@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>TaskNova Login</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Segoe UI', sans-serif; background: #05051a; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; overflow: hidden; padding: 20px; }
+  .stars { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; }
+  .star { position: absolute; background: white; border-radius: 50%; animation: twinkle 3s infinite; }
+  @keyframes twinkle { 0%, 100% { opacity: 0.2; } 50% { opacity: 1; } }
+  .glow-circle { position: fixed; border-radius: 50%; filter: blur(80px); z-index: 0; pointer-events: none; }
+  .glow-1 { width: 300px; height: 300px; background: rgba(108,99,255,0.25); top: -100px; left: -100px; }
+  .glow-2 { width: 250px; height: 250px; background: rgba(59,130,246,0.2); bottom: -80px; right: -80px; }
+
+  .card { position: relative; z-index: 10; width: 100%; max-width: 380px; animation: fadeUp 0.6s ease; }
+
+  .logo-section { text-align: center; margin-bottom: 30px; }
+  .logo-icon { width: 70px; height: 70px; background: linear-gradient(135deg, #6c63ff, #3b82f6); border-radius: 20px; display: flex; align-items: center; justify-content: center; font-size: 34px; margin: 0 auto 12px; box-shadow: 0 0 30px rgba(108,99,255,0.4); }
+  .logo-name { font-size: 26px; font-weight: 800; color: #fff; letter-spacing: 1px; }
+  .logo-name span { color: #6c63ff; }
+  .logo-sub { font-size: 12px; color: rgba(255,255,255,0.4); letter-spacing: 2px; text-transform: uppercase; margin-top: 4px; }
+
+  .tabs { display: flex; background: rgba(255,255,255,0.05); border-radius: 14px; padding: 4px; margin-bottom: 24px; }
+  .tab { flex: 1; text-align: center; padding: 10px; border-radius: 10px; font-size: 14px; font-weight: 600; color: rgba(255,255,255,0.4); cursor: pointer; transition: all 0.3s; }
+  .tab.active { background: linear-gradient(135deg, #6c63ff, #3b82f6); color: #fff; box-shadow: 0 4px 15px rgba(108,99,255,0.3); }
+
+  .form { display: flex; flex-direction: column; gap: 14px; }
+  .input-wrap { position: relative; }
+  .input-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); font-size: 16px; opacity: 0.6; }
+  input { width: 100%; background: rgba(255,255,255,0.07); border: 1.5px solid rgba(255,255,255,0.1); border-radius: 14px; padding: 14px 14px 14px 44px; color: #fff; font-size: 14px; outline: none; transition: all 0.3s; font-family: 'Segoe UI', sans-serif; }
+  input::placeholder { color: rgba(255,255,255,0.3); }
+  input:focus { border-color: #6c63ff; background: rgba(108,99,255,0.1); }
+
+  .forgot { text-align: right; font-size: 12px; color: #6c63ff; cursor: pointer; margin-top: -6px; }
+
+  .btn-main { width: 100%; padding: 15px; background: linear-gradient(135deg, #6c63ff, #3b82f6); border: none; border-radius: 14px; color: #fff; font-size: 15px; font-weight: 700; cursor: pointer; letter-spacing: 1px; box-shadow: 0 6px 25px rgba(108,99,255,0.35); font-family: 'Segoe UI', sans-serif; margin-top: 4px; transition: all 0.2s; }
+  .btn-main:active { transform: scale(0.98); }
+  .btn-main:disabled { opacity: 0.6; cursor: not-allowed; }
+
+  .divider { display: flex; align-items: center; gap: 12px; margin: 16px 0; }
+  .divider-line { flex: 1; height: 1px; background: rgba(255,255,255,0.1); }
+  .divider-text { font-size: 12px; color: rgba(255,255,255,0.3); }
+
+  .btn-google { width: 100%; padding: 13px; background: rgba(255,255,255,0.06); border: 1.5px solid rgba(255,255,255,0.12); border-radius: 14px; color: #fff; font-size: 14px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; font-family: 'Segoe UI', sans-serif; }
+
+  .register-form { display: none; flex-direction: column; gap: 14px; }
+
+  /* TOAST */
+  .toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2); color: #fff; padding: 12px 24px; border-radius: 50px; font-size: 13px; font-weight: 600; z-index: 100; display: none; text-align: center; }
+  .toast.success { background: rgba(34,197,94,0.2); border-color: rgba(34,197,94,0.4); color: #22c55e; }
+  .toast.error { background: rgba(239,68,68,0.2); border-color: rgba(239,68,68,0.4); color: #ef4444; }
+  .toast.show { display: block; animation: fadeUp 0.3s ease; }
+
+  /* LOADING SPINNER */
+  .spinner { width: 20px; height: 20px; border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: spin 0.8s linear infinite; display: inline-block; margin-right: 8px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+</style>
+</head>
+<body>
+
+<div class="stars" id="stars"></div>
+<div class="glow-circle glow-1"></div>
+<div class="glow-circle glow-2"></div>
+<div class="toast" id="toast"></div>
+
+<div class="card">
+  <div class="logo-section">
+    <div class="logo-icon">🚀</div>
+    <div class="logo-name">Task<span>nova</span></div>
+    <div class="logo-sub">Earn While You Explore</div>
+  </div>
+
+  <div class="tabs">
+    <div class="tab active" onclick="showLogin()">Login</div>
+    <div class="tab" onclick="showRegister()">Register</div>
+  </div>
+
+  <!-- LOGIN FORM -->
+  <div class="form" id="loginForm">
+    <div class="input-wrap">
+      <span class="input-icon">📧</span>
+      <input type="email" id="loginEmail" placeholder="Enter your email">
+    </div>
+    <div class="input-wrap">
+      <span class="input-icon">🔒</span>
+      <input type="password" id="loginPassword" placeholder="Enter your password">
+    </div>
+    <div class="forgot" onclick="forgotPassword()">Forgot Password?</div>
+    <button class="btn-main" id="loginBtn" onclick="loginUser()">LOGIN</button>
+    <div class="divider"><div class="divider-line"></div><div class="divider-text">OR</div><div class="divider-line"></div></div>
+    <button class="btn-google" onclick="googleLogin()">🌐 Continue with Google</button>
+  </div>
+
+  <!-- REGISTER FORM -->
+  <div class="register-form" id="registerForm">
+    <div class="input-wrap">
+      <span class="input-icon">👤</span>
+      <input type="text" id="regName" placeholder="Full Name">
+    </div>
+    <div class="input-wrap">
+      <span class="input-icon">📧</span>
+      <input type="email" id="regEmail" placeholder="Enter your email">
+    </div>
+    <div class="input-wrap">
+      <span class="input-icon">📱</span>
+      <input type="tel" id="regPhone" placeholder="Phone Number">
+    </div>
+    <div class="input-wrap">
+      <span class="input-icon">🔒</span>
+      <input type="password" id="regPassword" placeholder="Create password (min 6 chars)">
+    </div>
+    <div class="input-wrap">
+      <span class="input-icon">🎁</span>
+      <input type="text" id="regReferral" placeholder="Referral Code (optional)">
+    </div>
+    <button class="btn-main" id="registerBtn" onclick="registerUser()">CREATE ACCOUNT</button>
+    <div class="divider"><div class="divider-line"></div><div class="divider-text">OR</div><div class="divider-line"></div></div>
+    <button class="btn-google" onclick="googleLogin()">🌐 Continue with Google</button>
+  </div>
+</div>
+
+<!-- FIREBASE SDK -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+  import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+  import { getDatabase, ref, set, get } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyBbDeBse2WXwzd_X0Mr8VyEzytI8Yya_uc",
+    authDomain: "tasknova-66d0f.firebaseapp.com",
+    databaseURL: "https://tasknova-66d0f-default-rtdb.firebaseio.com",
+    projectId: "tasknova-66d0f",
+    storageBucket: "tasknova-66d0f.firebasestorage.app",
+    messagingSenderId: "135129024485",
+    appId: "1:135129024485:web:232a90fd0752086568510c",
+    measurementId: "G-M0W14NV21V"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getDatabase(app);
+  const provider = new GoogleAuthProvider();
+
+  function showToast(msg, type) {
+    const toast = document.getElementById('toast');
+    toast.textContent = msg;
+    toast.className = `toast ${type} show`;
+    setTimeout(() => toast.className = 'toast', 3000);
+  }
+
+  function generateReferralCode() {
+    return 'TN' + Math.random().toString(36).substring(2, 8).toUpperCase();
+  }
+
+  // REGISTER
+  window.registerUser = async function() {
+    const name = document.getElementById('regName').value.trim();
+    const email = document.getElementById('regEmail').value.trim();
+    const phone = document.getElementById('regPhone').value.trim();
+    const password = document.getElementById('regPassword').value;
+    const referral = document.getElementById('regReferral').value.trim();
+
+    if (!name || !email || !phone || !password) { showToast('Please fill all fields!', 'error'); return; }
+    if (password.length < 6) { showToast('Password must be 6+ characters!', 'error'); return; }
+
+    const btn = document.getElementById('registerBtn');
+    btn.innerHTML = '<span class="spinner"></span>Creating...';
+    btn.disabled = true;
+
+    try {
+      const userCred = await createUserWithEmailAndPassword(auth, email, password);
+      const uid = userCred.user.uid;
+      const myReferralCode = generateReferralCode();
+
+      // Save user data to Firebase
+      await set(ref(db, 'users/' + uid), {
+        name: name,
+        email: email,
+        phone: phone,
+        balance: 10,
+        coins: 1000,
+        referralCode: myReferralCode,
+        referredBy: referral || '',
+        totalEarned: 10,
+        tasksDone: 0,
+        referrals: 0,
+        joinDate: new Date().toISOString(),
+        welcomeBonus: true
+      });
+
+      // If referral code used — mark it
+      if (referral) {
+        await set(ref(db, 'referrals/' + referral + '/' + uid), {
+          joined: new Date().toISOString(),
+          withdrawn: false
+        });
+      }
+
+      showToast('Account created! Welcome bonus ₹10 added! 🎉', 'success');
+      setTimeout(() => {
+        window.location.href = 'home';
+      }, 2000);
+
+    } catch (e) {
+      btn.innerHTML = 'CREATE ACCOUNT';
+      btn.disabled = false;
+      if (e.code === 'auth/email-already-in-use') showToast('Email already registered!', 'error');
+      else showToast('Error: ' + e.message, 'error');
+    }
+  };
+
+  // LOGIN
+  window.loginUser = async function() {
+    const email = document.getElementById('loginEmail').value.trim();
+    const password = document.getElementById('loginPassword').value;
+
+    if (!email || !password) { showToast('Please fill all fields!', 'error'); return; }
+
+    const btn = document.getElementById('loginBtn');
+    btn.innerHTML = '<span class="spinner"></span>Logging in...';
+    btn.disabled = true;
+
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+      showToast('Login successful! 🎉', 'success');
+      setTimeout(() => {
+        window.location.href = 'home';
+      }, 1500);
+    } catch (e) {
+      btn.innerHTML = 'LOGIN';
+      btn.disabled = false;
+      if (e.code === 'auth/wrong-password') showToast('Wrong password!', 'error');
+      else if (e.code === 'auth/user-not-found') showToast('Email not registered!', 'error');
+      else showToast('Login failed!', 'error');
+    }
+  };
+
+  // GOOGLE LOGIN
+  window.googleLogin = async function() {
+    try {
+      const result = await signInWithPopup(auth, provider);
+      const user = result.user;
+      const uid = user.uid;
+
+      const snapshot = await get(ref(db, 'users/' + uid));
+      if (!snapshot.exists()) {
+        const myReferralCode = generateReferralCode();
+        await set(ref(db, 'users/' + uid), {
+          name: user.displayName,
+          email: user.email,
+          phone: '',
+          balance: 10,
+          coins: 1000,
+          referralCode: myReferralCode,
+          referredBy: '',
+          totalEarned: 10,
+          tasksDone: 0,
+          referrals: 0,
+          joinDate: new Date().toISOString(),
+          welcomeBonus: true
+        });
+      }
+
+      showToast('Login successful! 🎉', 'success');
+      setTimeout(() => { window.location.href = 'home'; }, 1500);
+    } catch (e) {
+      showToast('Google login failed!', 'error');
+    }
+  };
+
+  // FORGOT PASSWORD
+  window.forgotPassword = async function() {
+    const email = document.getElementById('loginEmail').value.trim();
+    if (!email) { showToast('Enter your email first!', 'error'); return; }
+    try {
+      await sendPasswordResetEmail(auth, email);
+      showToast('Reset email sent! Check inbox 📧', 'success');
+    } catch (e) {
+      showToast('Error sending reset email!', 'error');
+    }
+  };
+</script>
+
+<script>
+  // Stars
+  const starsContainer = document.getElementById('stars');
+  for (let i = 0; i < 60; i++) {
+    const star = document.createElement('div');
+    star.classList.add('star');
+    const size = Math.random() * 2 + 0.5;
+    star.style.cssText = `width:${size}px;height:${size}px;top:${Math.random()*100}%;left:${Math.random()*100}%;animation-delay:${Math.random()*3}s;animation-duration:${Math.random()*3+2}s;`;
+    starsContainer.appendChild(star);
+  }
+
+  function showLogin() {
+    document.getElementById('loginForm').style.display = 'flex';
+    document.getElementById('registerForm').style.display = 'none';
+    document.querySelectorAll('.tab')[0].classList.add('active');
+    document.querySelectorAll('.tab')[1].classList.remove('active');
+  }
+
+  function showRegister() {
+    document.getElementById('loginForm').style.display = 'none';
+    document.getElementById('registerForm').style.display = 'flex';
+    document.querySelectorAll('.tab')[1].classList.add('active');
+    document.querySelectorAll('.tab')[0].classList.remove('active');
+  }
+</script>
+</body>
+</html>
