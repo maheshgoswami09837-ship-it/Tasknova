@@ -106,10 +106,6 @@
       <input type="email" id="regEmail" placeholder="Enter your email">
     </div>
     <div class="input-wrap">
-      <span class="input-icon">📱</span>
-      <input type="tel" id="regPhone" placeholder="Phone Number">
-    </div>
-    <div class="input-wrap">
       <span class="input-icon">🔒</span>
       <input type="password" id="regPassword" placeholder="Create password (min 6 chars)">
     </div>
@@ -160,11 +156,11 @@
   window.registerUser = async function() {
     const name = document.getElementById('regName').value.trim();
     const email = document.getElementById('regEmail').value.trim();
-    const phone = document.getElementById('regPhone').value.trim();
+
     const password = document.getElementById('regPassword').value;
     const referral = document.getElementById('regReferral').value.trim();
 
-    if (!name || !email || !phone || !password) { showToast('Please fill all fields!', 'error'); return; }
+    if (!name || !email || !password) { showToast('Please fill all fields!', 'error'); return; }
     if (password.length < 6) { showToast('Password must be 6+ characters!', 'error'); return; }
 
     const btn = document.getElementById('registerBtn');
@@ -180,7 +176,7 @@
       await set(ref(db, 'users/' + uid), {
         name: name,
         email: email,
-        phone: phone,
+
         balance: 10,
         coins: 1000,
         referralCode: myReferralCode,
@@ -202,7 +198,7 @@
 
       showToast('Account created! Welcome bonus ₹10 added! 🎉', 'success');
       setTimeout(() => {
-        window.location.href = 'home';
+        window.location.href = 'https://maheshgoswami09837-ship-it.github.io/Tasknova/tasknova_home_new.html';
       }, 2000);
 
     } catch (e) {
@@ -228,7 +224,7 @@
       await signInWithEmailAndPassword(auth, email, password);
       showToast('Login successful! 🎉', 'success');
       setTimeout(() => {
-        window.location.href = 'home';
+        window.location.href = 'https://maheshgoswami09837-ship-it.github.io/Tasknova/tasknova_home_new.html';
       }, 1500);
     } catch (e) {
       btn.innerHTML = 'LOGIN';
@@ -266,7 +262,7 @@
       }
 
       showToast('Login successful! 🎉', 'success');
-      setTimeout(() => { window.location.href = 'home'; }, 1500);
+      setTimeout(() => { window.location.href = 'https://maheshgoswami09837-ship-it.github.io/Tasknova/tasknova_home_new.html'; }, 1500);
     } catch (e) {
       showToast('Google login failed!', 'error');
     }
