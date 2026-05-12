@@ -6,192 +6,97 @@
 <title>TaskNova Withdraw</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  body {
-    font-family: 'Segoe UI', sans-serif;
-    background: #05051a;
-    min-height: 100vh;
-    overflow-x: hidden;
-    padding-bottom: 80px;
-  }
+  body { font-family: 'Segoe UI', sans-serif; background: #05051a; min-height: 100vh; overflow-x: hidden; padding-bottom: 80px; }
   .stars { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; }
   .star { position: absolute; background: white; border-radius: 50%; animation: twinkle 3s infinite; }
   @keyframes twinkle { 0%, 100% { opacity: 0.2; } 50% { opacity: 1; } }
   .glow-circle { position: fixed; border-radius: 50%; filter: blur(80px); z-index: 0; pointer-events: none; }
   .glow-1 { width: 300px; height: 300px; background: rgba(108,99,255,0.2); top: -100px; left: -100px; }
   .glow-2 { width: 250px; height: 250px; background: rgba(59,130,246,0.15); bottom: -80px; right: -80px; }
-
   .content { position: relative; z-index: 10; padding: 20px 16px; animation: fadeUp 0.5s ease; }
 
   .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
   .header h1 { font-size: 22px; font-weight: 800; color: #fff; }
   .header p { font-size: 12px; color: rgba(255,255,255,0.4); margin-top: 2px; }
 
-  /* BALANCE CARD */
-  .balance-card {
-    background: linear-gradient(135deg, #6c63ff, #3b82f6);
-    border-radius: 20px;
-    padding: 22px;
-    margin-bottom: 20px;
-    box-shadow: 0 8px 30px rgba(108,99,255,0.35);
-    position: relative;
-    overflow: hidden;
-  }
-  .balance-card::after {
-    content: '💰';
-    position: absolute;
-    right: 20px; top: 50%;
-    transform: translateY(-50%);
-    font-size: 56px;
-    opacity: 0.3;
-  }
+  /* BALANCE */
+  .balance-card { background: linear-gradient(135deg, #6c63ff, #3b82f6, #a855f7); border-radius: 20px; padding: 22px; margin-bottom: 20px; box-shadow: 0 8px 30px rgba(108,99,255,0.35); position: relative; overflow: hidden; }
+  .balance-card::after { content: '💰'; position: absolute; right: 20px; top: 50%; transform: translateY(-50%); font-size: 56px; opacity: 0.3; }
   .balance-card .label { font-size: 13px; color: rgba(255,255,255,0.7); }
   .balance-card .amount { font-size: 36px; font-weight: 800; color: #fff; margin: 6px 0 2px; }
   .balance-card .coins-info { font-size: 12px; color: rgba(255,255,255,0.6); }
-  .min-note {
-    background: rgba(255,255,255,0.15);
-    border-radius: 8px;
-    padding: 6px 12px;
-    font-size: 11px;
-    color: #fff;
-    display: inline-block;
-    margin-top: 12px;
-  }
+  .min-note { background: rgba(255,255,255,0.15); border-radius: 8px; padding: 6px 12px; font-size: 11px; color: #fff; display: inline-block; margin-top: 12px; }
 
-  /* SECTION */
-  .section { margin-bottom: 20px; }
+  /* METHOD */
   .section-title { font-size: 15px; font-weight: 700; color: #fff; margin-bottom: 12px; }
-
-  /* METHOD CARDS */
   .method-grid { display: flex; gap: 10px; margin-bottom: 20px; }
-  .method-card {
-    flex: 1;
-    background: rgba(255,255,255,0.05);
-    border: 2px solid rgba(255,255,255,0.08);
-    border-radius: 16px;
-    padding: 16px 10px;
-    text-align: center;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-  .method-card.active {
-    border-color: #6c63ff;
-    background: rgba(108,99,255,0.15);
-  }
-  .method-card .icon { font-size: 28px; margin-bottom: 8px; }
-  .method-card .name { font-size: 12px; font-weight: 600; color: #fff; }
+  .method-card { flex: 1; background: rgba(255,255,255,0.05); border: 2px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 18px 10px; text-align: center; cursor: pointer; transition: all 0.2s; }
+  .method-card.active { border-color: #6c63ff; background: rgba(108,99,255,0.15); transform: scale(1.03); }
+  .method-card .icon { font-size: 32px; margin-bottom: 8px; }
+  .method-card .name { font-size: 13px; font-weight: 700; color: #fff; }
+  .method-card .desc { font-size: 10px; color: rgba(255,255,255,0.4); margin-top: 3px; }
 
   /* INPUT */
+  .input-section { margin-bottom: 16px; }
+  .input-label { font-size: 12px; color: rgba(255,255,255,0.5); margin-bottom: 8px; font-weight: 600; }
   .input-wrap { position: relative; margin-bottom: 14px; }
   .input-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); font-size: 16px; opacity: 0.6; }
-  input {
-    width: 100%;
-    background: rgba(255,255,255,0.07);
-    border: 1.5px solid rgba(255,255,255,0.1);
-    border-radius: 14px;
-    padding: 14px 14px 14px 44px;
-    color: #fff;
-    font-size: 14px;
-    outline: none;
-    transition: all 0.3s;
-    font-family: 'Segoe UI', sans-serif;
-  }
+  input { width: 100%; background: rgba(255,255,255,0.07); border: 1.5px solid rgba(255,255,255,0.1); border-radius: 14px; padding: 14px 14px 14px 44px; color: #fff; font-size: 14px; outline: none; transition: all 0.3s; font-family: 'Segoe UI', sans-serif; }
   input::placeholder { color: rgba(255,255,255,0.3); }
   input:focus { border-color: #6c63ff; background: rgba(108,99,255,0.1); }
 
   /* AMOUNT CHIPS */
-  .amount-chips { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
-  .chip {
-    padding: 8px 16px;
-    background: rgba(255,255,255,0.06);
-    border: 1px solid rgba(255,255,255,0.1);
-    border-radius: 50px;
-    font-size: 13px;
-    font-weight: 600;
-    color: rgba(255,255,255,0.6);
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-  .chip.active { background: rgba(108,99,255,0.2); border-color: #6c63ff; color: #fff; }
+  .amount-chips { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
+  .chip { padding: 12px 20px; background: rgba(255,255,255,0.06); border: 1.5px solid rgba(255,255,255,0.15); border-radius: 14px; font-size: 15px; font-weight: 700; color: rgba(255,255,255,0.7); cursor: pointer; transition: all 0.2s; flex: 1; text-align: center; }
+  .chip:active { transform: scale(0.96); }
+  .chip.active { background: rgba(108,99,255,0.25); border-color: #6c63ff; color: #fff; box-shadow: 0 4px 15px rgba(108,99,255,0.2); }
 
   /* WARNING */
-  .warning {
-    background: rgba(234,179,8,0.1);
-    border: 1px solid rgba(234,179,8,0.2);
-    border-radius: 12px;
-    padding: 12px 16px;
-    font-size: 12px;
-    color: rgba(234,179,8,0.8);
-    margin-bottom: 16px;
-    display: flex;
-    gap: 8px;
-    align-items: flex-start;
-  }
+  .warning { background: rgba(234,179,8,0.1); border: 1px solid rgba(234,179,8,0.2); border-radius: 12px; padding: 12px 16px; font-size: 12px; color: rgba(234,179,8,0.8); margin-bottom: 16px; display: flex; gap: 8px; align-items: flex-start; }
+
+  /* FEE INFO */
+  .fee-info { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 14px 16px; margin-bottom: 16px; }
+  .fee-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-size: 13px; }
+  .fee-row:last-child { margin-bottom: 0; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 8px; font-weight: 700; }
+  .fee-label { color: rgba(255,255,255,0.5); }
+  .fee-value { color: #fff; }
+  .fee-value.green { color: #22c55e; }
+  .fee-value.red { color: #ef4444; }
 
   /* WITHDRAW BTN */
-  .withdraw-btn {
-    width: 100%;
-    padding: 16px;
-    background: linear-gradient(135deg, #6c63ff, #3b82f6);
-    border: none;
-    border-radius: 14px;
-    color: #fff;
-    font-size: 15px;
-    font-weight: 700;
-    cursor: pointer;
-    letter-spacing: 1px;
-    box-shadow: 0 6px 25px rgba(108,99,255,0.35);
-    font-family: 'Segoe UI', sans-serif;
-    margin-bottom: 20px;
-  }
+  .withdraw-btn { width: 100%; padding: 16px; background: linear-gradient(135deg, #6c63ff, #3b82f6); border: none; border-radius: 14px; color: #fff; font-size: 15px; font-weight: 700; cursor: pointer; letter-spacing: 1px; box-shadow: 0 6px 25px rgba(108,99,255,0.35); font-family: 'Segoe UI', sans-serif; margin-bottom: 20px; transition: all 0.2s; }
+  .withdraw-btn:active { transform: scale(0.98); }
+  .withdraw-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
   /* HISTORY */
-  .history-item {
-    background: rgba(255,255,255,0.04);
-    border: 1px solid rgba(255,255,255,0.07);
-    border-radius: 14px;
-    padding: 14px 16px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: 10px;
-  }
-  .history-icon { font-size: 24px; }
-  .history-info { flex: 1; }
-  .history-info h4 { font-size: 13px; font-weight: 600; color: #fff; }
-  .history-info p { font-size: 11px; color: rgba(255,255,255,0.3); margin-top: 2px; }
-  .history-amount { font-size: 14px; font-weight: 700; color: #22c55e; }
-  .status-badge {
-    font-size: 10px;
-    padding: 3px 8px;
-    border-radius: 50px;
-    font-weight: 600;
-  }
+  .history-scroll { display: flex; gap: 12px; overflow-x: auto; scrollbar-width: none; padding-bottom: 4px; margin-bottom: 10px; }
+  .history-scroll::-webkit-scrollbar { display: none; }
+  .history-item { min-width: 160px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.07); border-radius: 16px; padding: 14px; flex-shrink: 0; }
+  .history-icon { font-size: 24px; margin-bottom: 8px; }
+  .history-amount { font-size: 18px; font-weight: 800; color: #fff; }
+  .history-method { font-size: 11px; color: rgba(255,255,255,0.4); margin-top: 3px; }
+  .history-date { font-size: 10px; color: rgba(255,255,255,0.3); margin-top: 4px; }
+  .status-badge { display: inline-block; font-size: 10px; padding: 3px 10px; border-radius: 50px; font-weight: 700; margin-top: 6px; }
   .status-pending { background: rgba(234,179,8,0.15); color: #eab308; }
   .status-done { background: rgba(34,197,94,0.15); color: #22c55e; }
 
+  .empty-history { text-align: center; padding: 20px; color: rgba(255,255,255,0.3); font-size: 13px; }
+
+  /* TOAST */
+  .toast { position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%); background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2); color: #fff; padding: 12px 24px; border-radius: 50px; font-size: 13px; font-weight: 600; z-index: 200; display: none; white-space: nowrap; }
+  .toast.success { background: rgba(34,197,94,0.2); border-color: rgba(34,197,94,0.4); color: #22c55e; }
+  .toast.error { background: rgba(239,68,68,0.2); border-color: rgba(239,68,68,0.4); color: #ef4444; }
+  .toast.show { display: block; animation: fadeUp 0.3s ease; }
+
   /* BOTTOM NAV */
-  .bottom-nav {
-    position: fixed; bottom: 0; left: 0; right: 0;
-    background: rgba(5,5,26,0.95);
-    backdrop-filter: blur(20px);
-    border-top: 1px solid rgba(255,255,255,0.08);
-    display: flex; justify-content: space-around; align-items: center;
-    padding: 10px 0 20px; z-index: 100;
-  }
+  .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: rgba(5,5,26,0.95); backdrop-filter: blur(20px); border-top: 1px solid rgba(255,255,255,0.08); display: flex; justify-content: space-around; align-items: center; padding: 10px 0 20px; z-index: 100; }
   .nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; padding: 4px 16px; }
   .nav-item span { font-size: 20px; }
   .nav-item p { font-size: 10px; color: rgba(255,255,255,0.3); font-weight: 500; }
-  .nav-center {
-    width: 52px; height: 52px;
-    background: linear-gradient(135deg, #6c63ff, #3b82f6);
-    border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 22px; margin-top: -20px;
-    box-shadow: 0 4px 20px rgba(108,99,255,0.4); cursor: pointer;
-  }
   .nav-item.active p { color: #6c63ff; }
+  .nav-center { width: 52px; height: 52px; background: linear-gradient(135deg, #6c63ff, #3b82f6); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 22px; margin-top: -20px; box-shadow: 0 4px 20px rgba(108,99,255,0.4); cursor: pointer; }
 
-  @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(20px) translateX(-50%); } to { opacity: 1; transform: translateY(0) translateX(-50%); } }
 </style>
 </head>
 <body>
@@ -199,108 +104,119 @@
 <div class="stars" id="stars"></div>
 <div class="glow-circle glow-1"></div>
 <div class="glow-circle glow-2"></div>
+<div class="toast" id="toast"></div>
 
 <div class="content">
   <div class="header">
-    <div>
-      <h1>Withdraw 💸</h1>
-      <p>Transfer your earnings</p>
-    </div>
+    <div><h1>Withdraw 💸</h1><p>Transfer your earnings</p></div>
   </div>
 
   <!-- BALANCE -->
   <div class="balance-card">
     <div class="label">Available Balance</div>
-    <div class="amount">₹0.00</div>
-    <div class="coins-info">0 Coins Available</div>
+    <div class="amount user-balance">₹0.00</div>
+    <div class="coins-info user-coins">0 Coins</div>
     <div class="min-note">⚠️ Minimum Withdraw: ₹100</div>
   </div>
 
   <!-- METHOD -->
   <div class="section-title">Select Payment Method</div>
   <div class="method-grid">
-    <div class="method-card active">
+    <div class="method-card active" onclick="selectMethod('upi', this)">
       <div class="icon">📱</div>
       <div class="name">UPI</div>
+      <div class="desc">Instant transfer</div>
     </div>
-    <div class="method-card">
-      <div class="icon">💳</div>
-      <div class="name">Paytm</div>
-    </div>
-    <div class="method-card">
+    <div class="method-card" onclick="selectMethod('bank', this)">
       <div class="icon">🏦</div>
       <div class="name">Bank</div>
+      <div class="desc">1-2 days</div>
     </div>
   </div>
 
-  <!-- UPI INPUT -->
-  <div class="section">
-    <div class="section-title">Enter UPI ID</div>
+  <!-- UPI FORM -->
+  <div id="upiForm">
+    <div class="input-label">Enter UPI ID</div>
     <div class="input-wrap">
       <span class="input-icon">📱</span>
-      <input type="text" placeholder="yourname@upi">
+      <input type="text" id="upiId" placeholder="yourname@upi">
     </div>
-
-    <div class="section-title">Enter Amount</div>
-    <div class="input-wrap">
-      <span class="input-icon">₹</span>
-      <input type="number" placeholder="Minimum ₹100">
-    </div>
-
-    <!-- AMOUNT CHIPS -->
-    <div class="amount-chips">
-      <div class="chip active">₹100</div>
-      <div class="chip">₹200</div>
-      <div class="chip">₹500</div>
-      <div class="chip">₹1000</div>
-    </div>
-
-    <!-- WARNING -->
-    <div class="warning">
-      <span>⚠️</span>
-      <span>Withdrawal is processed within 24-48 hours. Make sure your UPI ID is correct.</span>
-    </div>
-
-    <button class="withdraw-btn">REQUEST WITHDRAWAL</button>
   </div>
+
+  <!-- BANK FORM -->
+  <div id="bankForm" style="display:none;">
+    <div class="input-label">Account Number</div>
+    <div class="input-wrap">
+      <span class="input-icon">🏦</span>
+      <input type="number" id="accNumber" placeholder="Enter account number">
+    </div>
+    <div class="input-label">IFSC Code</div>
+    <div class="input-wrap">
+      <span class="input-icon">🔢</span>
+      <input type="text" id="ifscCode" placeholder="Enter IFSC code">
+    </div>
+    <div class="input-label">Account Holder Name</div>
+    <div class="input-wrap">
+      <span class="input-icon">👤</span>
+      <input type="text" id="accName" placeholder="Enter account holder name">
+    </div>
+  </div>
+
+  <!-- AMOUNT -->
+  <div class="input-label">Select Amount</div>
+  <div class="amount-chips">
+    <div class="chip active" onclick="selectAmount(100, this)">₹100</div>
+    <div class="chip" onclick="selectAmount(200, this)">₹200</div>
+    <div class="chip" onclick="selectAmount(500, this)">₹500</div>
+    <div class="chip" onclick="selectAmount(1000, this)">₹1000</div>
+  </div>
+
+  <!-- FEE INFO -->
+  <div class="fee-info">
+    <div class="fee-row">
+      <span class="fee-label">Withdrawal Amount</span>
+      <span class="fee-value" id="feeAmount">₹100</span>
+    </div>
+    <div class="fee-row">
+      <span class="fee-label">Service Fee (10%)</span>
+      <span class="fee-value red" id="feeCharge">- ₹10</span>
+    </div>
+    <div class="fee-row">
+      <span class="fee-label">You Receive</span>
+      <span class="fee-value green" id="feeReceive">₹90</span>
+    </div>
+  </div>
+
+  <!-- WARNING -->
+  <div class="warning">
+    <span>⚠️</span>
+    <span>Withdrawal processed within 24-48 hours. Make sure your details are correct.</span>
+  </div>
+
+  <button class="withdraw-btn" id="withdrawBtn" onclick="submitWithdraw()">REQUEST WITHDRAWAL</button>
 
   <!-- HISTORY -->
   <div class="section-title">Transaction History</div>
-  <div class="history-item">
-    <div class="history-icon">💸</div>
-    <div class="history-info">
-      <h4>Withdrawal Request</h4>
-      <p>UPI • Today 10:30 AM</p>
-    </div>
-    <div style="text-align:right;">
-      <div class="history-amount">₹100</div>
-      <div class="status-badge status-pending">Pending</div>
-    </div>
-  </div>
-  <div class="history-item">
-    <div class="history-icon">✅</div>
-    <div class="history-info">
-      <h4>Withdrawal Success</h4>
-      <p>UPI • Yesterday 2:00 PM</p>
-    </div>
-    <div style="text-align:right;">
-      <div class="history-amount">₹150</div>
-      <div class="status-badge status-done">Completed</div>
-    </div>
+  <div id="historyContainer">
+    <div class="empty-history">No transactions yet 📭</div>
   </div>
 
 </div>
 
-<!-- BOTTOM NAV -->
 <div class="bottom-nav">
   <div class="nav-item" onclick="window.location.href='tasknova_home_new.html'"><span>🏠</span><p>Home</p></div>
   <div class="nav-item" onclick="window.location.href='tasknova_tasks.html'"><span>📋</span><p>Tasks</p></div>
-  <div class="nav-center" onclick="window.location.href='tasknova_withdraw.html'">💰</div>
+  <div class="nav-center active">💰</div>
   <div class="nav-item" onclick="window.location.href='tasknova_refer.html'"><span>👥</span><p>Refer</p></div>
   <div class="nav-item" onclick="window.location.href='tasknova_profile.html'"><span>👤</span><p>Profile</p></div>
 </div>
 
 <script>
+  let selectedAmount = 100;
+  let selectedMethod = 'upi';
+  let userBalance = 0;
+
+  // Stars
   const starsContainer = document.getElementById('stars');
   for (let i = 0; i < 60; i++) {
     const star = document.createElement('div');
@@ -309,6 +225,130 @@
     star.style.cssText = `width:${size}px;height:${size}px;top:${Math.random()*100}%;left:${Math.random()*100}%;animation-delay:${Math.random()*3}s;animation-duration:${Math.random()*3+2}s;`;
     starsContainer.appendChild(star);
   }
+
+  function selectMethod(method, el) {
+    selectedMethod = method;
+    document.querySelectorAll('.method-card').forEach(c => c.classList.remove('active'));
+    el.classList.add('active');
+    document.getElementById('upiForm').style.display = method === 'upi' ? 'block' : 'none';
+    document.getElementById('bankForm').style.display = method === 'bank' ? 'block' : 'none';
+  }
+
+  function selectAmount(amount, el) {
+    selectedAmount = amount;
+    document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+    el.classList.add('active');
+    const fee = Math.round(amount * 0.1);
+    document.getElementById('feeAmount').textContent = '₹' + amount;
+    document.getElementById('feeCharge').textContent = '- ₹' + fee;
+    document.getElementById('feeReceive').textContent = '₹' + (amount - fee);
+  }
+
+  function showToast(msg, type) {
+    const toast = document.getElementById('toast');
+    toast.textContent = msg;
+    toast.className = `toast ${type} show`;
+    setTimeout(() => toast.className = 'toast', 3000);
+  }
+
+  async function submitWithdraw() {
+    if (userBalance < selectedAmount) {
+      showToast('Insufficient balance!', 'error');
+      return;
+    }
+    if (selectedAmount < 100) {
+      showToast('Minimum withdrawal is ₹100!', 'error');
+      return;
+    }
+
+    const btn = document.getElementById('withdrawBtn');
+    btn.textContent = 'Processing...';
+    btn.disabled = true;
+
+    try {
+      const { getAuth } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js");
+      const { getDatabase, ref, push, update, get } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js");
+      const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js");
+
+      const app = initializeApp({
+        apiKey: "AIzaSyBbDeBse2WXwzd_X0Mr8VyEzytI8Yya_uc",
+        authDomain: "tasknova-66d0f.firebaseapp.com",
+        databaseURL: "https://tasknova-66d0f-default-rtdb.firebaseio.com",
+        projectId: "tasknova-66d0f",
+        storageBucket: "tasknova-66d0f.firebasestorage.app",
+        messagingSenderId: "135129024485",
+        appId: "1:135129024485:web:232a90fd0752086568510c"
+      }, 'withdraw-app');
+
+      const auth = getAuth(app);
+      const db = getDatabase(app);
+      const user = auth.currentUser;
+
+      if (!user) { showToast('Please login again!', 'error'); return; }
+
+      const paymentDetails = selectedMethod === 'upi'
+        ? { upiId: document.getElementById('upiId').value }
+        : { accNumber: document.getElementById('accNumber').value, ifscCode: document.getElementById('ifscCode').value, accName: document.getElementById('accName').value };
+
+      // Save withdrawal request
+      await push(ref(db, 'withdrawals/' + user.uid), {
+        amount: selectedAmount,
+        fee: Math.round(selectedAmount * 0.1),
+        receive: selectedAmount - Math.round(selectedAmount * 0.1),
+        method: selectedMethod,
+        paymentDetails,
+        status: 'pending',
+        date: new Date().toISOString()
+      });
+
+      // Update user balance
+      const snap = await get(ref(db, 'users/' + user.uid + '/balance'));
+      const newBalance = (snap.val() || 0) - selectedAmount;
+      await update(ref(db, 'users/' + user.uid), { balance: newBalance });
+
+      showToast('Withdrawal request submitted! ✅', 'success');
+      loadHistory(user.uid, db, ref);
+      document.querySelector('.user-balance').textContent = '₹' + newBalance.toFixed(2);
+      userBalance = newBalance;
+
+    } catch(e) {
+      showToast('Error: ' + e.message, 'error');
+    }
+
+    btn.textContent = 'REQUEST WITHDRAWAL';
+    btn.disabled = false;
+  }
+
+  async function loadHistory(uid, db, ref) {
+    try {
+      const { get } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js");
+      const snap = await get(ref(db, 'withdrawals/' + uid));
+      const container = document.getElementById('historyContainer');
+
+      if (!snap.exists()) {
+        container.innerHTML = '<div class="empty-history">No transactions yet 📭</div>';
+        return;
+      }
+
+      const data = snap.val();
+      const items = Object.values(data).reverse();
+
+      container.innerHTML = '<div class="history-scroll">' +
+        items.map(item => `
+          <div class="history-item">
+            <div class="history-icon">${item.method === 'upi' ? '📱' : '🏦'}</div>
+            <div class="history-amount">₹${item.amount}</div>
+            <div class="history-method">${item.method.toUpperCase()}</div>
+            <div class="history-date">${new Date(item.date).toLocaleDateString()}</div>
+            <div class="status-badge ${item.status === 'pending' ? 'status-pending' : 'status-done'}">
+              ${item.status === 'pending' ? '⏳ Pending' : '✅ Success'}
+            </div>
+          </div>
+        `).join('') +
+        '</div>';
+    } catch(e) {}
+  }
 </script>
+<script type="module" src="firebase-data.js"></script>
 </body>
 </html>
