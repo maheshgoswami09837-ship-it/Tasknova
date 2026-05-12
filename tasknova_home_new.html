@@ -156,8 +156,8 @@
   <!-- BALANCE CARD -->
   <div class="balance-card">
     <div class="balance-label">💳 Your Balance</div>
-    <div class="balance-amount">₹10.00</div>
-    <div class="balance-coins">1000 Coins</div>
+    <div class="balance-amount user-balance">₹0.00</div>
+    <div class="balance-coins user-coins">0 Coins</div>
     <div class="wallet-img">👜</div>
     <button class="withdraw-btn" onclick="window.location.href='tasknova_withdraw.html'">↗ Withdraw</button>
   </div>
@@ -175,17 +175,17 @@
   <div class="stats-grid">
     <div class="stat-card">
       <div class="stat-icon">💰</div>
-      <div class="stat-value">₹10</div>
+      <div class="stat-value user-total-earned">₹0</div>
       <div class="stat-label">Total Earned</div>
     </div>
     <div class="stat-card">
       <div class="stat-icon">📋</div>
-      <div class="stat-value">0</div>
+      <div class="stat-value user-tasks">0</div>
       <div class="stat-label">Tasks Done</div>
     </div>
     <div class="stat-card">
       <div class="stat-icon">👥</div>
-      <div class="stat-value">0</div>
+      <div class="stat-value user-tasks">0</div>
       <div class="stat-label">Referrals</div>
     </div>
   </div>
@@ -290,5 +290,6 @@
     starsContainer.appendChild(star);
   }
 </script>
+<script type="module" src="firebase-data.js"></script>
 </body>
 </html>
