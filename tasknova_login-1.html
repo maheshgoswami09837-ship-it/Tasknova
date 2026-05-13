@@ -33,6 +33,7 @@
   input::placeholder { color: rgba(255,255,255,0.3); }
   input:focus { border-color: #6c63ff; background: rgba(108,99,255,0.1); }
 
+  .eye-icon { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); font-size: 16px; cursor: pointer; opacity: 0.6; }
   .forgot { text-align: right; font-size: 12px; color: #6c63ff; cursor: pointer; margin-top: -6px; }
 
   .btn-main { width: 100%; padding: 15px; background: linear-gradient(135deg, #6c63ff, #3b82f6); border: none; border-radius: 14px; color: #fff; font-size: 15px; font-weight: 700; cursor: pointer; letter-spacing: 1px; box-shadow: 0 6px 25px rgba(108,99,255,0.35); font-family: 'Segoe UI', sans-serif; margin-top: 4px; transition: all 0.2s; }
@@ -88,11 +89,10 @@
     <div class="input-wrap">
       <span class="input-icon">🔒</span>
       <input type="password" id="loginPassword" placeholder="Enter your password">
+      <span class="eye-icon" onclick="togglePassword('loginPassword', this)">👁️</span>
     </div>
     <div class="forgot" onclick="forgotPassword()">Forgot Password?</div>
     <button class="btn-main" id="loginBtn" onclick="loginUser()">LOGIN</button>
-    <div class="divider"><div class="divider-line"></div><div class="divider-text">OR</div><div class="divider-line"></div></div>
-    <button class="btn-google" onclick="googleLogin()">🌐 Continue with Google</button>
   </div>
 
   <!-- REGISTER FORM -->
@@ -108,14 +108,13 @@
     <div class="input-wrap">
       <span class="input-icon">🔒</span>
       <input type="password" id="regPassword" placeholder="Create password (min 6 chars)">
+      <span class="eye-icon" onclick="togglePassword('regPassword', this)">👁️</span>
     </div>
     <div class="input-wrap">
       <span class="input-icon">🎁</span>
       <input type="text" id="regReferral" placeholder="Referral Code (optional)">
     </div>
     <button class="btn-main" id="registerBtn" onclick="registerUser()">CREATE ACCOUNT</button>
-    <div class="divider"><div class="divider-line"></div><div class="divider-text">OR</div><div class="divider-line"></div></div>
-    <button class="btn-google" onclick="googleLogin()">🌐 Continue with Google</button>
   </div>
 </div>
 
@@ -290,6 +289,17 @@
     const size = Math.random() * 2 + 0.5;
     star.style.cssText = `width:${size}px;height:${size}px;top:${Math.random()*100}%;left:${Math.random()*100}%;animation-delay:${Math.random()*3}s;animation-duration:${Math.random()*3+2}s;`;
     starsContainer.appendChild(star);
+  }
+
+  function togglePassword(id, el) {
+    const input = document.getElementById(id);
+    if (input.type === 'password') {
+      input.type = 'text';
+      el.textContent = '🙈';
+    } else {
+      input.type = 'password';
+      el.textContent = '👁️';
+    }
   }
 
   function showLogin() {
