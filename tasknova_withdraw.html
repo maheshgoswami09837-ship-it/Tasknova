@@ -174,16 +174,16 @@
   <!-- FEE INFO -->
   <div class="fee-info">
     <div class="fee-row">
-      <span class="fee-label">Withdrawal Amount</span>
-      <span class="fee-value" id="feeAmount">₹100</span>
+      <span class="fee-label">You Receive</span>
+      <span class="fee-value green" id="feeAmount">₹100</span>
     </div>
     <div class="fee-row">
       <span class="fee-label">Service Fee (10%)</span>
-      <span class="fee-value red" id="feeCharge">- ₹10</span>
+      <span class="fee-value red" id="feeCharge">₹10</span>
     </div>
     <div class="fee-row">
-      <span class="fee-label">You Receive</span>
-      <span class="fee-value green" id="feeReceive">₹90</span>
+      <span class="fee-label">Total Deducted</span>
+      <span class="fee-value" id="feeReceive">₹110</span>
     </div>
   </div>
 
@@ -239,9 +239,10 @@
     document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
     el.classList.add('active');
     const fee = Math.round(amount * 0.1);
+    const total = amount + fee;
     document.getElementById('feeAmount').textContent = '₹' + amount;
-    document.getElementById('feeCharge').textContent = '- ₹' + fee;
-    document.getElementById('feeReceive').textContent = '₹' + (amount - fee);
+    document.getElementById('feeCharge').textContent = '₹' + fee;
+    document.getElementById('feeReceive').textContent = '₹' + total;
   }
 
   function showToast(msg, type) {
@@ -290,11 +291,15 @@
         ? { upiId: document.getElementById('upiId').value }
         : { accNumber: document.getElementById('accNumber').value, ifscCode: document.getElementById('ifscCode').value, accName: document.getElementById('accName').value };
 
+      const fee = Math.round(selectedAmount * 0.1);
+      const totalDeduct = selectedAmount + fee;
+
       // Save withdrawal request
       await push(ref(db, 'withdrawals/' + user.uid), {
         amount: selectedAmount,
-        fee: Math.round(selectedAmount * 0.1),
-        receive: selectedAmount - Math.round(selectedAmount * 0.1),
+        fee: fee,
+        receive: selectedAmount,
+        totalDeducted: totalDeduct,
         method: selectedMethod,
         paymentDetails,
         status: 'pending',
@@ -303,7 +308,7 @@
 
       // Update user balance
       const snap = await get(ref(db, 'users/' + user.uid + '/balance'));
-      const newBalance = (snap.val() || 0) - selectedAmount;
+      const newBalance = (snap.val() || 0) - totalDeduct;
       await update(ref(db, 'users/' + user.uid), { balance: newBalance });
 
       showToast('Withdrawal request submitted! ✅', 'success');
