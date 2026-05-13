@@ -29,35 +29,26 @@
   .form { display: flex; flex-direction: column; gap: 14px; }
   .input-wrap { position: relative; }
   .input-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); font-size: 16px; opacity: 0.6; }
-  input { width: 100%; background: rgba(255,255,255,0.07); border: 1.5px solid rgba(255,255,255,0.1); border-radius: 14px; padding: 14px 14px 14px 44px; color: #fff; font-size: 14px; outline: none; transition: all 0.3s; font-family: 'Segoe UI', sans-serif; }
+  .eye-icon { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); font-size: 16px; cursor: pointer; opacity: 0.6; }
+  input { width: 100%; background: rgba(255,255,255,0.07); border: 1.5px solid rgba(255,255,255,0.1); border-radius: 14px; padding: 14px 44px 14px 44px; color: #fff; font-size: 14px; outline: none; transition: all 0.3s; font-family: 'Segoe UI', sans-serif; }
   input::placeholder { color: rgba(255,255,255,0.3); }
   input:focus { border-color: #6c63ff; background: rgba(108,99,255,0.1); }
 
-  .eye-icon { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); font-size: 16px; cursor: pointer; opacity: 0.6; }
   .forgot { text-align: right; font-size: 12px; color: #6c63ff; cursor: pointer; margin-top: -6px; }
 
   .btn-main { width: 100%; padding: 15px; background: linear-gradient(135deg, #6c63ff, #3b82f6); border: none; border-radius: 14px; color: #fff; font-size: 15px; font-weight: 700; cursor: pointer; letter-spacing: 1px; box-shadow: 0 6px 25px rgba(108,99,255,0.35); font-family: 'Segoe UI', sans-serif; margin-top: 4px; transition: all 0.2s; }
   .btn-main:active { transform: scale(0.98); }
   .btn-main:disabled { opacity: 0.6; cursor: not-allowed; }
 
-  .divider { display: flex; align-items: center; gap: 12px; margin: 16px 0; }
-  .divider-line { flex: 1; height: 1px; background: rgba(255,255,255,0.1); }
-  .divider-text { font-size: 12px; color: rgba(255,255,255,0.3); }
-
-  .btn-google { width: 100%; padding: 13px; background: rgba(255,255,255,0.06); border: 1.5px solid rgba(255,255,255,0.12); border-radius: 14px; color: #fff; font-size: 14px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; font-family: 'Segoe UI', sans-serif; }
-
   .register-form { display: none; flex-direction: column; gap: 14px; }
 
-  /* TOAST */
-  .toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2); color: #fff; padding: 12px 24px; border-radius: 50px; font-size: 13px; font-weight: 600; z-index: 100; display: none; text-align: center; }
-  .toast.success { background: rgba(34,197,94,0.2); border-color: rgba(34,197,94,0.4); color: #22c55e; }
-  .toast.error { background: rgba(239,68,68,0.2); border-color: rgba(239,68,68,0.4); color: #ef4444; }
+  .toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); padding: 12px 24px; border-radius: 50px; font-size: 13px; font-weight: 600; z-index: 100; display: none; text-align: center; white-space: nowrap; }
+  .toast.success { background: rgba(34,197,94,0.2); border: 1px solid rgba(34,197,94,0.4); color: #22c55e; }
+  .toast.error { background: rgba(239,68,68,0.2); border: 1px solid rgba(239,68,68,0.4); color: #ef4444; }
   .toast.show { display: block; animation: fadeUp 0.3s ease; }
 
-  /* LOADING SPINNER */
-  .spinner { width: 20px; height: 20px; border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: spin 0.8s linear infinite; display: inline-block; margin-right: 8px; }
+  .spinner { width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: spin 0.8s linear infinite; display: inline-block; margin-right: 8px; vertical-align: middle; }
   @keyframes spin { to { transform: rotate(360deg); } }
-
   @keyframes fadeUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
 </style>
 </head>
@@ -83,13 +74,13 @@
   <!-- LOGIN FORM -->
   <div class="form" id="loginForm">
     <div class="input-wrap">
-      <span class="input-icon">📱</span>
-      <input type="tel" id="loginEmail" placeholder="Enter your mobile number" maxlength="10">
+      <span class="input-icon">📧</span>
+      <input type="email" id="loginEmail" placeholder="Enter your email">
     </div>
     <div class="input-wrap">
       <span class="input-icon">🔒</span>
       <input type="password" id="loginPassword" placeholder="Enter your password">
-      <span class="eye-icon" onclick="togglePassword('loginPassword', this)">👁️</span>
+      <span class="eye-icon" onclick="togglePass('loginPassword', this)">👁️</span>
     </div>
     <div class="forgot" onclick="forgotPassword()">Forgot Password?</div>
     <button class="btn-main" id="loginBtn" onclick="loginUser()">LOGIN</button>
@@ -102,13 +93,13 @@
       <input type="text" id="regName" placeholder="Full Name">
     </div>
     <div class="input-wrap">
-      <span class="input-icon">📱</span>
-      <input type="tel" id="regEmail" placeholder="Enter your mobile number" maxlength="10">
+      <span class="input-icon">📧</span>
+      <input type="email" id="regEmail" placeholder="Enter your email">
     </div>
     <div class="input-wrap">
       <span class="input-icon">🔒</span>
       <input type="password" id="regPassword" placeholder="Create password (min 6 chars)">
-      <span class="eye-icon" onclick="togglePassword('regPassword', this)">👁️</span>
+      <span class="eye-icon" onclick="togglePass('regPassword', this)">👁️</span>
     </div>
     <div class="input-wrap">
       <span class="input-icon">🎁</span>
@@ -118,7 +109,6 @@
   </div>
 </div>
 
-<!-- FIREBASE SDK -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
   import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
@@ -131,8 +121,7 @@
     projectId: "tasknova-66d0f",
     storageBucket: "tasknova-66d0f.firebasestorage.app",
     messagingSenderId: "135129024485",
-    appId: "1:135129024485:web:232a90fd0752086568510c",
-    measurementId: "G-M0W14NV21V"
+    appId: "1:135129024485:web:232a90fd0752086568510c"
   };
 
   const app = initializeApp(firebaseConfig);
@@ -160,16 +149,12 @@
   // REGISTER
   window.registerUser = async function() {
     const name = document.getElementById('regName').value.trim();
-    const phone = document.getElementById('regEmail').value.trim();
+    const email = document.getElementById('regEmail').value.trim();
     const password = document.getElementById('regPassword').value;
     const referral = document.getElementById('regReferral').value.trim();
 
-    if (!name || !phone || !password) { showToast('Please fill all fields!', 'error'); return; }
-    if (phone.length !== 10) { showToast('Enter valid 10 digit mobile number!', 'error'); return; }
+    if (!name || !email || !password) { showToast('Please fill all fields!', 'error'); return; }
     if (password.length < 6) { showToast('Password must be 6+ characters!', 'error'); return; }
-
-    // Convert phone to fake email for Firebase
-    const email = phone + '@tasknova.com';
 
     const btn = document.getElementById('registerBtn');
     btn.innerHTML = '<span class="spinner"></span>Creating...';
@@ -180,10 +165,8 @@
       const uid = userCred.user.uid;
       const myReferralCode = generateReferralCode();
 
-      // Save user data to Firebase
       await set(ref(db, 'users/' + uid), {
         name: name,
-        phone: phone,
         email: email,
         balance: 10,
         coins: 1000,
@@ -196,7 +179,6 @@
         welcomeBonus: true
       });
 
-      // If referral code used — mark it
       if (referral) {
         await set(ref(db, 'referrals/' + referral + '/' + uid), {
           joined: new Date().toISOString(),
@@ -206,7 +188,7 @@
 
       showToast('Account created! Welcome bonus ₹10 added! 🎉', 'success');
       setTimeout(() => {
-        window.location.href = 'https://maheshgoswami09837-ship-it.github.io/Tasknova/tasknova_home_new.html';
+        window.location.href = 'tasknova_home_new.html';
       }, 2000);
 
     } catch (e) {
@@ -219,14 +201,10 @@
 
   // LOGIN
   window.loginUser = async function() {
-    const phone = document.getElementById('loginEmail').value.trim();
+    const email = document.getElementById('loginEmail').value.trim();
     const password = document.getElementById('loginPassword').value;
 
-    if (!phone || !password) { showToast('Please fill all fields!', 'error'); return; }
-    if (phone.length !== 10) { showToast('Enter valid 10 digit mobile number!', 'error'); return; }
-
-    // Convert phone to fake email
-    const email = phone + '@tasknova.com';
+    if (!email || !password) { showToast('Please fill all fields!', 'error'); return; }
 
     const btn = document.getElementById('loginBtn');
     btn.innerHTML = '<span class="spinner"></span>Logging in...';
@@ -236,47 +214,14 @@
       await signInWithEmailAndPassword(auth, email, password);
       showToast('Login successful! 🎉', 'success');
       setTimeout(() => {
-        window.location.href = 'https://maheshgoswami09837-ship-it.github.io/Tasknova/tasknova_home_new.html';
+        window.location.href = 'tasknova_home_new.html';
       }, 1500);
     } catch (e) {
       btn.innerHTML = 'LOGIN';
       btn.disabled = false;
       if (e.code === 'auth/wrong-password') showToast('Wrong password!', 'error');
-      else if (e.code === 'auth/user-not-found') showToast('Number not registered!', 'error');
+      else if (e.code === 'auth/user-not-found') showToast('Email not registered!', 'error');
       else showToast('Login failed!', 'error');
-    }
-  };
-
-  // GOOGLE LOGIN
-  window.googleLogin = async function() {
-    try {
-      const result = await signInWithPopup(auth, provider);
-      const user = result.user;
-      const uid = user.uid;
-
-      const snapshot = await get(ref(db, 'users/' + uid));
-      if (!snapshot.exists()) {
-        const myReferralCode = generateReferralCode();
-        await set(ref(db, 'users/' + uid), {
-          name: user.displayName,
-          email: user.email,
-          phone: '',
-          balance: 10,
-          coins: 1000,
-          referralCode: myReferralCode,
-          referredBy: '',
-          totalEarned: 10,
-          tasksDone: 0,
-          referrals: 0,
-          joinDate: new Date().toISOString(),
-          welcomeBonus: true
-        });
-      }
-
-      showToast('Login successful! 🎉', 'success');
-      setTimeout(() => { window.location.href = 'https://maheshgoswami09837-ship-it.github.io/Tasknova/tasknova_home_new.html'; }, 1500);
-    } catch (e) {
-      showToast('Google login failed!', 'error');
     }
   };
 
@@ -304,7 +249,7 @@
     starsContainer.appendChild(star);
   }
 
-  function togglePassword(id, el) {
+  function togglePass(id, el) {
     const input = document.getElementById(id);
     if (input.type === 'password') {
       input.type = 'text';
