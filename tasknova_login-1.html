@@ -83,8 +83,8 @@
   <!-- LOGIN FORM -->
   <div class="form" id="loginForm">
     <div class="input-wrap">
-      <span class="input-icon">📧</span>
-      <input type="email" id="loginEmail" placeholder="Enter your email">
+      <span class="input-icon">📱</span>
+      <input type="tel" id="loginEmail" placeholder="Enter your mobile number" maxlength="10">
     </div>
     <div class="input-wrap">
       <span class="input-icon">🔒</span>
@@ -102,8 +102,8 @@
       <input type="text" id="regName" placeholder="Full Name">
     </div>
     <div class="input-wrap">
-      <span class="input-icon">📧</span>
-      <input type="email" id="regEmail" placeholder="Enter your email">
+      <span class="input-icon">📱</span>
+      <input type="tel" id="regEmail" placeholder="Enter your mobile number" maxlength="10">
     </div>
     <div class="input-wrap">
       <span class="input-icon">🔒</span>
@@ -121,7 +121,7 @@
 <!-- FIREBASE SDK -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-  import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+  import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
   import { getDatabase, ref, set, get } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
   const firebaseConfig = {
@@ -138,7 +138,13 @@
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
   const db = getDatabase(app);
-  const provider = new GoogleAuthProvider();
+
+  // Auto redirect if already logged in
+  onAuthStateChanged(auth, (user) => {
+    if (user) {
+      window.location.replace('tasknova_home_new.html');
+    }
+  });
 
   function showToast(msg, type) {
     const toast = document.getElementById('toast');
@@ -154,13 +160,16 @@
   // REGISTER
   window.registerUser = async function() {
     const name = document.getElementById('regName').value.trim();
-    const email = document.getElementById('regEmail').value.trim();
-
+    const phone = document.getElementById('regEmail').value.trim();
     const password = document.getElementById('regPassword').value;
     const referral = document.getElementById('regReferral').value.trim();
 
-    if (!name || !email || !password) { showToast('Please fill all fields!', 'error'); return; }
+    if (!name || !phone || !password) { showToast('Please fill all fields!', 'error'); return; }
+    if (phone.length !== 10) { showToast('Enter valid 10 digit mobile number!', 'error'); return; }
     if (password.length < 6) { showToast('Password must be 6+ characters!', 'error'); return; }
+
+    // Convert phone to fake email for Firebase
+    const email = phone + '@tasknova.com';
 
     const btn = document.getElementById('registerBtn');
     btn.innerHTML = '<span class="spinner"></span>Creating...';
@@ -174,8 +183,8 @@
       // Save user data to Firebase
       await set(ref(db, 'users/' + uid), {
         name: name,
+        phone: phone,
         email: email,
-
         balance: 10,
         coins: 1000,
         referralCode: myReferralCode,
@@ -210,10 +219,14 @@
 
   // LOGIN
   window.loginUser = async function() {
-    const email = document.getElementById('loginEmail').value.trim();
+    const phone = document.getElementById('loginEmail').value.trim();
     const password = document.getElementById('loginPassword').value;
 
-    if (!email || !password) { showToast('Please fill all fields!', 'error'); return; }
+    if (!phone || !password) { showToast('Please fill all fields!', 'error'); return; }
+    if (phone.length !== 10) { showToast('Enter valid 10 digit mobile number!', 'error'); return; }
+
+    // Convert phone to fake email
+    const email = phone + '@tasknova.com';
 
     const btn = document.getElementById('loginBtn');
     btn.innerHTML = '<span class="spinner"></span>Logging in...';
@@ -229,7 +242,7 @@
       btn.innerHTML = 'LOGIN';
       btn.disabled = false;
       if (e.code === 'auth/wrong-password') showToast('Wrong password!', 'error');
-      else if (e.code === 'auth/user-not-found') showToast('Email not registered!', 'error');
+      else if (e.code === 'auth/user-not-found') showToast('Number not registered!', 'error');
       else showToast('Login failed!', 'error');
     }
   };
