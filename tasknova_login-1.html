@@ -128,10 +128,12 @@
   const auth = getAuth(app);
   const db = getDatabase(app);
 
-  // Auto redirect if already logged in
+  // Auto redirect if already logged in - with flag to prevent loop
+  let redirected = false;
   onAuthStateChanged(auth, (user) => {
-    if (user) {
-      window.location.replace('tasknova_home_new.html');
+    if (user && !redirected) {
+      redirected = true;
+      window.location.replace('https://maheshgoswami09837-ship-it.github.io/Tasknova/tasknova_home_new.html');
     }
   });
 
@@ -188,7 +190,7 @@
 
       showToast('Account created! Welcome bonus ₹10 added! 🎉', 'success');
       setTimeout(() => {
-        window.location.href = 'tasknova_home_new.html';
+        window.location.replace('https://maheshgoswami09837-ship-it.github.io/Tasknova/tasknova_home_new.html');
       }, 2000);
 
     } catch (e) {
@@ -214,7 +216,7 @@
       await signInWithEmailAndPassword(auth, email, password);
       showToast('Login successful! 🎉', 'success');
       setTimeout(() => {
-        window.location.href = 'tasknova_home_new.html';
+        window.location.replace('https://maheshgoswami09837-ship-it.github.io/Tasknova/tasknova_home_new.html');
       }, 1500);
     } catch (e) {
       btn.innerHTML = 'LOGIN';
