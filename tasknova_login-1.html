@@ -289,38 +289,27 @@
   const auth = getAuth(app);
   const db = getDatabase(app);
 
-  // Check auth state — show login or home — ONLY ONCE
-  const unsubscribe = onAuthStateChanged(auth, async (user) => {
-    unsubscribe(); // Stop listening after first check
-    if (user) {
-      // Show home
-      document.getElementById('loginSection').style.display = 'none';
-      document.getElementById('homeSection').style.display = 'block';
+  // Check localStorage first — no Firebase loop!
+  const savedUID = localStorage.getItem('tasknova_uid');
+  if (savedUID) {
+    showHome(savedUID);
+  }
 
-      // Load user data
-      const snap = await get(ref(db, 'users/' + user.uid));
-      if (snap.exists()) {
-        const data = snap.val();
-        document.querySelectorAll('.user-balance').forEach(el => el.textContent = '₹' + (data.balance || 0).toFixed(2));
-        document.querySelectorAll('.user-coins').forEach(el => el.textContent = (data.coins || 0) + ' Coins');
-        document.querySelectorAll('.user-total-earned').forEach(el => el.textContent = '₹' + (data.totalEarned || 0));
-        document.querySelectorAll('.user-tasks').forEach(el => el.textContent = data.tasksDone || 0);
-        document.querySelectorAll('.user-referrals').forEach(el => el.textContent = data.referrals || 0);
-
-        // Hide welcome bonus if old user
-        if (!data.welcomeBonus) {
-          document.getElementById('welcomeBonusCard').style.display = 'none';
-        }
-
-        // Update greeting with name
-        document.querySelector('.header-left h2').textContent = 'Hello, ' + (data.name || 'User') + '! 👋';
-      }
-    } else {
-      // Show login
-      document.getElementById('loginSection').style.display = 'flex';
-      document.getElementById('homeSection').style.display = 'none';
+  async function showHome(uid) {
+    document.getElementById('loginSection').style.display = 'none';
+    document.getElementById('homeSection').style.display = 'block';
+    const snap = await get(ref(db, 'users/' + uid));
+    if (snap.exists()) {
+      const data = snap.val();
+      document.querySelectorAll('.user-balance').forEach(el => el.textContent = '₹' + (data.balance || 0).toFixed(2));
+      document.querySelectorAll('.user-coins').forEach(el => el.textContent = (data.coins || 0) + ' Coins');
+      document.querySelectorAll('.user-total-earned').forEach(el => el.textContent = '₹' + (data.totalEarned || 0));
+      document.querySelectorAll('.user-tasks').forEach(el => el.textContent = data.tasksDone || 0);
+      document.querySelectorAll('.user-referrals').forEach(el => el.textContent = data.referrals || 0);
+      if (!data.welcomeBonus) document.getElementById('welcomeBonusCard').style.display = 'none';
+      document.querySelector('.header-left h2').textContent = 'Hello, ' + (data.name || 'User') + '! 👋';
     }
-  });
+  }
 
   function showToast(msg, type) {
     const toast = document.getElementById('toast');
@@ -350,6 +339,7 @@
     try {
       const userCred = await createUserWithEmailAndPassword(auth, email, password);
       const uid = userCred.user.uid;
+      localStorage.setItem('tasknova_uid', uid);
       const myReferralCode = generateReferralCode();
 
       await set(ref(db, 'users/' + uid), {
@@ -366,6 +356,7 @@
       }
 
       showToast('Welcome! ₹10 bonus added! 🎉', 'success');
+      setTimeout(() => showHome(uid), 1500);
 
     } catch (e) {
       btn.innerHTML = 'CREATE ACCOUNT';
@@ -387,8 +378,10 @@
     btn.disabled = true;
 
     try {
-      await signInWithEmailAndPassword(auth, email, password);
+      const user = await signInWithEmailAndPassword(auth, email, password);
+      localStorage.setItem('tasknova_uid', user.user.uid);
       showToast('Login successful! 🎉', 'success');
+      setTimeout(() => showHome(user.user.uid), 1000);
     } catch (e) {
       btn.innerHTML = 'LOGIN';
       btn.disabled = false;
