@@ -289,8 +289,9 @@
   const auth = getAuth(app);
   const db = getDatabase(app);
 
-  // Check auth state — show login or home
-  onAuthStateChanged(auth, async (user) => {
+  // Check auth state — show login or home — ONLY ONCE
+  const unsubscribe = onAuthStateChanged(auth, async (user) => {
+    unsubscribe(); // Stop listening after first check
     if (user) {
       // Show home
       document.getElementById('loginSection').style.display = 'none';
