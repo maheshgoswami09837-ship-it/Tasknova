@@ -300,7 +300,9 @@
     if (uid && uid !== "null") {
       setTimeout(() => {
         showHome(uid);
-      }, 300);
+      }, 500);
+    } else {
+      document.getElementById('loginSection').style.display = 'flex';
     }
   });
 
