@@ -289,18 +289,27 @@
   const auth = getAuth(app);
   const db = getDatabase(app);
 
-  // Check localStorage first — no Firebase loop!
-  const savedUID = localStorage.getItem('tasknova_uid');
-  if (savedUID && savedUID !== "null") {
-    setTimeout(() => {
-      showHome(savedUID);
-    }, 200);
-  }
+  let alreadyChecked = false;
+
+  window.addEventListener("load", () => {
+    if (alreadyChecked) return;
+    alreadyChecked = true;
+
+    const uid = localStorage.getItem("tasknova_uid");
+
+    if (uid && uid !== "null") {
+      setTimeout(() => {
+        showHome(uid);
+      }, 300);
+    }
+  });
 
   async function showHome(uid) {
     if (!uid) return;
-    if (window.homeLoaded) return;
-    window.homeLoaded = true;
+
+    // HARD STOP MULTIPLE CALLS
+    if (window.__HOME_ACTIVE__) return;
+    window.__HOME_ACTIVE__ = true;
 
     document.getElementById('loginSection').style.display = 'none';
     document.getElementById('homeSection').style.display = 'block';
@@ -318,7 +327,7 @@
         document.querySelector('.header-left h2').textContent = 'Hello, ' + (data.name || 'User') + '! 👋';
       }
     } catch (e) {
-      console.log(e);
+      console.log("error:", e);
     }
   }
 
@@ -368,7 +377,7 @@
 
       showToast('Welcome! ₹10 bonus added! 🎉', 'success');
       setTimeout(() => {
-        window.homeLoaded = false;
+        window.__HOME_ACTIVE__ = false;
         showHome(uid);
       }, 1500);
 
@@ -396,7 +405,7 @@
       localStorage.setItem('tasknova_uid', user.user.uid);
       showToast('Login successful! 🎉', 'success');
       setTimeout(() => {
-        window.homeLoaded = false;
+        window.__HOME_ACTIVE__ = false;
         showHome(user.user.uid);
       }, 1000);
     } catch (e) {
