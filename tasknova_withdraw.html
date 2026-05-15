@@ -174,16 +174,16 @@
   <!-- FEE INFO -->
   <div class="fee-info">
     <div class="fee-row">
-      <span class="fee-label">You Receive</span>
-      <span class="fee-value green" id="feeAmount">₹100</span>
+      <span class="fee-label">Withdrawal Amount</span>
+      <span class="fee-value" id="feeAmount">₹100</span>
     </div>
     <div class="fee-row">
       <span class="fee-label">Service Fee (10%)</span>
-      <span class="fee-value red" id="feeCharge">₹10</span>
+      <span class="fee-value red" id="feeCharge">- ₹10</span>
     </div>
     <div class="fee-row">
-      <span class="fee-label">Total Deducted</span>
-      <span class="fee-value" id="feeReceive">₹110</span>
+      <span class="fee-label">You Receive</span>
+      <span class="fee-value green" id="feeReceive">₹90</span>
     </div>
   </div>
 
@@ -239,10 +239,9 @@
     document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
     el.classList.add('active');
     const fee = Math.round(amount * 0.1);
-    const total = amount + fee;
     document.getElementById('feeAmount').textContent = '₹' + amount;
-    document.getElementById('feeCharge').textContent = '₹' + fee;
-    document.getElementById('feeReceive').textContent = '₹' + total;
+    document.getElementById('feeCharge').textContent = '- ₹' + fee;
+    document.getElementById('feeReceive').textContent = '₹' + (amount - fee);
   }
 
   function showToast(msg, type) {
@@ -291,15 +290,11 @@
         ? { upiId: document.getElementById('upiId').value }
         : { accNumber: document.getElementById('accNumber').value, ifscCode: document.getElementById('ifscCode').value, accName: document.getElementById('accName').value };
 
-      const fee = Math.round(selectedAmount * 0.1);
-      const totalDeduct = selectedAmount + fee;
-
       // Save withdrawal request
       await push(ref(db, 'withdrawals/' + user.uid), {
         amount: selectedAmount,
-        fee: fee,
-        receive: selectedAmount,
-        totalDeducted: totalDeduct,
+        fee: Math.round(selectedAmount * 0.1),
+        receive: selectedAmount - Math.round(selectedAmount * 0.1),
         method: selectedMethod,
         paymentDetails,
         status: 'pending',
@@ -308,7 +303,7 @@
 
       // Update user balance
       const snap = await get(ref(db, 'users/' + user.uid + '/balance'));
-      const newBalance = (snap.val() || 0) - totalDeduct;
+      const newBalance = (snap.val() || 0) - selectedAmount;
       await update(ref(db, 'users/' + user.uid), { balance: newBalance });
 
       showToast('Withdrawal request submitted! ✅', 'success');
@@ -324,20 +319,40 @@
     btn.disabled = false;
   }
 
-  async function loadHistory(uid, db, ref) {
+  window.onload = function() {
+    const uid = localStorage.getItem('tasknova_uid');
+    if (uid && uid !== 'null') {
+      fetchUserBalanceByUID(uid);
+    }
+  };
+
+  async function fetchUserBalanceByUID(uid) {
     try {
-      const { get } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js");
-      const snap = await get(ref(db, 'withdrawals/' + uid));
+      const res = await fetch('https://tasknova-66d0f-default-rtdb.firebaseio.com/users/' + uid + '.json');
+      const data = await res.json();
+      if (data) {
+        userBalance = data.balance || 0;
+        document.querySelector('.user-balance').textContent = '₹' + userBalance.toFixed(2);
+        document.querySelector('.user-coins').textContent = (data.coins || 0) + ' Coins';
+        loadHistoryByUID(uid);
+      }
+    } catch(e) {
+      console.log("error:", e);
+    }
+  }
+
+  async function loadHistoryByUID(uid) {
+    try {
+      const res = await fetch('https://tasknova-66d0f-default-rtdb.firebaseio.com/withdrawals/' + uid + '.json');
+      const data = await res.json();
       const container = document.getElementById('historyContainer');
 
-      if (!snap.exists()) {
+      if (!data) {
         container.innerHTML = '<div class="empty-history">No transactions yet 📭</div>';
         return;
       }
 
-      const data = snap.val();
       const items = Object.values(data).reverse();
-
       container.innerHTML = '<div class="history-scroll">' +
         items.map(item => `
           <div class="history-item">
@@ -352,6 +367,10 @@
         `).join('') +
         '</div>';
     } catch(e) {}
+  }
+
+  function loadHistory(uid, db, ref) {
+    loadHistoryByUID(uid);
   }
 </script>
 <script type="module" src="firebase-data.js"></script>
