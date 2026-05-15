@@ -114,21 +114,18 @@
     starsContainer.appendChild(star);
   }
 
-  // Backup method to get UID if localStorage fails
   function getUserId() {
     let uid = localStorage.getItem("tasknova_uid");
-    // Agar webview storage khali hai, toh default test ID ya login redirect setup check karein
     if (!uid || uid === "null" || uid === "undefined") {
       return null;
     }
     return uid;
   }
 
-  // Ultra Safe REST API fetch logic
+  // Live Firebase Data Fetch - Capital letters matched with database
   async function loadProfile() {
     const uid = getUserId();
     if (!uid) {
-      // Agar login UID nahi milti toh loop se bachne ke liye direct login page par bhejega
       window.location.href = 'tasknova_login-13.html';
       return;
     }
@@ -139,11 +136,12 @@
       
       const data = await res.json();
       if (data) {
-        document.getElementById('userName').textContent = data.name || "TaskNova User";
-        document.getElementById('userEmail').textContent = data.email || "User Account";
+        // Aapke database ke 'Username', 'Balance' aur 'Coins' ke capital spelling ko use kiya hai
+        document.getElementById('userName').textContent = data.Username || "TaskNova User";
+        document.getElementById('userEmail').textContent = data.Email || "User Account";
         
-        const bal = Number(data.balance) || 0;
-        const totalCoins = data.coins || 0;
+        const bal = Number(data.Balance) || 0;
+        const totalCoins = data.Coins || 0;
         
         document.querySelector('.user-balance').textContent = '₹' + bal.toFixed(2);
         document.querySelector('.user-coins').textContent = totalCoins;
@@ -156,7 +154,6 @@
     }
   }
 
-  // Pure Logout Jo direct login script ko hit karega aur memory khali karega
   function logoutUser() {
     localStorage.removeItem("tasknova_uid");
     localStorage.clear();
