@@ -98,6 +98,7 @@
 
   @keyframes fadeUp { from { opacity: 0; transform: translateY(20px) translateX(-50%); } to { opacity: 1; transform: translateY(0) translateX(-50%); } }
 </style>
+
 </head>
 <body>
 
@@ -251,7 +252,7 @@
     setTimeout(() => toast.className = 'toast', 3000);
   }
 
-  async function submitWithdraw() {
+  function submitWithdraw() {
     if (userBalance < selectedAmount) {
       showToast('Insufficient balance!', 'error');
       return;
@@ -261,37 +262,38 @@
       return;
     }
 
+    // localStorage se UID lo (bina Auth module ke)
+    const uid = localStorage.getItem("tasknova_uid");
+    if (!uid || uid === "null") {
+      showToast('Please login again!', 'error');
+      return;
+    }
+
     const btn = document.getElementById('withdrawBtn');
     btn.textContent = 'Processing...';
     btn.disabled = true;
 
-    try {
-      const { getAuth } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js");
-      const { getDatabase, ref, push, update, get } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js");
-      const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js");
+    // Payment details
+    const paymentDetails = selectedMethod === 'upi'
+      ? { upiId: document.getElementById('upiId').value }
+      : { accNumber: document.getElementById('accNumber').value, ifscCode: document.getElementById('ifscCode').value, accName: document.getElementById('accName').value };
 
-      const app = initializeApp({
-        apiKey: "AIzaSyBbDeBse2WXwzd_X0Mr8VyEzytI8Yya_uc",
-        authDomain: "tasknova-66d0f.firebaseapp.com",
-        databaseURL: "https://tasknova-66d0f-default-rtdb.firebaseio.com",
-        projectId: "tasknova-66d0f",
-        storageBucket: "tasknova-66d0f.firebasestorage.app",
-        messagingSenderId: "135129024485",
-        appId: "1:135129024485:web:232a90fd0752086568510c"
-      }, 'withdraw-app');
+    // Input validation
+    if (selectedMethod === 'upi' && !paymentDetails.upiId) {
+      showToast('Please enter UPI ID', 'error');
+      btn.textContent = 'REQUEST WITHDRAWAL';
+      btn.disabled = false;
+      return;
+    }
 
-      const auth = getAuth(app);
-      const db = getDatabase(app);
-      const user = auth.currentUser;
+    // REST API se Firebase mein save karo
+    const dbURL = 'https://tasknova-66d0f-default-rtdb.firebaseio.com';
+    const newBalance = userBalance - selectedAmount;
 
-      if (!user) { showToast('Please login again!', 'error'); return; }
-
-      const paymentDetails = selectedMethod === 'upi'
-        ? { upiId: document.getElementById('upiId').value }
-        : { accNumber: document.getElementById('accNumber').value, ifscCode: document.getElementById('ifscCode').value, accName: document.getElementById('accName').value };
-
-      // Save withdrawal request
-      await push(ref(db, 'withdrawals/' + user.uid), {
+    // 1. Withdrawal request save karo
+    fetch(dbURL + '/withdrawals/' + uid + '.json', {
+      method: 'POST',
+      body: JSON.stringify({
         amount: selectedAmount,
         fee: Math.round(selectedAmount * 0.1),
         receive: selectedAmount - Math.round(selectedAmount * 0.1),
@@ -299,24 +301,24 @@
         paymentDetails,
         status: 'pending',
         date: new Date().toISOString()
+      })
+    }).then(() => {
+      // 2. Balance update karo
+      return fetch(dbURL + '/users/' + uid + '/balance.json', {
+        method: 'PUT',
+        body: JSON.stringify(newBalance)
       });
-
-      // Update user balance
-      const snap = await get(ref(db, 'users/' + user.uid + '/balance'));
-      const newBalance = (snap.val() || 0) - selectedAmount;
-      await update(ref(db, 'users/' + user.uid), { balance: newBalance });
-
+    }).then(() => {
       showToast('Withdrawal request submitted! ✅', 'success');
-      loadHistory(user.uid, db, ref);
       document.querySelector('.user-balance').textContent = '₹' + newBalance.toFixed(2);
       userBalance = newBalance;
-
-    } catch(e) {
-      showToast('Error: ' + e.message, 'error');
-    }
-
-    btn.textContent = 'REQUEST WITHDRAWAL';
-    btn.disabled = false;
+      loadHistory(uid);
+    }).catch((error) => {
+      showToast('Error: ' + error.message, 'error');
+    }).finally(() => {
+      btn.textContent = 'REQUEST WITHDRAWAL';
+      btn.disabled = false;
+    });
   }
 
   window.onload = function() {
@@ -334,45 +336,39 @@
         userBalance = data.balance || 0;
         document.querySelector('.user-balance').textContent = '₹' + userBalance.toFixed(2);
         document.querySelector('.user-coins').textContent = (data.coins || 0) + ' Coins';
-        loadHistoryByUID(uid);
+        loadHistory(uid);
       }
     } catch(e) {
       console.log("error:", e);
     }
   }
 
-  async function loadHistoryByUID(uid) {
-    try {
-      const res = await fetch('https://tasknova-66d0f-default-rtdb.firebaseio.com/withdrawals/' + uid + '.json');
-      const data = await res.json();
-      const container = document.getElementById('historyContainer');
-
-      if (!data) {
-        container.innerHTML = '<div class="empty-history">No transactions yet 📭</div>';
-        return;
-      }
-
-      const items = Object.values(data).reverse();
-      container.innerHTML = '<div class="history-scroll">' +
-        items.map(item => `
-          <div class="history-item">
-            <div class="history-icon">${item.method === 'upi' ? '📱' : '🏦'}</div>
-            <div class="history-amount">₹${item.amount}</div>
-            <div class="history-method">${item.method.toUpperCase()}</div>
-            <div class="history-date">${new Date(item.date).toLocaleDateString()}</div>
-            <div class="status-badge ${item.status === 'pending' ? 'status-pending' : 'status-done'}">
-              ${item.status === 'pending' ? '⏳ Pending' : '✅ Success'}
+  function loadHistory(uid) {
+    const container = document.getElementById('historyContainer');
+    fetch('https://tasknova-66d0f-default-rtdb.firebaseio.com/withdrawals/' + uid + '.json')
+      .then(res => res.json())
+      .then(data => {
+        if (!data) {
+          container.innerHTML = '<div class="empty-history">No transactions yet 📭</div>';
+          return;
+        }
+        const items = Object.values(data).reverse();
+        container.innerHTML = '<div class="history-scroll">' +
+          items.map(item => `
+            <div class="history-item">
+              <div class="history-icon">${item.method === 'upi' ? '📱' : '🏦'}</div>
+              <div class="history-amount">₹${item.amount}</div>
+              <div class="history-method">${item.method.toUpperCase()}</div>
+              <div class="history-date">${new Date(item.date).toLocaleDateString()}</div>
+              <div class="status-badge ${item.status === 'pending' ? 'status-pending' : 'status-done'}">
+                ${item.status === 'pending' ? '⏳ Pending' : '✅ Success'}
+              </div>
             </div>
-          </div>
-        `).join('') +
-        '</div>';
-    } catch(e) {}
-  }
-
-  function loadHistory(uid, db, ref) {
-    loadHistoryByUID(uid);
+          `).join('') +
+          '</div>';
+      }).catch(e => console.error(e));
   }
 </script>
-<script type="module" src="firebase-data.js"></script>
+
 </body>
 </html>
