@@ -1,30 +1,4 @@
-[1:05 pm, 15/5/2026] +91 97562 17725: <!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>TaskNova Profile</title>
-<style>
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { font-family: 'Segoe UI', sans-serif; background: #05051a; min-height: 100vh; overflow-x: hidden; padding-bottom: 80px; }
-  .stars { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; }
-  .star { position: absolute; background: white; border-radius: 50%; animation: twinkle 3s infinite; }
-  @keyframes twinkle { 0%, 100% { opacity: 0.2; } 50% { opacity: 1; } }
-  .glow-circle { position: fixed; border-radius: 50%; filter: blur(80px); z-index: 0; poi…
-[1:17 pm, 15/5/2026] +91 97562 17725: <!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>TaskNova Profile</title>
-<style>
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { font-family: 'Segoe UI', sans-serif; background: #05051a; min-height: 100vh; overflow-x: hidden; padding-bottom: 80px; }
-  .stars { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; }
-  .star { position: absolute; background: white; border-radius: 50%; animation: twinkle 3s infinite; }
-  @keyframes twinkle { 0%, 100% { opacity: 0.2; } 50% { opacity: 1; } }
-  .glow-circle { position: fixed; border-radius: 50%; filter: blur(80px); z-index: 0; poi…
-[2:19 pm, 15/5/2026] +91 97562 17725: <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -63,6 +37,7 @@
   .logout-btn { width: 100%; padding: 16px; background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.2); border-radius: 14px; color: #ef4444; font-size: 15px; font-weight: 700; cursor: pointer; font-family: 'Segoe UI', sans-serif; transition: all 0.2s; }
   .logout-btn:active { background: rgba(239,68,68,0.18); transform: scale(0.98); }
 
+  /* BOTTOM NAV */
   .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: rgba(5,5,26,0.95); backdrop-filter: blur(20px); border-top: 1px solid rgba(255,255,255,0.08); display: flex; justify-content: space-around; align-items: center; padding: 10px 0 20px; z-index: 100; }
   .nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; padding: 4px 16px; }
   .nav-item span { font-size: 20px; }
@@ -83,8 +58,8 @@
 
   <div class="profile-card">
     <div class="avatar">👤</div>
-    <h2 id="userName">TaskNova User</h2>
-    <p id="userEmail">Loading profile...</p>
+    <h2 id="userName">Loading Name...</h2>
+    <p id="userEmail">Loading email...</p>
   </div>
 
   <div class="stats-grid">
@@ -129,7 +104,7 @@
 </div>
 
 <script>
-  // Stars logic
+  // Stars Background
   const starsContainer = document.getElementById('stars');
   for (let i = 0; i < 60; i++) {
     const star = document.createElement('div');
@@ -139,7 +114,7 @@
     starsContainer.appendChild(star);
   }
 
-  // Pure REST API with exact Firebase Capital Spelling Fix
+  // Live Firebase connection with Capital Letter matching
   async function loadProfile() {
     const uid = localStorage.getItem("tasknova_uid");
     if (!uid || uid === "null") {
@@ -151,7 +126,7 @@
       const res = await fetch(https://tasknova-66d0f-default-rtdb.firebaseio.com/users/${uid}.json);
       const data = await res.json();
       if (data) {
-        // Aapke database ki capital key: Username, Email, Balance, Coins
+        // Match with Capital Username, Email, Balance, Coins from Firebase
         document.getElementById('userName').textContent = data.Username || "TaskNova User";
         document.getElementById('userEmail').textContent = data.Email || "No Email";
         
@@ -160,14 +135,14 @@
         document.querySelector('.user-coins').textContent = data.Coins || 0;
       }
     } catch(e) {
-      console.log("Profile fetch error:", e);
+      console.log("Error loading database:", e);
     }
   }
 
-  // Fixed Logout to solve Home Screen loop
+  // Safe logout function
   function logoutUser() {
     localStorage.removeItem("tasknova_uid");
-    localStorage.clear(); 
+    localStorage.clear();
     window.location.href = 'tasknova_login-13.html';
   }
 
