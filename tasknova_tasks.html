@@ -15,46 +15,30 @@
   .glow-2 { width: 250px; height: 250px; background: rgba(59,130,246,0.15); bottom: -80px; right: -80px; }
   .content { position: relative; z-index: 10; padding: 20px 16px; animation: fadeUp 0.5s ease; }
 
-  .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+  .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
   .header h1 { font-size: 22px; font-weight: 800; color: #fff; }
-  .header p { font-size: 12px; color: rgba(255,255,255,0.4); margin-top: 2px; }
 
-  .balance-mini { background: linear-gradient(135deg, #6c63ff, #3b82f6); border-radius: 16px; padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; box-shadow: 0 6px 25px rgba(108,99,255,0.3); }
-  .balance-mini .label { font-size: 12px; color: rgba(255,255,255,0.7); }
-  .balance-mini .amount { font-size: 22px; font-weight: 800; color: #fff; }
-  .balance-mini .coins { font-size: 12px; color: rgba(255,255,255,0.7); margin-top: 2px; }
+  .balance-card { background: linear-gradient(135deg, #6c63ff, #3b82f6); border-radius: 20px; padding: 18px 22px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; box-shadow: 0 8px 25px rgba(108,99,255,0.25); }
+  .bal-info .lbl { font-size: 11px; color: rgba(255,255,255,0.7); font-weight: 600; letter-spacing: 0.5px; margin-bottom: 2px; }
+  .bal-info .val { font-size: 24px; font-weight: 800; color: #fff; }
+  .bal-info .coins { font-size: 12px; color: rgba(255,255,255,0.8); margin-top: 2px; font-weight: 500; }
 
-  .cat-tabs { display: flex; gap: 8px; margin-bottom: 20px; overflow-x: auto; scrollbar-width: none; padding-bottom: 4px; }
-  .cat-tabs::-webkit-scrollbar { display: none; }
-  .cat-tab { padding: 8px 16px; border-radius: 50px; font-size: 13px; font-weight: 600; white-space: nowrap; cursor: pointer; border: 1.5px solid rgba(255,255,255,0.1); color: rgba(255,255,255,0.5); background: rgba(255,255,255,0.05); transition: all 0.2s; }
-  .cat-tab.active { background: linear-gradient(135deg, #6c63ff, #3b82f6); border-color: transparent; color: #fff; box-shadow: 0 4px 15px rgba(108,99,255,0.3); }
+  .cat-scroll { display: flex; gap: 8px; overflow-x: auto; margin-bottom: 20px; padding-bottom: 4px; scrollbar-width: none; }
+  .cat-scroll::-webkit-scrollbar { display: none; }
+  .cat-tab { padding: 10px 18px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: 50px; color: rgba(255,255,255,0.5); font-size: 12px; font-weight: 600; white-space: nowrap; cursor: pointer; transition: all 0.2s; }
+  .cat-tab.active { background: #6c63ff; border-color: #6c63ff; color: #fff; box-shadow: 0 4px 12px rgba(108,99,255,0.3); }
 
   .tasks-grid { display: flex; flex-direction: column; gap: 12px; }
-  .task-card { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); border-radius: 18px; padding: 16px; display: flex; align-items: center; gap: 14px; cursor: pointer; transition: all 0.2s; }
-  .task-card:active { transform: scale(0.98); background: rgba(108,99,255,0.1); }
-  .task-card.disabled { opacity: 0.55; pointer-events: none; }
+  .task-card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 18px; padding: 14px; display: flex; align-items: center; gap: 14px; cursor: pointer; transition: transform 0.2s, background 0.2s; }
+  .task-card:active { transform: scale(0.98); background: rgba(255,255,255,0.05); }
   .task-card.hidden { display: none; }
-
-  .task-icon { width: 52px; height: 52px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 24px; flex-shrink: 0; }
-  .icon-purple { background: rgba(108,99,255,0.2); }
-  .icon-green { background: rgba(34,197,94,0.2); }
-  .icon-orange { background: rgba(249,115,22,0.2); }
-  .icon-blue { background: rgba(59,130,246,0.2); }
-  .icon-pink { background: rgba(236,72,153,0.2); }
-
-  .task-info { flex: 1; }
-  .task-info h3 { font-size: 14px; font-weight: 700; color: #fff; margin-bottom: 4px; }
-  .task-info p { font-size: 12px; color: rgba(255,255,255,0.4); }
-  .task-meta { display: flex; align-items: center; gap: 6px; margin-top: 6px; }
-  .task-time { font-size: 10px; color: rgba(255,255,255,0.3); background: rgba(255,255,255,0.05); padding: 3px 8px; border-radius: 50px; }
-
-  .task-reward { text-align: right; flex-shrink: 0; }
-  .task-reward .coins-reward { font-size: 16px; font-weight: 800; color: #6c63ff; }
-  .task-reward .rupee { font-size: 11px; color: rgba(255,255,255,0.3); margin-top: 2px; }
-  .do-btn { margin-top: 8px; background: linear-gradient(135deg, #6c63ff, #3b82f6); border: none; border-radius: 8px; padding: 6px 14px; color: #fff; font-size: 11px; font-weight: 700; cursor: pointer; font-family: 'Segoe UI', sans-serif; }
-  .coming-soon-badge { display: inline-block; background: rgba(234,179,8,0.15); border: 1px solid rgba(234,179,8,0.3); color: #eab308; font-size: 10px; font-weight: 700; padding: 4px 10px; border-radius: 50px; margin-top: 8px; }
-
-  .section-title { font-size: 16px; font-weight: 700; color: #fff; margin-bottom: 12px; }
+  .task-icon { width: 44px; height: 44px; background: rgba(255,255,255,0.04); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px; border: 1px solid rgba(255,255,255,0.04); }
+  .task-details { flex: 1; }
+  .task-details h3 { font-size: 14px; color: #fff; font-weight: 600; margin-bottom: 2px; }
+  .task-details p { font-size: 11px; color: rgba(255,255,255,0.35); }
+  .task-reward { text-align: right; }
+  .task-reward .reward-val { font-size: 14px; color: #22c55e; font-weight: 700; margin-bottom: 2px; }
+  .task-reward .reward-lbl { font-size: 9px; color: rgba(255,255,255,0.3); font-weight: 500; }
 
   .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: rgba(5,5,26,0.95); backdrop-filter: blur(20px); border-top: 1px solid rgba(255,255,255,0.08); display: flex; justify-content: space-around; align-items: center; padding: 10px 0 20px; z-index: 100; }
   .nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; padding: 4px 16px; }
@@ -74,99 +58,41 @@
 
 <div class="content">
   <div class="header">
-    <div><h1>Tasks 📋</h1><p>Complete tasks & earn coins</p></div>
+    <h1>All Tasks 📋</h1>
   </div>
 
-  <div class="balance-mini">
-    <div>
-      <div class="label">Your Balance</div>
-      <div class="amount user-balance">₹0.00</div>
+  <div class="balance-card">
+    <div class="bal-info">
+      <div class="lbl">TOTAL BALANCE</div>
+      <div class="val user-balance">₹0.00</div>
       <div class="coins user-coins">0 Coins</div>
     </div>
-    <div style="font-size:40px;">💰</div>
+    <div style="font-size: 36px;">💼</div>
   </div>
 
-  <div class="cat-tabs">
+  <div class="cat-scroll">
     <div class="cat-tab active" onclick="filterTasks('all', this)">All Tasks</div>
-    <div class="cat-tab" onclick="filterTasks('watchads', this)">Watch Ads</div>
-    <div class="cat-tab" onclick="filterTasks('survey', this)">Survey</div>
-    <div class="cat-tab" onclick="filterTasks('instagram', this)">Instagram</div>
-    <div class="cat-tab" onclick="filterTasks('refer', this)">Refer</div>
+    <div class="cat-tab" onclick="filterTasks('high', this)">🔥 High Paying</div>
+    <div class="cat-tab" onclick="filterTasks('easy', this)">⚡ Easy</div>
+    <div class="cat-tab" onclick="filterTasks('video', this)">📺 Videos</div>
   </div>
 
-  <div class="section-title">🔥 Available Tasks</div>
   <div class="tasks-grid" id="tasksGrid">
-
-    <div class="task-card" data-category="watchads">
-      <div class="task-icon icon-purple">📺</div>
-      <div class="task-info">
-        <h3>Watch Video Ad</h3>
-        <p>Watch a short video ad & earn coins</p>
-        <div class="task-meta"><span class="task-time">⏱️ 30 sec</span></div>
-      </div>
-      <div class="task-reward">
-        <div class="coins-reward">+10</div>
-        <div class="rupee">coins</div>
-        <button class="do-btn" onclick="startWatchAd()">Watch</button>
-      </div>
+    <div class="task-card" data-category="high" onclick="window.location.href='task_details.html?id=1'">
+      <div class="task-icon" style="background:rgba(108,99,255,0.1);">📱</div>
+      <div class="task-details"><h3>Install & Register App</h3><p>Complete KYC verification</p></div>
+      <div class="task-reward"><div class="reward-val">+₹25.00</div><div class="reward-lbl">500 Coins</div></div>
     </div>
-
-    <div class="task-card disabled" data-category="survey">
-      <div class="task-icon icon-blue">📝</div>
-      <div class="task-info">
-        <h3>Complete Survey</h3>
-        <p>Answer questions from brands & earn</p>
-        <div class="task-meta"><span class="task-time">⏱️ 5 min</span></div>
-      </div>
-      <div class="task-reward">
-        <div class="coins-reward">₹5-50</div>
-        <div class="rupee">per survey</div>
-        <div class="coming-soon-badge">🔒 Coming Soon</div>
-      </div>
+    <div class="task-card" data-category="easy" onclick="window.location.href='task_details.html?id=2'">
+      <div class="task-icon" style="background:rgba(59,130,246,0.1);">🌐</div>
+      <div class="task-details"><h3>Visit Website</h3><p>Stay on page for 60 seconds</p></div>
+      <div class="task-reward"><div class="reward-val">+₹2.50</div><div class="reward-lbl">50 Coins</div></div>
     </div>
-
-    <div class="task-card disabled" data-category="watchads">
-      <div class="task-icon icon-green">🎯</div>
-      <div class="task-info">
-        <h3>Register & Do Task</h3>
-        <p>Register on app & complete 1 task</p>
-        <div class="task-meta"><span class="task-time">⏱️ 10 min</span></div>
-      </div>
-      <div class="task-reward">
-        <div class="coins-reward">+2000</div>
-        <div class="rupee">= ₹20</div>
-        <div class="coming-soon-badge">🔒 Coming Soon</div>
-      </div>
+    <div class="task-card" data-category="video" onclick="window.location.href='task_details.html?id=3'">
+      <div class="task-icon" style="background:rgba(234,179,8,0.1);">▶️</div>
+      <div class="task-details"><h3>Watch YouTube Video</h3><p>Like and subscribe channel</p></div>
+      <div class="task-reward"><div class="reward-val">+₹1.50</div><div class="reward-lbl">30 Coins</div></div>
     </div>
-
-    <div class="task-card disabled" data-category="instagram">
-      <div class="task-icon icon-pink">📸</div>
-      <div class="task-info">
-        <h3>Instagram Post</h3>
-        <p>Share TaskNova on your Instagram</p>
-        <div class="task-meta"><span class="task-time">⏱️ 2 min</span></div>
-      </div>
-      <div class="task-reward">
-        <div class="coins-reward">+500</div>
-        <div class="rupee">= ₹5</div>
-        <div class="coming-soon-badge">🔒 Coming Soon</div>
-      </div>
-    </div>
-
-    <div class="task-card disabled" data-category="refer">
-      <div class="task-icon icon-orange">👥</div>
-      <div class="task-info">
-        <h3>Refer & Earn</h3>
-        <p>Friend joins & withdraws = ₹10</p>
-        <div class="task-meta"><span class="task-time">⏱️ Anytime</span></div>
-      </div>
-      <div class="task-reward">
-        <div class="coins-reward">+1000</div>
-        <div class="rupee">= ₹10</div>
-        <div class="coming-soon-badge">🔒 Coming Soon</div>
-      </div>
-    </div>
-
   </div>
 </div>
 
@@ -189,28 +115,23 @@
     starsContainer.appendChild(star);
   }
 
-  // Filter tasks by category - selected tab goes to top
   function filterTasks(category, el) {
     document.querySelectorAll('.cat-tab').forEach(t => t.classList.remove('active'));
     el.classList.add('active');
-
     const grid = document.getElementById('tasksGrid');
     const cards = Array.from(grid.querySelectorAll('.task-card'));
-
     if (category === 'all') {
       cards.forEach(c => { c.classList.remove('hidden'); });
       return;
     }
-
-    const matching = cards.filter(c => c.dataset.category === category);
-    const others = cards.filter(c => c.dataset.category !== category);
-
-    cards.forEach(c => c.classList.remove('hidden'));
-    matching.forEach(c => grid.insertBefore(c, grid.firstChild));
+    cards.forEach(c => {
+      if (c.dataset.category === category) c.classList.remove('hidden');
+      else c.classList.add('hidden');
+    });
   }
 
-  // Pure REST API to fetch balance instantly without crash
-  async function fetchBalance() {
+  // Fetch Live Data for Tasks page - Capital Letter matched with Firebase
+  async function fetchLiveBalance() {
     const uid = localStorage.getItem("tasknova_uid");
     if (!uid || uid === "null") return;
 
@@ -218,25 +139,16 @@
       const res = await fetch(https://tasknova-66d0f-default-rtdb.firebaseio.com/users/${uid}.json);
       const data = await res.json();
       if (data) {
-        const bal = data.balance || 0;
+        const bal = Number(data.Balance) || 0;
         document.querySelector('.user-balance').textContent = '₹' + bal.toFixed(2);
-        document.querySelector('.user-coins').textContent = (data.coins || 0) + ' Coins';
+        document.querySelector('.user-coins').textContent = (data.Coins || 0) + ' Coins';
       }
     } catch(e) {
-      console.log("Balance fetch error:", e);
+      console.log("Error fetching task balance:", e);
     }
   }
 
-  function startWatchAd() {
-    if(window.AppInventor){
-        window.AppInventor.setWebViewString("watch_video_ad");
-    } else {
-        alert("Ad loading... (Testing Mode)");
-    }
-  }
-
-  // Load balance on page load
-  window.onload = fetchBalance;
+  window.onload = fetchLiveBalance;
 </script>
 </body>
 </html>
