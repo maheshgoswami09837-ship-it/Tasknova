@@ -15,33 +15,81 @@
   .glow-2 { width: 250px; height: 250px; background: rgba(59,130,246,0.15); bottom: -80px; right: -80px; }
   .content { position: relative; z-index: 10; padding: 20px 16px; animation: fadeUp 0.5s ease; }
 
-  .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-  .header h1 { font-size: 22px; font-weight: 800; color: #fff; }
-  .header p { font-size: 12px; color: rgba(255,255,255,0.4); margin-top: 2px; }
+  .header { text-align: center; margin-bottom: 24px; }
+  .header h1 { font-size: 24px; font-weight: 800; color: #fff; }
+  .header p { font-size: 13px; color: rgba(255,255,255,0.4); margin-top: 4px; }
 
-  .balance-mini { background: linear-gradient(135deg, #6c63ff, #3b82f6); border-radius: 16px; padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; box-shadow: 0 6px 25px rgba(108,99,255,0.3); }
-  .balance-mini .label { font-size: 12px; color: rgba(255,255,255,0.7); }
-  .balance-mini .amount { font-size: 22px; font-weight: 800; color: #fff; }
-  .balance-mini .coins { font-size: 12px; color: rgba(255,255,255,0.7); margin-top: 2px; }
+  .refer-banner { background: linear-gradient(135deg, #6c63ff, #3b82f6, #a855f7); border-radius: 22px; padding: 24px; text-align: center; margin-bottom: 20px; position: relative; overflow: hidden; box-shadow: 0 8px 30px rgba(108,99,255,0.35); }
+  .refer-banner::before { content: ''; position: absolute; top: -40px; right: -40px; width: 150px; height: 150px; background: rgba(255,255,255,0.08); border-radius: 50%; }
+  .refer-emoji { font-size: 50px; margin-bottom: 12px; }
+  .refer-banner h2 { font-size: 20px; font-weight: 800; color: #fff; margin-bottom: 6px; }
+  .refer-banner p { font-size: 13px; color: rgba(255,255,255,0.75); line-height: 1.5; }
+  .refer-banner strong { color: #fff; font-size: 16px; }
 
-  .refer-banner { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.07); border-radius: 24px; padding: 24px 16px; text-align: center; margin-bottom: 20px; }
-  .refer-img { font-size: 64px; margin-bottom: 12px; animation: float 3s ease-in-out infinite; }
-  @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
-  .refer-banner h2 { font-size: 18px; color: #fff; font-weight: 700; margin-bottom: 6px; }
-  .refer-banner p { font-size: 12px; color: rgba(255,255,255,0.4); line-height: 1.5; padding: 0 10px; }
+  .how-it-works { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 18px; padding: 18px; margin-bottom: 20px; }
+  .how-title { font-size: 14px; font-weight: 700; color: #fff; margin-bottom: 14px; }
+  .step { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+  .step:last-child { margin-bottom: 0; }
+  .step-num { width: 30px; height: 30px; background: linear-gradient(135deg, #6c63ff, #3b82f6); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 800; color: #fff; flex-shrink: 0; }
+  .step-text h4 { font-size: 13px; font-weight: 600; color: #fff; }
+  .step-text p { font-size: 11px; color: rgba(255,255,255,0.4); margin-top: 2px; }
 
-  .code-box { background: rgba(108,99,255,0.08); border: 1.5px dashed rgba(108,99,255,0.4); border-radius: 16px; padding: 16px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-  .code-info .lbl { font-size: 11px; color: rgba(108,99,255,0.8); font-weight: 700; letter-spacing: 0.5px; margin-bottom: 4px; }
-  .code-info .user-referral-code { font-size: 22px; font-weight: 900; color: #fff; letter-spacing: 1px; }
-  .copy-btn { background: #6c63ff; border: none; border-radius: 10px; padding: 10px 16px; color: #fff; font-size: 12px; font-weight: 700; cursor: pointer; font-family: 'Segoe UI', sans-serif; }
+  .code-section { margin-bottom: 20px; }
+  .code-label { font-size: 13px; color: rgba(255,255,255,0.5); margin-bottom: 10px; font-weight: 600; }
+  .code-box { background: rgba(108,99,255,0.1); border: 2px dashed rgba(108,99,255,0.4); border-radius: 16px; padding: 16px 20px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+  .code-text { font-size: 22px; font-weight: 800; color: #6c63ff; letter-spacing: 3px; }
+  .copy-btn { background: linear-gradient(135deg, #6c63ff, #3b82f6); border: none; border-radius: 10px; padding: 10px 18px; color: #fff; font-size: 13px; font-weight: 700; cursor: pointer; font-family: 'Segoe UI', sans-serif; box-shadow: 0 4px 12px rgba(108,99,255,0.3); }
 
-  .share-grid { display: flex; gap: 12px; margin-bottom: 25px; }
-  .share-btn { flex: 1; padding: 14px; border-radius: 14px; border: none; font-size: 13px; font-weight: 700; color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; font-family: 'Segoe UI', sans-serif; }
-  .btn-wa { background: #22c55e; box-shadow: 0 4px 15px rgba(34,197,94,0.3); }
-  .btn-more { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.1); }
+  .share-buttons { display: flex; gap: 10px; }
+  .share-btn { flex: 1; padding: 14px; border-radius: 14px; border: none; font-size: 14px; font-weight: 700; cursor: pointer; font-family: 'Segoe UI', sans-serif; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s; }
+  .share-btn:active { transform: scale(0.97); }
+  .share-whatsapp { background: rgba(37,211,102,0.15); border: 1.5px solid rgba(37,211,102,0.3); color: #25d366; }
+  .share-general { background: linear-gradient(135deg, #6c63ff, #3b82f6); color: #fff; box-shadow: 0 4px 15px rgba(108,99,255,0.3); }
 
-  .toast { position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%); background: rgba(34,197,94,0.2); border: 1px solid rgba(34,197,94,0.4); color: #22c55e; padding: 10px 20px; border-radius: 50px; font-size: 12px; font-weight: 600; z-index: 200; display: none; }
-  .toast.show { display: block; animation: fadeUp 0.3s ease; }
+  .refer-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px; }
+  .refer-stat { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 14px 8px; text-align: center; }
+  .refer-stat-icon { font-size: 22px; margin-bottom: 6px; }
+  .refer-stat-value { font-size: 16px; font-weight: 800; color: #fff; }
+  .refer-stat-label { font-size: 10px; color: rgba(255,255,255,0.3); margin-top: 3px; }
+
+  /* MILESTONES */
+  .milestone-section { margin-bottom: 20px; }
+  .milestone-title { font-size: 16px; font-weight: 700; color: #fff; margin-bottom: 12px; }
+  .milestone-card { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 14px 16px; display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+  .milestone-card.achieved { background: rgba(34,197,94,0.1); border-color: rgba(34,197,94,0.3); }
+  .milestone-card.next { background: rgba(108,99,255,0.1); border-color: rgba(108,99,255,0.3); }
+  .milestone-icon { font-size: 28px; flex-shrink: 0; }
+  .milestone-info { flex: 1; }
+  .milestone-info h4 { font-size: 14px; font-weight: 700; color: #fff; }
+  .milestone-info p { font-size: 11px; color: rgba(255,255,255,0.4); margin-top: 3px; }
+  .milestone-progress { height: 4px; background: rgba(255,255,255,0.1); border-radius: 10px; margin-top: 8px; overflow: hidden; }
+  .milestone-progress-fill { height: 100%; background: linear-gradient(90deg, #6c63ff, #3b82f6); border-radius: 10px; transition: width 0.5s ease; }
+  .milestone-reward { font-size: 16px; font-weight: 800; color: #22c55e; text-align: right; white-space: nowrap; }
+  .milestone-badge { font-size: 10px; padding: 3px 10px; border-radius: 50px; font-weight: 700; margin-top: 4px; display: inline-block; }
+  .badge-done { background: rgba(34,197,94,0.15); color: #22c55e; }
+  .badge-next { background: rgba(108,99,255,0.15); color: #6c63ff; }
+  .badge-locked { background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.3); }
+
+  .section-title { font-size: 16px; font-weight: 700; color: #fff; margin-bottom: 12px; }
+
+  .refer-list { display: flex; flex-direction: column; gap: 10px; }
+  .refer-item { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.07); border-radius: 16px; padding: 14px 16px; display: flex; align-items: center; gap: 12px; }
+  .refer-avatar { width: 42px; height: 42px; background: linear-gradient(135deg, #6c63ff, #3b82f6); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+  .refer-info { flex: 1; }
+  .refer-info h4 { font-size: 14px; font-weight: 600; color: #fff; }
+  .refer-info p { font-size: 11px; color: rgba(255,255,255,0.3); margin-top: 2px; }
+  .refer-status { font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 50px; }
+  .refer-pending { background: rgba(234,179,8,0.15); color: #eab308; }
+  .refer-done { background: rgba(34,197,94,0.15); color: #22c55e; }
+
+  .empty-state { text-align: center; padding: 30px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 18px; }
+  .empty-state .emoji { font-size: 40px; margin-bottom: 12px; }
+  .empty-state h4 { font-size: 14px; font-weight: 600; color: rgba(255,255,255,0.5); }
+  .empty-state p { font-size: 12px; color: rgba(255,255,255,0.3); margin-top: 6px; }
+
+  /* TOAST */
+  .toast { position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%); background: rgba(34,197,94,0.2); border: 1px solid rgba(34,197,94,0.4); color: #22c55e; padding: 12px 24px; border-radius: 50px; font-size: 13px; font-weight: 600; z-index: 200; display: none; white-space: nowrap; }
+  .toast.show { display: block; }
 
   .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: rgba(5,5,26,0.95); backdrop-filter: blur(20px); border-top: 1px solid rgba(255,255,255,0.08); display: flex; justify-content: space-around; align-items: center; padding: 10px 0 20px; z-index: 100; }
   .nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; padding: 4px 16px; }
@@ -58,39 +106,59 @@
 <div class="stars" id="stars"></div>
 <div class="glow-circle glow-1"></div>
 <div class="glow-circle glow-2"></div>
-<div class="toast" id="toast">📋 Code Copied Successfully!</div>
+<div class="toast" id="toast">✅ Copied!</div>
 
 <div class="content">
   <div class="header">
-    <div><h1>Invite Friends 👥</h1><p>Earn together with friends</p></div>
+    <h1>Refer & Earn 👥</h1>
+    <p>Invite friends and earn rewards</p>
   </div>
 
-  <div class="balance-mini">
-    <div>
-      <div class="label">Your Balance</div>
-      <div class="amount user-balance">₹0.00</div>
-      <div class="coins user-coins">0 Coins</div>
-    </div>
-    <div style="font-size:40px;\">💰</div>
+  <!-- MILESTONES - SABSE UPAR -->
+  <div class="milestone-section">
+    <div class="milestone-title">🏆 Refer Milestones</div>
+    <div id="milestoneList"></div>
   </div>
 
   <div class="refer-banner">
-    <div class="refer-img">🎁</div>
-    <h2>Invite & Get ₹10</h2>
-    <p>Share your referral code with friends. When they join and complete tasks, you both get heavy cash rewards!</p>
+    <div class="refer-emoji">🤝</div>
+    <h2>Invite Friends & Earn ₹10!</h2>
+    <p>Share your code — when your friend<br>joins & <strong>withdraws ₹100</strong>, you get <strong>₹10!</strong></p>
   </div>
 
-  <div class="code-box">
-    <div class="code-info">
-      <div class="lbl">YOUR REFERRAL CODE</div>
-      <div class="user-referral-code">TASK50K</div>
+  <div class="how-it-works">
+    <div class="how-title">📖 How It Works</div>
+    <div class="step"><div class="step-num">1</div><div class="step-text"><h4>Share your referral code</h4><p>Send your code to friends & family</p></div></div>
+    <div class="step"><div class="step-num">2</div><div class="step-text"><h4>Friend joins TaskNova</h4><p>They register using your code</p></div></div>
+    <div class="step"><div class="step-num">3</div><div class="step-text"><h4>Friend withdraws ₹100</h4><p>They complete tasks & withdraw</p></div></div>
+    <div class="step"><div class="step-num">4</div><div class="step-text"><h4>You earn ₹10!</h4><p>Automatically added to your balance</p></div></div>
+  </div>
+
+  <div class="code-section">
+    <div class="code-label">🎯 Your Referral Code</div>
+    <div class="code-box">
+      <div class="code-text user-referral-code">TN000000</div>
+      <button class="copy-btn" onclick="copyCode()">Copy</button>
     </div>
-    <button class="copy-btn" onclick="copyCode()">COPY</button>
+    <div class="share-buttons">
+      <button class="share-btn share-whatsapp" onclick="shareWhatsApp()">WhatsApp</button>
+      <button class="share-btn share-general" onclick="shareNow()">Share Now</button>
+    </div>
   </div>
 
-  <div class="share-grid">
-    <button class="share-btn btn-wa" onclick="shareWhatsApp()"><span>💬</span> WhatsApp</button>
-    <button class="share-btn btn-more" onclick="shareNow()"><span>🔗</span> More Options</button>
+  <div class="refer-stats">
+    <div class="refer-stat"><div class="refer-stat-icon">👥</div><div class="refer-stat-value user-referrals">0</div><div class="refer-stat-label">Total Refers</div></div>
+    <div class="refer-stat"><div class="refer-stat-icon">✅</div><div class="refer-stat-value" id="completedReferrals">0</div><div class="refer-stat-label">Completed</div></div>
+    <div class="refer-stat"><div class="refer-stat-icon">💰</div><div class="refer-stat-value" id="referEarned">₹0</div><div class="refer-stat-label">Earned</div></div>
+  </div>
+
+  <div class="section-title">Your Referrals</div>
+  <div id="referList">
+    <div class="empty-state">
+      <div class="emoji">👀</div>
+      <h4>No referrals yet!</h4>
+      <p>Share your code and start earning ₹10 per friend</p>
+    </div>
   </div>
 </div>
 
@@ -103,36 +171,58 @@
 </div>
 
 <script>
-  // Stars Background
   const starsContainer = document.getElementById('stars');
   for (let i = 0; i < 60; i++) {
     const star = document.createElement('div');
     star.classList.add('star');
     const size = Math.random() * 2 + 0.5;
-    star.style.cssText = width:${size}px;height:${size}px;top:${Math.random()*100}%;left:${Math.random()*100}%;animation-delay:${Math.random()*3}s;animation-duration:${Math.random()*3+2}s;;
+    star.style.cssText = `width:${size}px;height:${size}px;top:${Math.random()*100}%;left:${Math.random()*100}%;animation-delay:${Math.random()*3}s;animation-duration:${Math.random()*3+2}s;`;
     starsContainer.appendChild(star);
   }
 
-  // Fetch balance and code using REST API
-  async function fetchReferData() {
-    const uid = localStorage.getItem("tasknova_uid");
-    if (!uid || uid === "null") return;
+  // Milestones data
+  const milestones = [
+    { count: 1,    reward: 10,     icon: '🎯', label: '1 Friend' },
+    { count: 5,    reward: 50,     icon: '⚡', label: '5 Friends' },
+    { count: 10,   reward: 100,    icon: '🚀', label: '10 Friends' },
+    { count: 50,   reward: 500,    icon: '💎', label: '50 Friends' },
+    { count: 100,  reward: 1000,   icon: '👑', label: '100 Friends' },
+    { count: 500,  reward: 5000,   icon: '🔱', label: '500 Friends' },
+    { count: 1000, reward: 10000,  icon: '🏆', label: '1000 Friends' },
+  ];
 
-    try {
-      const res = await fetch(https://tasknova-66d0f-default-rtdb.firebaseio.com/users/${uid}.json);
-      const data = await res.json();
-      if (data) {
-        const bal = data.balance || 0;
-        document.querySelector('.user-balance').textContent = '₹' + bal.toFixed(2);
-        document.querySelector('.user-coins').textContent = (data.coins || 0) + ' Coins';
-        if(data.referCode) {
-           document.querySelector('.user-referral-code').textContent = data.referCode;
-        }
-      }
-    } catch(e) {
-      console.log("Error loading refer data:", e);
-    }
+  function renderMilestones(referralCount) {
+    const container = document.getElementById('milestoneList');
+    container.innerHTML = milestones.map(m => {
+      const achieved = referralCount >= m.count;
+      const isNext = !achieved && milestones.find(x => referralCount >= x.count) === milestones[milestones.indexOf(m) - 1] || (!achieved && m.count === 1);
+      const progress = Math.min((referralCount / m.count) * 100, 100);
+      const cardClass = achieved ? 'achieved' : (isNext ? 'next' : '');
+      const badgeClass = achieved ? 'badge-done' : (isNext ? 'badge-next' : 'badge-locked');
+      const badgeText = achieved ? '✅ Achieved' : (isNext ? '⚡ Next Goal' : '🔒 Locked');
+
+      return `
+        <div class="milestone-card ${cardClass}">
+          <div class="milestone-icon">${m.icon}</div>
+          <div class="milestone-info">
+            <h4>${m.label}</h4>
+            <p>Invite ${m.count} friend${m.count > 1 ? 's' : ''} who withdraw ₹100</p>
+            <div class="milestone-progress">
+              <div class="milestone-progress-fill" style="width:${progress}%"></div>
+            </div>
+            <span class="milestone-badge ${badgeClass}">${badgeText}</span>
+          </div>
+          <div style="text-align:right;">
+            <div class="milestone-reward">+₹${m.reward.toLocaleString()}</div>
+            <div style="font-size:10px;color:rgba(255,255,255,0.3);margin-top:2px;">${referralCount}/${m.count}</div>
+          </div>
+        </div>
+      `;
+    }).join('');
   }
+
+  // Initialize with 0 referrals — update when Firebase data loads
+  renderMilestones(0);
 
   function getCode() {
     return document.querySelector('.user-referral-code').textContent;
@@ -149,24 +239,88 @@
 
   function shareWhatsApp() {
     const code = getCode();
-    const msg = 🚀 Join TaskNova & earn money!\n\nUse my referral code: *${code}*\n\nDownload now & start earning!\nhttps://maheshgoswami09837-ship-it.github.io/Tasknova/tasknova_login-13.html;
+    const msg = `🚀 Join TaskNova & earn money!\n\nUse my referral code: *${code}*\n\nDownload now & start earning!\nhttps://maheshgoswami09837-ship-it.github.io/Tasknova/tasknova_login-1.html`;
     window.open('https://wa.me/?text=' + encodeURIComponent(msg));
   }
 
   function shareNow() {
     const code = getCode();
+    const shareData = {
+      title: 'TaskNova - Earn While You Explore',
+      text: `Join TaskNova & earn money! Use my referral code: ${code}`,
+      url: 'https://maheshgoswami09837-ship-it.github.io/Tasknova/tasknova_login-1.html'
+    };
     if (navigator.share) {
-      navigator.share({
-        title: 'TaskNova',
-        text: Join TaskNova & earn money! Use my referral code: ${code},
-        url: 'https://maheshgoswami09837-ship-it.github.io/Tasknova/tasknova_login-13.html'
-      });
+      navigator.share(shareData);
     } else {
-      shareWhatsApp();
+      navigator.clipboard.writeText(shareData.url);
+      alert('Link copied! Share it with your friends.');
     }
   }
 
-  window.onload = fetchReferData;
+  // Page load hote hi data fetch karo
+  window.addEventListener('load', () => {
+    const uid = localStorage.getItem('tasknova_uid');
+    if (!uid || uid === 'null') return;
+
+    const dbURL = 'https://tasknova-66d0f-default-rtdb.firebaseio.com';
+
+    // User data fetch karo
+    fetch(dbURL + '/users/' + uid + '.json')
+      .then(res => res.json())
+      .then(data => {
+        if (!data) return;
+
+        // Referral code set karo
+        document.querySelector('.user-referral-code').textContent = data.referralCode || ('TN' + uid.substring(0, 6).toUpperCase());
+
+        // Stats update karo
+        const totalRefers = data.referrals || 0;
+        const completedRefers = data.completedReferrals || 0;
+        const referEarned = completedRefers * 10;
+
+        document.querySelector('.user-referrals').textContent = totalRefers;
+        document.getElementById('completedReferrals').textContent = completedRefers;
+        document.getElementById('referEarned').textContent = '₹' + referEarned;
+
+        // Milestones render karo real data se
+        renderMilestones(completedRefers);
+      })
+      .catch(e => console.log('User fetch error:', e));
+
+    // Referral list fetch karo
+    fetch(dbURL + '/referrals/' + uid + '.json')
+      .then(res => res.json())
+      .then(data => {
+        const container = document.getElementById('referList');
+        if (!data) {
+          container.innerHTML = `
+            <div class="empty-state">
+              <div class="emoji">👀</div>
+              <h4>No referrals yet!</h4>
+              <p>Share your code and start earning ₹10 per friend</p>
+            </div>`;
+          return;
+        }
+
+        const items = Object.values(data).reverse();
+        container.innerHTML = items.map(item => `
+          <div class="refer-item" style="background:rgba(255,255,255,0.05);border-radius:12px;padding:14px 16px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;">
+            <div>
+              <div style="font-weight:700;color:#fff;font-size:14px;">👤 ${item.name || 'Friend'}</div>
+              <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:3px;">${new Date(item.date).toLocaleDateString()}</div>
+            </div>
+            <div style="text-align:right;">
+              <div style="padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600;background:${item.status === 'completed' ? 'rgba(34,197,94,0.2)' : 'rgba(234,179,8,0.2)'};color:${item.status === 'completed' ? '#22c55e' : '#eab308'};">
+                ${item.status === 'completed' ? '✅ Completed' : '⏳ Pending'}
+              </div>
+              ${item.status === 'completed' ? '<div style="font-size:12px;color:#22c55e;margin-top:4px;">+₹10 earned</div>' : ''}
+            </div>
+          </div>
+        `).join('');
+      })
+      .catch(e => console.log('Referral fetch error:', e));
+  });
 </script>
 </body>
 </html>
