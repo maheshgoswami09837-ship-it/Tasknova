@@ -319,7 +319,7 @@
 
 <!-- BOTTOM NAV -->
 <div class="bottom-nav">
-  <div class="nav-item" onclick="window.location.href='tasknova_home_new.html'"><span>🏠</span><p>Home</p></div>
+  <div class="nav-item" onclick="window.location.href='tasknova_login-1.html'"><span>🏠</span><p>Home</p></div>
   <div class="nav-item" onclick="window.location.href='tasknova_tasks.html'"><span>📋</span><p>Tasks</p></div>
   <div class="nav-center" onclick="window.location.href='tasknova_withdraw.html'">💰</div>
   <div class="nav-item" onclick="window.location.href='tasknova_refer.html'"><span>👥</span><p>Refer</p></div>
@@ -341,7 +341,7 @@
   function logoutUser() {
     localStorage.removeItem('tasknova_uid');
     localStorage.setItem('tasknova_uid', 'null');
-    window.location.href = 'tasknova_login-1_043825.html';
+    window.location.href = 'tasknova_login-1.html';
   }
 
   // Copy referral code
@@ -385,7 +385,7 @@
   window.addEventListener('load', () => {
     const uid = localStorage.getItem('tasknova_uid');
     if (!uid || uid === 'null') {
-      window.location.href = 'tasknova_login-1_043825.html';
+      window.location.href = 'tasknova_login-1.html';
       return;
     }
 
