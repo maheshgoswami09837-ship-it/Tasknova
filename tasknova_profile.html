@@ -11,10 +11,11 @@
   .star { position: absolute; background: white; border-radius: 50%; animation: twinkle 3s infinite; }
   @keyframes twinkle { 0%, 100% { opacity: 0.2; } 50% { opacity: 1; } }
   .glow-circle { position: fixed; border-radius: 50%; filter: blur(80px); z-index: 0; pointer-events: none; }
-  .glow-1 { width: 300px; height: 300px; background: rgba(108,99,255,0.2); top: -100px; left: -100px; }
+  .glow-1 { width: 300px; height: 300px; background: rgba(108,99,255,0.25); top: -100px; left: -100px; }
   .glow-2 { width: 250px; height: 250px; background: rgba(59,130,246,0.15); bottom: -80px; right: -80px; }
   .content { position: relative; z-index: 10; padding: 20px 16px; animation: fadeUp 0.5s ease; }
 
+  /* PEHLE WALI BEST UI DESIGN */
   .profile-card { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); border-radius: 24px; padding: 24px; text-align: center; margin-bottom: 20px; position: relative; }
   .avatar { width: 80px; height: 80px; background: linear-gradient(135deg, #6c63ff, #3b82f6); border-radius: 50%; margin: 0 auto 12px; display: flex; align-items: center; justify-content: center; font-size: 36px; box-shadow: 0 8px 20px rgba(108,99,255,0.3); }
   .profile-card h2 { font-size: 20px; color: #fff; font-weight: 700; margin-bottom: 4px; }
@@ -57,8 +58,8 @@
 
   <div class="profile-card">
     <div class="avatar">👤</div>
-    <h2 id="userName">User Name</h2>
-    <p id="userEmail">loading...</p>
+    <h2 id="userName">TaskNova User</h2>
+    <p id="userEmail">Loading profile...</p>
   </div>
 
   <div class="stats-grid">
@@ -84,7 +85,7 @@
       <div class="menu-arrow">›</div>
     </div>
     <div class="menu-item">
-      <div class="menu-icon" style="background:rgba(234,179,8,0.15);\">📄</div>
+      <div class="menu-icon" style="background:rgba(234,179,8,0.15);">📄</div>
       <div class="menu-info"><h4>Privacy Policy</h4><p>Terms & conditions</p></div>
       <div class="menu-arrow">›</div>
     </div>
@@ -103,7 +104,7 @@
 </div>
 
 <script>
-  // Stars logic
+  // Stars effect
   const starsContainer = document.getElementById('stars');
   for (let i = 0; i < 60; i++) {
     const star = document.createElement('div');
@@ -113,34 +114,52 @@
     starsContainer.appendChild(star);
   }
 
-  // Fetch live profile details & balance using REST API
+  // Backup method to get UID if localStorage fails
+  function getUserId() {
+    let uid = localStorage.getItem("tasknova_uid");
+    // Agar webview storage khali hai, toh default test ID ya login redirect setup check karein
+    if (!uid || uid === "null" || uid === "undefined") {
+      return null;
+    }
+    return uid;
+  }
+
+  // Ultra Safe REST API fetch logic
   async function loadProfile() {
-    const uid = localStorage.getItem("tasknova_uid");
-    if (!uid || uid === "null") {
+    const uid = getUserId();
+    if (!uid) {
+      // Agar login UID nahi milti toh loop se bachne ke liye direct login page par bhejega
       window.location.href = 'tasknova_login-13.html';
       return;
     }
 
     try {
       const res = await fetch(https://tasknova-66d0f-default-rtdb.firebaseio.com/users/${uid}.json);
+      if (!res.ok) throw new Error("Network response was not ok");
+      
       const data = await res.json();
       if (data) {
         document.getElementById('userName').textContent = data.name || "TaskNova User";
-        document.getElementById('userEmail').textContent = data.email || "No Email";
+        document.getElementById('userEmail').textContent = data.email || "User Account";
         
-        const bal = data.balance || 0;
+        const bal = Number(data.balance) || 0;
+        const totalCoins = data.coins || 0;
+        
         document.querySelector('.user-balance').textContent = '₹' + bal.toFixed(2);
-        document.querySelector('.user-coins').textContent = data.coins || 0;
+        document.querySelector('.user-coins').textContent = totalCoins;
+      } else {
+        document.getElementById('userEmail').textContent = "User not found in Database";
       }
     } catch(e) {
       console.log("Profile fetch error:", e);
+      document.getElementById('userEmail').textContent = "Database Error! Refreshing...";
     }
   }
 
-  // Sahi Logout function jo loop nahi banne dega
+  // Pure Logout Jo direct login script ko hit karega aur memory khali karega
   function logoutUser() {
     localStorage.removeItem("tasknova_uid");
-    localStorage.clear(); // Poora clear data
+    localStorage.clear();
     window.location.href = 'tasknova_login-13.html';
   }
 
