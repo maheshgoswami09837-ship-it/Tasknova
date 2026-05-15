@@ -1,4 +1,30 @@
-<!DOCTYPE html>
+[1:05 pm, 15/5/2026] +91 97562 17725: <!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>TaskNova Profile</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Segoe UI', sans-serif; background: #05051a; min-height: 100vh; overflow-x: hidden; padding-bottom: 80px; }
+  .stars { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; }
+  .star { position: absolute; background: white; border-radius: 50%; animation: twinkle 3s infinite; }
+  @keyframes twinkle { 0%, 100% { opacity: 0.2; } 50% { opacity: 1; } }
+  .glow-circle { position: fixed; border-radius: 50%; filter: blur(80px); z-index: 0; poi…
+[1:17 pm, 15/5/2026] +91 97562 17725: <!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>TaskNova Profile</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Segoe UI', sans-serif; background: #05051a; min-height: 100vh; overflow-x: hidden; padding-bottom: 80px; }
+  .stars { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; }
+  .star { position: absolute; background: white; border-radius: 50%; animation: twinkle 3s infinite; }
+  @keyframes twinkle { 0%, 100% { opacity: 0.2; } 50% { opacity: 1; } }
+  .glow-circle { position: fixed; border-radius: 50%; filter: blur(80px); z-index: 0; poi…
+[2:19 pm, 15/5/2026] +91 97562 17725: <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -11,11 +37,10 @@
   .star { position: absolute; background: white; border-radius: 50%; animation: twinkle 3s infinite; }
   @keyframes twinkle { 0%, 100% { opacity: 0.2; } 50% { opacity: 1; } }
   .glow-circle { position: fixed; border-radius: 50%; filter: blur(80px); z-index: 0; pointer-events: none; }
-  .glow-1 { width: 300px; height: 300px; background: rgba(108,99,255,0.25); top: -100px; left: -100px; }
+  .glow-1 { width: 300px; height: 300px; background: rgba(108,99,255,0.2); top: -100px; left: -100px; }
   .glow-2 { width: 250px; height: 250px; background: rgba(59,130,246,0.15); bottom: -80px; right: -80px; }
   .content { position: relative; z-index: 10; padding: 20px 16px; animation: fadeUp 0.5s ease; }
 
-  /* PEHLE WALI BEST UI DESIGN */
   .profile-card { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); border-radius: 24px; padding: 24px; text-align: center; margin-bottom: 20px; position: relative; }
   .avatar { width: 80px; height: 80px; background: linear-gradient(135deg, #6c63ff, #3b82f6); border-radius: 50%; margin: 0 auto 12px; display: flex; align-items: center; justify-content: center; font-size: 36px; box-shadow: 0 8px 20px rgba(108,99,255,0.3); }
   .profile-card h2 { font-size: 20px; color: #fff; font-weight: 700; margin-bottom: 4px; }
@@ -104,7 +129,7 @@
 </div>
 
 <script>
-  // Stars effect
+  // Stars logic
   const starsContainer = document.getElementById('stars');
   for (let i = 0; i < 60; i++) {
     const star = document.createElement('div');
@@ -114,49 +139,35 @@
     starsContainer.appendChild(star);
   }
 
-  function getUserId() {
-    let uid = localStorage.getItem("tasknova_uid");
-    if (!uid || uid === "null" || uid === "undefined") {
-      return null;
-    }
-    return uid;
-  }
-
-  // Live Firebase Data Fetch - Capital letters matched with database
+  // Pure REST API with exact Firebase Capital Spelling Fix
   async function loadProfile() {
-    const uid = getUserId();
-    if (!uid) {
+    const uid = localStorage.getItem("tasknova_uid");
+    if (!uid || uid === "null") {
       window.location.href = 'tasknova_login-13.html';
       return;
     }
 
     try {
       const res = await fetch(https://tasknova-66d0f-default-rtdb.firebaseio.com/users/${uid}.json);
-      if (!res.ok) throw new Error("Network response was not ok");
-      
       const data = await res.json();
       if (data) {
-        // Aapke database ke 'Username', 'Balance' aur 'Coins' ke capital spelling ko use kiya hai
+        // Aapke database ki capital key: Username, Email, Balance, Coins
         document.getElementById('userName').textContent = data.Username || "TaskNova User";
-        document.getElementById('userEmail').textContent = data.Email || "User Account";
+        document.getElementById('userEmail').textContent = data.Email || "No Email";
         
         const bal = Number(data.Balance) || 0;
-        const totalCoins = data.Coins || 0;
-        
         document.querySelector('.user-balance').textContent = '₹' + bal.toFixed(2);
-        document.querySelector('.user-coins').textContent = totalCoins;
-      } else {
-        document.getElementById('userEmail').textContent = "User not found in Database";
+        document.querySelector('.user-coins').textContent = data.Coins || 0;
       }
     } catch(e) {
       console.log("Profile fetch error:", e);
-      document.getElementById('userEmail').textContent = "Database Error! Refreshing...";
     }
   }
 
+  // Fixed Logout to solve Home Screen loop
   function logoutUser() {
     localStorage.removeItem("tasknova_uid");
-    localStorage.clear();
+    localStorage.clear(); 
     window.location.href = 'tasknova_login-13.html';
   }
 
