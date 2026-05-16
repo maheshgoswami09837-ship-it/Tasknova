@@ -415,9 +415,13 @@
     verifyBtn.disabled = true;
 
     emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
-      to_email : userEmail,
-      otp_code : currentOTP,
-      app_name : 'TaskNova'
+      to_email   : userEmail,
+      user_email : userEmail,
+      email      : userEmail,
+      otp_code   : currentOTP,
+      otp        : currentOTP,
+      app_name   : 'TaskNova',
+      name       : 'TaskNova User'
     }).then(() => {
       showToast('OTP bhej diya! Email check karein 📧', 'success');
       document.getElementById('otpModal').classList.add('show');
