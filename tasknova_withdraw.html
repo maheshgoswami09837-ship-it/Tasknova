@@ -414,6 +414,15 @@
     verifyBtn.innerHTML = '<span class="otp-loader"></span>Sending...';
     verifyBtn.disabled = true;
 
+    // EmailJS ready check
+    if (typeof emailjs === 'undefined') {
+      showToast('Email service load nahi hua, refresh karein!', 'error');
+      verifyBtn.innerHTML = '✅ Verify & Save Details';
+      verifyBtn.disabled = false;
+      return;
+    }
+    emailjs.init(EMAILJS_PUBLIC_KEY);
+
     emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
       to_email   : userEmail,
       user_email : userEmail,
@@ -427,7 +436,9 @@
       document.getElementById('otpModal').classList.add('show');
       document.querySelectorAll('.otp-box')[0].focus();
     }).catch(err => {
-      showToast('OTP send failed: ' + (err.text || err), 'error');
+      console.error('EmailJS Error:', JSON.stringify(err));
+      const msg = err.text || err.message || JSON.stringify(err) || 'Unknown error';
+      showToast('OTP failed: ' + msg, 'error');
     }).finally(() => {
       verifyBtn.innerHTML = '✅ Verify & Save Details';
       verifyBtn.disabled  = false;
