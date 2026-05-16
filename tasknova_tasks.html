@@ -91,23 +91,25 @@
     <div class="cat-tab" onclick="filterTasks('watchads', this)">Watch Ads</div>
     <div class="cat-tab" onclick="filterTasks('survey', this)">Survey</div>
     <div class="cat-tab" onclick="filterTasks('instagram', this)">Instagram</div>
-    <div class="cat-tab" onclick="filterTasks('refer', this)">Refer</div>
   </div>
 
   <div class="section-title">🔥 Available Tasks</div>
   <div class="tasks-grid" id="tasksGrid">
 
-    <div class="task-card" data-category="watchads">
+    <div class="task-card" data-category="watchads" id="watchAdCard">
       <div class="task-icon icon-purple">📺</div>
       <div class="task-info">
         <h3>Watch Video Ad</h3>
         <p>Watch a short video ad & earn coins</p>
-        <div class="task-meta"><span class="task-time">⏱ 30 sec</span></div>
+        <div class="task-meta">
+          <span class="task-time">⏱ 30 sec</span>
+          <span id="adCounter" style="font-size:11px;color:#6c63ff;font-weight:700;margin-left:8px;">20/20</span>
+        </div>
       </div>
       <div class="task-reward">
-        <div class="coins-reward">+10</div>
+        <div class="coins-reward" id="adCoins">+10</div>
         <div class="rupee">coins</div>
-        <button class="do-btn">Watch</button>
+        <button class="do-btn" id="watchAdBtn" onclick="watchAd()">Watch</button>
       </div>
     </div>
 
@@ -153,25 +155,12 @@
       </div>
     </div>
 
-    <div class="task-card disabled" data-category="refer">
-      <div class="task-icon icon-orange">👥</div>
-      <div class="task-info">
-        <h3>Refer & Earn</h3>
-        <p>Friend joins & withdraws = ₹10</p>
-        <div class="task-meta"><span class="task-time">⏱ Anytime</span></div>
-      </div>
-      <div class="task-reward">
-        <div class="coins-reward">+1000</div>
-        <div class="rupee">= ₹10</div>
-        <div class="coming-soon-badge">🔒 Coming Soon</div>
-      </div>
-    </div>
 
   </div>
 </div>
 
 <div class="bottom-nav">
-  <div class="nav-item" onclick="window.location.href='tasknova_home_new.html'"><span>🏠</span><p>Home</p></div>
+  <div class="nav-item" onclick="window.location.href='tasknova_login-1.html'"><span>🏠</span><p>Home</p></div>
   <div class="nav-item active" onclick="window.location.href='tasknova_tasks.html'"><span>📋</span><p>Tasks</p></div>
   <div class="nav-center" onclick="window.location.href='tasknova_withdraw.html'">💰</div>
   <div class="nav-item" onclick="window.location.href='tasknova_refer.html'"><span>👥</span><p>Refer</p></div>
@@ -213,19 +202,139 @@
     matching.forEach(c => grid.insertBefore(c, grid.firstChild));
   }
 
-  // Page load hote hi balance fetch karo
+  const DB_URL = 'https://tasknova-66d0f-default-rtdb.firebaseio.com';
+  const MAX_ADS = 20;
+  let adsWatchedToday = 0;
+  let cooldownInterval = null;
+
+  // Check reset time 7:30 AM
+  function shouldReset() {
+    const lastReset = localStorage.getItem('adLastReset');
+    const now = new Date();
+    const resetTime = new Date();
+    resetTime.setHours(7, 30, 0, 0);
+    if (now < resetTime) resetTime.setDate(resetTime.getDate() - 1);
+    return !lastReset || new Date(lastReset) < resetTime;
+  }
+
+  function updateCounter() {
+    const remaining = MAX_ADS - adsWatchedToday;
+    document.getElementById('adCounter').textContent = MAX_ADS + '/' + remaining;
+    if (remaining <= 0) {
+      const btn = document.getElementById('watchAdBtn');
+      btn.textContent = 'Done ✅';
+      btn.disabled = true;
+      btn.style.background = 'rgba(255,255,255,0.1)';
+      btn.style.color = 'rgba(255,255,255,0.4)';
+    }
+  }
+
+  function startCooldown() {
+    let secs = 30;
+    const btn = document.getElementById('watchAdBtn');
+    btn.disabled = true;
+    btn.style.background = 'rgba(255,165,0,0.3)';
+    btn.style.color = '#ffa500';
+    cooldownInterval = setInterval(() => {
+      btn.textContent = secs + 's';
+      secs--;
+      if (secs < 0) {
+        clearInterval(cooldownInterval);
+        if (adsWatchedToday < MAX_ADS) {
+          btn.textContent = 'Watch';
+          btn.disabled = false;
+          btn.style.background = '';
+          btn.style.color = '';
+        }
+      }
+    }, 1000);
+  }
+
+  function watchAd() {
+    const uid = localStorage.getItem('tasknova_uid');
+    if (!uid || uid === 'null') return;
+
+    // Anti-fraud: check last ad time
+    const lastAdTime = localStorage.getItem('lastAdTime');
+    const now = Date.now();
+    if (lastAdTime && (now - parseInt(lastAdTime)) < 30000) {
+      alert('Please wait 30 seconds between ads!');
+      return;
+    }
+
+    if (adsWatchedToday >= MAX_ADS) return;
+
+    // Random coins 8-12
+    const coinsEarned = Math.floor(Math.random() * 5) + 8;
+    document.getElementById('adCoins').textContent = '+' + coinsEarned;
+
+    // Simulate ad (3 sec)
+    const btn = document.getElementById('watchAdBtn');
+    btn.textContent = '▶ Playing...';
+    btn.disabled = true;
+
+    setTimeout(() => {
+      // Ad complete
+      adsWatchedToday++;
+      localStorage.setItem('adsWatchedToday', adsWatchedToday);
+      localStorage.setItem('lastAdTime', Date.now().toString());
+      updateCounter();
+
+      // Save to Firebase
+      fetch(DB_URL + '/users/' + uid + '.json')
+        .then(r => r.json())
+        .then(data => {
+          const newCoins = (data.coins || 0) + coinsEarned;
+          const newTasksDone = (data.tasksDone || 0) + 1;
+          return fetch(DB_URL + '/users/' + uid + '.json', {
+            method: 'PATCH',
+            body: JSON.stringify({ coins: newCoins, tasksDone: newTasksDone })
+          }).then(() => {
+            document.querySelector('.user-coins').textContent = newCoins + ' Coins';
+            // Show reward toast
+            showReward(coinsEarned);
+          });
+        })
+        .catch(e => console.log(e));
+
+      // Start 30 sec cooldown
+      startCooldown();
+    }, 3000);
+  }
+
+  function showReward(coins) {
+    const toast = document.createElement('div');
+    toast.textContent = '+' + coins + ' Coins Earned! 🎉';
+    toast.style.cssText = 'position:fixed;top:80px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#6c63ff,#3b82f6);color:#fff;padding:12px 24px;border-radius:50px;font-weight:700;font-size:14px;z-index:9999;box-shadow:0 4px 20px rgba(108,99,255,0.5);';
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 2500);
+  }
+
+  // Page load
   window.addEventListener('load', () => {
     const uid = localStorage.getItem('tasknova_uid');
     if (!uid || uid === 'null') return;
 
-    fetch('https://tasknova-66d0f-default-rtdb.firebaseio.com/users/' + uid + '.json')
+    // Check daily reset
+    if (shouldReset()) {
+      localStorage.setItem('adsWatchedToday', '0');
+      localStorage.setItem('adLastReset', new Date().toISOString());
+      adsWatchedToday = 0;
+    } else {
+      adsWatchedToday = parseInt(localStorage.getItem('adsWatchedToday') || '0');
+    }
+
+    updateCounter();
+
+    // Fetch balance
+    fetch(DB_URL + '/users/' + uid + '.json')
       .then(res => res.json())
       .then(data => {
         if (!data) return;
         document.querySelector('.user-balance').textContent = '₹' + (data.balance || 0).toFixed(2);
         document.querySelector('.user-coins').textContent = (data.coins || 0) + ' Coins';
       })
-      .catch(e => console.log('Balance fetch error:', e));
+      .catch(e => console.log(e));
   });
 </script>
 </body>
