@@ -64,7 +64,16 @@
   .nav-center { width: 52px; height: 52px; background: linear-gradient(135deg, #6c63ff, #3b82f6); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 22px; margin-top: -20px; box-shadow: 0 4px 20px rgba(108,99,255,0.4); cursor: pointer; }
 
   @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* Ad Popup */
+  #adPopup { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#000; z-index:9999; flex-direction:column; align-items:center; justify-content:center; }
+  #adPopup.show { display:flex; }
+  .ad-timer-bar { position:absolute; top:0; left:0; height:4px; background:linear-gradient(135deg,#6c63ff,#3b82f6); transition:width 1s linear; }
+  .ad-content { width:100%; height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:20px; }
+  .ad-skip-btn { position:absolute; top:20px; right:20px; background:rgba(255,255,255,0.15); border:none; color:#fff; padding:8px 16px; border-radius:20px; font-size:13px; font-weight:700; cursor:pointer; }
+  .ad-countdown { position:absolute; bottom:40px; font-size:16px; color:rgba(255,255,255,0.7); font-weight:600; }
 </style>
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9251791690276801" crossorigin="anonymous"></script>
 </head>
 <body>
 
@@ -159,6 +168,23 @@
   </div>
 </div>
 
+<!-- Ad Popup -->
+<div id="adPopup">
+  <div class="ad-timer-bar" id="adTimerBar" style="width:0%"></div>
+  <div class="ad-content">
+    <div style="font-size:60px;margin-bottom:20px;">📺</div>
+    <div style="color:#fff;font-size:22px;font-weight:800;margin-bottom:10px;">Advertisement</div>
+    <div style="color:rgba(255,255,255,0.5);font-size:14px;text-align:center;max-width:280px;">Watch this ad to earn coins! Your support keeps TaskNova free 🙏</div>
+    <div style="margin-top:30px;background:rgba(255,255,255,0.08);border-radius:20px;padding:20px 40px;text-align:center;">
+      <div style="color:rgba(255,255,255,0.5);font-size:12px;">You will earn</div>
+      <div id="adEarnCoins" style="color:#6c63ff;font-size:36px;font-weight:800;">+10</div>
+      <div style="color:rgba(255,255,255,0.5);font-size:12px;">Coins</div>
+    </div>
+  </div>
+  <div class="ad-countdown" id="adCountdown">Please wait... 30s</div>
+  <button class="ad-skip-btn" id="adSkipBtn" onclick="skipAd()" style="display:none;">Skip ✕</button>
+</div>
+
 <div class="bottom-nav">
   <div class="nav-item" onclick="window.location.href='tasknova_login-1.html'"><span>🏠</span><p>Home</p></div>
   <div class="nav-item active" onclick="window.location.href='tasknova_tasks.html'"><span>📋</span><p>Tasks</p></div>
@@ -250,6 +276,19 @@
     }, 1000);
   }
 
+  let currentCoins = 0;
+  let adInterval = null;
+  let rewardedAd = null;
+
+  // Load Google Rewarded Ad
+  function loadRewardedAd() {
+    try {
+      rewardedAd = new google.ima.AdDisplayContainer(
+        document.getElementById('adPopup')
+      );
+    } catch(e) {}
+  }
+
   function watchAd() {
     const uid = localStorage.getItem('tasknova_uid');
     if (!uid || uid === 'null') return;
@@ -265,41 +304,90 @@
     if (adsWatchedToday >= MAX_ADS) return;
 
     // Random coins 8-12
-    const coinsEarned = Math.floor(Math.random() * 5) + 8;
-    document.getElementById('adCoins').textContent = '+' + coinsEarned;
+    currentCoins = Math.floor(Math.random() * 5) + 8;
+    document.getElementById('adCoins').textContent = '+' + currentCoins;
+    document.getElementById('adEarnCoins').textContent = '+' + currentCoins;
 
-    // Simulate ad (3 sec)
-    const btn = document.getElementById('watchAdBtn');
-    btn.textContent = '▶ Playing...';
-    btn.disabled = true;
+    // Try Google AdSense Rewarded Ad
+    try {
+      (adsbygoogle = window.adsbygoogle || []).push({
+        google_ad_client: 'ca-pub-9251791690276801',
+        google_ad_slot: '2768961692',
+        google_ad_type: 'rewarded',
+        google_ad_reward_callback: function() {
+          // Ad watched completely - give reward
+          onAdComplete(uid);
+        }
+      });
+    } catch(e) {
+      // Fallback: show popup ad if AdSense not available
+      showPopupAd(uid);
+    }
+  }
 
+  function showPopupAd(uid) {
+    const popup = document.getElementById('adPopup');
+    popup.classList.add('show');
+    document.getElementById('adSkipBtn').style.display = 'none';
+    document.getElementById('adCountdown').textContent = 'Please wait... 30s';
+    document.getElementById('adTimerBar').style.width = '0%';
+
+    let secs = 30;
     setTimeout(() => {
-      // Ad complete
-      adsWatchedToday++;
-      localStorage.setItem('adsWatchedToday', adsWatchedToday);
-      localStorage.setItem('lastAdTime', Date.now().toString());
-      updateCounter();
+      document.getElementById('adTimerBar').style.width = '100%';
+      document.getElementById('adTimerBar').style.transition = 'width 30s linear';
+    }, 100);
 
-      // Save to Firebase
-      fetch(DB_URL + '/users/' + uid + '.json')
-        .then(r => r.json())
-        .then(data => {
-          const newCoins = (data.coins || 0) + coinsEarned;
-          const newTasksDone = (data.tasksDone || 0) + 1;
-          return fetch(DB_URL + '/users/' + uid + '.json', {
-            method: 'PATCH',
-            body: JSON.stringify({ coins: newCoins, tasksDone: newTasksDone })
-          }).then(() => {
-            document.querySelector('.user-coins').textContent = newCoins + ' Coins';
-            // Show reward toast
-            showReward(coinsEarned);
-          });
-        })
-        .catch(e => console.log(e));
+    adInterval = setInterval(() => {
+      secs--;
+      document.getElementById('adCountdown').textContent = 'Please wait... ' + secs + 's';
+      if (secs <= 0) {
+        clearInterval(adInterval);
+        document.getElementById('adCountdown').textContent = 'Ad Complete! 🎉';
+        document.getElementById('adSkipBtn').textContent = 'Collect Coins ✓';
+        document.getElementById('adSkipBtn').style.display = 'block';
+        document.getElementById('adSkipBtn').style.background = 'linear-gradient(135deg,#6c63ff,#3b82f6)';
+        document.getElementById('adSkipBtn').onclick = function() { collectCoins(uid); };
+      }
+    }, 1000);
+  }
 
-      // Start 30 sec cooldown
-      startCooldown();
-    }, 3000);
+  function collectCoins(uid) {
+    clearInterval(adInterval);
+    const popup = document.getElementById('adPopup');
+    popup.classList.remove('show');
+    document.getElementById('adTimerBar').style.transition = 'none';
+    document.getElementById('adTimerBar').style.width = '0%';
+    onAdComplete(uid);
+  }
+
+  function skipAd() {
+    // Only allow skip after ad completes
+  }
+
+  function onAdComplete(uid) {
+    adsWatchedToday++;
+    localStorage.setItem('adsWatchedToday', adsWatchedToday);
+    localStorage.setItem('lastAdTime', Date.now().toString());
+    updateCounter();
+
+    // Save coins to Firebase
+    fetch(DB_URL + '/users/' + uid + '.json')
+      .then(r => r.json())
+      .then(data => {
+        const newCoins = (data.coins || 0) + currentCoins;
+        const newTasksDone = (data.tasksDone || 0) + 1;
+        return fetch(DB_URL + '/users/' + uid + '.json', {
+          method: 'PATCH',
+          body: JSON.stringify({ coins: newCoins, tasksDone: newTasksDone })
+        }).then(() => {
+          document.querySelector('.user-coins').textContent = newCoins + ' Coins';
+          showReward(currentCoins);
+        });
+      })
+      .catch(e => console.log(e));
+
+    startCooldown();
   }
 
   function showReward(coins) {
