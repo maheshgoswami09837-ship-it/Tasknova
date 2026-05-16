@@ -14,14 +14,8 @@
   .glow-1 { width: 300px; height: 300px; background: rgba(108,99,255,0.25); top: -100px; left: -100px; }
   .glow-2 { width: 250px; height: 250px; background: rgba(59,130,246,0.2); bottom: -80px; right: -80px; }
 
-  /* ========== LOGIN SECTION ========== */
-  #loginSection {
-    position: relative; z-index: 10;
-    min-height: 100vh;
-    display: flex; flex-direction: column;
-    align-items: center; justify-content: center;
-    padding: 20px;
-  }
+  /* LOGIN */
+  #loginSection { position: relative; z-index: 10; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
   .card { width: 100%; max-width: 380px; animation: fadeUp 0.6s ease; }
   .logo-section { text-align: center; margin-bottom: 30px; }
   .logo-icon { width: 70px; height: 70px; background: linear-gradient(135deg, #6c63ff, #3b82f6); border-radius: 20px; display: flex; align-items: center; justify-content: center; font-size: 34px; margin: 0 auto 12px; box-shadow: 0 0 30px rgba(108,99,255,0.4); }
@@ -45,7 +39,35 @@
   .spinner { width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: spin 0.8s linear infinite; display: inline-block; margin-right: 8px; vertical-align: middle; }
   @keyframes spin { to { transform: rotate(360deg); } }
 
-  /* ========== HOME SECTION ========== */
+  /* OTP MODAL */
+  .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(5,5,26,0.88); backdrop-filter: blur(8px); z-index: 999; display: none; justify-content: center; align-items: center; }
+  .modal-overlay.show { display: flex; }
+  .modal-box { background: linear-gradient(145deg, #0d0d2b, #12123a); border: 1px solid rgba(108,99,255,0.3); border-radius: 24px; padding: 28px 24px; width: 90%; max-width: 360px; box-shadow: 0 20px 60px rgba(0,0,0,0.6); animation: modalIn 0.3s ease; }
+  @keyframes modalIn { from { opacity: 0; transform: scale(0.9) translateY(20px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+  .modal-title { font-size: 18px; font-weight: 800; color: #fff; margin-bottom: 6px; }
+  .modal-sub { font-size: 12px; color: rgba(255,255,255,0.4); margin-bottom: 20px; line-height: 1.5; }
+  .modal-sub span { color: #6c63ff; font-weight: 600; }
+  .otp-input-wrap { display: flex; gap: 10px; margin-bottom: 16px; justify-content: center; align-items: center; }
+  .otp-box { background: rgba(255,255,255,0.07); border: 1.5px solid rgba(255,255,255,0.12); border-radius: 12px; color: #fff; font-size: 22px; font-weight: 800; text-align: center; outline: none; font-family: 'Segoe UI', sans-serif; transition: all 0.2s; width: 44px; height: 54px; flex-shrink: 0; }
+  .otp-box:focus { border-color: #6c63ff; background: rgba(108,99,255,0.1); }
+  .resend-otp { font-size: 12px; color: rgba(255,255,255,0.4); text-align: center; margin-bottom: 14px; }
+  .resend-otp span { color: #6c63ff; cursor: pointer; font-weight: 600; }
+  .otp-verify-btn { width: 100%; padding: 14px; background: linear-gradient(135deg, #6c63ff, #3b82f6); border: none; border-radius: 12px; color: #fff; font-size: 14px; font-weight: 700; cursor: pointer; font-family: 'Segoe UI', sans-serif; margin-bottom: 12px; }
+  .otp-cancel-btn { width: 100%; padding: 12px; background: transparent; border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; color: rgba(255,255,255,0.5); font-size: 13px; cursor: pointer; font-family: 'Segoe UI', sans-serif; }
+  .otp-loader { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: spin 0.7s linear infinite; vertical-align: middle; margin-right: 6px; }
+
+  /* RULES MODAL */
+  .rules-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(5,5,26,0.88); backdrop-filter: blur(8px); z-index: 999; display: none; justify-content: center; align-items: center; padding: 20px; }
+  .rules-modal.show { display: flex; }
+  .rules-box { background: linear-gradient(145deg, #0d0d2b, #12123a); border: 1px solid rgba(108,99,255,0.3); border-radius: 24px; padding: 24px; width: 100%; max-width: 380px; max-height: 80vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.6); animation: modalIn 0.3s ease; }
+  .rules-box h2 { font-size: 18px; font-weight: 800; color: #fff; margin-bottom: 16px; text-align: center; }
+  .rule-item { display: flex; gap: 12px; align-items: flex-start; margin-bottom: 14px; padding: 12px; background: rgba(255,255,255,0.04); border-radius: 12px; border: 1px solid rgba(255,255,255,0.07); }
+  .rule-num { width: 28px; height: 28px; background: linear-gradient(135deg, #6c63ff, #3b82f6); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 800; color: #fff; flex-shrink: 0; }
+  .rule-text { font-size: 13px; color: rgba(255,255,255,0.7); line-height: 1.5; }
+  .rule-text strong { color: #fff; }
+  .rules-close-btn { width: 100%; padding: 14px; background: linear-gradient(135deg, #6c63ff, #3b82f6); border: none; border-radius: 12px; color: #fff; font-size: 14px; font-weight: 700; cursor: pointer; font-family: 'Segoe UI', sans-serif; margin-top: 8px; }
+
+  /* HOME */
   #homeSection { display: none; padding-bottom: 80px; }
   .content { position: relative; z-index: 10; padding: 20px 16px; animation: fadeUp 0.5s ease; }
   .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
@@ -108,13 +130,10 @@
   .nav-item p { font-size: 10px; color: rgba(255,255,255,0.3); font-weight: 500; }
   .nav-item.active p { color: #6c63ff; }
   .nav-center { width: 52px; height: 52px; background: linear-gradient(135deg, #6c63ff, #3b82f6); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 22px; margin-top: -20px; box-shadow: 0 4px 20px rgba(108,99,255,0.4); cursor: pointer; }
-
-  /* TOAST */
   .toast { position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%); padding: 12px 24px; border-radius: 50px; font-size: 13px; font-weight: 600; z-index: 200; display: none; white-space: nowrap; }
   .toast.success { background: rgba(34,197,94,0.2); border: 1px solid rgba(34,197,94,0.4); color: #22c55e; }
   .toast.error { background: rgba(239,68,68,0.2); border: 1px solid rgba(239,68,68,0.4); color: #ef4444; }
   .toast.show { display: block; }
-
   @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 </style>
 </head>
@@ -125,7 +144,62 @@
 <div class="glow-circle glow-2"></div>
 <div class="toast" id="toast"></div>
 
-<!-- ========== LOGIN SECTION ========== -->
+<!-- OTP MODAL -->
+<div class="modal-overlay" id="otpModal">
+  <div class="modal-box">
+    <div class="modal-title">📧 Email Verify Karein</div>
+    <div class="modal-sub">OTP bheja gaya hai <span id="otpEmailShow"></span> par. Account banane ke liye verify karein.</div>
+    <div class="otp-input-wrap">
+      <input class="otp-box" maxlength="1" type="tel" oninput="otpInput(this,0)" onkeydown="otpBack(event,0)">
+      <input class="otp-box" maxlength="1" type="tel" oninput="otpInput(this,1)" onkeydown="otpBack(event,1)">
+      <input class="otp-box" maxlength="1" type="tel" oninput="otpInput(this,2)" onkeydown="otpBack(event,2)">
+      <input class="otp-box" maxlength="1" type="tel" oninput="otpInput(this,3)" onkeydown="otpBack(event,3)">
+      <input class="otp-box" maxlength="1" type="tel" oninput="otpInput(this,4)" onkeydown="otpBack(event,4)">
+      <input class="otp-box" maxlength="1" type="tel" oninput="otpInput(this,5)" onkeydown="otpBack(event,5)">
+    </div>
+    <div class="resend-otp">OTP nahi aaya? <span onclick="resendRegOTP()">Resend OTP</span></div>
+    <button class="otp-verify-btn" id="otpVerifyBtn" onclick="verifyRegOTP()">✅ Verify & Create Account</button>
+    <button class="otp-cancel-btn" onclick="closeOTPModal()">Cancel</button>
+  </div>
+</div>
+
+<!-- RULES MODAL -->
+<div class="rules-modal" id="rulesModal">
+  <div class="rules-box">
+    <h2>📋 TaskNova Rules</h2>
+    <div class="rule-item">
+      <div class="rule-num">1</div>
+      <div class="rule-text"><strong>Minimum Withdrawal:</strong> ₹100 se kam withdraw nahi kar sakte.</div>
+    </div>
+    <div class="rule-item">
+      <div class="rule-num">2</div>
+      <div class="rule-text"><strong>Welcome Bonus:</strong> Signup karne par ₹10 aur 1000 coins milte hain.</div>
+    </div>
+    <div class="rule-item">
+      <div class="rule-num">3</div>
+      <div class="rule-text"><strong>Refer & Earn:</strong> Dost refer karo, jab wo withdraw kare tab tumhe ₹10 milega.</div>
+    </div>
+    <div class="rule-item">
+      <div class="rule-num">4</div>
+      <div class="rule-text"><strong>Tasks:</strong> Har task honest tarike se complete karo. Fake activity se account ban ho sakta hai.</div>
+    </div>
+    <div class="rule-item">
+      <div class="rule-num">5</div>
+      <div class="rule-text"><strong>Withdrawal Time:</strong> Withdrawal request 24-48 hours mein process hoti hai.</div>
+    </div>
+    <div class="rule-item">
+      <div class="rule-num">6</div>
+      <div class="rule-text"><strong>Ek Account:</strong> Ek device par sirf ek account allowed hai. Multiple accounts ban ho jayenge.</div>
+    </div>
+    <div class="rule-item">
+      <div class="rule-num">7</div>
+      <div class="rule-text"><strong>Payment Details:</strong> Withdraw se pehle sahi UPI ya Bank details save karein aur OTP se verify karein.</div>
+    </div>
+    <button class="rules-close-btn" onclick="closeRules()">✅ Samajh Gaya!</button>
+  </div>
+</div>
+
+<!-- LOGIN SECTION -->
 <div id="loginSection">
   <div class="card">
     <div class="logo-section">
@@ -150,6 +224,7 @@
       <div class="forgot" onclick="forgotPassword()">Forgot Password?</div>
       <button class="btn-main" id="loginBtn" onclick="loginUser()">LOGIN</button>
     </div>
+    <!-- REGISTER FORM — Refer field nahi hai -->
     <div class="register-form" id="registerForm">
       <div class="input-wrap">
         <span class="input-icon">👤</span>
@@ -164,16 +239,14 @@
         <input type="password" id="regPassword" placeholder="Create password (min 6 chars)">
         <span class="eye-icon" onclick="togglePass('regPassword', this)">👁️</span>
       </div>
-      <div class="input-wrap">
-        <span class="input-icon">🎁</span>
-        <input type="text" id="regReferral" placeholder="Referral Code (optional)">
-      </div>
-      <button class="btn-main" id="registerBtn" onclick="registerUser()">CREATE ACCOUNT</button>
+      <!-- Referral field hidden, auto-fill hoga URL se -->
+      <input type="hidden" id="regReferral">
+      <button class="btn-main" id="registerBtn" onclick="startRegister()">SEND OTP & REGISTER</button>
     </div>
   </div>
 </div>
 
-<!-- ========== HOME SECTION ========== -->
+<!-- HOME SECTION -->
 <div id="homeSection">
   <div class="content">
     <div class="header">
@@ -182,11 +255,10 @@
         <p>Let's earn more today</p>
       </div>
       <div class="header-right">
-        <div class="notif-btn">🔔<div class="notif-dot"></div></div>
+        <div class="notif-btn" onclick="showRules()">🔔<div class="notif-dot"></div></div>
         <div class="avatar" onclick="window.location.href='tasknova_profile.html'">👤</div>
       </div>
     </div>
-
     <div class="balance-card">
       <div class="balance-label">💳 Your Balance</div>
       <div class="balance-amount user-balance">₹0.00</div>
@@ -194,7 +266,6 @@
       <div class="wallet-img">👜</div>
       <button class="withdraw-btn-card" onclick="window.location.href='tasknova_withdraw.html'">↗ Withdraw</button>
     </div>
-
     <div class="welcome-bonus" id="welcomeBonusCard">
       <div class="icon">🎁</div>
       <div>
@@ -202,18 +273,15 @@
         <p>₹10 added to your account on joining</p>
       </div>
     </div>
-
     <div class="stats-grid">
       <div class="stat-card"><div class="stat-icon">💰</div><div class="stat-value user-total-earned">₹0</div><div class="stat-label">Total Earned</div></div>
       <div class="stat-card"><div class="stat-icon">📋</div><div class="stat-value user-tasks">0</div><div class="stat-label">Tasks Done</div></div>
       <div class="stat-card"><div class="stat-icon">👥</div><div class="stat-value user-referrals">0</div><div class="stat-label">Referrals</div></div>
     </div>
-
     <div class="section-header">
       <div class="section-title">Earning Options</div>
       <div class="view-all" onclick="window.location.href='tasknova_tasks.html'">View All</div>
     </div>
-
     <div class="earn-cards">
       <div class="earn-card" onclick="window.location.href='tasknova_tasks.html'">
         <div class="earn-card-icon bg-purple">📺</div>
@@ -235,13 +303,7 @@
         <div class="earn-card-info"><h3>Instagram Post</h3><p>Share TaskNova & earn ₹5</p></div>
         <div class="earn-card-reward coming">🔒 Soon</div>
       </div>
-      <div class="earn-card" onclick="window.location.href='tasknova_refer.html'">
-        <div class="earn-card-icon bg-orange">👥</div>
-        <div class="earn-card-info"><h3>Refer & Earn</h3><p>Friend withdraws = ₹10 for you</p></div>
-        <div class="earn-card-reward coming">🔒 Soon</div>
-      </div>
     </div>
-
     <div class="invite-banner">
       <div class="invite-text">
         <h3>Invite Friends<br>& <span>Earn More!</span></h3>
@@ -250,7 +312,6 @@
       </div>
       <div class="invite-emoji">🤝</div>
     </div>
-
     <div class="section-title" style="margin-bottom:12px;">Recent Activity</div>
     <div id="activityList">
       <div class="activity-item">
@@ -260,7 +321,6 @@
       </div>
     </div>
   </div>
-
   <div class="bottom-nav">
     <div class="nav-item active"><span>🏠</span><p>Home</p></div>
     <div class="nav-item" onclick="window.location.href='tasknova_tasks.html'"><span>📋</span><p>Tasks</p></div>
@@ -285,37 +345,68 @@
     appId: "1:135129024485:web:232a90fd0752086568510c"
   };
 
-  const app = initializeApp(firebaseConfig);
+  const app  = initializeApp(firebaseConfig);
   const auth = getAuth(app);
-  const db = getDatabase(app);
+  const db   = getDatabase(app);
+
+  // ── EmailJS config ────────────────────────────────────────────
+  const EMAILJS_SERVICE_ID  = 'service_4v9rxbp';
+  const EMAILJS_TEMPLATE_ID = 'template_vn14vex';
+  const EMAILJS_PUBLIC_KEY  = 'TDOOVu5VGqilIHFNe';
+
+  let currentOTP   = '';
+  let pendingRegData = null;
 
   let alreadyChecked = false;
-
-  window.addEventListener("load", () => {
+  window.addEventListener('load', () => {
     if (alreadyChecked) return;
     alreadyChecked = true;
 
-    const uid = localStorage.getItem("tasknova_uid");
+    // Stars load
+    requestAnimationFrame(() => {
+      const sc = document.getElementById('stars');
+      const f  = document.createDocumentFragment();
+      for (let i = 0; i < 60; i++) {
+        const s = document.createElement('div');
+        s.classList.add('star');
+        const sz = Math.random() * 2 + 0.5;
+        s.style.cssText = `width:${sz}px;height:${sz}px;top:${Math.random()*100}%;left:${Math.random()*100}%;animation-delay:${Math.random()*3}s;animation-duration:${Math.random()*3+2}s;`;
+        f.appendChild(s);
+      }
+      sc.appendChild(f);
+    });
 
-    if (uid && uid !== "null") {
-      setTimeout(() => {
-        showHome(uid);
-      }, 500);
+    // EmailJS load
+    const ejs = document.createElement('script');
+    ejs.src = 'https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js';
+    ejs.onload = () => emailjs.init(EMAILJS_PUBLIC_KEY);
+    document.head.appendChild(ejs);
+
+    // Auto-fill referral code from URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const refCode   = urlParams.get('ref');
+    if (refCode) {
+      document.getElementById('regReferral').value = refCode;
+      // Register tab show karo agar refer link se aaya
+      showRegister();
+      showToast('Referral code apply ho gaya! 🎁', 'success');
+    }
+
+    const uid = localStorage.getItem('tasknova_uid');
+    if (uid && uid !== 'null') {
+      setTimeout(() => showHome(uid), 500);
     } else {
       document.getElementById('loginSection').style.display = 'flex';
     }
   });
 
+  // ── Show Home ─────────────────────────────────────────────────
   async function showHome(uid) {
     if (!uid) return;
-
-    // HARD STOP MULTIPLE CALLS
     if (window.__HOME_ACTIVE__) return;
     window.__HOME_ACTIVE__ = true;
-
     document.getElementById('loginSection').style.display = 'none';
-    document.getElementById('homeSection').style.display = 'block';
-
+    document.getElementById('homeSection').style.display  = 'block';
     try {
       const snap = await get(ref(db, 'users/' + uid));
       if (snap.exists()) {
@@ -328,9 +419,7 @@
         if (!data.welcomeBonus) document.getElementById('welcomeBonusCard').style.display = 'none';
         document.querySelector('.header-left h2').textContent = 'Hello, ' + (data.name || 'User') + '! 👋';
       }
-    } catch (e) {
-      console.log("error:", e);
-    }
+    } catch(e) { console.log('error:', e); }
   }
 
   function showToast(msg, type) {
@@ -344,20 +433,101 @@
     return 'TN' + Math.random().toString(36).substring(2, 8).toUpperCase();
   }
 
-  // REGISTER
-  window.registerUser = async function() {
-    const name = document.getElementById('regName').value.trim();
-    const email = document.getElementById('regEmail').value.trim();
+  function maskEmail(email) {
+    const [user, domain] = email.split('@');
+    return user.slice(0, 2) + '****@' + domain;
+  }
+
+  // ── REGISTER Step 1: Validate → Send OTP ─────────────────────
+  window.startRegister = function() {
+    const name     = document.getElementById('regName').value.trim();
+    const email    = document.getElementById('regEmail').value.trim();
     const password = document.getElementById('regPassword').value;
     const referral = document.getElementById('regReferral').value.trim();
 
     if (!name || !email || !password) { showToast('Please fill all fields!', 'error'); return; }
     if (password.length < 6) { showToast('Password must be 6+ characters!', 'error'); return; }
+    if (!email.includes('@')) { showToast('Valid email enter karein!', 'error'); return; }
+
+    pendingRegData = { name, email, password, referral };
+    sendRegOTP();
+  };
+
+  function sendRegOTP() {
+    currentOTP = Math.floor(100000 + Math.random() * 900000).toString();
+    document.getElementById('otpEmailShow').textContent = maskEmail(pendingRegData.email);
+    document.querySelectorAll('.otp-box').forEach(b => b.value = '');
 
     const btn = document.getElementById('registerBtn');
-    btn.innerHTML = '<span class="spinner"></span>Creating...';
-    btn.disabled = true;
+    btn.innerHTML  = '<span class="spinner"></span>Sending OTP...';
+    btn.disabled   = true;
 
+    if (typeof emailjs === 'undefined') {
+      showToast('Email service load nahi hua, refresh karein!', 'error');
+      btn.innerHTML = 'SEND OTP & REGISTER';
+      btn.disabled  = false;
+      return;
+    }
+
+    emailjs.init(EMAILJS_PUBLIC_KEY);
+    emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
+      to_email   : pendingRegData.email,
+      user_email : pendingRegData.email,
+      email      : pendingRegData.email,
+      otp_code   : currentOTP,
+      otp        : currentOTP,
+      app_name   : 'TaskNova',
+      name       : pendingRegData.name
+    }).then(() => {
+      showToast('OTP bheja! Gmail check karein 📧', 'success');
+      document.getElementById('otpModal').classList.add('show');
+      document.querySelectorAll('.otp-box')[0].focus();
+    }).catch(err => {
+      console.error('EmailJS Error:', err);
+      showToast('OTP send failed: ' + (err.text || err.message || 'Try again'), 'error');
+    }).finally(() => {
+      btn.innerHTML = 'SEND OTP & REGISTER';
+      btn.disabled  = false;
+    });
+  }
+
+  window.resendRegOTP = function() {
+    if (!pendingRegData) return;
+    showToast('OTP dobara bhej raha hoon...', '');
+    sendRegOTP();
+  };
+
+  // ── OTP Input ─────────────────────────────────────────────────
+  window.otpInput = function(el, idx) {
+    el.value = el.value.replace(/\D/g, '');
+    if (el.value && idx < 5) document.querySelectorAll('.otp-box')[idx + 1].focus();
+    const all = [...document.querySelectorAll('.otp-box')].map(b => b.value);
+    if (all.every(v => v)) verifyRegOTP();
+  };
+
+  window.otpBack = function(e, idx) {
+    if (e.key === 'Backspace' && !e.target.value && idx > 0)
+      document.querySelectorAll('.otp-box')[idx - 1].focus();
+  };
+
+  // ── REGISTER Step 2: Verify OTP → Create Account ─────────────
+  window.verifyRegOTP = async function() {
+    const entered = [...document.querySelectorAll('.otp-box')].map(b => b.value).join('');
+    if (entered.length < 6) { showToast('Pura 6-digit OTP enter karein', 'error'); return; }
+
+    if (entered !== currentOTP) {
+      showToast('Galat OTP! Dobara try karein ❌', 'error');
+      document.querySelectorAll('.otp-box').forEach(b => { b.value = ''; b.style.borderColor = '#ef4444'; });
+      setTimeout(() => document.querySelectorAll('.otp-box').forEach(b => b.style.borderColor = ''), 1200);
+      document.querySelectorAll('.otp-box')[0].focus();
+      return;
+    }
+
+    const verifyBtn = document.getElementById('otpVerifyBtn');
+    verifyBtn.innerHTML = '<span class="otp-loader"></span>Creating Account...';
+    verifyBtn.disabled  = true;
+
+    const { name, email, password, referral } = pendingRegData;
     try {
       const userCred = await createUserWithEmailAndPassword(auth, email, password);
       const uid = userCred.user.uid;
@@ -377,71 +547,60 @@
         });
       }
 
+      closeOTPModal();
       showToast('Welcome! ₹10 bonus added! 🎉', 'success');
       setTimeout(() => {
         window.__HOME_ACTIVE__ = false;
         showHome(uid);
       }, 1500);
 
-    } catch (e) {
-      btn.innerHTML = 'CREATE ACCOUNT';
-      btn.disabled = false;
+    } catch(e) {
       if (e.code === 'auth/email-already-in-use') showToast('Email already registered!', 'error');
       else showToast('Error: ' + e.message, 'error');
+    } finally {
+      verifyBtn.innerHTML = '✅ Verify & Create Account';
+      verifyBtn.disabled  = false;
     }
   };
 
-  // LOGIN
+  window.closeOTPModal = function() {
+    document.getElementById('otpModal').classList.remove('show');
+  };
+
+  // ── LOGIN ─────────────────────────────────────────────────────
   window.loginUser = async function() {
-    const email = document.getElementById('loginEmail').value.trim();
+    const email    = document.getElementById('loginEmail').value.trim();
     const password = document.getElementById('loginPassword').value;
-
     if (!email || !password) { showToast('Please fill all fields!', 'error'); return; }
-
     const btn = document.getElementById('loginBtn');
     btn.innerHTML = '<span class="spinner"></span>Logging in...';
-    btn.disabled = true;
-
+    btn.disabled  = true;
     try {
       const user = await signInWithEmailAndPassword(auth, email, password);
       localStorage.setItem('tasknova_uid', user.user.uid);
       showToast('Login successful! 🎉', 'success');
-      setTimeout(() => {
-        window.__HOME_ACTIVE__ = false;
-        showHome(user.user.uid);
-      }, 1000);
-    } catch (e) {
+      setTimeout(() => { window.__HOME_ACTIVE__ = false; showHome(user.user.uid); }, 1000);
+    } catch(e) {
       btn.innerHTML = 'LOGIN';
-      btn.disabled = false;
+      btn.disabled  = false;
       if (e.code === 'auth/wrong-password') showToast('Wrong password!', 'error');
       else if (e.code === 'auth/user-not-found') showToast('Email not registered!', 'error');
       else showToast('Login failed!', 'error');
     }
   };
 
-  // FORGOT PASSWORD
+  // ── FORGOT PASSWORD ───────────────────────────────────────────
   window.forgotPassword = async function() {
     const email = document.getElementById('loginEmail').value.trim();
     if (!email) { showToast('Enter your email first!', 'error'); return; }
     try {
       await sendPasswordResetEmail(auth, email);
       showToast('Reset email sent! 📧', 'success');
-    } catch (e) {
-      showToast('Error sending reset email!', 'error');
-    }
+    } catch(e) { showToast('Error sending reset email!', 'error'); }
   };
 </script>
 
 <script>
-  const starsContainer = document.getElementById('stars');
-  for (let i = 0; i < 60; i++) {
-    const star = document.createElement('div');
-    star.classList.add('star');
-    const size = Math.random() * 2 + 0.5;
-    star.style.cssText = `width:${size}px;height:${size}px;top:${Math.random()*100}%;left:${Math.random()*100}%;animation-delay:${Math.random()*3}s;animation-duration:${Math.random()*3+2}s;`;
-    starsContainer.appendChild(star);
-  }
-
   function togglePass(id, el) {
     const input = document.getElementById(id);
     if (input.type === 'password') { input.type = 'text'; el.textContent = '🙈'; }
@@ -449,17 +608,25 @@
   }
 
   function showLogin() {
-    document.getElementById('loginForm').style.display = 'flex';
+    document.getElementById('loginForm').style.display    = 'flex';
     document.getElementById('registerForm').style.display = 'none';
     document.querySelectorAll('.tab')[0].classList.add('active');
     document.querySelectorAll('.tab')[1].classList.remove('active');
   }
 
   function showRegister() {
-    document.getElementById('loginForm').style.display = 'none';
+    document.getElementById('loginForm').style.display    = 'none';
     document.getElementById('registerForm').style.display = 'flex';
     document.querySelectorAll('.tab')[1].classList.add('active');
     document.querySelectorAll('.tab')[0].classList.remove('active');
+  }
+
+  function showRules() {
+    document.getElementById('rulesModal').classList.add('show');
+  }
+
+  function closeRules() {
+    document.getElementById('rulesModal').classList.remove('show');
   }
 </script>
 </body>
