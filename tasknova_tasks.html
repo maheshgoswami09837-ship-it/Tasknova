@@ -158,19 +158,35 @@
 
 <!-- Ad Popup -->
 <div id="adPopup">
-  <div class="ad-timer-bar" id="adTimerBar" style="width:0%"></div>
-  <div class="ad-content">
-    <div style="font-size:60px;margin-bottom:20px;">📺</div>
-    <div style="color:#fff;font-size:22px;font-weight:800;margin-bottom:10px;">Advertisement</div>
-    <div style="color:rgba(255,255,255,0.5);font-size:14px;text-align:center;max-width:280px;">Watch the full video to claim your coins.</div>
-    <div style="margin-top:30px;background:rgba(255,255,255,0.08);border-radius:20px;padding:20px 40px;text-align:center;">
-      <div style="color:rgba(255,255,255,0.5);font-size:12px;">You will earn</div>
-      <div id="adEarnCoins" style="color:#6c63ff;font-size:36px;font-weight:800;">+10</div>
-      <div style="color:rgba(255,255,255,0.5);font-size:12px;">Coins</div>
+  <div style="width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;">
+    
+    <!-- Timer bar -->
+    <div style="width:100%;height:4px;background:rgba(255,255,255,0.1);border-radius:2px;margin-bottom:30px;">
+      <div id="adTimerBar" style="height:100%;width:0%;background:linear-gradient(135deg,#6c63ff,#3b82f6);border-radius:2px;transition:width 1s linear;"></div>
     </div>
+
+    <div style="font-size:50px;margin-bottom:16px;">📺</div>
+    <div style="color:#fff;font-size:20px;font-weight:800;margin-bottom:8px;">Advertisement</div>
+    <div id="adStatusText" style="color:rgba(255,255,255,0.5);font-size:13px;text-align:center;margin-bottom:24px;">Ad page par ja rahe ho...</div>
+
+    <!-- Alert box for cheating -->
+    <div id="adAlert" style="display:none;background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.4);border-radius:14px;padding:14px;text-align:center;margin-bottom:16px;width:100%;">
+      <div style="color:#ef4444;font-weight:700;font-size:14px;">⚠️ Ad puri dekho!</div>
+      <div style="color:rgba(255,255,255,0.6);font-size:12px;margin-top:4px;" id="adAlertText">Abhi tak <span id="adTimeSpent">0</span>s dekhi hai, 15s chahiye</div>
+    </div>
+
+    <div style="background:rgba(255,255,255,0.08);border-radius:16px;padding:16px 32px;text-align:center;margin-bottom:24px;">
+      <div style="color:rgba(255,255,255,0.5);font-size:11px;">Aapko milenge</div>
+      <div id="adEarnCoins" style="color:#6c63ff;font-size:32px;font-weight:800;">+10</div>
+      <div style="color:rgba(255,255,255,0.5);font-size:11px;">Coins</div>
+    </div>
+
+    <div id="adCountdown" style="color:rgba(255,255,255,0.6);font-size:14px;font-weight:600;margin-bottom:16px;"></div>
+
+    <button id="adClaimBtn" onclick="claimCoins()" style="display:none;width:100%;background:linear-gradient(135deg,#22c55e,#16a34a);border:none;border-radius:16px;padding:16px;color:#fff;font-size:16px;font-weight:800;cursor:pointer;">
+      ✅ Coins Claim Karo
+    </button>
   </div>
-  <div class="ad-countdown" id="adCountdown">Please wait... 30s</div>
-  <button class="ad-skip-btn" id="adSkipBtn" onclick="skipAd()" style="display:none;">Skip ✕</button>
 </div>
 
 <div class="bottom-nav">
@@ -217,9 +233,15 @@
   }
 
   const DB_URL = 'https://tasknova-66d0f-default-rtdb.firebaseio.com';
-  const MAX_ADS = 20;
+  const MAX_ADS = 10; // 10 ads per day
+  const MIN_AD_TIME = 15; // 15 seconds minimum on ad page
+  const COOLDOWN_TIME = 30; // 30 seconds cooldown after claim
   let adsWatchedToday = 0;
   let cooldownInterval = null;
+  let adTimeSpent = 0;
+  let adTimerInterval = null;
+  let adBarWidth = 0;
+  let currentCoins = 10;
 
   // Check reset time 7:30 AM
   function shouldReset() {
@@ -236,7 +258,7 @@
     document.getElementById('adCounter').textContent = MAX_ADS + '/' + remaining;
     if (remaining <= 0) {
       const btn = document.getElementById('watchAdBtn');
-      btn.textContent = 'Done ✅';
+      btn.textContent = 'Limit Done ✅';
       btn.disabled = true;
       btn.style.background = 'rgba(255,255,255,0.1)';
       btn.style.color = 'rgba(255,255,255,0.4)';
@@ -244,7 +266,7 @@
   }
 
   function startCooldown() {
-    let secs = 30;
+    let secs = COOLDOWN_TIME;
     const btn = document.getElementById('watchAdBtn');
     btn.disabled = true;
     btn.style.background = 'rgba(255,165,0,0.3)';
@@ -264,101 +286,84 @@
     }, 1000);
   }
 
-  let currentCoins = 0;
-  let adInterval = null;
-  let rewardedAd = null;
+  // Page Visibility API - track time on ad page
+  function startAdTracking(uid) {
+    adTimeSpent = 0;
+    adBarWidth = 0;
+    document.getElementById('adAlert').style.display = 'none';
+    document.getElementById('adClaimBtn').style.display = 'none';
+    document.getElementById('adCountdown').textContent = '';
+    document.getElementById('adStatusText').textContent = 'Ad page par jao aur 15s dekho...';
+    document.getElementById('adTimerBar').style.width = '0%';
 
-  // Load Google Rewarded Ad
-  function loadRewardedAd() {
-    try {
-      rewardedAd = new google.ima.AdDisplayContainer(
-        document.getElementById('adPopup')
-      );
-    } catch(e) {}
+    adTimerInterval = setInterval(() => {
+      if (!document.hidden) {
+        // User is on app - not on ad page
+        if (adTimeSpent < MIN_AD_TIME) {
+          document.getElementById('adAlert').style.display = 'block';
+          document.getElementById('adTimeSpent').textContent = adTimeSpent;
+        }
+      } else {
+        // User is on ad page - count time
+        adTimeSpent++;
+        const percent = Math.min((adTimeSpent / MIN_AD_TIME) * 100, 100);
+        document.getElementById('adTimerBar').style.width = percent + '%';
+        document.getElementById('adStatusText').textContent = 'Ad dekh rahe ho... ' + adTimeSpent + 's/' + MIN_AD_TIME + 's';
+        document.getElementById('adAlert').style.display = 'none';
+
+        if (adTimeSpent >= MIN_AD_TIME) {
+          // Enough time spent - show claim button
+          clearInterval(adTimerInterval);
+          document.getElementById('adStatusText').textContent = 'Ad puri ho gayi! Ab coins lo 🎉';
+          document.getElementById('adCountdown').textContent = '';
+          document.getElementById('adClaimBtn').style.display = 'block';
+          document.getElementById('adClaimBtn').onclick = function() { claimCoins(uid); };
+        }
+      }
+    }, 1000);
   }
 
   function watchAd() {
     const uid = localStorage.getItem('tasknova_uid');
     if (!uid || uid === 'null') return;
 
-    // Anti-fraud: check last ad time
     const lastAdTime = localStorage.getItem('lastAdTime');
     const now = Date.now();
-    if (lastAdTime && (now - parseInt(lastAdTime)) < 30000) {
-      alert('Please wait 30 seconds between ads!');
+    if (lastAdTime && (now - parseInt(lastAdTime)) < COOLDOWN_TIME * 1000) {
+      const remaining = Math.ceil((COOLDOWN_TIME * 1000 - (now - parseInt(lastAdTime))) / 1000);
+      alert(remaining + ' seconds wait karo!');
       return;
     }
 
-    if (adsWatchedToday >= MAX_ADS) return;
-
-    // Random coins 8-12
-    currentCoins = Math.floor(Math.random() * 5) + 8;
-    document.getElementById('adCoins').textContent = '+' + currentCoins;
-    document.getElementById('adEarnCoins').textContent = '+' + currentCoins;
-
-    // Try Google AdSense Rewarded Ad
-    try {
-      (adsbygoogle = window.adsbygoogle || []).push({
-        google_ad_client: 'ca-pub-9251791690276801',
-        google_ad_slot: '2768961692',
-        google_ad_type: 'rewarded',
-        google_ad_reward_callback: function() {
-          // Ad watched completely - give reward
-          onAdComplete(uid);
-        }
-      });
-    } catch(e) {
-      // Fallback: show popup ad if AdSense not available
-      showPopupAd(uid);
+    if (adsWatchedToday >= MAX_ADS) {
+      alert('Aaj ki limit puri ho gayi! Kal 7:30 AM pe reset hogi.');
+      return;
     }
-  }
 
-  function showPopupAd(uid) {
-    // Step 1: Open real ad URL
+    currentCoins = Math.floor(Math.random() * 3) + 8; // 8-10 coins
+    document.getElementById('adEarnCoins').textContent = '+' + currentCoins;
+    document.getElementById('adCoins').textContent = '+' + currentCoins;
+
+    // Show popup
+    document.getElementById('adPopup').classList.add('show');
+
+    // Open ad in external browser
     window.open('https://www.effectivecpmnetwork.com/b1bggwx0?key=f1f69a147759698e8fda4cfd27e423ba', '_blank');
 
-    // Step 2: Show "Ad is playing" screen - wait for user to come back
-    const popup = document.getElementById('adPopup');
-    popup.classList.add('show');
-    document.getElementById('adSkipBtn').style.display = 'block';
-    document.getElementById('adSkipBtn').textContent = 'Ad Dekh Li ✓';
-    document.getElementById('adSkipBtn').style.background = 'linear-gradient(135deg,#6c63ff,#3b82f6)';
-    document.getElementById('adCountdown').textContent = 'Ad chal rahi hai... 📺';
-    document.getElementById('adTimerBar').style.width = '0%';
-    document.getElementById('adSkipBtn').onclick = function() { adWatched(uid); };
+    // Start tracking
+    startAdTracking(uid);
   }
 
-  function adWatched(uid) {
-    // Ad complete - now start 30sec cooldown on button
-    const popup = document.getElementById('adPopup');
-    popup.classList.remove('show');
-    document.getElementById('adTimerBar').style.transition = 'none';
-    document.getElementById('adTimerBar').style.width = '0%';
+  function claimCoins(uid) {
+    clearInterval(adTimerInterval);
+    document.getElementById('adPopup').classList.remove('show');
 
-    // Give coins
-    onAdComplete(uid);
-  }
-
-  function collectCoins(uid) {
-    clearInterval(adInterval);
-    const popup = document.getElementById('adPopup');
-    popup.classList.remove('show');
-    document.getElementById('adTimerBar').style.transition = 'none';
-    document.getElementById('adTimerBar').style.width = '0%';
-    onAdComplete(uid);
-  }
-
-  function skipAd() {
-    // Only allow skip after ad completes
-  }
-
-  function onAdComplete(uid) {
     adsWatchedToday++;
     localStorage.setItem('adsWatchedToday', adsWatchedToday);
     localStorage.setItem('lastAdTime', Date.now().toString());
     updateCounter();
 
-    // Save coins to Firebase
+    // Save to Firebase
     fetch(DB_URL + '/users/' + uid + '.json')
       .then(r => r.json())
       .then(data => {
@@ -377,7 +382,13 @@
     startCooldown();
   }
 
-  function showReward(coins) {
+  function skipAd() {} // disabled
+
+  function collectCoins(uid) { claimCoins(uid); }
+  function adWatched(uid) { claimCoins(uid); }
+  function onAdComplete(uid) { claimCoins(uid); }
+
+    function showReward(coins) {
     const toast = document.createElement('div');
     toast.textContent = '+' + coins + ' Coins Earned! 🎉';
     toast.style.cssText = 'position:fixed;top:80px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#6c63ff,#3b82f6);color:#fff;padding:12px 24px;border-radius:50px;font-weight:700;font-size:14px;z-index:9999;box-shadow:0 4px 20px rgba(108,99,255,0.5);';
