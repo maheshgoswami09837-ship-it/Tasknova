@@ -314,30 +314,29 @@
   }
 
   function showPopupAd(uid) {
+    // Step 1: Open real ad URL
+    window.open('https://www.effectivecpmnetwork.com/b1bggwx0?key=f1f69a147759698e8fda4cfd27e423ba', '_blank');
+
+    // Step 2: Show "Ad is playing" screen - wait for user to come back
     const popup = document.getElementById('adPopup');
     popup.classList.add('show');
-    document.getElementById('adSkipBtn').style.display = 'none';
-    document.getElementById('adCountdown').textContent = 'Please wait... 30s';
+    document.getElementById('adSkipBtn').style.display = 'block';
+    document.getElementById('adSkipBtn').textContent = 'Ad Dekh Li ✓';
+    document.getElementById('adSkipBtn').style.background = 'linear-gradient(135deg,#6c63ff,#3b82f6)';
+    document.getElementById('adCountdown').textContent = 'Ad chal rahi hai... 📺';
+    document.getElementById('adTimerBar').style.width = '0%';
+    document.getElementById('adSkipBtn').onclick = function() { adWatched(uid); };
+  }
+
+  function adWatched(uid) {
+    // Ad complete - now start 30sec cooldown on button
+    const popup = document.getElementById('adPopup');
+    popup.classList.remove('show');
+    document.getElementById('adTimerBar').style.transition = 'none';
     document.getElementById('adTimerBar').style.width = '0%';
 
-    let secs = 30;
-    setTimeout(() => {
-      document.getElementById('adTimerBar').style.width = '100%';
-      document.getElementById('adTimerBar').style.transition = 'width 30s linear';
-    }, 100);
-
-    adInterval = setInterval(() => {
-      secs--;
-      document.getElementById('adCountdown').textContent = 'Please wait... ' + secs + 's';
-      if (secs <= 0) {
-        clearInterval(adInterval);
-        document.getElementById('adCountdown').textContent = 'Ad Complete! 🎉';
-        document.getElementById('adSkipBtn').textContent = 'Collect Coins ✓';
-        document.getElementById('adSkipBtn').style.display = 'block';
-        document.getElementById('adSkipBtn').style.background = 'linear-gradient(135deg,#6c63ff,#3b82f6)';
-        document.getElementById('adSkipBtn').onclick = function() { collectCoins(uid); };
-      }
-    }, 1000);
+    // Give coins
+    onAdComplete(uid);
   }
 
   function collectCoins(uid) {
