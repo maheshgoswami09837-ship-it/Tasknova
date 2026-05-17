@@ -122,17 +122,17 @@
       </div>
     </div>
 
-    <div class="task-card disabled" data-category="survey">
+    <div class="task-card" data-category="survey" onclick="openSurvey()">
       <div class="task-icon icon-blue">📝</div>
       <div class="task-info">
         <h3>Complete Survey</h3>
-        <p>Answer questions from brands & earn</p>
-        <div class="task-meta"><span class="task-time">⏱ 5 min</span></div>
+        <p>Answer questions from brands & earn coins</p>
+        <div class="task-meta"><span class="task-time">⏱ 5-10 min</span></div>
       </div>
       <div class="task-reward">
-        <div class="coins-reward">₹5-50</div>
-        <div class="rupee">per survey</div>
-        <div class="coming-soon-badge">🔒 Coming Soon</div>
+        <div class="coins-reward">500-2000</div>
+        <div class="rupee">coins/survey</div>
+        <button class="do-btn">Start</button>
       </div>
     </div>
 
@@ -348,7 +348,13 @@
     document.getElementById('adPopup').classList.add('show');
 
     // Open ad in external browser
-    window.open('https://www.effectivecpmnetwork.com/b1bggwx0?key=f1f69a147759698e8fda4cfd27e423ba', '_blank');
+    const adLink = document.createElement('a');
+    adLink.href = 'https://www.effectivecpmnetwork.com/b1bggwx0?key=f1f69a147759698e8fda4cfd27e423ba';
+    adLink.target = '_blank';
+    adLink.rel = 'noopener';
+    document.body.appendChild(adLink);
+    adLink.click();
+    document.body.removeChild(adLink);
 
     // Start tracking
     startAdTracking(uid);
@@ -388,7 +394,20 @@
   function adWatched(uid) { claimCoins(uid); }
   function onAdComplete(uid) { claimCoins(uid); }
 
-    function showReward(coins) {
+    function openSurvey() {
+    const uid = localStorage.getItem('tasknova_uid');
+    if (!uid || uid === 'null') return;
+    const surveyUrl = 'https://offers.cpx-research.com/index.php?app_id=33101&ext_user_id=' + uid;
+    const a = document.createElement('a');
+    a.href = surveyUrl;
+    a.target = '_blank';
+    a.rel = 'noopener';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  }
+
+  function showReward(coins) {
     const toast = document.createElement('div');
     toast.textContent = '+' + coins + ' Coins Earned! 🎉';
     toast.style.cssText = 'position:fixed;top:80px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#6c63ff,#3b82f6);color:#fff;padding:12px 24px;border-radius:50px;font-weight:700;font-size:14px;z-index:9999;box-shadow:0 4px 20px rgba(108,99,255,0.5);';
