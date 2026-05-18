@@ -289,36 +289,28 @@
   // Page Visibility API - track time on ad page
   function startAdTracking(uid) {
     adTimeSpent = 0;
-    adBarWidth = 0;
     document.getElementById('adAlert').style.display = 'none';
     document.getElementById('adClaimBtn').style.display = 'none';
-    document.getElementById('adCountdown').textContent = '';
-    document.getElementById('adStatusText').textContent = 'Ad page par jao aur 15s dekho...';
+    document.getElementById('adStatusText').textContent = 'Ad khul rahi hai Chrome mein...';
     document.getElementById('adTimerBar').style.width = '0%';
 
-    adTimerInterval = setInterval(() => {
-      if (!document.hidden) {
-        // User is on app - not on ad page
-        if (adTimeSpent < MIN_AD_TIME) {
-          document.getElementById('adAlert').style.display = 'block';
-          document.getElementById('adTimeSpent').textContent = adTimeSpent;
-        }
-      } else {
-        // User is on ad page - count time
-        adTimeSpent++;
-        const percent = Math.min((adTimeSpent / MIN_AD_TIME) * 100, 100);
-        document.getElementById('adTimerBar').style.width = percent + '%';
-        document.getElementById('adStatusText').textContent = 'Ad dekh rahe ho... ' + adTimeSpent + 's/' + MIN_AD_TIME + 's';
-        document.getElementById('adAlert').style.display = 'none';
+    // Simple 15 sec timer
+    let secs = MIN_AD_TIME;
+    setTimeout(() => {
+      document.getElementById('adTimerBar').style.width = '100%';
+      document.getElementById('adTimerBar').style.transition = 'width ' + MIN_AD_TIME + 's linear';
+    }, 100);
 
-        if (adTimeSpent >= MIN_AD_TIME) {
-          // Enough time spent - show claim button
-          clearInterval(adTimerInterval);
-          document.getElementById('adStatusText').textContent = 'Ad puri ho gayi! Ab coins lo 🎉';
-          document.getElementById('adCountdown').textContent = '';
-          document.getElementById('adClaimBtn').style.display = 'block';
-          document.getElementById('adClaimBtn').onclick = function() { claimCoins(uid); };
-        }
+    adTimerInterval = setInterval(() => {
+      secs--;
+      adTimeSpent++;
+      document.getElementById('adStatusText').textContent = 'Ad dekho... ' + secs + 's aur ruko';
+      if (secs <= 0) {
+        clearInterval(adTimerInterval);
+        document.getElementById('adStatusText').textContent = 'Ab coins lo! 🎉';
+        document.getElementById('adAlert').style.display = 'none';
+        document.getElementById('adClaimBtn').style.display = 'block';
+        document.getElementById('adClaimBtn').onclick = function() { claimCoins(uid); };
       }
     }, 1000);
   }
