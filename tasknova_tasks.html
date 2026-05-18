@@ -394,10 +394,59 @@
   function adWatched(uid) { claimCoins(uid); }
   function onAdComplete(uid) { claimCoins(uid); }
 
-    function openSurvey() {
+  // ── CPX Research Config ──────────────────────────────────────────
+  const CPX_APP_ID = 33101;
+  const SURVEY_COOLDOWN_KEY = 'surveyCooldownUntil'; // only set on success
+
+  // Load CPX Script dynamically with correct user params
+  function loadCPXScript(uid) {
+    // Remove old script if any
+    const old = document.getElementById('cpx-script');
+    if (old) old.remove();
+
+    window.cpx_config = {
+      general: {
+        app_id: CPX_APP_ID,
+        ext_user_id: uid,
+      },
+      style: {
+        survey_box: {
+          roundness: "10",
+          has_border: true,
+        },
+      },
+    };
+
+    const script = document.createElement('script');
+    script.id = 'cpx-script';
+    script.src = 'https://cdn.cpx-research.com/assets/js/main-widget.js';
+    script.async = true;
+    document.head.appendChild(script);
+  }
+
+  function openSurvey() {
     const uid = localStorage.getItem('tasknova_uid');
-    if (!uid || uid === 'null') return;
-    const surveyUrl = 'https://offers.cpx-research.com/index.php?app_id=33101&ext_user_id=' + uid;
+    if (!uid || uid === 'null') {
+      alert('Pehle login karo!');
+      return;
+    }
+
+    // Check cooldown (only if user previously completed a survey)
+    const cooldownUntil = localStorage.getItem(SURVEY_COOLDOWN_KEY);
+    if (cooldownUntil) {
+      const remaining = Math.ceil((parseInt(cooldownUntil) - Date.now()) / 1000);
+      if (remaining > 0) {
+        const mins = Math.floor(remaining / 60);
+        const secs = remaining % 60;
+        alert('Survey cooldown chal raha hai! ' + mins + 'm ' + secs + 's aur ruko.');
+        return;
+      } else {
+        localStorage.removeItem(SURVEY_COOLDOWN_KEY);
+      }
+    }
+
+    // Open CPX survey wall in new tab
+    const surveyUrl = 'https://offers.cpx-research.com/index.php?app_id=' + CPX_APP_ID + '&ext_user_id=' + uid;
     const a = document.createElement('a');
     a.href = surveyUrl;
     a.target = '_blank';
@@ -407,18 +456,155 @@
     document.body.removeChild(a);
   }
 
-  function showReward(coins) {
+  // ── CPX Postback Handler ─────────────────────────────────────────
+  // CPX calls this URL on your server, but for client-side apps
+  // we listen via window.message events from the CPX widget.
+  // Additionally, handle URL param ?cpx_status=1&trans_id=XXX&amount=YYY
+  // when user returns to app after survey completion.
+
+  // ── CPX Postback Handler (Production Ready) ──────────────────────
+  // Handles: https://tasknovaapp.netlify.app/tasknova_tasks.html
+  //          ?cpx_status={status}&trans_id={transaction_id}
+  //          &amount={payout}&ext_user_id={ext_user_id}
+  //
+  // status values:
+  //   1 = Survey completed successfully → credit coins + 30 min cooldown
+  //   2 = Disqualified                  → NO coins, NO cooldown
+  //   3 = Screenout                     → NO coins, NO cooldown
+
+  function handleCPXPostback(status, transId, amount, extUserId) {
+    const uid = localStorage.getItem('tasknova_uid');
+    if (!uid || uid === 'null') return;
+
+    // Security: ext_user_id must match logged-in user
+    if (extUserId && extUserId !== uid) {
+      console.warn('CPX: ext_user_id mismatch. Ignoring postback.');
+      return;
+    }
+
+    // Duplicate transaction prevention
+    const processedKey = 'cpx_done_' + transId;
+    if (transId && localStorage.getItem(processedKey)) {
+      console.log('CPX: Transaction already processed:', transId);
+      return;
+    }
+
+    const statusNum = parseInt(status);
+
+    if (statusNum === 1) {
+      // ✅ SUCCESS — credit coins + 30 min cooldown
+      const coinsToAdd = amount ? Math.max(1, Math.round(parseFloat(amount))) : 500;
+
+      // Mark transaction as processed immediately (prevent double credit)
+      if (transId) localStorage.setItem(processedKey, '1');
+
+      fetch(DB_URL + '/users/' + uid + '.json')
+        .then(r => r.json())
+        .then(data => {
+          if (!data) throw new Error('User not found');
+          const newCoins    = (data.coins    || 0) + coinsToAdd;
+          const newTasksDone = (data.tasksDone || 0) + 1;
+
+          return fetch(DB_URL + '/users/' + uid + '.json', {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              coins: newCoins,
+              tasksDone: newTasksDone,
+              lastSurveyCompleted: Date.now(),
+              lastSurveyTransId: transId || 'N/A'
+            })
+          }).then(() => {
+            // Update UI
+            document.querySelector('.user-coins').textContent = newCoins + ' Coins';
+            document.querySelector('.user-balance').textContent =
+              '₹' + (newCoins / 100).toFixed(2);
+
+            showReward(coinsToAdd);
+
+            // 30 min cooldown — ONLY on success
+            const cooldownEnd = Date.now() + 30 * 60 * 1000;
+            localStorage.setItem(SURVEY_COOLDOWN_KEY, cooldownEnd.toString());
+
+            console.log('CPX: Success! Coins credited:', coinsToAdd, '| TransID:', transId);
+          });
+        })
+        .catch(e => {
+          console.error('CPX Firebase error:', e);
+          // If Firebase failed, remove processed flag so user can retry
+          if (transId) localStorage.removeItem(processedKey);
+          showToast('Coins credit karne mein error aaya. Support se contact karo.', '#ef4444');
+        });
+
+    } else if (statusNum === 2 || statusNum === 3) {
+      // ❌ DISQUALIFIED or SCREENOUT — no coins, no cooldown
+      console.log('CPX: Status', statusNum, '(disqualify/screenout). No cooldown applied.');
+      showToast('Yeh survey match nahi hua — koi baat nahi, dusra try karo! 😊', '#f59e0b');
+
+    } else {
+      console.log('CPX: Unknown status received:', status);
+    }
+  }
+
+  // Listen for CPX widget postMessage events (inline widget flow)
+  window.addEventListener('message', function(event) {
+    if (!event.data) return;
+    try {
+      const data = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
+      if (data && data.status !== undefined && (data.trans_id || data.transaction_id)) {
+        handleCPXPostback(
+          data.status,
+          data.trans_id || data.transaction_id,
+          data.amount || data.payout,
+          data.ext_user_id || null
+        );
+      }
+    } catch(e) { /* ignore non-JSON messages */ }
+  });
+
+  // ── URL Query Param Listener ──────────────────────────────────────
+  // Triggered when CPX redirects back to our URL with postback params
+  // URL: ?cpx_status=1&trans_id=ABC123&amount=5.00&ext_user_id=UID
+  function checkCPXUrlParams() {
+    const params = new URLSearchParams(window.location.search);
+    const status    = params.get('cpx_status');
+    const transId   = params.get('trans_id');
+    const amount    = params.get('amount');
+    const extUserId = params.get('ext_user_id');
+
+    if (status !== null && transId) {
+      console.log('CPX Postback received — status:', status, '| transId:', transId, '| amount:', amount, '| uid:', extUserId);
+      handleCPXPostback(status, transId, amount, extUserId);
+
+      // Clean URL so params don't re-trigger on refresh
+      const cleanUrl = window.location.pathname;
+      window.history.replaceState({}, document.title, cleanUrl);
+    }
+  }
+
+  function showToast(message, color) {
     const toast = document.createElement('div');
-    toast.textContent = '+' + coins + ' Coins Earned! 🎉';
-    toast.style.cssText = 'position:fixed;top:80px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#6c63ff,#3b82f6);color:#fff;padding:12px 24px;border-radius:50px;font-weight:700;font-size:14px;z-index:9999;box-shadow:0 4px 20px rgba(108,99,255,0.5);';
+    toast.textContent = message;
+    toast.style.cssText = 'position:fixed;top:80px;left:50%;transform:translateX(-50%);background:' + (color || 'linear-gradient(135deg,#6c63ff,#3b82f6)') + ';color:#fff;padding:12px 24px;border-radius:50px;font-weight:700;font-size:13px;z-index:9999;box-shadow:0 4px 20px rgba(0,0,0,0.3);text-align:center;max-width:80%;';
     document.body.appendChild(toast);
-    setTimeout(() => toast.remove(), 2500);
+    setTimeout(() => toast.remove(), 3000);
+  }
+
+  function showReward(coins) {
+    showToast('+' + coins + ' Coins Earned! 🎉', 'linear-gradient(135deg,#6c63ff,#3b82f6)');
   }
 
   // Page load
   window.addEventListener('load', () => {
     const uid = localStorage.getItem('tasknova_uid');
+
+    // Always check URL params first (CPX postback redirect)
+    checkCPXUrlParams();
+
     if (!uid || uid === 'null') return;
+
+    // Load CPX Research widget script
+    loadCPXScript(uid);
 
     // Check daily reset
     if (shouldReset()) {
