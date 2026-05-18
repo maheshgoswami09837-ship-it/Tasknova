@@ -336,13 +336,10 @@
     document.getElementById('adEarnCoins').textContent = '+' + currentCoins;
     document.getElementById('adCoins').textContent = '+' + currentCoins;
 
-    // Show popup UI
+    // Show popup
     document.getElementById('adPopup').classList.add('show');
 
-    // FORCE AD TO OPEN DIRECTLY IN EXTERNAL BROWSER (CHROME)
-    const adUrl = 'https://www.effectivecpmnetwork.com/b1bggwx0?key=f1f69a147759698e8fda4cfd27e423ba';
-
-    // Directly creating a virtual link click guarantees bypass of WebView restrictions
+    // Force open in Chrome - bypass WebView
     const linkAnchor = document.createElement('a');
     linkAnchor.href = adUrl;
     linkAnchor.target = '_blank';
@@ -351,7 +348,7 @@
     linkAnchor.click();
     document.body.removeChild(linkAnchor);
 
-    // Start the UI countdown tracking immediately inside the app
+    // Start tracking
     startAdTracking(uid);
   }
 
