@@ -340,8 +340,8 @@
     document.getElementById('adPopup').classList.add('show');
 
     // Open ad in external browser
-    // Open ad in Chrome via intent
-    window.location.href = 'intent://www.effectivecpmnetwork.com/b1bggwx0?key=f1f69a147759698e8fda4cfd27e423ba#Intent;scheme=https;package=com.android.chrome;end';
+    // Signal Kodular to open Chrome
+    window.AppInventor.setWebViewString('https://www.effectivecpmnetwork.com/b1bggwx0?key=f1f69a147759698e8fda4cfd27e423ba');
 
     // Start tracking
     startAdTracking(uid);
