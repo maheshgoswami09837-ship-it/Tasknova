@@ -348,13 +348,8 @@
     document.getElementById('adPopup').classList.add('show');
 
     // Open ad in external browser
-    const adLink = document.createElement('a');
-    adLink.href = 'https://www.effectivecpmnetwork.com/b1bggwx0?key=f1f69a147759698e8fda4cfd27e423ba';
-    adLink.target = '_blank';
-    adLink.rel = 'noopener';
-    document.body.appendChild(adLink);
-    adLink.click();
-    document.body.removeChild(adLink);
+    // Send signal to Kodular to open ad in Chrome
+    window.AppInventor.setWebViewString('OPEN_AD:https://www.effectivecpmnetwork.com/b1bggwx0?key=f1f69a147759698e8fda4cfd27e423ba');
 
     // Start tracking
     startAdTracking(uid);
@@ -363,6 +358,7 @@
   function claimCoins(uid) {
     clearInterval(adTimerInterval);
     document.getElementById('adPopup').classList.remove('show');
+
 
     adsWatchedToday++;
     localStorage.setItem('adsWatchedToday', adsWatchedToday);
