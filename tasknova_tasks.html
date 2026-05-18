@@ -339,13 +339,17 @@
     // Show popup
     document.getElementById('adPopup').classList.add('show');
 
-    // Open ad via Kodular ActivityStarter
-    const adUrl = 'https://www.effectivecpmnetwork.com/b1bggwx0?key=f1f69a147759698e8fda4cfd27e423ba';
     try {
-      window.AppInventor.setWebViewString(adUrl);
+      // Adding a unique random parameter forces WebView to register a distinct string change event every time
+      window.AppInventor.setWebViewString(adUrl + "&t=" + Date.now());
     } catch(e) {
-      // Fallback for browser testing
-      window.open(adUrl, '_blank');
+      // If tested in desktop browser, open directly
+      var a = document.createElement('a');
+      a.href = adUrl;
+      a.target = '_blank';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
     }
 
     // Start tracking
