@@ -339,9 +339,14 @@
     // Show popup
     document.getElementById('adPopup').classList.add('show');
 
-    // Open ad in external browser
-    // Signal Kodular to open Chrome
-    window.AppInventor.setWebViewString('https://www.effectivecpmnetwork.com/b1bggwx0?key=f1f69a147759698e8fda4cfd27e423ba');
+    // Open ad via Kodular ActivityStarter
+    const adUrl = 'https://www.effectivecpmnetwork.com/b1bggwx0?key=f1f69a147759698e8fda4cfd27e423ba';
+    try {
+      window.AppInventor.setWebViewString(adUrl);
+    } catch(e) {
+      // Fallback for browser testing
+      window.open(adUrl, '_blank');
+    }
 
     // Start tracking
     startAdTracking(uid);
