@@ -263,6 +263,28 @@
   <div class="nav-item" onclick="window.location.href='tasknova_profile.html'"><span>👤</span><p>Profile</p></div>
 </div>
 
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+  const _app = initializeApp({
+    apiKey: "AIzaSyBbDeBse2WXwzd_X0Mr8VyEzytI8Yya_uc",
+    authDomain: "tasknova-66d0f.firebaseapp.com",
+    databaseURL: "https://tasknova-66d0f-default-rtdb.firebaseio.com",
+    projectId: "tasknova-66d0f",
+    storageBucket: "tasknova-66d0f.firebasestorage.app",
+    messagingSenderId: "135129024485",
+    appId: "1:135129024485:web:232a90fd0752086568510c"
+  });
+  window._getAuthToken = async function() {
+    return new Promise((resolve) => {
+      const unsub = onAuthStateChanged(getAuth(_app), async (user) => {
+        unsub();
+        resolve(user ? await user.getIdToken(true) : null);
+      });
+    });
+  };
+</script>
+
 <script>
   // ─── CONFIG ───────────────────────────────────────────────────
   const DB = 'https://tasknova-66d0f-default-rtdb.firebaseio.com';
@@ -312,7 +334,9 @@
   // ── Fetch user data + saved payments ─────────────────────────
   async function fetchUserData(uid) {
     try {
-      const res  = await fetch(DB + '/users/' + uid + '.json');
+      const token = await window._getAuthToken();
+      const authParam = token ? '?auth=' + token : '';
+      const res  = await fetch(DB + '/users/' + uid + '.json' + authParam);
       const data = await res.json();
       if (data) {
         // Calculate live balance from coins (100 coins = ₹1)
@@ -497,7 +521,9 @@
     const { method, data } = pendingPayData;
 
     try {
-      await fetch(DB + '/users/' + uid + '/savedPayments/' + method + '.json', {
+      const token2 = await window._getAuthToken();
+      const authParam2 = token2 ? '?auth=' + token2 : '';
+      await fetch(DB + '/users/' + uid + '/savedPayments/' + method + '.json' + authParam2, {
         method: 'PUT',
         body  : JSON.stringify(data)
       });
@@ -581,7 +607,9 @@
 
     const newBalance = userBalance - selectedAmount;
 
-    fetch(DB + '/withdrawals/' + uid + '.json', {
+    window._getAuthToken().then(token => {
+    const ap = token ? '?auth=' + token : '';
+    fetch(DB + '/withdrawals/' + uid + '.json' + ap, {
       method: 'POST',
       body  : JSON.stringify({
         amount        : selectedAmount,
@@ -593,9 +621,8 @@
         date          : new Date().toISOString()
       })
     }).then(() => {
-      // Deduct coins from Firebase (newBalance * 100 = remaining coins)
       const remainingCoins = Math.round(newBalance * 100);
-      return fetch(DB + '/users/' + uid + '.json', {
+      return fetch(DB + '/users/' + uid + '.json' + ap, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ balance: newBalance, coins: remainingCoins })
@@ -612,12 +639,15 @@
       btn.textContent = 'REQUEST WITHDRAWAL';
       btn.disabled    = false;
     });
+    }); // end _getAuthToken
   }
 
   // ── History ───────────────────────────────────────────────────
   function loadHistory(uid) {
     const container = document.getElementById('historyContainer');
-    fetch(DB + '/withdrawals/' + uid + '.json')
+    window._getAuthToken().then(token => {
+    const ap = token ? '?auth=' + token : '';
+    fetch(DB + '/withdrawals/' + uid + '.json' + ap)
       .then(res  => res.json())
       .then(data => {
         if (!data) { container.innerHTML = '<div class="empty-history">No transactions yet 📭</div>'; return; }
@@ -635,6 +665,7 @@
             </div>
           `).join('') + '</div>';
       }).catch(e => console.error(e));
+    }); // end _getAuthToken
   }
 </script>
 </body>
