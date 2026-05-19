@@ -200,6 +200,38 @@
   <div class="nav-item" onclick="window.location.href='tasknova_profile.html'"><span>👤</span><p>Profile</p></div>
 </div>
 
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyBbDeBse2WXwzd_X0Mr8VyEzytI8Yya_uc",
+    authDomain: "tasknova-66d0f.firebaseapp.com",
+    databaseURL: "https://tasknova-66d0f-default-rtdb.firebaseio.com",
+    projectId: "tasknova-66d0f",
+    storageBucket: "tasknova-66d0f.firebasestorage.app",
+    messagingSenderId: "135129024485",
+    appId: "1:135129024485:web:232a90fd0752086568510c"
+  };
+  const _app  = initializeApp(firebaseConfig);
+  const _auth = getAuth(_app);
+
+  // Global helper — returns fresh ID token for REST calls
+  window._getAuthToken = async function() {
+    return new Promise((resolve) => {
+      const unsub = onAuthStateChanged(_auth, async (user) => {
+        unsub();
+        if (user) {
+          const token = await user.getIdToken(true);
+          resolve(token);
+        } else {
+          resolve(null);
+        }
+      });
+    });
+  };
+</script>
+
 <script>
   // Stars
   const starsContainer = document.getElementById('stars');
@@ -373,15 +405,18 @@
     updateCounter();
 
     // Save to Firebase
-    fetch(DB_URL + '/users/' + uid + '.json')
+    window._getAuthToken().then(token => {
+      const authParam = token ? '?auth=' + token : '';
+      fetch(DB_URL + '/users/' + uid + '.json' + authParam)
       .then(r => r.json())
       .then(data => {
         const newCoins = (data.coins || 0) + currentCoins;
         const newBalance = parseFloat(((newCoins) / 100).toFixed(2));
         const newTasksDone = (data.tasksDone || 0) + 1;
-        return fetch(DB_URL + '/users/' + uid + '.json', {
+        return fetch(DB_URL + '/users/' + uid + '.json' + authParam, {
           method: 'PATCH',
-          body: JSON.stringify({ coins: newCoins, balance: newBalance, tasksDone: newTasksDone })
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ coins: newCoins, balance: newBalance, tasksDone: newTasksDone, totalEarned: newBalance })
         }).then(() => {
           document.querySelector('.user-coins').textContent = newCoins + ' Coins';
           document.querySelector('.user-balance').textContent = '₹' + newBalance.toFixed(2);
@@ -389,6 +424,7 @@
         });
       })
       .catch(e => console.log(e));
+    }); // end getAuthToken
 
     startCooldown();
   }
@@ -557,7 +593,9 @@
       if (transId) localStorage.setItem(processedKey, '1');
 
       // Step 1: Read current coins for this user (using ext_user_id)
-      fetch(DB_URL + '/users/' + targetUid + '.json')
+      window._getAuthToken().then(token => {
+      const authParam = token ? '?auth=' + token : '';
+      fetch(DB_URL + '/users/' + targetUid + '.json' + authParam)
         .then(r => r.json())
         .then(userData => {
           if (!userData) throw new Error('User node not found for uid: ' + targetUid);
@@ -567,13 +605,14 @@
 
           // Step 2: PATCH updated values back to Firebase
           const newBalance = parseFloat((newCoins / 100).toFixed(2));
-          return fetch(DB_URL + '/users/' + targetUid + '.json', {
+          return fetch(DB_URL + '/users/' + targetUid + '.json' + authParam, {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               coins: newCoins,
               balance: newBalance,
               tasksDone: newTasksDone,
+              totalEarned: newBalance,
               lastSurveyCompleted: Date.now(),
               lastSurveyTransId: transId || 'N/A'
             })
@@ -601,6 +640,7 @@
           if (transId) localStorage.removeItem(processedKey);
           showToast('Coins credit mein error aaya. Support se contact karo.', '#ef4444');
         });
+      }); // end _getAuthToken
 
     } else if (statusNum === 2 || statusNum === 3) {
       // ❌ DISQUALIFIED / SCREENOUT — no coins, no cooldown
@@ -684,19 +724,19 @@
     updateCounter();
 
     // Fetch balance and calculate live rupees from total coins
-    fetch(DB_URL + '/users/' + uid + '.json')
-      .then(res => res.json())
-      .then(data => {
-        if (!data) return;
-
-        // Calculate fresh balance based on actual coins (100 coins = 1 Rupee)
-        const totalCoins = data.coins || 0;
-        const calculatedBalance = parseFloat((totalCoins / 100).toFixed(2));
-
-        document.querySelector('.user-balance').textContent = '₹' + calculatedBalance.toFixed(2);
-        document.querySelector('.user-coins').textContent = totalCoins + ' Coins';
-      })
-      .catch(e => console.log(e));
+    window._getAuthToken().then(token => {
+      const authParam = token ? '?auth=' + token : '';
+      fetch(DB_URL + '/users/' + uid + '.json' + authParam)
+        .then(res => res.json())
+        .then(data => {
+          if (!data) return;
+          const totalCoins = data.coins || 0;
+          const calculatedBalance = parseFloat((totalCoins / 100).toFixed(2));
+          document.querySelector('.user-balance').textContent = '₹' + calculatedBalance.toFixed(2);
+          document.querySelector('.user-coins').textContent = totalCoins + ' Coins';
+        })
+        .catch(e => console.log(e));
+    });
   });
 </script>
 </body>
