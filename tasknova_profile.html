@@ -328,7 +328,27 @@
   <div class="nav-item active" onclick="window.location.href='tasknova_profile.html'"><span>👤</span><p>Profile</p></div>
 </div>
 
-<script>
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+  const _app = initializeApp({
+    apiKey: "AIzaSyBbDeBse2WXwzd_X0Mr8VyEzytI8Yya_uc",
+    authDomain: "tasknova-66d0f.firebaseapp.com",
+    databaseURL: "https://tasknova-66d0f-default-rtdb.firebaseio.com",
+    projectId: "tasknova-66d0f",
+    storageBucket: "tasknova-66d0f.firebasestorage.app",
+    messagingSenderId: "135129024485",
+    appId: "1:135129024485:web:232a90fd0752086568510c"
+  });
+  window._getAuthToken = async function() {
+    return new Promise((resolve) => {
+      const unsub = onAuthStateChanged(getAuth(_app), async (user) => {
+        unsub();
+        resolve(user ? await user.getIdToken(true) : null);
+      });
+    });
+  };
+
   // Stars
   const starsContainer = document.getElementById('stars');
   for (let i = 0; i < 60; i++) {
@@ -373,14 +393,17 @@
     const name = document.getElementById('editName').value.trim();
     if (!name) { alert('Name cannot be empty!'); return; }
 
-    fetch('https://tasknova-66d0f-default-rtdb.firebaseio.com/users/' + uid + '/name.json', {
-      method: 'PUT',
-      body: JSON.stringify(name)
-    }).then(() => {
+    window._getAuthToken().then(token => {
+      const ap = token ? '?auth=' + token : '';
+      fetch('https://tasknova-66d0f-default-rtdb.firebaseio.com/users/' + uid + '/name.json' + ap, {
+        method: 'PUT',
+        body: JSON.stringify(name)
+      }).then(() => {
       document.querySelector('.user-name').textContent = name;
       closeModal('accountModal');
       alert('Profile updated! ✅');
-    }).catch(e => alert('Error saving!'));
+      }).catch(e => alert('Error saving!'));
+    }); // end token
   }
 
   // Page load hote hi profile data fetch karo
@@ -391,7 +414,9 @@
       return;
     }
 
-    fetch('https://tasknova-66d0f-default-rtdb.firebaseio.com/users/' + uid + '.json')
+    window._getAuthToken().then(token => {
+      const ap = token ? '?auth=' + token : '';
+      fetch('https://tasknova-66d0f-default-rtdb.firebaseio.com/users/' + uid + '.json' + ap)
       .then(res => res.json())
       .then(data => {
         if (!data) return;
@@ -400,13 +425,16 @@
         document.querySelector('.profile-id').textContent = 'ID: ' + (data.referralCode || uid.substring(0, 8).toUpperCase());
         document.querySelector('.user-referral-code').textContent = data.referralCode || ('TN' + uid.substring(0, 6).toUpperCase());
 
-        // Stats
+        // Stats — coins se live calculate
+        const totalCoins = data.coins || 0;
+        const calculatedBalance = parseFloat((totalCoins / 100).toFixed(2));
         const statValues = document.querySelectorAll('.stat-value');
-        if (statValues[0]) statValues[0].textContent = '₹' + (data.totalEarned || data.balance || 0);
+        if (statValues[0]) statValues[0].textContent = '₹' + calculatedBalance.toFixed(2);
         if (statValues[1]) statValues[1].textContent = data.tasksDone || 0;
         if (statValues[2]) statValues[2].textContent = data.referrals || 0;
       })
       .catch(e => console.log('Profile fetch error:', e));
+    }); // end token
   });
 </script>
 </body>
