@@ -660,7 +660,7 @@
     showToast('+' + coins + ' Coins Earned! 🎉', 'linear-gradient(135deg,#6c63ff,#3b82f6)');
   }
 
-  // Page load
+  // Page load (Updated for Realtime Coins to Balance Sync)
   window.addEventListener('load', () => {
     const uid = localStorage.getItem('tasknova_uid');
 
@@ -683,13 +683,18 @@
 
     updateCounter();
 
-    // Fetch balance
+    // Fetch balance and calculate live rupees from total coins
     fetch(DB_URL + '/users/' + uid + '.json')
       .then(res => res.json())
       .then(data => {
         if (!data) return;
-        document.querySelector('.user-balance').textContent = '₹' + (data.balance || 0).toFixed(2);
-        document.querySelector('.user-coins').textContent = (data.coins || 0) + ' Coins';
+
+        // Calculate fresh balance based on actual coins (100 coins = 1 Rupee)
+        const totalCoins = data.coins || 0;
+        const calculatedBalance = parseFloat((totalCoins / 100).toFixed(2));
+
+        document.querySelector('.user-balance').textContent = '₹' + calculatedBalance.toFixed(2);
+        document.querySelector('.user-coins').textContent = totalCoins + ' Coins';
       })
       .catch(e => console.log(e));
   });
