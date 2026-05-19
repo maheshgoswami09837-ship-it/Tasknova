@@ -122,17 +122,20 @@
       </div>
     </div>
 
-    <div class="task-card" data-category="survey" onclick="openSurvey()">
+    <div class="task-card" data-category="survey" id="surveyCard" onclick="openSurvey()">
       <div class="task-icon icon-blue">📝</div>
       <div class="task-info">
         <h3>Complete Survey</h3>
         <p>Answer questions from brands & earn coins</p>
-        <div class="task-meta"><span class="task-time">⏱ 5-10 min</span></div>
+        <div class="task-meta">
+          <span class="task-time">⏱ 5-10 min</span>
+          <span id="surveyCooldownBadge" style="display:none;font-size:10px;color:#f59e0b;font-weight:700;margin-left:8px;background:rgba(245,158,11,0.15);padding:3px 8px;border-radius:50px;">⏳ 00:00</span>
+        </div>
       </div>
       <div class="task-reward">
         <div class="coins-reward">500-2000</div>
         <div class="rupee">coins/survey</div>
-        <button class="do-btn">Start</button>
+        <button class="do-btn" id="surveyBtn">Start</button>
       </div>
     </div>
 
@@ -374,12 +377,14 @@
       .then(r => r.json())
       .then(data => {
         const newCoins = (data.coins || 0) + currentCoins;
+        const newBalance = parseFloat(((newCoins) / 100).toFixed(2));
         const newTasksDone = (data.tasksDone || 0) + 1;
         return fetch(DB_URL + '/users/' + uid + '.json', {
           method: 'PATCH',
-          body: JSON.stringify({ coins: newCoins, tasksDone: newTasksDone })
+          body: JSON.stringify({ coins: newCoins, balance: newBalance, tasksDone: newTasksDone })
         }).then(() => {
           document.querySelector('.user-coins').textContent = newCoins + ' Coins';
+          document.querySelector('.user-balance').textContent = '₹' + newBalance.toFixed(2);
           showReward(currentCoins);
         });
       })
@@ -472,77 +477,138 @@
   //   2 = Disqualified                  → NO coins, NO cooldown
   //   3 = Screenout                     → NO coins, NO cooldown
 
-  function handleCPXPostback(status, transId, amount, extUserId) {
-    const uid = localStorage.getItem('tasknova_uid');
-    if (!uid || uid === 'null') return;
+  // ── triggerSurveyCooldown ─────────────────────────────────────────
+  // Locks the survey card visually for 30 minutes and runs countdown
+  let surveyCooldownInterval = null;
 
-    // Security: ext_user_id must match logged-in user
-    if (extUserId && extUserId !== uid) {
-      console.warn('CPX: ext_user_id mismatch. Ignoring postback.');
+  function triggerSurveyCooldown() {
+    const cooldownEnd = Date.now() + 30 * 60 * 1000;
+    localStorage.setItem(SURVEY_COOLDOWN_KEY, cooldownEnd.toString());
+    startSurveyCooldownUI(cooldownEnd);
+  }
+
+  function startSurveyCooldownUI(cooldownEnd) {
+    const card   = document.getElementById('surveyCard');
+    const badge  = document.getElementById('surveyCooldownBadge');
+    const btn    = document.getElementById('surveyBtn');
+    if (!card || !badge || !btn) return;
+
+    // Freeze card visually
+    card.style.opacity = '0.6';
+    card.style.pointerEvents = 'none';
+    btn.textContent = 'Cooldown';
+    btn.style.background = 'rgba(255,165,0,0.3)';
+    btn.style.color = '#ffa500';
+    badge.style.display = 'inline-block';
+
+    if (surveyCooldownInterval) clearInterval(surveyCooldownInterval);
+
+    surveyCooldownInterval = setInterval(() => {
+      const remaining = Math.max(0, Math.ceil((cooldownEnd - Date.now()) / 1000));
+      const mins = String(Math.floor(remaining / 60)).padStart(2, '0');
+      const secs = String(remaining % 60).padStart(2, '0');
+      badge.textContent = '⏳ ' + mins + ':' + secs;
+
+      if (remaining <= 0) {
+        clearInterval(surveyCooldownInterval);
+        localStorage.removeItem(SURVEY_COOLDOWN_KEY);
+        // Unlock card
+        card.style.opacity = '';
+        card.style.pointerEvents = '';
+        btn.textContent = 'Start';
+        btn.style.background = '';
+        btn.style.color = '';
+        badge.style.display = 'none';
+      }
+    }, 1000);
+  }
+
+  // ── handleCPXPostback ─────────────────────────────────────────────
+  // status 1 = success → Firebase PATCH with ext_user_id + cooldown
+  // status 2/3 = disqualify/screenout → NO coins, NO cooldown
+
+  function handleCPXPostback(status, transId, amount, extUserId) {
+    const localUid = localStorage.getItem('tasknova_uid');
+
+    // Use ext_user_id from URL param (most authoritative); fallback to localStorage
+    const targetUid = (extUserId && extUserId !== 'null') ? extUserId : localUid;
+    if (!targetUid || targetUid === 'null') return;
+
+    // Security: if both present, they must match
+    if (extUserId && localUid && extUserId !== localUid) {
+      console.warn('CPX: ext_user_id mismatch with logged-in user. Ignoring.');
       return;
     }
 
-    // Duplicate transaction prevention
+    // Duplicate transaction guard
     const processedKey = 'cpx_done_' + transId;
     if (transId && localStorage.getItem(processedKey)) {
-      console.log('CPX: Transaction already processed:', transId);
+      console.log('CPX: Already processed trans_id:', transId);
       return;
     }
 
     const statusNum = parseInt(status);
 
     if (statusNum === 1) {
-      // ✅ SUCCESS — credit coins + 30 min cooldown
+      // ✅ SUCCESS
       const coinsToAdd = amount ? Math.max(1, Math.round(parseFloat(amount))) : 500;
 
-      // Mark transaction as processed immediately (prevent double credit)
+      // Lock transaction immediately to prevent double-credit
       if (transId) localStorage.setItem(processedKey, '1');
 
-      fetch(DB_URL + '/users/' + uid + '.json')
+      // Step 1: Read current coins for this user (using ext_user_id)
+      fetch(DB_URL + '/users/' + targetUid + '.json')
         .then(r => r.json())
-        .then(data => {
-          if (!data) throw new Error('User not found');
-          const newCoins    = (data.coins    || 0) + coinsToAdd;
-          const newTasksDone = (data.tasksDone || 0) + 1;
+        .then(userData => {
+          if (!userData) throw new Error('User node not found for uid: ' + targetUid);
 
-          return fetch(DB_URL + '/users/' + uid + '.json', {
+          const newCoins     = (userData.coins     || 0) + coinsToAdd;
+          const newTasksDone = (userData.tasksDone  || 0) + 1;
+
+          // Step 2: PATCH updated values back to Firebase
+          const newBalance = parseFloat((newCoins / 100).toFixed(2));
+          return fetch(DB_URL + '/users/' + targetUid + '.json', {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               coins: newCoins,
+              balance: newBalance,
               tasksDone: newTasksDone,
               lastSurveyCompleted: Date.now(),
               lastSurveyTransId: transId || 'N/A'
             })
-          }).then(() => {
-            // Update UI
-            document.querySelector('.user-coins').textContent = newCoins + ' Coins';
-            document.querySelector('.user-balance').textContent =
-              '₹' + (newCoins / 100).toFixed(2);
+          }).then(res => {
+            if (!res.ok) throw new Error('Firebase PATCH failed: ' + res.status);
+
+            // Step 3: Update UI (only if this is the logged-in user's session)
+            if (targetUid === localUid) {
+              document.querySelector('.user-coins').textContent = newCoins + ' Coins';
+              const balanceEl = document.querySelector('.user-balance');
+              if (balanceEl) balanceEl.textContent = '₹' + newBalance.toFixed(2);
+            }
 
             showReward(coinsToAdd);
 
-            // 30 min cooldown — ONLY on success
-            const cooldownEnd = Date.now() + 30 * 60 * 1000;
-            localStorage.setItem(SURVEY_COOLDOWN_KEY, cooldownEnd.toString());
+            // Step 4: Trigger 30-min cooldown ONLY on confirmed Firebase success
+            triggerSurveyCooldown();
 
-            console.log('CPX: Success! Coins credited:', coinsToAdd, '| TransID:', transId);
+            console.log('CPX ✅ Coins credited:', coinsToAdd, '→ uid:', targetUid, '| trans_id:', transId);
           });
         })
         .catch(e => {
           console.error('CPX Firebase error:', e);
-          // If Firebase failed, remove processed flag so user can retry
+          // Roll back duplicate guard so user isn't permanently locked out
           if (transId) localStorage.removeItem(processedKey);
-          showToast('Coins credit karne mein error aaya. Support se contact karo.', '#ef4444');
+          showToast('Coins credit mein error aaya. Support se contact karo.', '#ef4444');
         });
 
     } else if (statusNum === 2 || statusNum === 3) {
-      // ❌ DISQUALIFIED or SCREENOUT — no coins, no cooldown
-      console.log('CPX: Status', statusNum, '(disqualify/screenout). No cooldown applied.');
+      // ❌ DISQUALIFIED / SCREENOUT — no coins, no cooldown
+      console.log('CPX status', statusNum, '— no cooldown applied.');
       showToast('Yeh survey match nahi hua — koi baat nahi, dusra try karo! 😊', '#f59e0b');
 
     } else {
-      console.log('CPX: Unknown status received:', status);
+      console.log('CPX: Unknown status:', status);
     }
   }
 
