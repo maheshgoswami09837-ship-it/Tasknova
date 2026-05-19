@@ -360,14 +360,14 @@
   }
 
   // Logout function
-  function logoutUser() {
+  window.logoutUser = function() {
     localStorage.removeItem('tasknova_uid');
     localStorage.setItem('tasknova_uid', 'null');
     window.location.href = 'tasknova_login-1.html';
   }
 
   // Copy referral code
-  function copyCode() {
+  window.copyCode = function() {
     const code = document.querySelector('.user-referral-code').textContent;
     navigator.clipboard.writeText(code).then(() => {
       alert('Referral code copied!');
@@ -375,7 +375,7 @@
   }
 
   // Modal functions
-  function openModal(id) {
+  window.openModal = function(id) {
     const modal = document.getElementById(id);
     modal.style.display = 'flex';
     if (id === 'accountModal') {
@@ -384,11 +384,11 @@
     }
   }
 
-  function closeModal(id) {
+  window.closeModal = function(id) {
     document.getElementById(id).style.display = 'none';
   }
 
-  function saveAccountSettings() {
+  window.saveAccountSettings = function() {
     const uid = localStorage.getItem('tasknova_uid');
     const name = document.getElementById('editName').value.trim();
     if (!name) { alert('Name cannot be empty!'); return; }
