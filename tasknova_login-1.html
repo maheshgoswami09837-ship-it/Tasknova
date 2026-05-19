@@ -48,7 +48,7 @@
   .modal-sub { font-size: 12px; color: rgba(255,255,255,0.4); margin-bottom: 20px; line-height: 1.5; }
   .modal-sub span { color: #6c63ff; font-weight: 600; }
   .otp-input-wrap { display: flex; gap: 10px; margin-bottom: 16px; justify-content: center; align-items: center; }
-  .otp-box { background: rgba(255,255,255,0.07); border: 1.5px solid rgba(255,255,255,0.12); border-radius: 12px; color: #fff; font-size: 22px; font-weight: 800; text-align: center; outline: none; font-family: 'Segoe UI', sans-serif; transition: all 0.2s; width: 44px; height: 54px; flex-shrink: 0; }
+  .otp-box { background: rgba(255,255,255,0.07); border: 1.5px solid rgba(255,255,255,0.12); border-radius: 12px; color: #ffffff !important; -webkit-text-fill-color: #ffffff !important; font-size: 22px; font-weight: 800; text-align: center; outline: none; font-family: 'Segoe UI', sans-serif; transition: all 0.2s; width: 44px; height: 54px; flex-shrink: 0; caret-color: #6c63ff; }
   .otp-box:focus { border-color: #6c63ff; background: rgba(108,99,255,0.1); }
   .resend-otp { font-size: 12px; color: rgba(255,255,255,0.4); text-align: center; margin-bottom: 14px; }
   .resend-otp span { color: #6c63ff; cursor: pointer; font-weight: 600; }
@@ -195,6 +195,10 @@
       <div class="rule-num">7</div>
       <div class="rule-text"><strong>Payment Details:</strong> Withdraw se pehle sahi UPI ya Bank details save karein aur OTP se verify karein.</div>
     </div>
+    <div class="rule-item" style="background:rgba(245,158,11,0.08);border-color:rgba(245,158,11,0.25);">
+      <div class="rule-num" style="background:linear-gradient(135deg,#f59e0b,#ef4444);">💡</div>
+      <div class="rule-text"><strong style="color:#f59e0b;">Survey Tips:</strong> Agar survey mein disqualify ho jao, toh ghabrao mat! Alag surveys try karo, har survey alag audience ke liye hota hai. Zyada surveys complete karoge, zyada coins milenge! 🎯</div>
+    </div>
     <button class="rules-close-btn" onclick="closeRules()">✅ Samajh Gaya!</button>
   </div>
 </div>
@@ -291,7 +295,7 @@
       <div class="earn-card" onclick="window.location.href='tasknova_tasks.html'">
         <div class="earn-card-icon bg-blue">📝</div>
         <div class="earn-card-info"><h3>Complete Survey</h3><p>Answer questions & earn</p></div>
-        <div class="earn-card-reward coming">🔒 Soon</div>
+        <div class="earn-card-reward" style="background:linear-gradient(135deg,#22c55e,#16a34a);font-size:11px;">✅ Active Now</div>
       </div>
 
       <div class="earn-card" onclick="window.location.href='tasknova_tasks.html'">
@@ -407,8 +411,10 @@
       const snap = await get(ref(db, 'users/' + uid));
       if (snap.exists()) {
         const data = snap.val();
-        document.querySelectorAll('.user-balance').forEach(el => el.textContent = '₹' + (data.balance || 0).toFixed(2));
-        document.querySelectorAll('.user-coins').forEach(el => el.textContent = (data.coins || 0) + ' Coins');
+        const totalCoins = data.coins || 0;
+        const calculatedBalance = parseFloat((totalCoins / 100).toFixed(2));
+        document.querySelectorAll('.user-balance').forEach(el => el.textContent = '₹' + calculatedBalance.toFixed(2));
+        document.querySelectorAll('.user-coins').forEach(el => el.textContent = totalCoins + ' Coins');
         document.querySelectorAll('.user-total-earned').forEach(el => el.textContent = '₹' + (data.totalEarned || 0));
         document.querySelectorAll('.user-tasks').forEach(el => el.textContent = data.tasksDone || 0);
         document.querySelectorAll('.user-referrals').forEach(el => el.textContent = data.referrals || 0);
