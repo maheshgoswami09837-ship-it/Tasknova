@@ -170,7 +170,27 @@
   <div class="nav-item" onclick="window.location.href='tasknova_profile.html'"><span>👤</span><p>Profile</p></div>
 </div>
 
-<script>
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+  const _app = initializeApp({
+    apiKey: "AIzaSyBbDeBse2WXwzd_X0Mr8VyEzytI8Yya_uc",
+    authDomain: "tasknova-66d0f.firebaseapp.com",
+    databaseURL: "https://tasknova-66d0f-default-rtdb.firebaseio.com",
+    projectId: "tasknova-66d0f",
+    storageBucket: "tasknova-66d0f.firebasestorage.app",
+    messagingSenderId: "135129024485",
+    appId: "1:135129024485:web:232a90fd0752086568510c"
+  });
+  window._getAuthToken = async function() {
+    return new Promise((resolve) => {
+      const unsub = onAuthStateChanged(getAuth(_app), async (user) => {
+        unsub();
+        resolve(user ? await user.getIdToken(true) : null);
+      });
+    });
+  };
+
   const starsContainer = document.getElementById('stars');
   for (let i = 0; i < 60; i++) {
     const star = document.createElement('div');
@@ -266,7 +286,9 @@
     const dbURL = 'https://tasknova-66d0f-default-rtdb.firebaseio.com';
 
     // User data fetch karo
-    fetch(dbURL + '/users/' + uid + '.json')
+    window._getAuthToken().then(token => {
+      const ap = token ? '?auth=' + token : '';
+      fetch(dbURL + '/users/' + uid + '.json' + ap)
       .then(res => res.json())
       .then(data => {
         if (!data) return;
@@ -287,9 +309,12 @@
         renderMilestones(completedRefers);
       })
       .catch(e => console.log('User fetch error:', e));
+    }); // end token
 
     // Referral list fetch karo
-    fetch(dbURL + '/referrals/' + uid + '.json')
+    window._getAuthToken().then(token => {
+      const ap = token ? '?auth=' + token : '';
+      fetch(dbURL + '/referrals/' + uid + '.json' + ap)
       .then(res => res.json())
       .then(data => {
         const container = document.getElementById('referList');
@@ -320,6 +345,7 @@
         `).join('');
       })
       .catch(e => console.log('Referral fetch error:', e));
+    }); // end token
   });
 </script>
 </body>
