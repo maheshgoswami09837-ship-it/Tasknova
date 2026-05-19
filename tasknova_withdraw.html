@@ -315,10 +315,12 @@
       const res  = await fetch(DB + '/users/' + uid + '.json');
       const data = await res.json();
       if (data) {
-        userBalance  = data.balance  || 0;
+        // Calculate live balance from coins (100 coins = ₹1)
+        const totalCoins = data.coins || 0;
+        userBalance  = parseFloat((totalCoins / 100).toFixed(2));
         userEmail    = data.email    || '';
         document.querySelector('.user-balance').textContent = '₹' + userBalance.toFixed(2);
-        document.querySelector('.user-coins').textContent   = (data.coins || 0) + ' Coins';
+        document.querySelector('.user-coins').textContent   = totalCoins + ' Coins';
 
         // Saved payment details load karo
         if (data.savedPayments) {
@@ -590,12 +592,18 @@
         status        : 'pending',
         date          : new Date().toISOString()
       })
-    }).then(() => fetch(DB + '/users/' + uid + '/balance.json', {
-      method: 'PUT',
-      body  : JSON.stringify(newBalance)
-    })).then(() => {
+    }).then(() => {
+      // Deduct coins from Firebase (newBalance * 100 = remaining coins)
+      const remainingCoins = Math.round(newBalance * 100);
+      return fetch(DB + '/users/' + uid + '.json', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ balance: newBalance, coins: remainingCoins })
+      });
+    }).then(() => {
       showToast('Withdrawal request submitted! ✅', 'success');
       document.querySelector('.user-balance').textContent = '₹' + newBalance.toFixed(2);
+      document.querySelector('.user-coins').textContent = Math.round(newBalance * 100) + ' Coins';
       userBalance = newBalance;
       loadHistory(uid);
     }).catch(err => {
