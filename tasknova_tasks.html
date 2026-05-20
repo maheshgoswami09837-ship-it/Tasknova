@@ -64,6 +64,52 @@
   .nav-center { width: 52px; height: 52px; background: linear-gradient(135deg, #6c63ff, #3b82f6); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 22px; margin-top: -20px; box-shadow: 0 4px 20px rgba(108,99,255,0.4); cursor: pointer; }
 
   @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes spinWheel { from { transform: rotate(0deg); } to { transform: rotate(var(--spin-deg)); } }
+  @keyframes scratchReveal { from { opacity: 0; transform: scale(0.5); } to { opacity: 1; transform: scale(1); } }
+
+  /* Daily Limit Bar */
+  .daily-limit-bar { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; padding: 12px 16px; margin-bottom: 16px; }
+  .daily-limit-bar .limit-label { font-size: 11px; color: rgba(255,255,255,0.4); margin-bottom: 6px; display: flex; justify-content: space-between; }
+  .daily-limit-bar .limit-fill { height: 6px; background: rgba(255,255,255,0.08); border-radius: 3px; }
+  .daily-limit-bar .limit-fill-inner { height: 100%; background: linear-gradient(135deg, #6c63ff, #3b82f6); border-radius: 3px; transition: width 0.5s; }
+
+  /* Full screen modal */
+  .feature-modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(5,5,26,0.97); z-index:999; flex-direction:column; align-items:center; overflow-y:auto; padding:20px 16px 100px; }
+  .feature-modal.show { display:flex; }
+  .modal-header { width:100%; display:flex; align-items:center; gap:12px; margin-bottom:24px; }
+  .modal-back { background:rgba(255,255,255,0.08); border:none; color:#fff; width:40px; height:40px; border-radius:12px; font-size:18px; cursor:pointer; }
+  .modal-title { font-size:20px; font-weight:800; color:#fff; }
+
+  /* Spin Wheel */
+  .wheel-wrap { position:relative; width:260px; height:260px; margin:0 auto 24px; }
+  .wheel-canvas { width:260px; height:260px; border-radius:50%; border:4px solid rgba(108,99,255,0.5); box-shadow:0 0 30px rgba(108,99,255,0.3); }
+  .wheel-pointer { position:absolute; top:-16px; left:50%; transform:translateX(-50%); font-size:28px; z-index:10; }
+  .spin-btn-main { width:100%; max-width:280px; background:linear-gradient(135deg,#6c63ff,#3b82f6); border:none; border-radius:16px; padding:16px; color:#fff; font-size:16px; font-weight:800; cursor:pointer; font-family:'Segoe UI',sans-serif; box-shadow:0 4px 20px rgba(108,99,255,0.4); }
+  .spin-btn-main:disabled { background:rgba(255,255,255,0.1); box-shadow:none; cursor:not-allowed; color:rgba(255,255,255,0.4); }
+
+  /* Scratch Card */
+  .scratch-wrap { position:relative; width:260px; height:160px; margin:0 auto 24px; border-radius:20px; overflow:hidden; cursor:crosshair; }
+  .scratch-canvas { position:absolute; top:0; left:0; width:100%; height:100%; border-radius:20px; }
+  .scratch-prize { position:absolute; top:0; left:0; width:100%; height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; background:linear-gradient(135deg,rgba(108,99,255,0.2),rgba(59,130,246,0.2)); border-radius:20px; border:1px solid rgba(108,99,255,0.3); }
+  .scratch-prize .prize-coins { font-size:48px; font-weight:800; color:#6c63ff; }
+  .scratch-prize .prize-label { font-size:14px; color:rgba(255,255,255,0.6); margin-top:4px; }
+
+  /* Quiz */
+  .quiz-question { background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.08); border-radius:16px; padding:20px; margin-bottom:16px; width:100%; }
+  .quiz-question p { font-size:18px; font-weight:700; color:#fff; text-align:center; }
+  .quiz-options { display:grid; grid-template-columns:1fr 1fr; gap:10px; width:100%; margin-bottom:16px; }
+  .quiz-opt { background:rgba(255,255,255,0.06); border:1.5px solid rgba(255,255,255,0.1); border-radius:14px; padding:14px; color:#fff; font-size:15px; font-weight:700; cursor:pointer; text-align:center; transition:all 0.2s; font-family:'Segoe UI',sans-serif; }
+  .quiz-opt:active { transform:scale(0.97); }
+  .quiz-opt.correct { background:rgba(34,197,94,0.2); border-color:#22c55e; color:#22c55e; }
+  .quiz-opt.wrong { background:rgba(239,68,68,0.2); border-color:#ef4444; color:#ef4444; }
+
+  /* Cooldown badge */
+  .cooldown-badge { font-size:11px; color:#f59e0b; font-weight:700; background:rgba(245,158,11,0.15); padding:4px 10px; border-radius:50px; }
+
+  /* Limit popup */
+  #limitPopup { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:9999; align-items:center; justify-content:center; }
+  #limitPopup.show { display:flex; }
+  #limitPopup .popup-box { background:linear-gradient(135deg,#1a1a3e,#0d0d2b); border:1px solid rgba(108,99,255,0.3); border-radius:24px; padding:32px 24px; text-align:center; max-width:300px; width:90%; }
 
   /* Ad Popup */
   #adPopup { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#000; z-index:9999; flex-direction:column; align-items:center; justify-content:center; }
@@ -95,11 +141,23 @@
     <div style="font-size:40px;">💰</div>
   </div>
 
+  <!-- Daily Limit Bar -->
+  <div class="daily-limit-bar">
+    <div class="limit-label">
+      <span>📊 Aaj ki Earning</span>
+      <span id="dailyLimitText">0 / 500 Coins</span>
+    </div>
+    <div class="limit-fill">
+      <div class="limit-fill-inner" id="dailyLimitBar" style="width:0%"></div>
+    </div>
+  </div>
+
   <div class="cat-tabs">
     <div class="cat-tab active" onclick="filterTasks('all', this)">All Tasks</div>
     <div class="cat-tab" onclick="filterTasks('watchads', this)">Watch Ads</div>
     <div class="cat-tab" onclick="filterTasks('survey', this)">Survey</div>
     <div class="cat-tab" onclick="filterTasks('instagram', this)">Instagram</div>
+    <div class="cat-tab" onclick="filterTasks('daily', this)">Daily Tasks</div>
   </div>
 
   <div class="section-title">🔥 Available Tasks</div>
@@ -140,6 +198,78 @@
     </div>
 
     
+
+    <!-- Daily Check-In -->
+    <div class="task-card" data-category="daily" id="checkinCard" onclick="doCheckin()">
+      <div class="task-icon icon-green">📅</div>
+      <div class="task-info">
+        <h3>Daily Check-In</h3>
+        <p>Har roz ek baar claim karo</p>
+        <div class="task-meta">
+          <span class="task-time">⏱ 1 baar/day</span>
+          <span id="checkinBadge" style="display:none;" class="cooldown-badge">✅ Done</span>
+        </div>
+      </div>
+      <div class="task-reward">
+        <div class="coins-reward">+50</div>
+        <div class="rupee">coins</div>
+        <button class="do-btn" id="checkinBtn">Claim</button>
+      </div>
+    </div>
+
+    <!-- Spin Wheel -->
+    <div class="task-card" data-category="daily" id="spinTaskCard" onclick="openSpinModal()">
+      <div class="task-icon icon-purple">🎡</div>
+      <div class="task-info">
+        <h3>Spin & Win</h3>
+        <p>Wheel spin karo aur coins jeeto</p>
+        <div class="task-meta">
+          <span class="task-time">⏱ 15/day</span>
+          <span id="spinCountBadge" class="cooldown-badge">0/15</span>
+        </div>
+      </div>
+      <div class="task-reward">
+        <div class="coins-reward">~10</div>
+        <div class="rupee">coins/spin</div>
+        <button class="do-btn" id="spinTaskBtn">Spin</button>
+      </div>
+    </div>
+
+    <!-- Scratch Card -->
+    <div class="task-card" data-category="daily" id="scratchTaskCard" onclick="openScratchModal()">
+      <div class="task-icon icon-orange">🎴</div>
+      <div class="task-info">
+        <h3>Scratch Card</h3>
+        <p>Card scratch karo aur coins pao</p>
+        <div class="task-meta">
+          <span class="task-time">⏱ 15/day</span>
+          <span id="scratchCountBadge" class="cooldown-badge">0/15</span>
+        </div>
+      </div>
+      <div class="task-reward">
+        <div class="coins-reward">~10</div>
+        <div class="rupee">coins/scratch</div>
+        <button class="do-btn" id="scratchTaskBtn">Scratch</button>
+      </div>
+    </div>
+
+    <!-- Math Quiz -->
+    <div class="task-card" data-category="daily" id="quizTaskCard" onclick="openQuizModal()">
+      <div class="task-icon icon-blue">🧮</div>
+      <div class="task-info">
+        <h3>Math Quiz</h3>
+        <p>Sawaal solve karo aur coins pao</p>
+        <div class="task-meta">
+          <span class="task-time">⏱ 15/day</span>
+          <span id="quizCountBadge" class="cooldown-badge">0/15</span>
+        </div>
+      </div>
+      <div class="task-reward">
+        <div class="coins-reward">+10</div>
+        <div class="rupee">coins/quiz</div>
+        <button class="do-btn" id="quizTaskBtn">Play</button>
+      </div>
+    </div>
 
     <div class="task-card disabled" data-category="instagram">
       <div class="task-icon icon-pink">📸</div>
@@ -190,6 +320,76 @@
       ✅ Coins Claim Karo
     </button>
   </div>
+</div>
+
+<!-- Limit Reached Popup -->
+<div id="limitPopup">
+  <div class="popup-box">
+    <div style="font-size:48px;margin-bottom:12px;">🚫</div>
+    <div style="font-size:20px;font-weight:800;color:#fff;margin-bottom:8px;">Today's Limit Reached!</div>
+    <div style="font-size:13px;color:rgba(255,255,255,0.5);margin-bottom:20px;">Aapne aaj 500 coins kama liye! Kal wapas aao 🎉</div>
+    <button onclick="document.getElementById('limitPopup').classList.remove('show')" style="background:linear-gradient(135deg,#6c63ff,#3b82f6);border:none;border-radius:12px;padding:12px 32px;color:#fff;font-size:14px;font-weight:700;cursor:pointer;">OK</button>
+  </div>
+</div>
+
+<!-- Spin Modal -->
+<div class="feature-modal" id="spinModal">
+  <div class="modal-header">
+    <button class="modal-back" onclick="closeModal('spinModal')">←</button>
+    <div class="modal-title">🎡 Spin & Win</div>
+  </div>
+  <div style="text-align:center;color:rgba(255,255,255,0.4);font-size:13px;margin-bottom:16px;">
+    Spins aaj: <span id="spinCountText">0</span>/15 &nbsp;|&nbsp; <span id="spinCooldownText"></span>
+  </div>
+  <div class="wheel-wrap">
+    <div class="wheel-pointer">▼</div>
+    <canvas class="wheel-canvas" id="wheelCanvas" width="260" height="260"></canvas>
+  </div>
+  <div style="margin-bottom:20px;text-align:center;">
+    <div id="spinResult" style="font-size:22px;font-weight:800;color:#6c63ff;min-height:32px;"></div>
+  </div>
+  <button class="spin-btn-main" id="spinBtnMain" onclick="doSpin()">🎡 Spin Now!</button>
+  <!-- Banner Ad 320x50 — loads after spin success -->
+  <div id="spinBannerAd" style="width:320px;height:50px;max-width:100%;margin:12px auto;overflow:hidden;"></div>
+</div>
+
+<!-- Scratch Modal -->
+<div class="feature-modal" id="scratchModal">
+  <div class="modal-header">
+    <button class="modal-back" onclick="closeModal('scratchModal')">←</button>
+    <div class="modal-title">🎴 Scratch Card</div>
+  </div>
+  <div style="text-align:center;color:rgba(255,255,255,0.4);font-size:13px;margin-bottom:16px;">
+    Scratches aaj: <span id="scratchCountText">0</span>/15 &nbsp;|&nbsp; <span id="scratchCooldownText"></span>
+  </div>
+  <div style="color:rgba(255,255,255,0.5);font-size:13px;text-align:center;margin-bottom:12px;">Card pe finger ghisao 👇</div>
+  <div class="scratch-wrap" id="scratchWrap">
+    <div class="scratch-prize">
+      <div class="prize-coins" id="scratchPrize">?</div>
+      <div class="prize-label">Coins</div>
+    </div>
+    <canvas class="scratch-canvas" id="scratchCanvas"></canvas>
+  </div>
+  <div id="scratchResult" style="font-size:18px;font-weight:800;color:#6c63ff;text-align:center;min-height:28px;margin-bottom:16px;"></div>
+  <button class="spin-btn-main" id="newScratchBtn" onclick="newScratch()" style="display:none;">🎴 Next Card</button>
+  <!-- Banner Ad 320x50 — loads after scratch success -->
+  <div id="scratchBannerAd" style="width:320px;height:50px;max-width:100%;margin:12px auto;overflow:hidden;"></div>
+</div>
+
+<!-- Quiz Modal -->
+<div class="feature-modal" id="quizModal">
+  <div class="modal-header">
+    <button class="modal-back" onclick="closeModal('quizModal')">←</button>
+    <div class="modal-title">🧮 Math Quiz</div>
+  </div>
+  <div style="text-align:center;color:rgba(255,255,255,0.4);font-size:13px;margin-bottom:20px;">
+    Quiz aaj: <span id="quizCountText">0</span>/15 &nbsp;|&nbsp; <span id="quizCooldownText"></span>
+  </div>
+  <div class="quiz-question">
+    <p id="quizQuestion">2 + 2 = ?</p>
+  </div>
+  <div class="quiz-options" id="quizOptions"></div>
+  <div id="quizResult" style="font-size:16px;font-weight:800;text-align:center;min-height:24px;margin-bottom:16px;"></div>
 </div>
 
 <div class="bottom-nav">
@@ -737,7 +937,474 @@
         })
         .catch(e => console.log(e));
     });
+    updateDailyLimitUI();
   });
+
+  // ── DAILY ECONOMY ─────────────────────────────────────────────
+  const DAILY_CAP = 500;
+  const COOLDOWN_60S = 60 * 1000;
+
+  function getTodayKey() {
+    return new Date().toISOString().split('T')[0];
+  }
+
+  function getDailyData() {
+    const key = 'tasknova_daily_' + getTodayKey();
+    const raw = localStorage.getItem(key);
+    if (raw) return JSON.parse(raw);
+    return { earned: 0, checkin: false, spins: 0, scratches: 0, quizzes: 0, lastSpin: 0, lastScratch: 0, lastQuiz: 0 };
+  }
+
+  function saveDailyData(data) {
+    const key = 'tasknova_daily_' + getTodayKey();
+    localStorage.setItem(key, JSON.stringify(data));
+  }
+
+  function updateDailyLimitUI() {
+    const d = getDailyData();
+    const pct = Math.min(100, (d.earned / DAILY_CAP) * 100);
+    const el = document.getElementById('dailyLimitText');
+    const bar = document.getElementById('dailyLimitBar');
+    if (el) el.textContent = d.earned + ' / ' + DAILY_CAP + ' Coins';
+    if (bar) bar.style.width = pct + '%';
+
+    // Update badges
+    const sb = document.getElementById('spinCountBadge');
+    const scb = document.getElementById('scratchCountBadge');
+    const qb = document.getElementById('quizCountBadge');
+    if (sb) sb.textContent = d.spins + '/15';
+    if (scb) scb.textContent = d.scratches + '/15';
+    if (qb) qb.textContent = d.quizzes + '/15';
+
+    // Check-in badge
+    if (d.checkin) {
+      const cb = document.getElementById('checkinBadge');
+      const cbtn = document.getElementById('checkinBtn');
+      if (cb) cb.style.display = 'inline-block';
+      if (cbtn) { cbtn.textContent = 'Done'; cbtn.disabled = true; }
+    }
+  }
+
+  function checkDailyLimit() {
+    const d = getDailyData();
+    if (d.earned >= DAILY_CAP) {
+      document.getElementById('limitPopup').classList.add('show');
+      return false;
+    }
+    return true;
+  }
+
+  async function creditCoins(amount, type) {
+    const d = getDailyData();
+    const remaining = DAILY_CAP - d.earned;
+    const actual = Math.min(amount, remaining);
+    if (actual <= 0) { checkDailyLimit(); return 0; }
+
+    d.earned += actual;
+    if (type === 'checkin') d.checkin = true;
+    else if (type === 'spin') { d.spins++; d.lastSpin = Date.now(); }
+    else if (type === 'scratch') { d.scratches++; d.lastScratch = Date.now(); }
+    else if (type === 'quiz') { d.quizzes++; d.lastQuiz = Date.now(); }
+    saveDailyData(d);
+
+    const uid = localStorage.getItem('tasknova_uid');
+    if (uid && uid !== 'null') {
+      window._getAuthToken && window._getAuthToken().then(token => {
+        const ap = token ? '?auth=' + token : '';
+        fetch(DB_URL + '/users/' + uid + '.json' + ap)
+          .then(r => r.json())
+          .then(data => {
+            const newCoins = (data.coins || 0) + actual;
+            const newBalance = parseFloat((newCoins / 100).toFixed(2));
+            fetch(DB_URL + '/users/' + uid + '.json' + ap, {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ coins: newCoins, balance: newBalance, totalEarned: newBalance })
+            }).then(() => {
+              document.querySelector('.user-coins').textContent = newCoins + ' Coins';
+              document.querySelector('.user-balance').textContent = '₹' + newBalance.toFixed(2);
+            });
+          });
+      });
+    }
+    updateDailyLimitUI();
+    return actual;
+  }
+
+  function getCooldownRemaining(lastTime) {
+    const remaining = COOLDOWN_60S - (Date.now() - lastTime);
+    return remaining > 0 ? remaining : 0;
+  }
+
+  function formatCooldown(ms) {
+    return Math.ceil(ms / 1000) + 's';
+  }
+
+  // ── AD TRIGGER FUNCTIONS ─────────────────────────────────────
+  let popunderFired = false;
+
+  function firePopunder() {
+    if (!popunderFired) {
+      const s = document.createElement('script');
+      s.src = 'https://pl29503369.effectivecpmnetwork.com/1c/3b/d0/1c3bd0127e4be2ff172d7c6e0eaa5204.js';
+      s.async = true;
+      document.head.appendChild(s);
+      popunderFired = true;
+    }
+  }
+
+  function loadBannerAd(containerId) {
+    const container = document.getElementById(containerId);
+    if (!container || container.dataset.loaded) return;
+    container.dataset.loaded = '1';
+    container.style.cssText = 'width:320px;height:50px;max-width:100%;margin:12px auto;overflow:hidden;display:block;';
+    const s = document.createElement('script');
+    s.src = 'https://pl29503370.effectivecpmnetwork.com/37/f8/25/37f825df0a33796f8b779e4ca2abdac8.js';
+    s.async = true;
+    container.appendChild(s);
+  }
+
+  function loadSocialBar() {
+    if (window._socialBarLoaded) return;
+    window._socialBarLoaded = true;
+    const s = document.createElement('script');
+    s.src = 'https://www.highperformanceformat.com/68bf9531f68f81be99e32a8350f48396/invoke.js';
+    s.async = true;
+    document.head.appendChild(s);
+  }
+
+  // ── CHECK-IN ──────────────────────────────────────────────────
+  function doCheckin() {
+    const d = getDailyData();
+    if (d.checkin) { showToast('Aaj check-in ho chuka hai!', '#f59e0b'); return; }
+    if (!checkDailyLimit()) return;
+    // Fire Popunder on click
+    firePopunder();
+    // Credit coins after ad fires
+    setTimeout(() => {
+      creditCoins(50, 'checkin').then(earned => {
+        if (earned > 0) showToast('+' + earned + ' Coins! Check-in complete! 🎉', 'linear-gradient(135deg,#22c55e,#16a34a)');
+      });
+    }, 500);
+  }
+
+  // ── SPIN WHEEL ────────────────────────────────────────────────
+  const SPIN_PRIZES = [5, 10, 10, 15, 10, 5, 10, 20];
+  const SPIN_COLORS = ['#6c63ff','#3b82f6','#8b5cf6','#06b6d4','#6c63ff','#3b82f6','#8b5cf6','#06b6d4'];
+  let isSpinning = false;
+  let currentSpinAngle = 0;
+
+  function drawWheel() {
+    const canvas = document.getElementById('wheelCanvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const cx = 130, cy = 130, r = 126;
+    const slices = SPIN_PRIZES.length;
+    const angle = (2 * Math.PI) / slices;
+    for (let i = 0; i < slices; i++) {
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.arc(cx, cy, r, i * angle, (i + 1) * angle);
+      ctx.fillStyle = SPIN_COLORS[i];
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      ctx.save();
+      ctx.translate(cx, cy);
+      ctx.rotate(i * angle + angle / 2);
+      ctx.fillStyle = '#fff';
+      ctx.font = 'bold 14px Segoe UI';
+      ctx.textAlign = 'right';
+      ctx.fillText(SPIN_PRIZES[i], r - 16, 5);
+      ctx.restore();
+    }
+    ctx.beginPath();
+    ctx.arc(cx, cy, 20, 0, 2 * Math.PI);
+    ctx.fillStyle = '#05051a';
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+    ctx.stroke();
+  }
+
+  function openSpinModal() {
+    document.getElementById('spinModal').classList.add('show');
+    drawWheel();
+    updateSpinUI();
+  }
+
+  function updateSpinUI() {
+    const d = getDailyData();
+    const ct = document.getElementById('spinCountText');
+    const cd = document.getElementById('spinCooldownText');
+    const btn = document.getElementById('spinBtnMain');
+    if (ct) ct.textContent = d.spins;
+    const cooldown = getCooldownRemaining(d.lastSpin);
+    if (d.spins >= 15) {
+      if (btn) { btn.disabled = true; btn.textContent = '✅ Aaj ke spins khatam!'; }
+    } else if (cooldown > 0) {
+      if (btn) { btn.disabled = true; btn.textContent = 'Wait ' + formatCooldown(cooldown) + '...'; }
+      setTimeout(updateSpinUI, 1000);
+    } else {
+      if (btn) { btn.disabled = false; btn.textContent = '🎡 Spin Now!'; }
+    }
+    if (cd) cd.textContent = cooldown > 0 ? 'Cooldown: ' + formatCooldown(cooldown) : '';
+  }
+
+  function doSpin() {
+    const d = getDailyData();
+    if (d.spins >= 15) { showToast('Aaj ke spins khatam!', '#f59e0b'); return; }
+    if (getCooldownRemaining(d.lastSpin) > 0) { showToast('60 second wait karo!', '#f59e0b'); return; }
+    if (!checkDailyLimit()) return;
+    if (isSpinning) return;
+    isSpinning = true;
+
+    const prizeIdx = Math.floor(Math.random() * SPIN_PRIZES.length);
+    const prize = SPIN_PRIZES[prizeIdx];
+    const sliceAngle = 360 / SPIN_PRIZES.length;
+    const targetAngle = 360 * 5 + (360 - prizeIdx * sliceAngle - sliceAngle / 2);
+    const canvas = document.getElementById('wheelCanvas');
+    let start = null;
+    const duration = 3000;
+    const startAngle = currentSpinAngle;
+
+    function animate(ts) {
+      if (!start) start = ts;
+      const progress = Math.min((ts - start) / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      const angle = startAngle + targetAngle * eased;
+      const ctx = canvas.getContext('2d');
+      ctx.save();
+      ctx.clearRect(0, 0, 260, 260);
+      ctx.translate(130, 130);
+      ctx.rotate((angle * Math.PI) / 180);
+      ctx.translate(-130, -130);
+      drawWheelAt(ctx);
+      ctx.restore();
+      if (progress < 1) { requestAnimationFrame(animate); }
+      else {
+        currentSpinAngle = angle % 360;
+        isSpinning = false;
+        creditCoins(prize, 'spin').then(earned => {
+          document.getElementById('spinResult').textContent = earned > 0 ? '+' + earned + ' Coins! 🎉' : '';
+          showToast('+' + earned + ' Coins!', 'linear-gradient(135deg,#6c63ff,#3b82f6)');
+          // Load banner ad ONLY after coins success
+          loadBannerAd('spinBannerAd');
+          loadSocialBar();
+          updateSpinUI();
+          updateDailyLimitUI();
+        });
+      }
+    }
+    requestAnimationFrame(animate);
+  }
+
+  function drawWheelAt(ctx) {
+    const cx = 130, cy = 130, r = 126;
+    const slices = SPIN_PRIZES.length;
+    const angle = (2 * Math.PI) / slices;
+    for (let i = 0; i < slices; i++) {
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.arc(cx, cy, r, i * angle, (i + 1) * angle);
+      ctx.fillStyle = SPIN_COLORS[i];
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      ctx.save();
+      ctx.translate(cx, cy);
+      ctx.rotate(i * angle + angle / 2);
+      ctx.fillStyle = '#fff';
+      ctx.font = 'bold 14px Segoe UI';
+      ctx.textAlign = 'right';
+      ctx.fillText(SPIN_PRIZES[i], r - 16, 5);
+      ctx.restore();
+    }
+    ctx.beginPath();
+    ctx.arc(cx, cy, 20, 0, 2 * Math.PI);
+    ctx.fillStyle = '#05051a';
+    ctx.fill();
+  }
+
+  // ── SCRATCH CARD ──────────────────────────────────────────────
+  let scratchPrizeAmount = 0;
+  let scratchRevealed = false;
+  let scratchCtx = null;
+  let isScratchActive = false;
+
+  function openScratchModal() {
+    document.getElementById('scratchModal').classList.add('show');
+    updateScratchUI();
+    newScratch();
+  }
+
+  function updateScratchUI() {
+    const d = getDailyData();
+    const ct = document.getElementById('scratchCountText');
+    const cd = document.getElementById('scratchCooldownText');
+    if (ct) ct.textContent = d.scratches;
+    const cooldown = getCooldownRemaining(d.lastScratch);
+    if (cd) cd.textContent = cooldown > 0 ? 'Cooldown: ' + formatCooldown(cooldown) : '';
+    if (cooldown > 0) setTimeout(updateScratchUI, 1000);
+  }
+
+  function newScratch() {
+    const d = getDailyData();
+    if (d.scratches >= 15) { showToast('Aaj ke scratch cards khatam!', '#f59e0b'); return; }
+    const cooldown = getCooldownRemaining(d.lastScratch);
+    if (cooldown > 0 && d.scratches > 0) { showToast('Wait ' + formatCooldown(cooldown) + '!', '#f59e0b'); return; }
+
+    scratchPrizeAmount = [5, 10, 10, 15, 10, 20][Math.floor(Math.random() * 6)];
+    scratchRevealed = false;
+    isScratchActive = true;
+    document.getElementById('scratchPrize').textContent = scratchPrizeAmount;
+    document.getElementById('scratchResult').textContent = '';
+    document.getElementById('newScratchBtn').style.display = 'none';
+
+    const canvas = document.getElementById('scratchCanvas');
+    const wrap = document.getElementById('scratchWrap');
+    canvas.width = wrap.offsetWidth || 260;
+    canvas.height = 160;
+    scratchCtx = canvas.getContext('2d');
+    scratchCtx.fillStyle = 'linear-gradient(135deg,#6c63ff,#3b82f6)';
+    const grad = scratchCtx.createLinearGradient(0, 0, canvas.width, 160);
+    grad.addColorStop(0, '#6c63ff');
+    grad.addColorStop(1, '#3b82f6');
+    scratchCtx.fillStyle = grad;
+    scratchCtx.fillRect(0, 0, canvas.width, 160);
+    scratchCtx.fillStyle = 'rgba(255,255,255,0.1)';
+    scratchCtx.font = 'bold 18px Segoe UI';
+    scratchCtx.textAlign = 'center';
+    scratchCtx.fillText('👆 Yahan finger ghisao!', canvas.width / 2, 85);
+    scratchCtx.globalCompositeOperation = 'destination-out';
+
+    let drawing = false;
+    canvas.ontouchstart = (e) => { drawing = true; scratch(e.touches[0], canvas); };
+    canvas.ontouchmove = (e) => { if (drawing) scratch(e.touches[0], canvas); e.preventDefault(); };
+    canvas.ontouchend = () => { drawing = false; checkScratchComplete(canvas); };
+    canvas.onmousedown = (e) => { drawing = true; scratch(e, canvas); };
+    canvas.onmousemove = (e) => { if (drawing) scratch(e, canvas); };
+    canvas.onmouseup = () => { drawing = false; checkScratchComplete(canvas); };
+  }
+
+  function scratch(e, canvas) {
+    const rect = canvas.getBoundingClientRect();
+    const x = (e.clientX || e.pageX) - rect.left;
+    const y = (e.clientY || e.pageY) - rect.top;
+    scratchCtx.beginPath();
+    scratchCtx.arc(x, y, 28, 0, 2 * Math.PI);
+    scratchCtx.fill();
+  }
+
+  function checkScratchComplete(canvas) {
+    if (scratchRevealed) return;
+    const imageData = scratchCtx.getImageData(0, 0, canvas.width, 160);
+    let cleared = 0;
+    for (let i = 3; i < imageData.data.length; i += 4) {
+      if (imageData.data[i] === 0) cleared++;
+    }
+    const pct = cleared / (canvas.width * 160);
+    if (pct > 0.5) revealScratch();
+  }
+
+  function revealScratch() {
+    if (scratchRevealed || !isScratchActive) return;
+    scratchRevealed = true;
+    isScratchActive = false;
+    if (!checkDailyLimit()) return;
+    scratchCtx.clearRect(0, 0, 1000, 1000);
+    creditCoins(scratchPrizeAmount, 'scratch').then(earned => {
+      document.getElementById('scratchResult').textContent = '+' + earned + ' Coins! 🎉';
+      document.getElementById('newScratchBtn').style.display = 'block';
+      showToast('+' + earned + ' Coins!', 'linear-gradient(135deg,#f59e0b,#ef4444)');
+      // Load banner ad ONLY after scratch success
+      loadBannerAd('scratchBannerAd');
+      loadSocialBar();
+      updateScratchUI();
+      updateDailyLimitUI();
+    });
+  }
+
+  // ── MATH QUIZ ─────────────────────────────────────────────────
+  let currentAnswer = 0;
+
+  function openQuizModal() {
+    document.getElementById('quizModal').classList.add('show');
+    updateQuizUI();
+    generateQuiz();
+  }
+
+  function updateQuizUI() {
+    const d = getDailyData();
+    const ct = document.getElementById('quizCountText');
+    const cd = document.getElementById('quizCooldownText');
+    if (ct) ct.textContent = d.quizzes;
+    const cooldown = getCooldownRemaining(d.lastQuiz);
+    if (cd) cd.textContent = cooldown > 0 ? 'Cooldown: ' + formatCooldown(cooldown) : '';
+    if (cooldown > 0) setTimeout(updateQuizUI, 1000);
+  }
+
+  function generateQuiz() {
+    const d = getDailyData();
+    if (d.quizzes >= 15) {
+      document.getElementById('quizQuestion').textContent = 'Aaj ke quiz khatam! Kal wapas aao 😊';
+      document.getElementById('quizOptions').innerHTML = '';
+      return;
+    }
+    const ops = ['+', '-', '*'];
+    const op = ops[Math.floor(Math.random() * ops.length)];
+    let a = Math.floor(Math.random() * 12) + 1;
+    let b = Math.floor(Math.random() * 12) + 1;
+    if (op === '-' && b > a) { let t = a; a = b; b = t; }
+    currentAnswer = op === '+' ? a + b : op === '-' ? a - b : a * b;
+    document.getElementById('quizQuestion').textContent = a + ' ' + op + ' ' + b + ' = ?';
+    document.getElementById('quizResult').textContent = '';
+
+    // Generate options
+    const opts = new Set([currentAnswer]);
+    while (opts.size < 4) opts.add(currentAnswer + Math.floor(Math.random() * 10) - 5);
+    const arr = [...opts].sort(() => Math.random() - 0.5);
+    const container = document.getElementById('quizOptions');
+    container.innerHTML = arr.map(o =>
+      '<button class="quiz-opt" onclick="checkQuiz(' + o + ', this)">' + o + '</button>'
+    ).join('');
+  }
+
+  function checkQuiz(selected, btn) {
+    const d = getDailyData();
+    if (d.quizzes >= 15) return;
+    const cooldown = getCooldownRemaining(d.lastQuiz);
+    if (cooldown > 0 && d.quizzes > 0) { showToast('Wait ' + formatCooldown(cooldown) + '!', '#f59e0b'); return; }
+    if (!checkDailyLimit()) return;
+
+    const allBtns = document.querySelectorAll('.quiz-opt');
+    allBtns.forEach(b => b.disabled = true);
+
+    if (selected === currentAnswer) {
+      btn.classList.add('correct');
+      creditCoins(10, 'quiz').then(earned => {
+        document.getElementById('quizResult').textContent = '+' + earned + ' Coins! Sahi jawab! ✅';
+        showToast('+' + earned + ' Coins!', 'linear-gradient(135deg,#22c55e,#16a34a)');
+        // Load social bar after correct answer
+        loadSocialBar();
+        updateQuizUI();
+        updateDailyLimitUI();
+        setTimeout(generateQuiz, 1500);
+      });
+    } else {
+      btn.classList.add('wrong');
+      allBtns.forEach(b => { if (parseInt(b.textContent) === currentAnswer) b.classList.add('correct'); });
+      document.getElementById('quizResult').textContent = 'Galat jawab! Sahi tha: ' + currentAnswer;
+      setTimeout(generateQuiz, 1500);
+    }
+  }
+
+  // ── MODAL HELPERS ─────────────────────────────────────────────
+  function closeModal(id) {
+    document.getElementById(id).classList.remove('show');
+    updateDailyLimitUI();
+  }
 </script>
 </body>
 </html>
