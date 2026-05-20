@@ -1,0 +1,5 @@
+{
+  "rewrites": [
+    { "source": "/", "destination": "/tasknova_login-1.html" }
+  ]
+}
