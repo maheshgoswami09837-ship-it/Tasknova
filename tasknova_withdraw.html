@@ -3,93 +3,111 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>TaskNova Refer</title>
+<title>TaskNova Withdraw</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { font-family: 'Segoe UI', sans-serif; background: #05051a; min-height: 100vh; overflow-x: hidden; padding-bottom: 80px; }
+  body { font-family: 'Segoe UI', sans-serif; background: #05051a; min-height: 100vh; overflow-x: hidden; padding-bottom: 80px; opacity: 0; transition: opacity 0.3s ease; }
+  body.loaded { opacity: 1; }
   .stars { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; }
   .star { position: absolute; background: white; border-radius: 50%; animation: twinkle 3s infinite; }
   @keyframes twinkle { 0%, 100% { opacity: 0.2; } 50% { opacity: 1; } }
   .glow-circle { position: fixed; border-radius: 50%; filter: blur(80px); z-index: 0; pointer-events: none; }
   .glow-1 { width: 300px; height: 300px; background: rgba(108,99,255,0.2); top: -100px; left: -100px; }
   .glow-2 { width: 250px; height: 250px; background: rgba(59,130,246,0.15); bottom: -80px; right: -80px; }
-  .content { position: relative; z-index: 10; padding: 20px 16px; animation: fadeUp 0.5s ease; }
+  .content { position: relative; z-index: 10; padding: 20px 16px; animation: fadeUpContent 0.4s ease both; }
+  @keyframes fadeUpContent { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
 
-  .header { text-align: center; margin-bottom: 24px; }
-  .header h1 { font-size: 24px; font-weight: 800; color: #fff; }
-  .header p { font-size: 13px; color: rgba(255,255,255,0.4); margin-top: 4px; }
+  .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+  .header h1 { font-size: 22px; font-weight: 800; color: #fff; }
+  .header p { font-size: 12px; color: rgba(255,255,255,0.4); margin-top: 2px; }
 
-  .refer-banner { background: linear-gradient(135deg, #6c63ff, #3b82f6, #a855f7); border-radius: 22px; padding: 24px; text-align: center; margin-bottom: 20px; position: relative; overflow: hidden; box-shadow: 0 8px 30px rgba(108,99,255,0.35); }
-  .refer-banner::before { content: ''; position: absolute; top: -40px; right: -40px; width: 150px; height: 150px; background: rgba(255,255,255,0.08); border-radius: 50%; }
-  .refer-emoji { font-size: 50px; margin-bottom: 12px; }
-  .refer-banner h2 { font-size: 20px; font-weight: 800; color: #fff; margin-bottom: 6px; }
-  .refer-banner p { font-size: 13px; color: rgba(255,255,255,0.75); line-height: 1.5; }
-  .refer-banner strong { color: #fff; font-size: 16px; }
+  .balance-card { background: linear-gradient(135deg, #6c63ff, #3b82f6, #a855f7); border-radius: 20px; padding: 22px; margin-bottom: 20px; box-shadow: 0 8px 30px rgba(108,99,255,0.35); position: relative; overflow: hidden; }
+  .balance-card::after { content: '💰'; position: absolute; right: 20px; top: 50%; transform: translateY(-50%); font-size: 56px; opacity: 0.3; }
+  .balance-card .label { font-size: 13px; color: rgba(255,255,255,0.7); }
+  .balance-card .amount { font-size: 36px; font-weight: 800; color: #fff; margin: 6px 0 2px; }
+  .balance-card .coins-info { font-size: 12px; color: rgba(255,255,255,0.6); }
+  .min-note { background: rgba(255,255,255,0.15); border-radius: 8px; padding: 6px 12px; font-size: 11px; color: #fff; display: inline-block; margin-top: 12px; }
 
-  .how-it-works { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 18px; padding: 18px; margin-bottom: 20px; }
-  .how-title { font-size: 14px; font-weight: 700; color: #fff; margin-bottom: 14px; }
-  .step { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
-  .step:last-child { margin-bottom: 0; }
-  .step-num { width: 30px; height: 30px; background: linear-gradient(135deg, #6c63ff, #3b82f6); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 800; color: #fff; flex-shrink: 0; }
-  .step-text h4 { font-size: 13px; font-weight: 600; color: #fff; }
-  .step-text p { font-size: 11px; color: rgba(255,255,255,0.4); margin-top: 2px; }
+  .section-title { font-size: 15px; font-weight: 700; color: #fff; margin-bottom: 12px; }
+  .method-grid { display: flex; gap: 10px; margin-bottom: 20px; }
+  .method-card { flex: 1; background: rgba(255,255,255,0.05); border: 2px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 18px 10px; text-align: center; cursor: pointer; transition: all 0.2s; }
+  .method-card.active { border-color: #6c63ff; background: rgba(108,99,255,0.15); transform: scale(1.03); }
+  .method-card .icon { font-size: 32px; margin-bottom: 8px; }
+  .method-card .name { font-size: 13px; font-weight: 700; color: #fff; }
+  .method-card .desc { font-size: 10px; color: rgba(255,255,255,0.4); margin-top: 3px; }
 
-  .code-section { margin-bottom: 20px; }
-  .code-label { font-size: 13px; color: rgba(255,255,255,0.5); margin-bottom: 10px; font-weight: 600; }
-  .code-box { background: rgba(108,99,255,0.1); border: 2px dashed rgba(108,99,255,0.4); border-radius: 16px; padding: 16px 20px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
-  .code-text { font-size: 22px; font-weight: 800; color: #6c63ff; letter-spacing: 3px; }
-  .copy-btn { background: linear-gradient(135deg, #6c63ff, #3b82f6); border: none; border-radius: 10px; padding: 10px 18px; color: #fff; font-size: 13px; font-weight: 700; cursor: pointer; font-family: 'Segoe UI', sans-serif; box-shadow: 0 4px 12px rgba(108,99,255,0.3); }
+  .input-section { margin-bottom: 16px; }
+  .input-label { font-size: 12px; color: rgba(255,255,255,0.5); margin-bottom: 8px; font-weight: 600; }
+  .input-wrap { position: relative; margin-bottom: 14px; }
+  .input-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); font-size: 16px; opacity: 0.6; }
+  input { width: 100%; background: rgba(255,255,255,0.07); border: 1.5px solid rgba(255,255,255,0.1); border-radius: 14px; padding: 14px 14px 14px 44px; color: #fff; font-size: 14px; outline: none; transition: all 0.3s; font-family: 'Segoe UI', sans-serif; }
+  input::placeholder { color: rgba(255,255,255,0.3); }
+  input:focus { border-color: #6c63ff; background: rgba(108,99,255,0.1); }
+  input:disabled { opacity: 0.5; cursor: not-allowed; }
 
-  .share-buttons { display: flex; gap: 10px; }
-  .share-btn { flex: 1; padding: 14px; border-radius: 14px; border: none; font-size: 14px; font-weight: 700; cursor: pointer; font-family: 'Segoe UI', sans-serif; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s; }
-  .share-btn:active { transform: scale(0.97); }
-  .share-whatsapp { background: rgba(37,211,102,0.15); border: 1.5px solid rgba(37,211,102,0.3); color: #25d366; }
-  .share-general { background: linear-gradient(135deg, #6c63ff, #3b82f6); color: #fff; box-shadow: 0 4px 15px rgba(108,99,255,0.3); }
+  /* SAVED BADGE */
+  .saved-badge { display: inline-flex; align-items: center; gap: 6px; background: rgba(34,197,94,0.12); border: 1px solid rgba(34,197,94,0.25); border-radius: 50px; padding: 5px 12px; font-size: 11px; color: #22c55e; font-weight: 600; margin-bottom: 12px; }
+  .change-link { font-size: 11px; color: #6c63ff; text-decoration: underline; cursor: pointer; margin-left: 8px; font-weight: 600; }
 
-  .refer-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px; }
-  .refer-stat { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 14px 8px; text-align: center; }
-  .refer-stat-icon { font-size: 22px; margin-bottom: 6px; }
-  .refer-stat-value { font-size: 16px; font-weight: 800; color: #fff; }
-  .refer-stat-label { font-size: 10px; color: rgba(255,255,255,0.3); margin-top: 3px; }
+  /* OTP MODAL */
+  .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(5,5,26,0.85); backdrop-filter: blur(8px); z-index: 999; display: none; justify-content: center; align-items: center; }
+  .modal-overlay.show { display: flex; }
+  .modal-box { background: linear-gradient(145deg, #0d0d2b, #12123a); border: 1px solid rgba(108,99,255,0.3); border-radius: 24px; padding: 28px 24px; width: 90%; max-width: 360px; box-shadow: 0 20px 60px rgba(0,0,0,0.6); animation: modalIn 0.3s ease; }
+  @keyframes modalIn { from { opacity: 0; transform: scale(0.9) translateY(20px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+  .modal-title { font-size: 18px; font-weight: 800; color: #fff; margin-bottom: 6px; }
+  .modal-sub { font-size: 12px; color: rgba(255,255,255,0.4); margin-bottom: 20px; line-height: 1.5; }
+  .modal-sub span { color: #6c63ff; font-weight: 600; }
+  .otp-input-wrap { display: flex; gap: 10px; margin-bottom: 16px; justify-content: center; align-items: center; }
+  .otp-box { background: rgba(255,255,255,0.07); border: 1.5px solid rgba(255,255,255,0.12); border-radius: 12px; padding: 14px 0; color: #fff; font-size: 22px; font-weight: 800; text-align: center; outline: none; font-family: 'Segoe UI', sans-serif; transition: all 0.2s; width: 44px; height: 54px; flex-shrink: 0; }
+  .otp-box:focus { border-color: #6c63ff; background: rgba(108,99,255,0.1); }
+  .otp-verify-btn { width: 100%; padding: 14px; background: linear-gradient(135deg, #6c63ff, #3b82f6); border: none; border-radius: 12px; color: #fff; font-size: 14px; font-weight: 700; cursor: pointer; font-family: 'Segoe UI', sans-serif; margin-bottom: 12px; transition: all 0.2s; }
+  .otp-verify-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .otp-cancel-btn { width: 100%; padding: 12px; background: transparent; border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; color: rgba(255,255,255,0.5); font-size: 13px; cursor: pointer; font-family: 'Segoe UI', sans-serif; }
+  .resend-otp { font-size: 12px; color: rgba(255,255,255,0.4); text-align: center; margin-bottom: 14px; }
+  .resend-otp span { color: #6c63ff; cursor: pointer; font-weight: 600; }
+  .otp-loader { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: spin 0.7s linear infinite; vertical-align: middle; margin-right: 6px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
 
-  /* MILESTONES */
-  .milestone-section { margin-bottom: 20px; }
-  .milestone-title { font-size: 16px; font-weight: 700; color: #fff; margin-bottom: 12px; }
-  .milestone-card { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 14px 16px; display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
-  .milestone-card.achieved { background: rgba(34,197,94,0.1); border-color: rgba(34,197,94,0.3); }
-  .milestone-card.next { background: rgba(108,99,255,0.1); border-color: rgba(108,99,255,0.3); }
-  .milestone-icon { font-size: 28px; flex-shrink: 0; }
-  .milestone-info { flex: 1; }
-  .milestone-info h4 { font-size: 14px; font-weight: 700; color: #fff; }
-  .milestone-info p { font-size: 11px; color: rgba(255,255,255,0.4); margin-top: 3px; }
-  .milestone-progress { height: 4px; background: rgba(255,255,255,0.1); border-radius: 10px; margin-top: 8px; overflow: hidden; }
-  .milestone-progress-fill { height: 100%; background: linear-gradient(90deg, #6c63ff, #3b82f6); border-radius: 10px; transition: width 0.5s ease; }
-  .milestone-reward { font-size: 16px; font-weight: 800; color: #22c55e; text-align: right; white-space: nowrap; }
-  .milestone-badge { font-size: 10px; padding: 3px 10px; border-radius: 50px; font-weight: 700; margin-top: 4px; display: inline-block; }
-  .badge-done { background: rgba(34,197,94,0.15); color: #22c55e; }
-  .badge-next { background: rgba(108,99,255,0.15); color: #6c63ff; }
-  .badge-locked { background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.3); }
+  /* BIND BUTTON */
+  .bind-btn { width: 100%; padding: 13px; background: rgba(108,99,255,0.15); border: 1.5px solid rgba(108,99,255,0.4); border-radius: 12px; color: #a78bfa; font-size: 13px; font-weight: 700; cursor: pointer; font-family: 'Segoe UI', sans-serif; margin-bottom: 16px; transition: all 0.2s; }
+  .bind-btn:hover { background: rgba(108,99,255,0.25); }
 
-  .section-title { font-size: 16px; font-weight: 700; color: #fff; margin-bottom: 12px; }
+  .amount-chips { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
+  .chip { padding: 12px 20px; background: rgba(255,255,255,0.06); border: 1.5px solid rgba(255,255,255,0.15); border-radius: 14px; font-size: 15px; font-weight: 700; color: rgba(255,255,255,0.7); cursor: pointer; transition: all 0.2s; flex: 1; text-align: center; }
+  .chip:active { transform: scale(0.96); }
+  .chip.active { background: rgba(108,99,255,0.25); border-color: #6c63ff; color: #fff; box-shadow: 0 4px 15px rgba(108,99,255,0.2); }
 
-  .refer-list { display: flex; flex-direction: column; gap: 10px; }
-  .refer-item { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.07); border-radius: 16px; padding: 14px 16px; display: flex; align-items: center; gap: 12px; }
-  .refer-avatar { width: 42px; height: 42px; background: linear-gradient(135deg, #6c63ff, #3b82f6); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
-  .refer-info { flex: 1; }
-  .refer-info h4 { font-size: 14px; font-weight: 600; color: #fff; }
-  .refer-info p { font-size: 11px; color: rgba(255,255,255,0.3); margin-top: 2px; }
-  .refer-status { font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 50px; }
-  .refer-pending { background: rgba(234,179,8,0.15); color: #eab308; }
-  .refer-done { background: rgba(34,197,94,0.15); color: #22c55e; }
+  .warning { background: rgba(234,179,8,0.1); border: 1px solid rgba(234,179,8,0.2); border-radius: 12px; padding: 12px 16px; font-size: 12px; color: rgba(234,179,8,0.8); margin-bottom: 16px; display: flex; gap: 8px; align-items: flex-start; }
 
-  .empty-state { text-align: center; padding: 30px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 18px; }
-  .empty-state .emoji { font-size: 40px; margin-bottom: 12px; }
-  .empty-state h4 { font-size: 14px; font-weight: 600; color: rgba(255,255,255,0.5); }
-  .empty-state p { font-size: 12px; color: rgba(255,255,255,0.3); margin-top: 6px; }
+  .fee-info { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 14px 16px; margin-bottom: 16px; }
+  .fee-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-size: 13px; }
+  .fee-row:last-child { margin-bottom: 0; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 8px; font-weight: 700; }
+  .fee-label { color: rgba(255,255,255,0.5); }
+  .fee-value { color: #fff; }
+  .fee-value.green { color: #22c55e; }
+  .fee-value.red { color: #ef4444; }
 
-  /* TOAST */
-  .toast { position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%); background: rgba(34,197,94,0.2); border: 1px solid rgba(34,197,94,0.4); color: #22c55e; padding: 12px 24px; border-radius: 50px; font-size: 13px; font-weight: 600; z-index: 200; display: none; white-space: nowrap; }
-  .toast.show { display: block; }
+  .withdraw-btn { width: 100%; padding: 16px; background: linear-gradient(135deg, #6c63ff, #3b82f6); border: none; border-radius: 14px; color: #fff; font-size: 15px; font-weight: 700; cursor: pointer; letter-spacing: 1px; box-shadow: 0 6px 25px rgba(108,99,255,0.35); font-family: 'Segoe UI', sans-serif; margin-bottom: 20px; transition: all 0.2s; }
+  .withdraw-btn:active { transform: scale(0.98); }
+  .withdraw-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .history-scroll { display: flex; gap: 12px; overflow-x: auto; scrollbar-width: none; padding-bottom: 4px; margin-bottom: 10px; }
+  .history-scroll::-webkit-scrollbar { display: none; }
+  .history-item { min-width: 160px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.07); border-radius: 16px; padding: 14px; flex-shrink: 0; }
+  .history-icon { font-size: 24px; margin-bottom: 8px; }
+  .history-amount { font-size: 18px; font-weight: 800; color: #fff; }
+  .history-method { font-size: 11px; color: rgba(255,255,255,0.4); margin-top: 3px; }
+  .history-date { font-size: 10px; color: rgba(255,255,255,0.3); margin-top: 4px; }
+  .status-badge { display: inline-block; font-size: 10px; padding: 3px 10px; border-radius: 50px; font-weight: 700; margin-top: 6px; }
+  .status-pending { background: rgba(234,179,8,0.15); color: #eab308; }
+  .status-done { background: rgba(34,197,94,0.15); color: #22c55e; }
+  .empty-history { text-align: center; padding: 20px; color: rgba(255,255,255,0.3); font-size: 13px; }
+
+  .toast { position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%); background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2); color: #fff; padding: 12px 24px; border-radius: 50px; font-size: 13px; font-weight: 600; z-index: 200; display: none; white-space: nowrap; }
+  .toast.success { background: rgba(34,197,94,0.2); border-color: rgba(34,197,94,0.4); color: #22c55e; }
+  .toast.error { background: rgba(239,68,68,0.2); border-color: rgba(239,68,68,0.4); color: #ef4444; }
+  .toast.show { display: block; animation: toastIn 0.3s ease; }
+  @keyframes toastIn { from { opacity: 0; transform: translateX(-50%) translateY(10px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
 
   .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: rgba(5,5,26,0.95); backdrop-filter: blur(20px); border-top: 1px solid rgba(255,255,255,0.08); display: flex; justify-content: space-around; align-items: center; padding: 10px 0 20px; z-index: 100; }
   .nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; padding: 4px 16px; }
@@ -97,8 +115,6 @@
   .nav-item p { font-size: 10px; color: rgba(255,255,255,0.3); font-weight: 500; }
   .nav-item.active p { color: #6c63ff; }
   .nav-center { width: 52px; height: 52px; background: linear-gradient(135deg, #6c63ff, #3b82f6); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 22px; margin-top: -20px; box-shadow: 0 4px 20px rgba(108,99,255,0.4); cursor: pointer; }
-
-  @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 </style>
 </head>
 <body>
@@ -106,67 +122,144 @@
 <div class="stars" id="stars"></div>
 <div class="glow-circle glow-1"></div>
 <div class="glow-circle glow-2"></div>
-<div class="toast" id="toast">✅ Copied!</div>
+<div class="toast" id="toast"></div>
+
+<!-- OTP MODAL -->
+<div class="modal-overlay" id="otpModal">
+  <div class="modal-box">
+    <div class="modal-title">🔐 Verify Your Email</div>
+    <div class="modal-sub">OTP bheja gaya hai <span id="otpEmailDisplay"></span> par. Payment details save karne ke liye verify karein.</div>
+    <div class="otp-input-wrap" id="otpBoxes">
+      <input class="otp-box" maxlength="1" type="tel" oninput="otpInput(this,0)" onkeydown="otpBack(event,0)">
+      <input class="otp-box" maxlength="1" type="tel" oninput="otpInput(this,1)" onkeydown="otpBack(event,1)">
+      <input class="otp-box" maxlength="1" type="tel" oninput="otpInput(this,2)" onkeydown="otpBack(event,2)">
+      <input class="otp-box" maxlength="1" type="tel" oninput="otpInput(this,3)" onkeydown="otpBack(event,3)">
+      <input class="otp-box" maxlength="1" type="tel" oninput="otpInput(this,4)" onkeydown="otpBack(event,4)">
+      <input class="otp-box" maxlength="1" type="tel" oninput="otpInput(this,5)" onkeydown="otpBack(event,5)">
+    </div>
+    <div class="resend-otp" id="resendSection">OTP nahi aaya? <span onclick="resendOTP()">Resend OTP</span></div>
+    <button class="otp-verify-btn" id="verifyBtn" onclick="verifyOTP()">✅ Verify & Save Details</button>
+    <button class="otp-cancel-btn" onclick="closeOTPModal()">Cancel</button>
+  </div>
+</div>
 
 <div class="content">
   <div class="header">
-    <h1>Refer & Earn 👥</h1>
-    <p>Invite friends and earn rewards</p>
+    <div><h1>Withdraw 💸</h1><p>Transfer your earnings</p></div>
   </div>
 
-  <!-- MILESTONES - SABSE UPAR -->
-  <div class="milestone-section">
-    <div class="milestone-title">🏆 Refer Milestones</div>
-    <div id="milestoneList"></div>
+  <!-- BALANCE -->
+  <div class="balance-card">
+    <div class="label">Available Balance</div>
+    <div class="amount user-balance">₹0.00</div>
+    <div class="coins-info user-coins">0 Coins</div>
+    <div class="min-note">⚠️ Minimum Withdraw: ₹100</div>
   </div>
 
-  <div class="refer-banner">
-    <div class="refer-emoji">🤝</div>
-    <h2>Invite Friends & Earn ₹10!</h2>
-    <p>Share your code — when your friend<br>joins & <strong>withdraws ₹100</strong>, you get <strong>₹10!</strong></p>
-  </div>
-
-  <div class="how-it-works">
-    <div class="how-title">📖 How It Works</div>
-    <div class="step"><div class="step-num">1</div><div class="step-text"><h4>Share your referral code</h4><p>Send your code to friends & family</p></div></div>
-    <div class="step"><div class="step-num">2</div><div class="step-text"><h4>Friend joins TaskNova</h4><p>They register using your code</p></div></div>
-    <div class="step"><div class="step-num">3</div><div class="step-text"><h4>Friend withdraws ₹100</h4><p>They complete tasks & withdraw</p></div></div>
-    <div class="step"><div class="step-num">4</div><div class="step-text"><h4>You earn ₹10!</h4><p>Automatically added to your balance</p></div></div>
-  </div>
-
-  <div class="code-section">
-    <div class="code-label">🎯 Your Referral Code</div>
-    <div class="code-box">
-      <div class="code-text user-referral-code">TN000000</div>
-      <button class="copy-btn" onclick="copyCode()">Copy</button>
+  <!-- METHOD -->
+  <div class="section-title">Select Payment Method</div>
+  <div class="method-grid">
+    <div class="method-card active" onclick="selectMethod('upi', this)">
+      <div class="icon">📱</div>
+      <div class="name">UPI</div>
+      <div class="desc">Instant transfer</div>
     </div>
-    <div class="share-buttons">
-      <button class="share-btn share-whatsapp" onclick="shareWhatsApp()">WhatsApp</button>
-      <button class="share-btn share-general" onclick="shareNow()">Share Now</button>
+    <div class="method-card" onclick="selectMethod('bank', this)">
+      <div class="icon">🏦</div>
+      <div class="name">Bank</div>
+      <div class="desc">1-2 days</div>
     </div>
   </div>
 
-  <div class="refer-stats">
-    <div class="refer-stat"><div class="refer-stat-icon">👥</div><div class="refer-stat-value user-referrals">0</div><div class="refer-stat-label">Total Refers</div></div>
-    <div class="refer-stat"><div class="refer-stat-icon">✅</div><div class="refer-stat-value" id="completedReferrals">0</div><div class="refer-stat-label">Completed</div></div>
-    <div class="refer-stat"><div class="refer-stat-icon">💰</div><div class="refer-stat-value" id="referEarned">₹0</div><div class="refer-stat-label">Earned</div></div>
+  <!-- UPI FORM -->
+  <div id="upiForm">
+    <!-- Saved UPI -->
+    <div id="savedUpiSection" style="display:none;">
+      <div class="saved-badge">✅ UPI Saved: <strong id="savedUpiDisplay"></strong> <span class="change-link" onclick="changePayment('upi')">Change</span></div>
+    </div>
+    <!-- UPI Input (shown when not saved or changing) -->
+    <div id="upiInputSection">
+      <div class="input-label">Enter UPI ID</div>
+      <div class="input-wrap">
+        <span class="input-icon">📱</span>
+        <input type="text" id="upiId" placeholder="yourname@upi">
+      </div>
+      <button class="bind-btn" onclick="bindPayment('upi')">🔐 Save & Verify UPI</button>
+    </div>
   </div>
 
-  <div class="section-title">Your Referrals</div>
-  <div id="referList">
-    <div class="empty-state">
-      <div class="emoji">👀</div>
-      <h4>No referrals yet!</h4>
-      <p>Share your code and start earning ₹10 per friend</p>
+  <!-- BANK FORM -->
+  <div id="bankForm" style="display:none;">
+    <!-- Saved Bank -->
+    <div id="savedBankSection" style="display:none;">
+      <div class="saved-badge">✅ Bank Saved: <strong id="savedBankDisplay"></strong> <span class="change-link" onclick="changePayment('bank')">Change</span></div>
     </div>
+    <!-- Bank Input (shown when not saved or changing) -->
+    <div id="bankInputSection">
+      <div class="input-label">Account Number</div>
+      <div class="input-wrap">
+        <span class="input-icon">🏦</span>
+        <input type="number" id="accNumber" placeholder="Enter account number">
+      </div>
+      <div class="input-label">IFSC Code</div>
+      <div class="input-wrap">
+        <span class="input-icon">🔢</span>
+        <input type="text" id="ifscCode" placeholder="Enter IFSC code">
+      </div>
+      <div class="input-label">Account Holder Name</div>
+      <div class="input-wrap">
+        <span class="input-icon">👤</span>
+        <input type="text" id="accName" placeholder="Enter account holder name">
+      </div>
+      <button class="bind-btn" onclick="bindPayment('bank')">🔐 Save & Verify Bank</button>
+    </div>
+  </div>
+
+  <!-- AMOUNT -->
+  <div class="input-label">Select Amount</div>
+  <div class="amount-chips">
+    <div class="chip active" onclick="selectAmount(100, this)">₹100</div>
+    <div class="chip" onclick="selectAmount(200, this)">₹200</div>
+    <div class="chip" onclick="selectAmount(500, this)">₹500</div>
+    <div class="chip" onclick="selectAmount(1000, this)">₹1000</div>
+  </div>
+
+  <!-- FEE INFO -->
+  <div class="fee-info">
+    <div class="fee-row">
+      <span class="fee-label">Withdrawal Amount</span>
+      <span class="fee-value" id="feeAmount">₹100</span>
+    </div>
+    <div class="fee-row">
+      <span class="fee-label">Service Fee (10%)</span>
+      <span class="fee-value red" id="feeCharge">- ₹10</span>
+    </div>
+    <div class="fee-row">
+      <span class="fee-label">You Receive</span>
+      <span class="fee-value green" id="feeReceive">₹90</span>
+    </div>
+  </div>
+
+  <!-- WARNING -->
+  <div class="warning">
+    <span>⚠️</span>
+    <span>Withdrawal processed within 24-48 hours. Make sure your details are correct.</span>
+  </div>
+
+  <button class="withdraw-btn" id="withdrawBtn" onclick="submitWithdraw()">REQUEST WITHDRAWAL</button>
+
+  <!-- HISTORY -->
+  <div class="section-title">Transaction History</div>
+  <div id="historyContainer">
+    <div class="empty-history">No transactions yet 📭</div>
   </div>
 </div>
 
 <div class="bottom-nav">
   <div class="nav-item" onclick="window.location.href='tasknova_login-1.html'"><span>🏠</span><p>Home</p></div>
   <div class="nav-item" onclick="window.location.href='tasknova_tasks.html'"><span>📋</span><p>Tasks</p></div>
-  <div class="nav-center" onclick="window.location.href='tasknova_withdraw.html'">💰</div>
-  <div class="nav-item active" onclick="window.location.href='tasknova_refer.html'"><span>👥</span><p>Refer</p></div>
+  <div class="nav-center active">💰</div>
+  <div class="nav-item" onclick="window.location.href='tasknova_refer.html'"><span>👥</span><p>Refer</p></div>
   <div class="nav-item" onclick="window.location.href='tasknova_profile.html'"><span>👤</span><p>Profile</p></div>
 </div>
 
@@ -190,163 +283,390 @@
       });
     });
   };
+</script>
 
-  const starsContainer = document.getElementById('stars');
-  for (let i = 0; i < 60; i++) {
-    const star = document.createElement('div');
-    star.classList.add('star');
-    const size = Math.random() * 2 + 0.5;
-    star.style.cssText = `width:${size}px;height:${size}px;top:${Math.random()*100}%;left:${Math.random()*100}%;animation-delay:${Math.random()*3}s;animation-duration:${Math.random()*3+2}s;`;
-    starsContainer.appendChild(star);
-  }
+<script>
+  // ─── CONFIG ───────────────────────────────────────────────────
+  const DB = 'https://tasknova-66d0f-default-rtdb.firebaseio.com';
+  // EmailJS config — apni values dalo
+  const EMAILJS_SERVICE_ID  = 'service_4v9rxbp';
+  const EMAILJS_TEMPLATE_ID = 'template_vn14vex';
+  const EMAILJS_PUBLIC_KEY  = 'TDOOVu5VGqilIHFNe';
+  // ──────────────────────────────────────────────────────────────
 
-  // Milestones data
-  const milestones = [
-    { count: 1,    reward: 10,     icon: '🎯', label: '1 Friend' },
-    { count: 5,    reward: 50,     icon: '⚡', label: '5 Friends' },
-    { count: 10,   reward: 100,    icon: '🚀', label: '10 Friends' },
-    { count: 50,   reward: 500,    icon: '💎', label: '50 Friends' },
-    { count: 100,  reward: 1000,   icon: '👑', label: '100 Friends' },
-    { count: 500,  reward: 5000,   icon: '🔱', label: '500 Friends' },
-    { count: 1000, reward: 10000,  icon: '🏆', label: '1000 Friends' },
-  ];
+  let selectedAmount   = 100;
+  let selectedMethod   = 'upi';
+  let userBalance      = 0;
+  let currentOTP       = '';
+  let pendingPayData   = null;  // data waiting to be saved after OTP
+  let userEmail        = '';
+  let savedPayments    = { upi: null, bank: null };
 
-  function renderMilestones(referralCount) {
-    const container = document.getElementById('milestoneList');
-    container.innerHTML = milestones.map(m => {
-      const achieved = referralCount >= m.count;
-      const isNext = !achieved && milestones.find(x => referralCount >= x.count) === milestones[milestones.indexOf(m) - 1] || (!achieved && m.count === 1);
-      const progress = Math.min((referralCount / m.count) * 100, 100);
-      const cardClass = achieved ? 'achieved' : (isNext ? 'next' : '');
-      const badgeClass = achieved ? 'badge-done' : (isNext ? 'badge-next' : 'badge-locked');
-      const badgeText = achieved ? '✅ Achieved' : (isNext ? '⚡ Next Goal' : '🔒 Locked');
-
-      return `
-        <div class="milestone-card ${cardClass}">
-          <div class="milestone-icon">${m.icon}</div>
-          <div class="milestone-info">
-            <h4>${m.label}</h4>
-            <p>Invite ${m.count} friend${m.count > 1 ? 's' : ''} who withdraw ₹100</p>
-            <div class="milestone-progress">
-              <div class="milestone-progress-fill" style="width:${progress}%"></div>
-            </div>
-            <span class="milestone-badge ${badgeClass}">${badgeText}</span>
-          </div>
-          <div style="text-align:right;">
-            <div class="milestone-reward">+₹${m.reward.toLocaleString()}</div>
-            <div style="font-size:10px;color:rgba(255,255,255,0.3);margin-top:2px;">${referralCount}/${m.count}</div>
-          </div>
-        </div>
-      `;
-    }).join('');
-  }
-
-  // Initialize with 0 referrals — update when Firebase data loads
-  renderMilestones(0);
-
-  function getCode() {
-    return document.querySelector('.user-referral-code').textContent;
-  }
-
-  function copyCode() {
-    const code = getCode();
-    navigator.clipboard.writeText(code).then(() => {
-      const toast = document.getElementById('toast');
-      toast.classList.add('show');
-      setTimeout(() => toast.classList.remove('show'), 2000);
+  // ── Smooth page load ──────────────────────────────────────────
+  window.addEventListener('load', () => {
+    document.body.classList.add('loaded');
+    // Stars banao after load (lag fix)
+    requestAnimationFrame(() => {
+      const starsContainer = document.getElementById('stars');
+      const frag = document.createDocumentFragment();
+      for (let i = 0; i < 60; i++) {
+        const star = document.createElement('div');
+        star.classList.add('star');
+        const size = Math.random() * 2 + 0.5;
+        star.style.cssText = `width:${size}px;height:${size}px;top:${Math.random()*100}%;left:${Math.random()*100}%;animation-delay:${Math.random()*3}s;animation-duration:${Math.random()*3+2}s;`;
+        frag.appendChild(star);
+      }
+      starsContainer.appendChild(frag);
     });
+
+    // Load EmailJS
+    const ejsScript = document.createElement('script');
+    ejsScript.src = 'https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js';
+    ejsScript.onload = () => emailjs.init(EMAILJS_PUBLIC_KEY);
+    document.head.appendChild(ejsScript);
+
+    const uid = localStorage.getItem('tasknova_uid');
+    if (uid && uid !== 'null') {
+      fetchUserData(uid);
+    }
+  });
+
+  // ── Fetch user data + saved payments ─────────────────────────
+  async function fetchUserData(uid) {
+    try {
+      const token = await window._getAuthToken();
+      const authParam = token ? '?auth=' + token : '';
+      const res  = await fetch(DB + '/users/' + uid + '.json' + authParam);
+      const data = await res.json();
+      if (data) {
+        // Calculate live balance from coins (100 coins = ₹1)
+        const totalCoins = data.coins || 0;
+        userBalance  = parseFloat((totalCoins / 100).toFixed(2));
+        userEmail    = data.email    || '';
+        document.querySelector('.user-balance').textContent = '₹' + userBalance.toFixed(2);
+        document.querySelector('.user-coins').textContent   = totalCoins + ' Coins';
+
+        // Saved payment details load karo
+        if (data.savedPayments) {
+          savedPayments = data.savedPayments;
+          renderSavedDetails();
+        }
+        loadHistory(uid);
+      }
+    } catch(e) { console.log('error:', e); }
   }
 
-  function shareWhatsApp() {
-    const code = getCode();
-    const msg = `🚀 Join TaskNova & earn money!\n\nUse my referral code: *${code}*\n\nDownload now & start earning!\nhttps://maheshgoswami09837-ship-it.github.io/Tasknova/tasknova_login-1.html`;
-    window.open('https://wa.me/?text=' + encodeURIComponent(msg));
-  }
-
-  function shareNow() {
-    const code = getCode();
-    const shareData = {
-      title: 'TaskNova - Earn While You Explore',
-      text: `Join TaskNova & earn money! Use my referral code: ${code}`,
-      url: 'https://maheshgoswami09837-ship-it.github.io/Tasknova/tasknova_login-1.html'
-    };
-    if (navigator.share) {
-      navigator.share(shareData);
+  // ── Show saved details ────────────────────────────────────────
+  function renderSavedDetails() {
+    // UPI
+    if (savedPayments.upi) {
+      document.getElementById('savedUpiDisplay').textContent = savedPayments.upi.upiId;
+      document.getElementById('savedUpiSection').style.display  = 'block';
+      document.getElementById('upiInputSection').style.display  = 'none';
     } else {
-      navigator.clipboard.writeText(shareData.url);
-      alert('Link copied! Share it with your friends.');
+      document.getElementById('savedUpiSection').style.display  = 'none';
+      document.getElementById('upiInputSection').style.display  = 'block';
+    }
+    // Bank
+    if (savedPayments.bank) {
+      const b = savedPayments.bank;
+      document.getElementById('savedBankDisplay').textContent = '****' + String(b.accNumber).slice(-4) + ' | ' + b.ifscCode;
+      document.getElementById('savedBankSection').style.display  = 'block';
+      document.getElementById('bankInputSection').style.display  = 'none';
+    } else {
+      document.getElementById('savedBankSection').style.display  = 'none';
+      document.getElementById('bankInputSection').style.display  = 'block';
     }
   }
 
-  // Page load hote hi data fetch karo
-  window.addEventListener('load', () => {
+  // ── Change saved payment ──────────────────────────────────────
+  function changePayment(method) {
+    if (method === 'upi') {
+      document.getElementById('savedUpiSection').style.display  = 'none';
+      document.getElementById('upiInputSection').style.display  = 'block';
+      document.getElementById('upiId').value = savedPayments.upi ? savedPayments.upi.upiId : '';
+    } else {
+      document.getElementById('savedBankSection').style.display  = 'none';
+      document.getElementById('bankInputSection').style.display  = 'block';
+      if (savedPayments.bank) {
+        document.getElementById('accNumber').value = savedPayments.bank.accNumber;
+        document.getElementById('ifscCode').value  = savedPayments.bank.ifscCode;
+        document.getElementById('accName').value   = savedPayments.bank.accName;
+      }
+    }
+  }
+
+  // ── Bind / Save payment ───────────────────────────────────────
+  function bindPayment(method) {
+    if (!userEmail) {
+      showToast('Email nahi mila. Login karein!', 'error');
+      return;
+    }
+
+    let data = {};
+    if (method === 'upi') {
+      const upiId = document.getElementById('upiId').value.trim();
+      if (!upiId || !upiId.includes('@')) { showToast('Valid UPI ID enter karein', 'error'); return; }
+      data = { upiId };
+    } else {
+      const accNumber = document.getElementById('accNumber').value.trim();
+      const ifscCode  = document.getElementById('ifscCode').value.trim().toUpperCase();
+      const accName   = document.getElementById('accName').value.trim();
+      if (!accNumber || accNumber.length < 9) { showToast('Valid account number enter karein', 'error'); return; }
+      if (!ifscCode  || ifscCode.length !== 11) { showToast('Valid IFSC code enter karein (11 chars)', 'error'); return; }
+      if (!accName) { showToast('Account holder name enter karein', 'error'); return; }
+      data = { accNumber, ifscCode, accName };
+    }
+
+    pendingPayData = { method, data };
+    sendOTPEmail();
+  }
+
+  // ── Send OTP via EmailJS ──────────────────────────────────────
+  function sendOTPEmail() {
+    currentOTP = Math.floor(100000 + Math.random() * 900000).toString();
+    document.getElementById('otpEmailDisplay').textContent = maskEmail(userEmail);
+    document.querySelectorAll('.otp-box').forEach(b => b.value = '');
+
+    // Agar EmailJS configured nahi hai to dev mode
+    if (EMAILJS_PUBLIC_KEY === 'YOUR_PUBLIC_KEY') {
+      console.log('DEV MODE — OTP:', currentOTP);
+      showToast('DEV: OTP = ' + currentOTP, 'success');
+      document.getElementById('otpModal').classList.add('show');
+      return;
+    }
+
+    const verifyBtn = document.getElementById('verifyBtn');
+    verifyBtn.innerHTML = '<span class="otp-loader"></span>Sending...';
+    verifyBtn.disabled = true;
+
+    // EmailJS ready check
+    if (typeof emailjs === 'undefined') {
+      showToast('Email service load nahi hua, refresh karein!', 'error');
+      verifyBtn.innerHTML = '✅ Verify & Save Details';
+      verifyBtn.disabled = false;
+      return;
+    }
+    emailjs.init(EMAILJS_PUBLIC_KEY);
+
+    emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
+      to_email   : userEmail,
+      user_email : userEmail,
+      email      : userEmail,
+      otp_code   : currentOTP,
+      otp        : currentOTP,
+      app_name   : 'TaskNova',
+      name       : 'TaskNova User'
+    }).then(() => {
+      showToast('OTP bhej diya! Email check karein 📧', 'success');
+      document.getElementById('otpModal').classList.add('show');
+      document.querySelectorAll('.otp-box')[0].focus();
+    }).catch(err => {
+      console.error('EmailJS Error:', JSON.stringify(err));
+      const msg = err.text || err.message || JSON.stringify(err) || 'Unknown error';
+      showToast('OTP failed: ' + msg, 'error');
+    }).finally(() => {
+      verifyBtn.innerHTML = '✅ Verify & Save Details';
+      verifyBtn.disabled  = false;
+    });
+  }
+
+  function resendOTP() {
+    showToast('OTP dobara bhej raha hoon...', '');
+    sendOTPEmail();
+  }
+
+  function maskEmail(email) {
+    if (!email) return '';
+    const [user, domain] = email.split('@');
+    return user.slice(0, 2) + '****@' + domain;
+  }
+
+  // ── OTP box logic ─────────────────────────────────────────────
+  function otpInput(el, idx) {
+    el.value = el.value.replace(/\D/g, '');
+    if (el.value && idx < 5) {
+      document.querySelectorAll('.otp-box')[idx + 1].focus();
+    }
+    // Auto verify when all 6 filled
+    const all = [...document.querySelectorAll('.otp-box')].map(b => b.value);
+    if (all.every(v => v)) verifyOTP();
+  }
+
+  function otpBack(e, idx) {
+    if (e.key === 'Backspace' && !e.target.value && idx > 0) {
+      document.querySelectorAll('.otp-box')[idx - 1].focus();
+    }
+  }
+
+  // ── Verify OTP & Save ─────────────────────────────────────────
+  async function verifyOTP() {
+    const entered = [...document.querySelectorAll('.otp-box')].map(b => b.value).join('');
+    if (entered.length < 6) { showToast('Pura 6-digit OTP enter karein', 'error'); return; }
+
+    if (entered !== currentOTP) {
+      showToast('Galat OTP! Dobara try karein ❌', 'error');
+      document.querySelectorAll('.otp-box').forEach(b => { b.value = ''; b.style.borderColor = '#ef4444'; });
+      setTimeout(() => document.querySelectorAll('.otp-box').forEach(b => b.style.borderColor = ''), 1200);
+      document.querySelectorAll('.otp-box')[0].focus();
+      return;
+    }
+
+    // Correct — save to Firebase
+    const verifyBtn = document.getElementById('verifyBtn');
+    verifyBtn.innerHTML = '<span class="otp-loader"></span>Saving...';
+    verifyBtn.disabled  = true;
+
     const uid = localStorage.getItem('tasknova_uid');
-    if (!uid || uid === 'null') return;
+    const { method, data } = pendingPayData;
 
-    const dbURL = 'https://tasknova-66d0f-default-rtdb.firebaseio.com';
+    try {
+      const token2 = await window._getAuthToken();
+      const authParam2 = token2 ? '?auth=' + token2 : '';
+      await fetch(DB + '/users/' + uid + '/savedPayments/' + method + '.json' + authParam2, {
+        method: 'PUT',
+        body  : JSON.stringify(data)
+      });
+      savedPayments[method] = data;
+      renderSavedDetails();
+      closeOTPModal();
+      showToast('Details save ho gayi! ✅', 'success');
+    } catch(e) {
+      showToast('Save failed: ' + e.message, 'error');
+    } finally {
+      verifyBtn.innerHTML = '✅ Verify & Save Details';
+      verifyBtn.disabled  = false;
+    }
+  }
 
-    // User data fetch karo
+  function closeOTPModal() {
+    document.getElementById('otpModal').classList.remove('show');
+    pendingPayData = null;
+    currentOTP     = '';
+  }
+
+  // ── Method select ─────────────────────────────────────────────
+  function selectMethod(method, el) {
+    selectedMethod = method;
+    document.querySelectorAll('.method-card').forEach(c => c.classList.remove('active'));
+    el.classList.add('active');
+    document.getElementById('upiForm').style.display  = method === 'upi'  ? 'block' : 'none';
+    document.getElementById('bankForm').style.display = method === 'bank' ? 'block' : 'none';
+  }
+
+  function selectAmount(amount, el) {
+    selectedAmount = amount;
+    document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+    el.classList.add('active');
+    const fee = Math.round(amount * 0.1);
+    document.getElementById('feeAmount').textContent  = '₹' + amount;
+    document.getElementById('feeCharge').textContent  = '- ₹' + fee;
+    document.getElementById('feeReceive').textContent = '₹' + (amount - fee);
+  }
+
+  function showToast(msg, type) {
+    const toast = document.getElementById('toast');
+    toast.textContent = msg;
+    toast.className   = `toast ${type} show`;
+    setTimeout(() => toast.className = 'toast', 3000);
+  }
+
+  // ── Submit Withdraw ───────────────────────────────────────────
+  function submitWithdraw() {
+    if (userBalance < selectedAmount) { showToast('Insufficient balance!', 'error'); return; }
+    if (selectedAmount < 100)         { showToast('Minimum withdrawal is ₹100!', 'error'); return; }
+
+    const uid = localStorage.getItem('tasknova_uid');
+    if (!uid || uid === 'null') { showToast('Please login again!', 'error'); return; }
+
+    // Payment details — saved use karo ya input se
+    let paymentDetails = {};
+    if (selectedMethod === 'upi') {
+      if (savedPayments.upi) {
+        paymentDetails = savedPayments.upi;
+      } else {
+        const upiId = document.getElementById('upiId').value.trim();
+        if (!upiId) { showToast('UPI ID enter karein ya save karein', 'error'); return; }
+        paymentDetails = { upiId };
+      }
+    } else {
+      if (savedPayments.bank) {
+        paymentDetails = savedPayments.bank;
+      } else {
+        const accNumber = document.getElementById('accNumber').value.trim();
+        const ifscCode  = document.getElementById('ifscCode').value.trim();
+        const accName   = document.getElementById('accName').value.trim();
+        if (!accNumber || !ifscCode || !accName) { showToast('Bank details enter karein ya save karein', 'error'); return; }
+        paymentDetails = { accNumber, ifscCode, accName };
+      }
+    }
+
+    const btn = document.getElementById('withdrawBtn');
+    btn.textContent = 'Processing...';
+    btn.disabled    = true;
+
+    const newBalance = userBalance - selectedAmount;
+
     window._getAuthToken().then(token => {
-      const ap = token ? '?auth=' + token : '';
-      fetch(dbURL + '/users/' + uid + '.json' + ap)
-      .then(res => res.json())
-      .then(data => {
-        if (!data) return;
-
-        // Referral code set karo
-        document.querySelector('.user-referral-code').textContent = data.referralCode || ('TN' + uid.substring(0, 6).toUpperCase());
-
-        // Stats update karo
-        const totalRefers = data.referrals || 0;
-        const completedRefers = data.completedReferrals || 0;
-        const referEarned = completedRefers * 10;
-
-        document.querySelector('.user-referrals').textContent = totalRefers;
-        document.getElementById('completedReferrals').textContent = completedRefers;
-        document.getElementById('referEarned').textContent = '₹' + referEarned;
-
-        // Milestones render karo real data se
-        renderMilestones(completedRefers);
+    const ap = token ? '?auth=' + token : '';
+    fetch(DB + '/withdrawals/' + uid + '.json' + ap, {
+      method: 'POST',
+      body  : JSON.stringify({
+        amount        : selectedAmount,
+        fee           : Math.round(selectedAmount * 0.1),
+        receive       : selectedAmount - Math.round(selectedAmount * 0.1),
+        method        : selectedMethod,
+        paymentDetails,
+        status        : 'pending',
+        date          : new Date().toISOString()
       })
-      .catch(e => console.log('User fetch error:', e));
-    }); // end token
+    }).then(() => {
+      const remainingCoins = Math.round(newBalance * 100);
+      return fetch(DB + '/users/' + uid + '.json' + ap, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ balance: newBalance, coins: remainingCoins })
+      });
+    }).then(() => {
+      showToast('Withdrawal request submitted! ✅', 'success');
+      document.querySelector('.user-balance').textContent = '₹' + newBalance.toFixed(2);
+      document.querySelector('.user-coins').textContent = Math.round(newBalance * 100) + ' Coins';
+      userBalance = newBalance;
+      loadHistory(uid);
+    }).catch(err => {
+      showToast('Error: ' + err.message, 'error');
+    }).finally(() => {
+      btn.textContent = 'REQUEST WITHDRAWAL';
+      btn.disabled    = false;
+    });
+    }); // end _getAuthToken
+  }
 
-    // Referral list fetch karo
+  // ── History ───────────────────────────────────────────────────
+  function loadHistory(uid) {
+    const container = document.getElementById('historyContainer');
     window._getAuthToken().then(token => {
-      const ap = token ? '?auth=' + token : '';
-      fetch(dbURL + '/referrals/' + uid + '.json' + ap)
-      .then(res => res.json())
+    const ap = token ? '?auth=' + token : '';
+    fetch(DB + '/withdrawals/' + uid + '.json' + ap)
+      .then(res  => res.json())
       .then(data => {
-        const container = document.getElementById('referList');
-        if (!data) {
-          container.innerHTML = `
-            <div class="empty-state">
-              <div class="emoji">👀</div>
-              <h4>No referrals yet!</h4>
-              <p>Share your code and start earning ₹10 per friend</p>
-            </div>`;
-          return;
-        }
-
+        if (!data) { container.innerHTML = '<div class="empty-history">No transactions yet 📭</div>'; return; }
         const items = Object.values(data).reverse();
-        container.innerHTML = items.map(item => `
-          <div class="refer-item" style="background:rgba(255,255,255,0.05);border-radius:12px;padding:14px 16px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;">
-            <div>
-              <div style="font-weight:700;color:#fff;font-size:14px;">👤 ${item.name || 'Friend'}</div>
-              <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:3px;">${new Date(item.date).toLocaleDateString()}</div>
-            </div>
-            <div style="text-align:right;">
-              <div style="padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600;background:${item.status === 'completed' ? 'rgba(34,197,94,0.2)' : 'rgba(234,179,8,0.2)'};color:${item.status === 'completed' ? '#22c55e' : '#eab308'};">
-                ${item.status === 'completed' ? '✅ Completed' : '⏳ Pending'}
+        container.innerHTML = '<div class="history-scroll">' +
+          items.map(item => `
+            <div class="history-item">
+              <div class="history-icon">${item.method === 'upi' ? '📱' : '🏦'}</div>
+              <div class="history-amount">₹${item.amount}</div>
+              <div class="history-method">${item.method.toUpperCase()}</div>
+              <div class="history-date">${new Date(item.date).toLocaleDateString()}</div>
+              <div class="status-badge ${item.status === 'pending' ? 'status-pending' : 'status-done'}">
+                ${item.status === 'pending' ? '⏳ Pending' : '✅ Success'}
               </div>
-              ${item.status === 'completed' ? '<div style="font-size:12px;color:#22c55e;margin-top:4px;">+₹10 earned</div>' : ''}
             </div>
-          </div>
-        `).join('');
-      })
-      .catch(e => console.log('Referral fetch error:', e));
-    }); // end token
-  });
+          `).join('') + '</div>';
+      }).catch(e => console.error(e));
+    }); // end _getAuthToken
+  }
 </script>
 </body>
 </html>
