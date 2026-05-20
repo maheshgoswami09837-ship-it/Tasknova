@@ -673,10 +673,10 @@
   // URL: ?cpx_status=1&trans_id=ABC123&amount=5.00&ext_user_id=UID
   function checkCPXUrlParams() {
     const params = new URLSearchParams(window.location.search);
-    const status    = params.get('cpx_status');
+    const status    = params.get('status');
     const transId   = params.get('trans_id');
-    const amount    = params.get('amount');
-    const extUserId = params.get('ext_user_id');
+    const amount    = params.get('amount_local') || params.get('amount');
+    const extUserId = params.get('user_id') || params.get('ext_user_id');
 
     if (status !== null && transId) {
       console.log('CPX Postback received — status:', status, '| transId:', transId, '| amount:', amount, '| uid:', extUserId);
