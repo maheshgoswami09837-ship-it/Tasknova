@@ -3,6 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<!-- WebView: JS must be enabled (setJavaScriptEnabled=true) for ads to load -->
+<meta name="ad-render-mode" content="js-enabled">
 <title>TaskNova Tasks</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -30,8 +33,39 @@
   .cat-tab.active { background: linear-gradient(135deg, #6c63ff, #3b82f6); border-color: transparent; color: #fff; box-shadow: 0 4px 15px rgba(108,99,255,0.3); }
 
   .tasks-grid { display: flex; flex-direction: column; gap: 12px; }
-  .task-card { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); border-radius: 18px; padding: 16px; display: flex; align-items: center; gap: 14px; cursor: pointer; transition: all 0.2s; }
-  .task-card:active { transform: scale(0.98); background: rgba(108,99,255,0.1); }
+  .task-card {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.10);
+    border-radius: 18px;
+    padding: 16px 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    cursor: pointer;
+    transition: transform 0.18s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.18s ease, background 0.18s ease;
+    box-shadow: 0 4px 18px rgba(0,0,0,0.25), 0 1px 4px rgba(0,0,0,0.15);
+    will-change: transform;
+  }
+  .task-card:hover {
+    transform: scale(1.025);
+    box-shadow: 0 8px 32px rgba(108,99,255,0.22), 0 2px 8px rgba(0,0,0,0.2);
+    background: rgba(108,99,255,0.09);
+  }
+  .task-card:active {
+    transform: scale(0.97);
+    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    background: rgba(108,99,255,0.13);
+  }
+  .task-card.tapped {
+    animation: cardTap 0.32s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  @keyframes cardTap {
+    0%   { transform: scale(1); }
+    40%  { transform: scale(0.955); }
+    70%  { transform: scale(1.045); }
+    100% { transform: scale(1); }
+  }
   .task-card.disabled { opacity: 0.55; pointer-events: none; }
   .task-card.hidden { display: none; }
 
@@ -88,11 +122,37 @@
   .spin-btn-main:disabled { background:rgba(255,255,255,0.1); box-shadow:none; cursor:not-allowed; color:rgba(255,255,255,0.4); }
 
   /* Scratch Card */
-  .scratch-wrap { position:relative; width:260px; height:160px; margin:0 auto 24px; border-radius:20px; overflow:hidden; cursor:crosshair; }
+  .scratch-wrap { position:relative; width:280px; height:170px; margin:0 auto 24px; border-radius:20px; overflow:hidden; cursor:crosshair; box-shadow: 0 8px 32px rgba(0,0,0,0.35); }
   .scratch-canvas { position:absolute; top:0; left:0; width:100%; height:100%; border-radius:20px; }
-  .scratch-prize { position:absolute; top:0; left:0; width:100%; height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; background:linear-gradient(135deg,rgba(108,99,255,0.2),rgba(59,130,246,0.2)); border-radius:20px; border:1px solid rgba(108,99,255,0.3); }
-  .scratch-prize .prize-coins { font-size:48px; font-weight:800; color:#6c63ff; }
-  .scratch-prize .prize-label { font-size:14px; color:rgba(255,255,255,0.6); margin-top:4px; }
+  .scratch-prize {
+    position:absolute; top:0; left:0; width:100%; height:100%;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    background: #ffffff;
+    border-radius:20px;
+    border: 2.5px solid #e0e0e0;
+  }
+  .scratch-prize .prize-amount {
+    font-size: 52px;
+    font-weight: 900;
+    color: #6c63ff;
+    line-height: 1;
+    letter-spacing: -1px;
+    font-family: 'Segoe UI', sans-serif;
+    text-shadow: 0 2px 12px rgba(108,99,255,0.18);
+  }
+  .scratch-prize .prize-unit {
+    font-size: 16px;
+    font-weight: 800;
+    color: #444;
+    margin-top: 6px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+  .scratch-prize .prize-star {
+    font-size: 13px;
+    color: #aaa;
+    margin-top: 4px;
+  }
 
   /* Quiz */
   .quiz-question { background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.08); border-radius:16px; padding:20px; margin-bottom:16px; width:100%; }
@@ -105,6 +165,25 @@
 
   /* Cooldown badge */
   .cooldown-badge { font-size:11px; color:#f59e0b; font-weight:700; background:rgba(245,158,11,0.15); padding:4px 10px; border-radius:50px; }
+
+  /* Daily Bonus countdown on button */
+  .bonus-countdown-btn { background:rgba(245,158,11,0.18)!important; color:#f59e0b!important; cursor:not-allowed; font-size:10px!important; padding:5px 10px!important; border:1px solid rgba(245,158,11,0.3)!important; }
+
+  /* Ad containers — must NOT be 0px, explicit size for WebView */
+  .ad-banner-container {
+    display: block !important;
+    width: 320px !important;
+    min-height: 50px !important;
+    max-width: 100% !important;
+    margin: 12px auto !important;
+    overflow: visible !important;
+    position: relative !important;
+    z-index: 10 !important;
+    background: transparent;
+  }
+  .ad-banner-container iframe,
+  .ad-banner-container ins,
+  .ad-banner-container div { min-height: 50px !important; }
 
   /* Limit popup */
   #limitPopup { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:9999; align-items:center; justify-content:center; }
@@ -214,6 +293,24 @@
         <div class="coins-reward">+50</div>
         <div class="rupee">coins</div>
         <button class="do-btn" id="checkinBtn">Claim</button>
+      </div>
+    </div>
+
+    <!-- Daily Bonus (7:30 PM IST strict reset) -->
+    <div class="task-card" data-category="daily" id="dailyBonusCard" onclick="claimDailyBonus()">
+      <div class="task-icon icon-orange">🎁</div>
+      <div class="task-info">
+        <h3>Daily Bonus</h3>
+        <p>Har din 7:30 PM pe naya bonus milega</p>
+        <div class="task-meta">
+          <span class="task-time">⏱ Resets 7:30 PM</span>
+          <span id="dailyBonusBadge" style="display:none;" class="cooldown-badge">✅ Claimed</span>
+        </div>
+      </div>
+      <div class="task-reward">
+        <div class="coins-reward">+100</div>
+        <div class="rupee">coins</div>
+        <button class="do-btn" id="dailyBonusBtn">Claim</button>
       </div>
     </div>
 
@@ -350,7 +447,7 @@
   </div>
   <button class="spin-btn-main" id="spinBtnMain" onclick="doSpin()">🎡 Spin Now!</button>
   <!-- Banner Ad 320x50 — loads after spin success -->
-  <div id="spinBannerAd" style="width:320px;height:50px;max-width:100%;margin:12px auto;overflow:hidden;"></div>
+  <div id="spinBannerAd" class="ad-banner-container"></div>
 </div>
 
 <!-- Scratch Modal -->
@@ -365,15 +462,16 @@
   <div style="color:rgba(255,255,255,0.5);font-size:13px;text-align:center;margin-bottom:12px;">Card pe finger ghisao 👇</div>
   <div class="scratch-wrap" id="scratchWrap">
     <div class="scratch-prize">
-      <div class="prize-coins" id="scratchPrize">?</div>
-      <div class="prize-label">Coins</div>
+      <div class="prize-amount" id="scratchPrize">10</div>
+      <div class="prize-unit">Coins</div>
+      <div class="prize-star">🪙 Scratch to reveal!</div>
     </div>
     <canvas class="scratch-canvas" id="scratchCanvas"></canvas>
   </div>
   <div id="scratchResult" style="font-size:18px;font-weight:800;color:#6c63ff;text-align:center;min-height:28px;margin-bottom:16px;"></div>
   <button class="spin-btn-main" id="newScratchBtn" onclick="newScratch()" style="display:none;">🎴 Next Card</button>
   <!-- Banner Ad 320x50 — loads after scratch success -->
-  <div id="scratchBannerAd" style="width:320px;height:50px;max-width:100%;margin:12px auto;overflow:hidden;"></div>
+  <div id="scratchBannerAd" class="ad-banner-container"></div>
 </div>
 
 <!-- Quiz Modal -->
@@ -443,6 +541,18 @@
     starsContainer.appendChild(star);
   }
 
+  // Task card micro-interaction: scale-up bounce on tap
+  document.querySelectorAll('.task-card:not(.disabled)').forEach(card => {
+    card.addEventListener('pointerdown', function() {
+      this.classList.remove('tapped');
+      void this.offsetWidth; // reflow to restart animation
+      this.classList.add('tapped');
+    });
+    card.addEventListener('animationend', function() {
+      this.classList.remove('tapped');
+    });
+  });
+
   // Filter tasks by category - selected tab goes to top
   function filterTasks(category, el) {
     // Update active tab
@@ -478,14 +588,236 @@
   let adBarWidth = 0;
   let currentCoins = 10;
 
-  // Check reset time 7:30 AM
-  function shouldReset() {
-    const lastReset = localStorage.getItem('adLastReset');
+  // ── STRICT 7:30 PM IST RESET ─────────────────────────────────
+  // Reset happens at exactly 19:30 IST every day.
+  // Uses server-side worldtimeapi for accurate IST time (fallback: device time + IST offset).
+
+  async function getISTTime() {
+    try {
+      const res = await fetch('https://worldtimeapi.org/api/timezone/Asia/Kolkata', { signal: AbortSignal.timeout(3000) });
+      if (!res.ok) throw new Error('API error');
+      const data = await res.json();
+      return new Date(data.datetime); // accurate IST datetime
+    } catch(e) {
+      // Fallback: device UTC + 5.5h offset
+      const now = new Date();
+      return new Date(now.getTime() + (5.5 * 60 * 60 * 1000) - (now.getTimezoneOffset() * 60 * 1000));
+    }
+  }
+
+  // Returns the most recent 7:30 PM IST reset timestamp (in ms, UTC-based)
+  function getLast730PMReset() {
     const now = new Date();
-    const resetTime = new Date();
-    resetTime.setHours(7, 30, 0, 0);
-    if (now < resetTime) resetTime.setDate(resetTime.getDate() - 1);
-    return !lastReset || new Date(lastReset) < resetTime;
+    // Get IST offset: UTC+5:30 = 330 min
+    const istOffset = 5.5 * 60 * 60 * 1000;
+    const nowIST = new Date(now.getTime() + istOffset - (now.getTimezoneOffset() * 60 * 1000));
+    // Build today's 7:30 PM IST
+    const reset = new Date(nowIST);
+    reset.setHours(19, 30, 0, 0);
+    // If it's before 7:30 PM IST today, use yesterday's 7:30 PM
+    if (nowIST < reset) {
+      reset.setDate(reset.getDate() - 1);
+    }
+    // Convert back to UTC ms for comparison
+    return reset.getTime() - istOffset + (now.getTimezoneOffset() * 60 * 1000);
+  }
+
+  function shouldReset() {
+    const lastClaimed = localStorage.getItem('adLastReset');
+    if (!lastClaimed) return true;
+    const lastResetUTC = getLast730PMReset();
+    return new Date(lastClaimed).getTime() < lastResetUTC;
+  }
+
+  // Daily Bonus: strict 7:30 PM IST reset
+  const DAILY_BONUS_KEY = 'tasknova_dailyBonus';
+  let dailyBonusCountdownInterval = null;
+
+  function getDailyBonusData() {
+    const raw = localStorage.getItem(DAILY_BONUS_KEY);
+    return raw ? JSON.parse(raw) : { claimed: false, claimedAt: 0 };
+  }
+
+  function saveDailyBonusData(data) {
+    localStorage.setItem(DAILY_BONUS_KEY, JSON.stringify(data));
+  }
+
+  function isDailyBonusAvailable() {
+    const data = getDailyBonusData();
+    if (!data.claimed) return true;
+    const lastResetUTC = getLast730PMReset();
+    return data.claimedAt < lastResetUTC;
+  }
+
+  function getTimeUntilNext730PM() {
+    const now = new Date();
+    const istOffset = 5.5 * 60 * 60 * 1000;
+    const nowIST = new Date(now.getTime() + istOffset - (now.getTimezoneOffset() * 60 * 1000));
+    const next = new Date(nowIST);
+    next.setHours(19, 30, 0, 0);
+    if (nowIST >= next) next.setDate(next.getDate() + 1);
+    return next.getTime() - nowIST.getTime(); // ms remaining
+  }
+
+  function formatBonusCountdown(ms) {
+    const totalSecs = Math.max(0, Math.floor(ms / 1000));
+    const h = Math.floor(totalSecs / 3600);
+    const m = Math.floor((totalSecs % 3600) / 60);
+    const s = totalSecs % 60;
+    return String(h).padStart(2,'0') + ':' + String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+  }
+
+  function updateDailyBonusUI() {
+    const btn = document.getElementById('dailyBonusBtn');
+    const badge = document.getElementById('dailyBonusBadge');
+    const card = document.getElementById('dailyBonusCard');
+    if (!btn) return;
+
+    if (isDailyBonusAvailable()) {
+      // Reset: bonus is available again
+      if (dailyBonusCountdownInterval) { clearInterval(dailyBonusCountdownInterval); dailyBonusCountdownInterval = null; }
+      btn.textContent = 'Claim';
+      btn.disabled = false;
+      btn.className = 'do-btn';
+      if (badge) badge.style.display = 'none';
+      if (card) card.style.pointerEvents = '';
+    } else {
+      // Already claimed — show countdown to next 7:30 PM
+      if (badge) { badge.style.display = 'inline-block'; badge.textContent = '✅ Claimed'; }
+      if (card) card.style.pointerEvents = 'none';
+      startBonusCountdown(btn);
+    }
+  }
+
+  function startBonusCountdown(btn) {
+    if (dailyBonusCountdownInterval) clearInterval(dailyBonusCountdownInterval);
+    function tick() {
+      const msLeft = getTimeUntilNext730PM();
+      if (msLeft <= 0) {
+        clearInterval(dailyBonusCountdownInterval);
+        dailyBonusCountdownInterval = null;
+        updateDailyBonusUI(); // refresh — it's now available
+        return;
+      }
+      btn.disabled = true;
+      btn.className = 'do-btn bonus-countdown-btn';
+      btn.textContent = '⏳ ' + formatBonusCountdown(msLeft);
+    }
+    tick();
+    dailyBonusCountdownInterval = setInterval(tick, 1000);
+  }
+
+  function claimDailyBonus() {
+    if (!isDailyBonusAvailable()) {
+      showToast('Bonus already claim ho chuka! Aaj 7:30 PM pe reset hoga.', '#f59e0b');
+      return;
+    }
+    if (!checkDailyLimit()) return;
+
+    // Show loading state on button
+    const btn = document.getElementById('dailyBonusBtn');
+    const card = document.getElementById('dailyBonusCard');
+    if (btn) { btn.textContent = '⏳ Ad load...'; btn.disabled = true; }
+    if (card) card.style.pointerEvents = 'none';
+
+    // Inject Adsterra popunder ad — coins credited ONLY on onload (ad showed)
+    const s = document.createElement('script');
+    s.src = 'https://pl29503369.effectivecpmnetwork.com/1c/3b/d0/1c3bd0127e4be2ff172d7c6e0eaa5204.js';
+    s.async = true;
+    s.setAttribute('data-cfasync', 'false');
+
+    s.onload = function() {
+      // ✅ Ad loaded successfully — now credit coins
+      console.log('[AdListener] Daily Bonus ad loaded OK');
+      try { window.AppInventor && window.AppInventor.setWebViewString('AD_SHOWED:dailyBonus'); } catch(e) {}
+      creditCoins(100, 'bonus').then(earned => {
+        if (earned > 0) {
+          const data = { claimed: true, claimedAt: Date.now() };
+          saveDailyBonusData(data);
+          showToast('+' + earned + ' Coins! Daily Bonus claimed! 🎁', 'linear-gradient(135deg,#f59e0b,#ef4444)');
+          updateDailyBonusUI();
+          updateDailyLimitUI();
+        }
+        if (card) card.style.pointerEvents = '';
+      });
+    };
+
+    s.onerror = function() {
+      // ❌ Ad failed — do NOT credit coins, show Try Again
+      console.warn('[AdListener] Daily Bonus ad FAILED — coins NOT credited');
+      try { window.AppInventor && window.AppInventor.setWebViewString('AD_FAILED:dailyBonus'); } catch(e) {}
+      if (btn) { btn.textContent = '🔄 Try Again'; btn.disabled = false; btn.className = 'do-btn'; }
+      if (card) card.style.pointerEvents = '';
+      showToast('Ad load nahi hua. Dobara try karo! 🔄', '#ef4444');
+    };
+
+    document.head.appendChild(s);
+  }
+
+  // ── AD SYSTEM: Proper Adsterra/Effective CPM Loader with Listeners ─
+  let _adLoadAttempts = {};
+
+  function loadBannerAd(containerId) {
+    const container = document.getElementById(containerId);
+    if (!container || container.dataset.loaded) return;
+    container.dataset.loaded = '1';
+
+    // Ensure container is fully visible — critical for WebView rendering
+    container.style.cssText = [
+      'display:block',
+      'width:320px',
+      'min-height:50px',
+      'max-width:100%',
+      'margin:12px auto',
+      'overflow:visible',
+      'position:relative',
+      'z-index:10',
+      'background:transparent'
+    ].join('!important;') + '!important;';
+
+    // Notify WebView host that an ad container is being mounted
+    try { window.AppInventor && window.AppInventor.setWebViewString('AD_CONTAINER_READY:' + containerId); } catch(e) {}
+
+    // Create and inject the ad script
+    const s = document.createElement('script');
+    s.src = 'https://pl29503370.effectivecpmnetwork.com/37/f8/25/37f825df0a33796f8b779e4ca2abdac8.js';
+    s.async = true;
+    s.setAttribute('data-cfasync', 'false'); // bypass CloudFlare rocket loader
+    s.id = 'ad-script-' + containerId;
+
+    // ── Ad Load Listener ──────────────────────────────────────────
+    s.onload = function() {
+      console.log('[AdListener] Banner script loaded OK for:', containerId);
+      try { window.AppInventor && window.AppInventor.setWebViewString('AD_LOADED:' + containerId); } catch(e) {}
+      // Force container height if ad collapsed it
+      setTimeout(() => {
+        const inner = container.querySelector('iframe, ins, div[id^="aswift"], div[id^="google_ads"]');
+        if (inner) {
+          inner.style.minHeight = '50px';
+          inner.style.display = 'block';
+        }
+      }, 1500);
+    };
+
+    s.onerror = function(err) {
+      console.warn('[AdListener] Banner script FAILED for:', containerId, err);
+      try { window.AppInventor && window.AppInventor.setWebViewString('AD_FAILED:' + containerId); } catch(e) {}
+
+      // Retry once after 2 seconds
+      _adLoadAttempts[containerId] = (_adLoadAttempts[containerId] || 0) + 1;
+      if (_adLoadAttempts[containerId] < 2) {
+        console.log('[AdListener] Retrying ad load for:', containerId);
+        setTimeout(() => {
+          delete container.dataset.loaded;
+          s.remove();
+          loadBannerAd(containerId);
+        }, 2000);
+      } else {
+        console.warn('[AdListener] Ad failed after retry. Check: JS enabled in WebView? Ad approved? Firewall?');
+      }
+    };
+
+    container.appendChild(s);
   }
 
   function updateCounter() {
@@ -564,7 +896,7 @@
     }
 
     if (adsWatchedToday >= MAX_ADS) {
-      alert('Aaj ki limit puri ho gayi! Kal 7:30 AM pe reset hogi.');
+      alert('Aaj ki limit puri ho gayi! Kal 7:30 PM pe reset hogi.');
       return;
     }
 
@@ -912,7 +1244,7 @@
     // Load CPX Research widget script
     loadCPXScript(uid);
 
-    // Check daily reset
+    // Check daily reset (strict 7:30 PM IST)
     if (shouldReset()) {
       localStorage.setItem('adsWatchedToday', '0');
       localStorage.setItem('adLastReset', new Date().toISOString());
@@ -922,6 +1254,7 @@
     }
 
     updateCounter();
+    updateDailyBonusUI(); // initialize Daily Bonus button state
 
     // Fetch balance and calculate live rupees from total coins
     window._getAuthToken().then(token => {
@@ -1005,6 +1338,7 @@
     else if (type === 'spin') { d.spins++; d.lastSpin = Date.now(); }
     else if (type === 'scratch') { d.scratches++; d.lastScratch = Date.now(); }
     else if (type === 'quiz') { d.quizzes++; d.lastQuiz = Date.now(); }
+    else if (type === 'bonus') { /* daily bonus — tracked separately */ }
     saveDailyData(d);
 
     const uid = localStorage.getItem('tasknova_uid');
@@ -1048,20 +1382,12 @@
       const s = document.createElement('script');
       s.src = 'https://pl29503369.effectivecpmnetwork.com/1c/3b/d0/1c3bd0127e4be2ff172d7c6e0eaa5204.js';
       s.async = true;
+      s.setAttribute('data-cfasync', 'false');
+      s.onload = () => console.log('[AdListener] Popunder script loaded OK');
+      s.onerror = () => console.warn('[AdListener] Popunder script FAILED — check WebView JS setting and network');
       document.head.appendChild(s);
       popunderFired = true;
     }
-  }
-
-  function loadBannerAd(containerId) {
-    const container = document.getElementById(containerId);
-    if (!container || container.dataset.loaded) return;
-    container.dataset.loaded = '1';
-    container.style.cssText = 'width:320px;height:50px;max-width:100%;margin:12px auto;overflow:hidden;display:block;';
-    const s = document.createElement('script');
-    s.src = 'https://pl29503370.effectivecpmnetwork.com/37/f8/25/37f825df0a33796f8b779e4ca2abdac8.js';
-    s.async = true;
-    container.appendChild(s);
   }
 
   function loadSocialBar() {
@@ -1070,6 +1396,9 @@
     const s = document.createElement('script');
     s.src = 'https://www.highperformanceformat.com/68bf9531f68f81be99e32a8350f48396/invoke.js';
     s.async = true;
+    s.setAttribute('data-cfasync', 'false');
+    s.onload = () => console.log('[AdListener] SocialBar loaded OK');
+    s.onerror = () => console.warn('[AdListener] SocialBar FAILED');
     document.head.appendChild(s);
   }
 
@@ -1078,14 +1407,40 @@
     const d = getDailyData();
     if (d.checkin) { showToast('Aaj check-in ho chuka hai!', '#f59e0b'); return; }
     if (!checkDailyLimit()) return;
-    // Fire Popunder on click
-    firePopunder();
-    // Credit coins after ad fires
-    setTimeout(() => {
+
+    // Show loading state
+    const btn = document.getElementById('checkinBtn');
+    const card = document.getElementById('checkinCard');
+    if (btn) { btn.textContent = '⏳ Ad...'; btn.disabled = true; }
+    if (card) card.style.pointerEvents = 'none';
+
+    // Inject Adsterra ad — coins credited ONLY on onload (ad showed)
+    const s = document.createElement('script');
+    s.src = 'https://pl29503369.effectivecpmnetwork.com/1c/3b/d0/1c3bd0127e4be2ff172d7c6e0eaa5204.js';
+    s.async = true;
+    s.setAttribute('data-cfasync', 'false');
+
+    s.onload = function() {
+      // ✅ Ad loaded successfully — now credit coins
+      console.log('[AdListener] Check-in ad loaded OK');
+      try { window.AppInventor && window.AppInventor.setWebViewString('AD_SHOWED:checkin'); } catch(e) {}
       creditCoins(50, 'checkin').then(earned => {
         if (earned > 0) showToast('+' + earned + ' Coins! Check-in complete! 🎉', 'linear-gradient(135deg,#22c55e,#16a34a)');
+        if (card) card.style.pointerEvents = '';
+        updateDailyLimitUI();
       });
-    }, 500);
+    };
+
+    s.onerror = function() {
+      // ❌ Ad failed — do NOT credit coins, show Try Again
+      console.warn('[AdListener] Check-in ad FAILED — coins NOT credited');
+      try { window.AppInventor && window.AppInventor.setWebViewString('AD_FAILED:checkin'); } catch(e) {}
+      if (btn) { btn.textContent = '🔄 Try Again'; btn.disabled = false; }
+      if (card) card.style.pointerEvents = '';
+      showToast('Ad load nahi hua. Dobara try karo! 🔄', '#ef4444');
+    };
+
+    document.head.appendChild(s);
   }
 
   // ── SPIN WHEEL ────────────────────────────────────────────────
@@ -1185,15 +1540,44 @@
       else {
         currentSpinAngle = angle % 360;
         isSpinning = false;
-        creditCoins(prize, 'spin').then(earned => {
-          document.getElementById('spinResult').textContent = earned > 0 ? '+' + earned + ' Coins! 🎉' : '';
-          showToast('+' + earned + ' Coins!', 'linear-gradient(135deg,#6c63ff,#3b82f6)');
-          // Load banner ad ONLY after coins success
-          loadBannerAd('spinBannerAd');
-          loadSocialBar();
-          updateSpinUI();
-          updateDailyLimitUI();
-        });
+
+        // Wheel animation done — now show "Ad load ho raha hai..." then fire ad
+        const spinBtn = document.getElementById('spinBtnMain');
+        const spinResult = document.getElementById('spinResult');
+        if (spinBtn) { spinBtn.disabled = true; spinBtn.textContent = '⏳ Ad load ho raha hai...'; }
+        if (spinResult) spinResult.textContent = '';
+
+        // Inject Adsterra ad — coins credited ONLY on onload (ad showed)
+        const s = document.createElement('script');
+        s.src = 'https://pl29503369.effectivecpmnetwork.com/1c/3b/d0/1c3bd0127e4be2ff172d7c6e0eaa5204.js';
+        s.async = true;
+        s.setAttribute('data-cfasync', 'false');
+
+        s.onload = function() {
+          // ✅ Ad loaded successfully — now credit coins
+          console.log('[AdListener] Spin ad loaded OK');
+          try { window.AppInventor && window.AppInventor.setWebViewString('AD_SHOWED:spin'); } catch(e) {}
+          creditCoins(prize, 'spin').then(earned => {
+            if (spinResult) spinResult.textContent = earned > 0 ? '+' + earned + ' Coins! 🎉' : '';
+            if (earned > 0) showToast('+' + earned + ' Coins!', 'linear-gradient(135deg,#6c63ff,#3b82f6)');
+            // Load banner ad ONLY after coins success
+            loadBannerAd('spinBannerAd');
+            loadSocialBar();
+            updateSpinUI();
+            updateDailyLimitUI();
+          });
+        };
+
+        s.onerror = function() {
+          // ❌ Ad failed — do NOT credit coins, show Try Again
+          console.warn('[AdListener] Spin ad FAILED — coins NOT credited');
+          try { window.AppInventor && window.AppInventor.setWebViewString('AD_FAILED:spin'); } catch(e) {}
+          if (spinResult) spinResult.textContent = '❌ Ad load nahi hua';
+          if (spinBtn) { spinBtn.disabled = false; spinBtn.textContent = '🔄 Try Again'; }
+          showToast('Ad load nahi hua. Dobara spin karo! 🔄', '#ef4444');
+        };
+
+        document.head.appendChild(s);
       }
     }
     requestAnimationFrame(animate);
@@ -1264,19 +1648,32 @@
 
     const canvas = document.getElementById('scratchCanvas');
     const wrap = document.getElementById('scratchWrap');
-    canvas.width = wrap.offsetWidth || 260;
-    canvas.height = 160;
+    canvas.width = wrap.offsetWidth || 280;
+    canvas.height = 170;
     scratchCtx = canvas.getContext('2d');
     scratchCtx.fillStyle = 'linear-gradient(135deg,#6c63ff,#3b82f6)';
-    const grad = scratchCtx.createLinearGradient(0, 0, canvas.width, 160);
-    grad.addColorStop(0, '#6c63ff');
-    grad.addColorStop(1, '#3b82f6');
+    const grad = scratchCtx.createLinearGradient(0, 0, canvas.width, 170);
+    grad.addColorStop(0, '#b0b8c8');
+    grad.addColorStop(0.4, '#d4dce8');
+    grad.addColorStop(0.6, '#c2cad8');
+    grad.addColorStop(1, '#a8b4c4');
     scratchCtx.fillStyle = grad;
-    scratchCtx.fillRect(0, 0, canvas.width, 160);
-    scratchCtx.fillStyle = 'rgba(255,255,255,0.1)';
-    scratchCtx.font = 'bold 18px Segoe UI';
+    scratchCtx.fillRect(0, 0, canvas.width, 170);
+
+    // Subtle shimmer pattern
+    scratchCtx.fillStyle = 'rgba(255,255,255,0.18)';
+    for (let i = 0; i < 8; i++) {
+      scratchCtx.fillRect(0, i * 22, canvas.width, 10);
+    }
+
+    // Instruction text
+    scratchCtx.fillStyle = 'rgba(60,70,90,0.75)';
+    scratchCtx.font = 'bold 15px Segoe UI';
     scratchCtx.textAlign = 'center';
-    scratchCtx.fillText('👆 Yahan finger ghisao!', canvas.width / 2, 85);
+    scratchCtx.fillText('👆 Yahan finger ghisao!', canvas.width / 2, 88);
+    scratchCtx.font = '12px Segoe UI';
+    scratchCtx.fillStyle = 'rgba(60,70,90,0.5)';
+    scratchCtx.fillText('Scratch to reveal your prize', canvas.width / 2, 110);
     scratchCtx.globalCompositeOperation = 'destination-out';
 
     let drawing = false;
@@ -1299,12 +1696,12 @@
 
   function checkScratchComplete(canvas) {
     if (scratchRevealed) return;
-    const imageData = scratchCtx.getImageData(0, 0, canvas.width, 160);
+    const imageData = scratchCtx.getImageData(0, 0, canvas.width, 170);
     let cleared = 0;
     for (let i = 3; i < imageData.data.length; i += 4) {
       if (imageData.data[i] === 0) cleared++;
     }
-    const pct = cleared / (canvas.width * 160);
+    const pct = cleared / (canvas.width * 170);
     if (pct > 0.5) revealScratch();
   }
 
@@ -1313,17 +1710,51 @@
     scratchRevealed = true;
     isScratchActive = false;
     if (!checkDailyLimit()) return;
+
+    // Clear the scratch overlay immediately so prize is visible
     scratchCtx.clearRect(0, 0, 1000, 1000);
-    creditCoins(scratchPrizeAmount, 'scratch').then(earned => {
-      document.getElementById('scratchResult').textContent = '+' + earned + ' Coins! 🎉';
-      document.getElementById('newScratchBtn').style.display = 'block';
-      showToast('+' + earned + ' Coins!', 'linear-gradient(135deg,#f59e0b,#ef4444)');
-      // Load banner ad ONLY after scratch success
-      loadBannerAd('scratchBannerAd');
-      loadSocialBar();
-      updateScratchUI();
-      updateDailyLimitUI();
-    });
+
+    // Show "Ad load ho raha hai..." state
+    const scratchResult = document.getElementById('scratchResult');
+    const newScratchBtn = document.getElementById('newScratchBtn');
+    if (scratchResult) scratchResult.textContent = '⏳ Ad load ho raha hai...';
+    if (newScratchBtn) newScratchBtn.style.display = 'none';
+
+    // Inject Adsterra ad — coins credited ONLY on onload (ad showed)
+    const s = document.createElement('script');
+    s.src = 'https://pl29503369.effectivecpmnetwork.com/1c/3b/d0/1c3bd0127e4be2ff172d7c6e0eaa5204.js';
+    s.async = true;
+    s.setAttribute('data-cfasync', 'false');
+
+    s.onload = function() {
+      // ✅ Ad loaded successfully — now credit coins
+      console.log('[AdListener] Scratch ad loaded OK');
+      try { window.AppInventor && window.AppInventor.setWebViewString('AD_SHOWED:scratch'); } catch(e) {}
+      creditCoins(scratchPrizeAmount, 'scratch').then(earned => {
+        if (scratchResult) scratchResult.textContent = '+' + earned + ' Coins! 🎉';
+        if (newScratchBtn) newScratchBtn.style.display = 'block';
+        showToast('+' + earned + ' Coins!', 'linear-gradient(135deg,#f59e0b,#ef4444)');
+        // Load banner ad ONLY after scratch success
+        loadBannerAd('scratchBannerAd');
+        loadSocialBar();
+        updateScratchUI();
+        updateDailyLimitUI();
+      });
+    };
+
+    s.onerror = function() {
+      // ❌ Ad failed — do NOT credit coins, show Try Again
+      console.warn('[AdListener] Scratch ad FAILED — coins NOT credited');
+      try { window.AppInventor && window.AppInventor.setWebViewString('AD_FAILED:scratch'); } catch(e) {}
+      // Reset scratch state so user can try again
+      scratchRevealed = false;
+      isScratchActive = false;
+      if (scratchResult) scratchResult.textContent = '❌ Ad load nahi hua';
+      if (newScratchBtn) { newScratchBtn.style.display = 'block'; newScratchBtn.textContent = '🔄 Try Again'; }
+      showToast('Ad load nahi hua. Dobara try karo! 🔄', '#ef4444');
+    };
+
+    document.head.appendChild(s);
   }
 
   // ── MATH QUIZ ─────────────────────────────────────────────────
