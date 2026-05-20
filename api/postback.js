@@ -1,4 +1,5 @@
 const FIREBASE_URL = 'https://tasknova-66d0f-default-rtdb.firebaseio.com';
+const FIREBASE_SECRET = process.env.FIREBASE_SECRET;
 
 export default async function handler(req, res) {
   const { status, trans_id, amount_local, amount_usd, user_id } = req.query;
@@ -10,11 +11,12 @@ export default async function handler(req, res) {
   }
 
   const statusNum = parseInt(status);
+  const authParam = FIREBASE_SECRET ? ?auth=${FIREBASE_SECRET} : '';
 
   if (statusNum === 1) {
     try {
-      // User data fetch
-      const userRes = await fetch(${FIREBASE_URL}/users/${user_id}.json);
+      // User data fetch with secret
+      const userRes = await fetch(${FIREBASE_URL}/users/${user_id}.json${authParam});
       const userData = await userRes.json();
 
       if (!userData) {
@@ -31,8 +33,8 @@ export default async function handler(req, res) {
       const newBalance = parseFloat((newCoins / 100).toFixed(2));
       const newTasksDone = (userData.tasksDone || 0) + 1;
 
-      // Firebase update
-      await fetch(${FIREBASE_URL}/users/${user_id}.json, {
+      // Firebase update with secret
+      await fetch(${FIREBASE_URL}/users/${user_id}.json${authParam}, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
