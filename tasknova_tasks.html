@@ -2406,39 +2406,64 @@
     if (!overlay) {
       overlay = document.createElement('div');
       overlay.id = 'taskAdOverlay';
-      overlay.style.cssText = [
-        'position:fixed','top:0','left:0','width:100%','height:100%',
-        'background:#000','z-index:99999','display:flex',
-        'flex-direction:column','align-items:center','justify-content:center',
-        'padding:24px','box-sizing:border-box'
-      ].join(';');
+      overlay.style.cssText =
+        'position:fixed;top:0;left:0;width:100%;height:100%;' +
+        'background:#000;z-index:99999;overflow:hidden;';
       document.body.appendChild(overlay);
     }
+    overlay.style.display = 'block';
 
-    // Progress bar + UI
-    overlay.innerHTML = [
-      '<div style="position:absolute;top:0;left:0;height:4px;width:0%;background:linear-gradient(135deg,#6c63ff,#f59e0b);transition:width 15s linear;" id="taskAdBar"></div>',
-      // Real ad iframe — loads Adsterra direct link visually inside overlay
-      '<iframe id="taskAdFrame" src="https://www.effectivecpmnetwork.com/b1bggwx0?key=f1f69a147759698e8fda4cfd27e423ba" style="width:100%;max-width:360px;height:220px;border:none;border-radius:16px;margin-bottom:16px;background:rgba(255,255,255,0.03);" scrolling="no" frameborder="0" allowfullscreen></iframe>',
-      '<div style="font-size:36px;margin-bottom:8px;">📺</div>',
-      '<div style="color:#fff;font-size:16px;font-weight:800;margin-bottom:4px;">Advertisement</div>',
-      '<div id="taskAdStatus" style="color:rgba(255,255,255,0.55);font-size:13px;margin-bottom:20px;text-align:center;">Reward in 15s...</div>',
-      '<div style="background:rgba(255,255,255,0.08);border-radius:14px;padding:12px 28px;text-align:center;margin-bottom:20px;">',
-        '<div style="color:rgba(255,255,255,0.4);font-size:11px;">Aapko milenge</div>',
-        '<div id="taskAdCoinsDisplay" style="color:#6c63ff;font-size:28px;font-weight:800;">+' + coins + '</div>',
-        '<div style="color:rgba(255,255,255,0.4);font-size:11px;">Coins</div>',
-      '</div>',
-      '<div id="taskAdLockNote" style="color:rgba(255,165,0,0.7);font-size:11px;margin-bottom:14px;">⚠️ Back button = 0 coins penalty</div>',
-      '<button id="taskAdClaimBtn" disabled style="width:100%;max-width:320px;background:rgba(255,255,255,0.1);border:none;border-radius:16px;padding:14px;color:rgba(255,255,255,0.4);font-size:15px;font-weight:800;cursor:not-allowed;font-family:Segoe UI,sans-serif;">⏳ Please wait 15s...</button>'
-    ].join('');
+    // ── TRUE FULL-SCREEN INTERSTITIAL LAYOUT ──────────────────────
+    // Ad iframe = 100% width & height of screen (behind bottom bar)
+    // Bottom bar pinned with timer + coin reward + claim button
+    overlay.innerHTML =
+      // Top progress bar
+      '<div style="position:absolute;top:0;left:0;right:0;height:5px;background:rgba(255,255,255,0.08);z-index:2;">' +
+        '<div id="taskAdBar" style="height:100%;width:0%;background:linear-gradient(90deg,#6c63ff,#f59e0b);transition:width 15s linear;"></div>' +
+      '</div>' +
 
-    overlay.style.display = 'flex';
+      // FULL-SCREEN AD IFRAME — covers entire overlay behind the bottom bar
+      '<iframe id="taskAdFrame"' +
+        ' src="https://www.effectivecpmnetwork.com/b1bggwx0?key=f1f69a147759698e8fda4cfd27e423ba&t=' + Date.now() + '"' +
+        ' style="position:absolute;top:0;left:0;width:100%;height:100%;border:none;z-index:1;"' +
+        ' scrolling="yes" frameborder="0" allowfullscreen allow="autoplay;fullscreen">'+
+      '</iframe>' +
+
+      // Semi-transparent bottom bar — pinned over iframe (z-index:3)
+      '<div style="position:absolute;bottom:0;left:0;right:0;z-index:3;' +
+           'background:linear-gradient(to top,rgba(0,0,0,0.97) 70%,transparent);' +
+           'padding:18px 20px 28px;">' +
+
+        // Countdown row
+        '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">' +
+          '<div id="taskAdStatus" style="color:rgba(255,255,255,0.7);font-size:13px;font-weight:700;">⏳ Reward in 15s...</div>' +
+          '<div style="display:flex;align-items:center;gap:6px;background:rgba(108,99,255,0.2);border:1px solid rgba(108,99,255,0.4);border-radius:50px;padding:4px 12px;">' +
+            '<span style="color:#a78bfa;font-size:13px;font-weight:800;">+<span id="taskAdCoinsDisplay">' + coins + '</span> 🪙</span>' +
+          '</div>' +
+        '</div>' +
+
+        // Warning
+        '<div style="color:rgba(255,165,0,0.65);font-size:10px;text-align:center;margin-bottom:10px;">⚠️ Back button dabaoge toh 0 coins milenge</div>' +
+
+        // Claim button
+        '<button id="taskAdClaimBtn" disabled ' +
+          'style="width:100%;background:rgba(255,255,255,0.12);border:1.5px solid rgba(255,255,255,0.15);' +
+          'border-radius:14px;padding:14px;color:rgba(255,255,255,0.4);font-size:15px;font-weight:800;' +
+          'cursor:not-allowed;font-family:Segoe UI,sans-serif;letter-spacing:0.3px;">' +
+          '⏳ Please wait 15s...' +
+        '</button>' +
+      '</div>';
+
+    overlay.style.display = 'block'; // ensure visible
 
     // Animate progress bar
     setTimeout(() => {
       const bar = document.getElementById('taskAdBar');
-      if (bar) bar.style.width = '100%';
-    }, 50);
+      if (bar) { bar.style.width = '0%'; bar.style.transition = 'none'; }
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        if (bar) { bar.style.transition = 'width 15s linear'; bar.style.width = '100%'; }
+      }));
+    }, 80);
 
     // ── INJECT REAL AD inside overlay ────────────────────────────
     // Method 1: Direct-link ad opened in WebView via AppInventor
@@ -2490,7 +2515,7 @@
     hardLockTimer = setInterval(() => {
       if (penaltyApplied) { clearInterval(hardLockTimer); return; }
       secsLeft--;
-      if (statusEl) statusEl.textContent = 'Reward in ' + Math.max(0, secsLeft) + 's...';
+      if (statusEl) statusEl.textContent = '⏳ Reward in ' + Math.max(0, secsLeft) + 's...';
 
       if (secsLeft <= 0) {
         clearInterval(hardLockTimer);
@@ -2503,11 +2528,11 @@
           // Waiting for ad server — show Collect button (only after 15s done)
           if (claimBtn) {
             claimBtn.disabled = false;
-            claimBtn.textContent = '✅ Collect Reward';
-            claimBtn.style.cssText = 'width:100%;max-width:320px;background:linear-gradient(135deg,#22c55e,#16a34a);border:none;border-radius:16px;padding:14px;color:#fff;font-size:15px;font-weight:800;cursor:pointer;';
+            claimBtn.textContent = '✅ Collect +' + coins + ' Coins';
+            claimBtn.style.cssText = 'width:100%;background:linear-gradient(135deg,#22c55e,#16a34a);border:none;border-radius:14px;padding:14px;color:#fff;font-size:15px;font-weight:800;cursor:pointer;font-family:Segoe UI,sans-serif;box-shadow:0 4px 20px rgba(34,197,94,0.4);';
             claimBtn.onclick = _doCredit;
           }
-          if (statusEl) statusEl.textContent = 'Ad dekh li! Reward collect karo 🎉';
+          if (statusEl) statusEl.textContent = '🎉 Ab collect karo!';
         }
       }
     }, 1000);
