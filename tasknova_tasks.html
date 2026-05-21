@@ -826,10 +826,16 @@
   }
 
   // IDs of every "claim / entry" button in the app
-  // Survey excluded — CPX Research has its own built-in timers
   const GLOBAL_LOCK_BTN_IDS = [
     'spinBtnMain', 'newScratchBtn', 'quizClaimAdBtn',
-    'watchAdBtn', 'checkinBtn', 'dailyBonusBtn'
+    'watchAdBtn', 'checkinBtn', 'dailyBonusBtn',
+    'spinTaskBtn', 'scratchTaskBtn', 'quizTaskBtn'
+  ];
+
+  // Task cards to visually freeze during global lock
+  const GLOBAL_LOCK_CARD_IDS = [
+    'spinTaskCard', 'scratchTaskCard', 'quizTaskCard',
+    'watchAdCard', 'checkinCard', 'dailyBonusCard'
   ];
 
   function runGlobalLockUI(until) {
@@ -838,21 +844,20 @@
     function tick() {
       const secsLeft = Math.max(0, Math.ceil((until - Date.now()) / 1000));
 
+      // ── Lock all buttons ──────────────────────────────────────
       GLOBAL_LOCK_BTN_IDS.forEach(id => {
         const btn = document.getElementById(id);
         if (!btn) return;
         if (secsLeft > 0) {
           btn.disabled = true;
-          // Only overwrite text if not already showing a "Watch Ad" label (preserve that context)
           if (!btn.textContent.includes('📺')) {
             btn.dataset.origText = btn.dataset.origText || btn.textContent;
             btn.textContent = '⏳ ' + secsLeft + 's';
           }
-          btn.style.opacity = '0.6';
+          btn.style.opacity = '0.7';
         } else {
           btn.disabled = false;
           btn.style.opacity = '';
-          // Restore original text if we saved it
           if (btn.dataset.origText && !btn.textContent.includes('📺')) {
             btn.textContent = btn.dataset.origText;
             delete btn.dataset.origText;
@@ -860,18 +865,40 @@
         }
       });
 
-      // Also lock any dynamically injected quiz claim button
+      // ── Lock dynamically created quiz claim button ────────────
       const qBtn = document.getElementById('quizClaimAdBtn');
       if (qBtn) {
-        if (secsLeft > 0) { qBtn.disabled = true; qBtn.style.opacity = '0.6'; }
+        if (secsLeft > 0) { qBtn.disabled = true; qBtn.style.opacity = '0.7'; }
         else { qBtn.disabled = false; qBtn.style.opacity = ''; }
       }
+
+      // ── Show/hide cooldown badge on each task card ────────────
+      GLOBAL_LOCK_CARD_IDS.forEach(id => {
+        const card = document.getElementById(id);
+        if (!card) return;
+        let badge = card.querySelector('.global-lock-badge');
+        if (secsLeft > 0) {
+          card.style.pointerEvents = 'none';
+          card.style.opacity = '0.7';
+          if (!badge) {
+            badge = document.createElement('div');
+            badge.className = 'global-lock-badge';
+            badge.style.cssText = 'position:absolute;top:8px;right:8px;background:rgba(245,158,11,0.9);color:#000;font-size:10px;font-weight:800;padding:3px 8px;border-radius:50px;z-index:5;pointer-events:none;';
+            card.style.position = 'relative';
+            card.appendChild(badge);
+          }
+          badge.textContent = '⏳ ' + secsLeft + 's';
+        } else {
+          card.style.pointerEvents = '';
+          card.style.opacity = '';
+          if (badge) badge.remove();
+        }
+      });
 
       if (secsLeft <= 0) {
         clearInterval(globalLockInterval);
         globalLockInterval = null;
         localStorage.removeItem(GLOBAL_LOCK_KEY);
-        // Refresh all task UIs so buttons return to correct state
         updateAdButtonUI();
         updateSpinUI();
         updateScratchUI();
@@ -881,7 +908,7 @@
       }
     }
 
-    tick(); // run immediately
+    tick();
     globalLockInterval = setInterval(tick, 1000);
   }
 
@@ -921,9 +948,8 @@
         const adPopup = document.getElementById('adPopup');
         if (adPopup) adPopup.classList.remove('show');
         showToast('❌ Penalty! Ad skipped early. 0 Coins rewarded.', '#ef4444');
-        const penaltyUntil = Date.now() + 60000;
-        localStorage.setItem('tn_backbtn_penalty', penaltyUntil.toString());
-        applyBackBtnPenalty(penaltyUntil);
+        // Global lock on all tasks
+        triggerGlobalLock();
       }
     }
   });
@@ -1979,14 +2005,15 @@
   }
 
   // ── SPIN WHEEL ────────────────────────────────────────────────
-  // Wheel display segments (visual) — 8 slots
-  const SPIN_PRIZES = [5, 5, 10, 5, 5, 10, 5, 5];
+  // Wheel display segments (visual) — 8 slots, all real prizes
+  const SPIN_PRIZES = [5, 10, 5, 15, 5, 10, 5, 20];
 
-  // Weighted prize table: 5 coins = 60%, 10 coins = 30%, 0 = 10%
+  // Weighted prize table: only real coin prizes — no 0/Try Again
   const PRIZE_WEIGHTS = [
-    { prize: 5,  weight: 60 },
+    { prize: 5,  weight: 50 },
     { prize: 10, weight: 30 },
-    { prize: 0,  weight: 10 }  // Try Again
+    { prize: 15, weight: 13 },
+    { prize: 20, weight: 7  }
   ];
 
   function getWeightedPrize() {
@@ -2022,11 +2049,10 @@
       ctx.translate(cx, cy);
       ctx.rotate(i * angle + angle / 2);
       const prize = SPIN_PRIZES[i];
-      ctx.fillStyle = prize === 0 ? '#ff6b6b' : '#fff';
-      ctx.font = prize === 0 ? 'bold 10px Segoe UI' : 'bold 14px Segoe UI';
+      ctx.fillStyle = '#fff';
+      ctx.font = 'bold 13px Segoe UI';
       ctx.textAlign = 'right';
-      ctx.fillText(prize === 0 ? 'TRY' : prize, r - 16, prize === 0 ? 2 : 5);
-      if (prize === 0) { ctx.font = 'bold 10px Segoe UI'; ctx.fillText('AGAIN', r - 16, 13); }
+      ctx.fillText(prize + '🪙', r - 12, 5);
       ctx.restore();
     }
     ctx.beginPath();
@@ -2038,6 +2064,7 @@
   }
 
   function openSpinModal() {
+    if (isGlobalLocked()) return;
     if (Date.now() < crossTaskFreezeEnd) {
       const secs = Math.ceil((crossTaskFreezeEnd - Date.now()) / 1000);
       showToast('⏳ Watch Ads timer chal raha hai! Spin ' + secs + 's baad unlock hoga.', '#f59e0b');
@@ -2119,27 +2146,17 @@
         currentSpinAngle = angle % 360;
         isSpinning = false;
 
-        // Wheel stopped — show result text + "Watch Ad and Claim Coin" button
         const spinBtn    = document.getElementById('spinBtnMain');
         const spinResult = document.getElementById('spinResult');
 
-        if (prize === 0) {
-          // Try Again slot — no ad, just reset
-          if (spinResult) spinResult.textContent = '😅 Better luck next time!';
-          if (spinBtn) {
-            spinBtn.disabled = false;
-            spinBtn.style.background = '';
-            spinBtn.textContent = '🎡 Spin Now!';
-            spinBtn.onclick = doSpin;
-          }
-        } else {
-          if (spinResult) spinResult.textContent = '🎉 Aapne jeeta: +' + prize + ' Coins!';
-          if (spinBtn) {
-            spinBtn.disabled    = false;
-            spinBtn.textContent = '📺 Watch Ad and Claim Coin';
-            spinBtn.style.background = 'linear-gradient(135deg,#f59e0b,#ef4444)';
-            spinBtn.onclick = function() { claimSpinReward(prize, spinBtn, spinResult); };
-          }
+        // Every spin wins real coins
+        if (spinResult) spinResult.textContent = '🎉 Aapne jeeta: +' + prize + ' Coins!';
+        if (spinBtn) {
+          spinBtn.disabled    = false;
+          spinBtn.textContent = '📺 Watch Ad and Claim Coin';
+          spinBtn.style.background = 'linear-gradient(135deg,#f59e0b,#ef4444)';
+          spinBtn.style.color = '#fff';
+          spinBtn.onclick = function() { claimSpinReward(prize, spinBtn, spinResult); };
         }
       }
     }
@@ -2163,9 +2180,9 @@
       ctx.translate(cx, cy);
       ctx.rotate(i * angle + angle / 2);
       ctx.fillStyle = '#fff';
-      ctx.font = 'bold 14px Segoe UI';
+      ctx.font = 'bold 13px Segoe UI';
       ctx.textAlign = 'right';
-      ctx.fillText(SPIN_PRIZES[i], r - 16, 5);
+      ctx.fillText(SPIN_PRIZES[i] + '🪙', r - 12, 5);
       ctx.restore();
     }
     ctx.beginPath();
@@ -2181,6 +2198,7 @@
   let isScratchActive = false;
 
   function openScratchModal() {
+    if (isGlobalLocked()) return;
     if (Date.now() < crossTaskFreezeEnd) {
       const secs = Math.ceil((crossTaskFreezeEnd - Date.now()) / 1000);
       showToast('⏳ Watch Ads timer chal raha hai! Scratch ' + secs + 's baad unlock hoga.', '#f59e0b');
@@ -2300,6 +2318,7 @@
   let currentAnswer = 0;
 
   function openQuizModal() {
+    if (isGlobalLocked()) return;
     if (Date.now() < crossTaskFreezeEnd) {
       const secs = Math.ceil((crossTaskFreezeEnd - Date.now()) / 1000);
       showToast('⏳ Watch Ads timer chal raha hai! Quiz ' + secs + 's baad unlock hoga.', '#f59e0b');
@@ -2559,11 +2578,8 @@
       console.warn('[AdListener] ' + type + ' — ad skipped before 15s. 0 coins.');
       try { window.AppInventor && window.AppInventor.setWebViewString('AD_SKIP_PENALTY:' + type); } catch(e) {}
 
-      // Apply 1-min lock on Spin/Scratch/Quiz as penalty
-      const penaltyUntil = Date.now() + 60000;
-      localStorage.setItem('tn_backbtn_penalty', penaltyUntil.toString());
-      applyBackBtnPenalty(penaltyUntil);
-
+      // Apply 1-min GLOBAL lock on ALL tasks as skip penalty
+      triggerGlobalLock();
       onFail(); // 0 coins path
     };
 
