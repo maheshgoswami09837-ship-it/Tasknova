@@ -114,7 +114,17 @@
     background-image: radial-gradient(ellipse at 20% 10%, rgba(108,99,255,0.18) 0%, transparent 55%),
                       radial-gradient(ellipse at 80% 90%, rgba(59,130,246,0.12) 0%, transparent 55%);
     z-index: 999; flex-direction: column; align-items: center;
-    overflow-y: auto; padding: 20px 16px 100px;
+    overflow-y: auto; padding: 20px 16px 120px;
+  }
+  /* Fixed bottom banner inside modals */
+  .modal-bottom-banner {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    height: 60px; display: flex; align-items: center; justify-content: center;
+    background: rgba(5,5,26,0.96); border-top: 1px solid rgba(255,255,255,0.06);
+    z-index: 1001; pointer-events: all;
+  }
+  .modal-bottom-banner ins, .modal-bottom-banner iframe, .modal-bottom-banner div {
+    max-width: 320px !important; max-height: 50px !important;
   }
   .feature-modal.show { display:flex; }
   .modal-header { width:100%; display:flex; align-items:center; gap:12px; margin-bottom:24px; }
@@ -485,6 +495,11 @@
   </div>
 
   <button class="spin-btn-main" id="spinBtnMain" onclick="doSpin()">🎡 Spin Now!</button>
+
+  <!-- Fixed bottom native/banner ad -->
+  <div class="modal-bottom-banner" id="spinBottomBanner">
+    <div id="spinBannerSlot" style="width:320px;height:50px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.03);border-radius:8px;overflow:hidden;"></div>
+  </div>
 </div>
 
 <!-- Scratch Modal -->
@@ -531,6 +546,11 @@
 
   <div id="scratchResult" style="font-size:18px;font-weight:800;color:#a78bfa;text-align:center;min-height:28px;margin-bottom:16px;"></div>
   <button class="spin-btn-main" id="newScratchBtn" onclick="newScratch()" style="display:none;">🎴 Next Card</button>
+
+  <!-- Fixed bottom native/banner ad -->
+  <div class="modal-bottom-banner" id="scratchBottomBanner">
+    <div id="scratchBannerSlot" style="width:320px;height:50px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.03);border-radius:8px;overflow:hidden;"></div>
+  </div>
 </div>
 
 <!-- Quiz Modal -->
@@ -564,6 +584,11 @@
 
   <div class="quiz-options" id="quizOptions"></div>
   <div id="quizResult" style="font-size:16px;font-weight:800;text-align:center;min-height:24px;margin-bottom:16px;"></div>
+
+  <!-- Fixed bottom native/banner ad -->
+  <div class="modal-bottom-banner" id="quizBottomBanner">
+    <div id="quizBannerSlot" style="width:320px;height:50px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.03);border-radius:8px;overflow:hidden;"></div>
+  </div>
 </div>
 
 <div class="bottom-nav">
@@ -728,8 +753,8 @@
   }
   function setAdBatchCount(n) { localStorage.setItem(AD_COUNT_KEY, n); }
 
-  function get1MinUntil()   { return parseInt(localStorage.getItem(AD_1MIN_KEY) || '0'); }
-  function get5HrUntil()    { return parseInt(localStorage.getItem(AD_5HR_KEY)  || '0'); }
+  function get1MinUntil()   { const v = parseInt(localStorage.getItem(AD_1MIN_KEY)); return (!v || isNaN(v)) ? 0 : v; }
+  function get5HrUntil()    { const v = parseInt(localStorage.getItem(AD_5HR_KEY));  return (!v || isNaN(v)) ? 0 : v; }
   function set1MinUntil(ts) { localStorage.setItem(AD_1MIN_KEY, ts); }
   function set5HrUntil(ts)  { localStorage.setItem(AD_5HR_KEY,  ts); }
   function clearAdTimers()  { localStorage.removeItem(AD_1MIN_KEY); localStorage.removeItem(AD_5HR_KEY); }
@@ -790,15 +815,21 @@
   }
 
   function getGlobalLockRemaining() {
-    const until = parseInt(localStorage.getItem(GLOBAL_LOCK_KEY) || '0');
-    const remaining = until - Date.now();
-    return remaining > 0 ? Math.ceil(remaining / 1000) : 0;
+    const raw   = localStorage.getItem(GLOBAL_LOCK_KEY);
+    const until = raw ? parseInt(raw) : 0;
+    // Guard: NaN, 0, or expired → return 0 (unlocked)
+    if (!until || isNaN(until) || until <= Date.now()) {
+      if (raw) localStorage.removeItem(GLOBAL_LOCK_KEY); // clean up stale value
+      return 0;
+    }
+    return Math.ceil((until - Date.now()) / 1000);
   }
 
   // IDs of every "claim / entry" button in the app
+  // Survey excluded — CPX Research has its own built-in timers
   const GLOBAL_LOCK_BTN_IDS = [
     'spinBtnMain', 'newScratchBtn', 'quizClaimAdBtn',
-    'watchAdBtn', 'checkinBtn', 'dailyBonusBtn', 'surveyBtn'
+    'watchAdBtn', 'checkinBtn', 'dailyBonusBtn'
   ];
 
   function runGlobalLockUI(until) {
@@ -879,25 +910,21 @@
   window.addEventListener('popstate', function(e) {
     if (adHardLockActive) {
       history.pushState(null, '', location.href); // block navigation
-      showToast('⚠️ Back button se ad band hua! 1 min ke liye sabke tasks lock hai.', '#ef4444');
 
-      // User pressed back during 15s hard lock — treat as skipped ad
-      // Clear hard lock
-      adHardLockActive = false;
-      if (adTimerInterval)  { clearInterval(adTimerInterval);  adTimerInterval  = null; }
-
-      // Close any open ad overlay (task ad fullscreen)
-      const overlay = document.getElementById('taskAdOverlay');
-      if (overlay) overlay.style.display = 'none';
-
-      // Close watch-ad popup if open
-      const adPopup = document.getElementById('adPopup');
-      if (adPopup) adPopup.classList.remove('show');
-
-      // ── Apply 1-min lock to Spin, Scratch, Quiz buttons ──
-      const penaltyUntil = Date.now() + 60000;
-      localStorage.setItem('tn_backbtn_penalty', penaltyUntil.toString());
-      applyBackBtnPenalty(penaltyUntil);
+      // ── Route to the active ad's strict penalty handler ─────
+      if (typeof window._currentAdPenalty === 'function') {
+        window._currentAdPenalty(); // fires 0-coins + toast + 1-min lock
+      } else {
+        // Fallback: Watch Ads popup was open
+        adHardLockActive = false;
+        if (adTimerInterval) { clearInterval(adTimerInterval); adTimerInterval = null; }
+        const adPopup = document.getElementById('adPopup');
+        if (adPopup) adPopup.classList.remove('show');
+        showToast('❌ Penalty! Ad skipped early. 0 Coins rewarded.', '#ef4444');
+        const penaltyUntil = Date.now() + 60000;
+        localStorage.setItem('tn_backbtn_penalty', penaltyUntil.toString());
+        applyBackBtnPenalty(penaltyUntil);
+      }
     }
   });
   history.pushState(null, '', location.href);
@@ -1706,6 +1733,13 @@
     // Restore persistent timers — resume exactly where left off
     updateAdButtonUI();
     updateDailyBonusUI(); // initialize Daily Bonus button state
+    // Clean stale/corrupted localStorage values before restoring locks
+    ['tn_global_lock_until','tn_ad_1min_until','tn_ad_5hr_until','tn_backbtn_penalty'].forEach(function(k) {
+      const v = parseInt(localStorage.getItem(k));
+      if (localStorage.getItem(k) !== null && (!v || isNaN(v) || v <= Date.now())) {
+        localStorage.removeItem(k); // wipe expired or corrupt entries
+      }
+    });
     restoreGlobalLockIfActive();     // resume 1-min global lock if app was restarted
     restoreBackBtnPenaltyIfActive(); // resume back-btn skip penalty if app was restarted
 
@@ -2004,7 +2038,6 @@
   }
 
   function openSpinModal() {
-    // Cross-task freeze check
     if (Date.now() < crossTaskFreezeEnd) {
       const secs = Math.ceil((crossTaskFreezeEnd - Date.now()) / 1000);
       showToast('⏳ Watch Ads timer chal raha hai! Spin ' + secs + 's baad unlock hoga.', '#f59e0b');
@@ -2013,6 +2046,7 @@
     document.getElementById('spinModal').classList.add('show');
     drawWheel();
     updateSpinUI();
+    loadModalBottomBanner('spinBannerSlot');
   }
 
   function updateSpinUI() {
@@ -2134,7 +2168,6 @@
   let isScratchActive = false;
 
   function openScratchModal() {
-    // Cross-task freeze check
     if (Date.now() < crossTaskFreezeEnd) {
       const secs = Math.ceil((crossTaskFreezeEnd - Date.now()) / 1000);
       showToast('⏳ Watch Ads timer chal raha hai! Scratch ' + secs + 's baad unlock hoga.', '#f59e0b');
@@ -2143,6 +2176,7 @@
     document.getElementById('scratchModal').classList.add('show');
     updateScratchUI();
     newScratch();
+    loadModalBottomBanner('scratchBannerSlot');
   }
 
   function updateScratchUI() {
@@ -2253,7 +2287,6 @@
   let currentAnswer = 0;
 
   function openQuizModal() {
-    // Cross-task freeze check
     if (Date.now() < crossTaskFreezeEnd) {
       const secs = Math.ceil((crossTaskFreezeEnd - Date.now()) / 1000);
       showToast('⏳ Watch Ads timer chal raha hai! Quiz ' + secs + 's baad unlock hoga.', '#f59e0b');
@@ -2262,6 +2295,7 @@
     document.getElementById('quizModal').classList.add('show');
     updateQuizUI();
     generateQuiz();
+    loadModalBottomBanner('quizBannerSlot');
   }
 
   function updateQuizUI() {
@@ -2344,8 +2378,10 @@
   // Coins credited ONLY inside the successful onAdClosed path.
 
   function _playAdAndClaim({ coins, type, onSuccess, onFail, btn }) {
-    // Global lock guard — block if 1-min cooldown is active
-    if (isGlobalLocked()) {
+    // Global lock guard — re-check at execution time (double safety)
+    const lockSecs = getGlobalLockRemaining();
+    if (lockSecs > 0) {
+      showToast('Ad system cooling down... Wait ' + lockSecs + 's!', '#f59e0b');
       if (btn) { btn.disabled = false; }
       return;
     }
@@ -2366,7 +2402,7 @@
       document.body.appendChild(overlay);
     }
 
-    // Progress bar
+    // Progress bar + UI
     overlay.innerHTML = [
       '<div style="position:absolute;top:0;left:0;height:4px;width:0%;background:linear-gradient(135deg,#6c63ff,#f59e0b);transition:width 15s linear;" id="taskAdBar"></div>',
       '<div style="font-size:48px;margin-bottom:12px;">📺</div>',
@@ -2374,11 +2410,11 @@
       '<div id="taskAdStatus" style="color:rgba(255,255,255,0.55);font-size:14px;margin-bottom:24px;text-align:center;">Reward in 15s...</div>',
       '<div style="background:rgba(255,255,255,0.08);border-radius:16px;padding:14px 32px;text-align:center;margin-bottom:28px;">',
         '<div style="color:rgba(255,255,255,0.4);font-size:11px;">Aapko milenge</div>',
-        '<div style="color:#6c63ff;font-size:30px;font-weight:800;">+' + coins + '</div>',
+        '<div id="taskAdCoinsDisplay" style="color:#6c63ff;font-size:30px;font-weight:800;">+' + coins + '</div>',
         '<div style="color:rgba(255,255,255,0.4);font-size:11px;">Coins</div>',
       '</div>',
-      '<div id="taskAdLockNote" style="color:rgba(255,255,255,0.35);font-size:11px;margin-bottom:16px;">Back button disabled during ad</div>',
-      '<button id="taskAdClaimBtn" disabled style="width:100%;max-width:320px;background:rgba(255,255,255,0.1);border:none;border-radius:16px;padding:14px;color:rgba(255,255,255,0.4);font-size:15px;font-weight:800;cursor:not-allowed;">⏳ Please wait...</button>'
+      '<div id="taskAdLockNote" style="color:rgba(255,255,255,0.35);font-size:11px;margin-bottom:16px;">⚠️ Back button = 0 coins penalty</div>',
+      '<button id="taskAdClaimBtn" disabled style="width:100%;max-width:320px;background:rgba(255,255,255,0.1);border:none;border-radius:16px;padding:14px;color:rgba(255,255,255,0.4);font-size:15px;font-weight:800;cursor:not-allowed;">⏳ Please wait 15s...</button>'
     ].join('');
 
     overlay.style.display = 'flex';
@@ -2389,7 +2425,7 @@
       if (bar) bar.style.width = '100%';
     }, 50);
 
-    // Inject actual Adsterra Direct Link + script
+    // Inject Adsterra Direct Link
     const directUrl = 'https://www.effectivecpmnetwork.com/b1bggwx0?key=f1f69a147759698e8fda4cfd27e423ba&t=' + Date.now();
     try {
       window.AppInventor && window.AppInventor.setWebViewString(directUrl);
@@ -2405,19 +2441,23 @@
     s.setAttribute('data-cfasync', 'false');
     document.head.appendChild(s);
 
-    // ── 15-second hard lock countdown ───────────────────────────
-    let secsLeft = 15;
-    let adWatchSuccess = false; // set true only after onload fires
-    let hardLockTimer = null;
-    adHardLockActive = true; // block back-button
+    // ── State tracking ───────────────────────────────────────────
+    let secsLeft       = 15;
+    let adWatchSuccess = false; // true only if onload fires
+    let hardLockTimer  = null;
+    let penaltyApplied = false; // true if back-btn pressed mid-ad
+    let creditFired    = false;
+    adHardLockActive   = true;
 
-    // Push history state so popstate fires on back
     history.pushState({ adLock: true }, '', location.href);
 
-    const statusEl    = document.getElementById('taskAdStatus');
-    const claimBtn    = document.getElementById('taskAdClaimBtn');
+    const statusEl = document.getElementById('taskAdStatus');
+    const claimBtn = document.getElementById('taskAdClaimBtn');
+    const coinsEl  = document.getElementById('taskAdCoinsDisplay');
 
+    // ── 15-second hard-lock countdown ───────────────────────────
     hardLockTimer = setInterval(() => {
+      if (penaltyApplied) { clearInterval(hardLockTimer); return; }
       secsLeft--;
       if (statusEl) statusEl.textContent = 'Reward in ' + Math.max(0, secsLeft) + 's...';
 
@@ -2425,18 +2465,15 @@
         clearInterval(hardLockTimer);
         adHardLockActive = false;
 
-        // Ad script already fired — check if onload came back
         if (adWatchSuccess) {
-          // onload already confirmed — credit coins now
+          // onload already confirmed — credit immediately
           _doCredit();
         } else {
-          // Still waiting for ad server response — enable claim button
+          // Waiting for ad server — show Collect button (only after 15s done)
           if (claimBtn) {
             claimBtn.disabled = false;
             claimBtn.textContent = '✅ Collect Reward';
-            claimBtn.style.background = 'linear-gradient(135deg,#22c55e,#16a34a)';
-            claimBtn.style.color = '#fff';
-            claimBtn.style.cursor = 'pointer';
+            claimBtn.style.cssText = 'width:100%;max-width:320px;background:linear-gradient(135deg,#22c55e,#16a34a);border:none;border-radius:16px;padding:14px;color:#fff;font-size:15px;font-weight:800;cursor:pointer;';
             claimBtn.onclick = _doCredit;
           }
           if (statusEl) statusEl.textContent = 'Ad dekh li! Reward collect karo 🎉';
@@ -2444,40 +2481,76 @@
       }
     }, 1000);
 
-    // Called once: either from onload (if 15s already done) or from claimBtn
-    let creditFired = false;
+    // ── Strict penalty: called when back pressed before 15s ─────
+    window._currentAdPenalty = function() {
+      if (creditFired || penaltyApplied) return;
+      penaltyApplied = true;
+      adHardLockActive = false;
+      clearInterval(hardLockTimer);
+
+      // Hide overlay
+      if (overlay) overlay.style.display = 'none';
+
+      // Restore original button
+      if (btn) {
+        btn.disabled = false;
+        btn.textContent = '📺 Watch Ad and Claim Coin';
+        btn.style.background = 'linear-gradient(135deg,#f59e0b,#ef4444)';
+      }
+
+      // ❌ 0 coins — do NOT increment count
+      showToast('❌ Penalty! Ad skipped early. 0 Coins rewarded.', '#ef4444');
+      console.warn('[AdListener] ' + type + ' — ad skipped before 15s. 0 coins.');
+      try { window.AppInventor && window.AppInventor.setWebViewString('AD_SKIP_PENALTY:' + type); } catch(e) {}
+
+      // Apply 1-min lock on Spin/Scratch/Quiz as penalty
+      const penaltyUntil = Date.now() + 60000;
+      localStorage.setItem('tn_backbtn_penalty', penaltyUntil.toString());
+      applyBackBtnPenalty(penaltyUntil);
+
+      onFail(); // 0 coins path
+    };
+
+    // ── Credit coins (only on success path) ─────────────────────
     function _doCredit() {
-      if (creditFired) return;
+      if (creditFired || penaltyApplied) return;
       creditFired = true;
 
       if (claimBtn) { claimBtn.disabled = true; claimBtn.textContent = '⏳ Crediting...'; }
 
-      // ✅ Strict: credit only here — inside successful ad-closed path
       s.onload = null; // prevent double-fire
       creditCoins(coins, type).then(earned => {
-        // Close overlay
         if (overlay) overlay.style.display = 'none';
+        window._currentAdPenalty = null; // disarm penalty handler
 
-        // ── TRIGGER UNIVERSAL 1-MINUTE GLOBAL LOCK ──────────────
-        triggerGlobalLock();
+        // Trigger universal 1-min global lock (NOT for survey)
+        if (type !== 'survey') triggerGlobalLock();
 
-        // Notify AppInventor
         try { window.AppInventor && window.AppInventor.setWebViewString('AD_SHOWED:' + type); } catch(e) {}
-        console.log('[AdListener] ' + type + ' ad coins credited:', earned);
-
+        console.log('[AdListener] ' + type + ' coins credited:', earned);
         onSuccess(earned);
       });
     }
 
-    // onload = ad confirmed served (fires when script executes)
+    // onload = ad script confirmed running
     s.onload = function() {
+      if (penaltyApplied) return; // already penalised
       adWatchSuccess = true;
       console.log('[AdListener] ' + type + ' ad script loaded OK');
-      // If 15s already elapsed by the time onload fires, credit immediately
-      if (secsLeft <= 0 && !creditFired) {
-        _doCredit();
-      }
-      // else: wait for hard-lock countdown to finish
+      if (secsLeft <= 0 && !creditFired) _doCredit();
+    };
+
+    s.onerror = function() {
+      if (penaltyApplied) return;
+      clearInterval(hardLockTimer);
+      adHardLockActive = false;
+      if (overlay) overlay.style.display = 'none';
+      if (btn) { btn.disabled = false; btn.textContent = '📺 Watch Ad and Claim Coin'; }
+      // ❌ 0 coins on ad load failure too
+      showToast('❌ Penalty! Ad skipped early. 0 Coins rewarded.', '#ef4444');
+      console.warn('[AdListener] ' + type + ' ad FAILED — 0 coins');
+      try { window.AppInventor && window.AppInventor.setWebViewString('AD_FAILED:' + type); } catch(e) {}
+      onFail();
     };
 
     s.onerror = function() {
@@ -2576,6 +2649,25 @@
   }
 
     // ── MODAL HELPERS ─────────────────────────────────────────────
+  // ── BOTTOM BANNER LOADER ─────────────────────────────────────────
+  // Loads Adsterra native/banner ad into bottom slot of each modal.
+  // Each slot loads only once per session to avoid duplicate requests.
+  const _bannerLoaded = {};
+  function loadModalBottomBanner(slotId) {
+    if (_bannerLoaded[slotId]) return;
+    _bannerLoaded[slotId] = true;
+    const slot = document.getElementById(slotId);
+    if (!slot) return;
+    // Adsterra native banner script (320x50 equivalent)
+    const s = document.createElement('script');
+    s.src = 'https://pl29503369.effectivecpmnetwork.com/1c/3b/d0/1c3bd0127e4be2ff172d7c6e0eaa5204.js';
+    s.async = true;
+    s.setAttribute('data-cfasync', 'false');
+    s.onload  = () => console.log('[Banner] ' + slotId + ' loaded OK');
+    s.onerror = () => { slot.style.display = 'none'; }; // hide if fails
+    slot.appendChild(s);
+  }
+
   function closeModal(id) {
     document.getElementById(id).classList.remove('show');
     updateDailyLimitUI();
