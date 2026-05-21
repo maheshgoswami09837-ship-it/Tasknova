@@ -2057,14 +2057,27 @@
     if (ct) ct.textContent = d.spins;
     const cooldown = getCooldownRemaining(d.lastSpin);
     if (d.spins >= 15) {
-      if (btn) { btn.disabled = true; btn.textContent = '✅ Aaj ke spins khatam!'; }
+      if (btn) { btn.disabled = true; btn.textContent = '✅ Aaj ke spins khatam!'; btn.style.background = 'rgba(255,255,255,0.1)'; btn.style.color = 'rgba(255,255,255,0.4)'; }
     } else if (cooldown > 0) {
-      if (btn) { btn.disabled = true; btn.textContent = 'Wait ' + formatCooldown(cooldown) + '...'; }
+      const secsLeft = Math.ceil(cooldown / 1000);
+      if (btn) {
+        btn.disabled = true;
+        btn.textContent = '⏳ Next spin in ' + secsLeft + 's...';
+        btn.style.background = 'rgba(255,165,0,0.2)';
+        btn.style.color = '#ffa500';
+        btn.onclick = null;
+      }
       setTimeout(updateSpinUI, 1000);
     } else {
-      if (btn) { btn.disabled = false; btn.textContent = '🎡 Spin Now!'; btn.style.background = ''; btn.onclick = doSpin; }
+      if (btn) {
+        btn.disabled = false;
+        btn.textContent = '🎡 Spin Now!';
+        btn.style.background = '';
+        btn.style.color = '';
+        btn.onclick = doSpin;
+      }
     }
-    if (cd) cd.textContent = cooldown > 0 ? formatCooldown(cooldown) : 'Ready!';
+    if (cd) cd.textContent = cooldown > 0 ? Math.ceil(cooldown/1000) + 's' : 'Ready!';
   }
 
   function doSpin() {
@@ -2405,16 +2418,18 @@
     // Progress bar + UI
     overlay.innerHTML = [
       '<div style="position:absolute;top:0;left:0;height:4px;width:0%;background:linear-gradient(135deg,#6c63ff,#f59e0b);transition:width 15s linear;" id="taskAdBar"></div>',
-      '<div style="font-size:48px;margin-bottom:12px;">📺</div>',
-      '<div style="color:#fff;font-size:18px;font-weight:800;margin-bottom:8px;">Advertisement</div>',
-      '<div id="taskAdStatus" style="color:rgba(255,255,255,0.55);font-size:14px;margin-bottom:24px;text-align:center;">Reward in 15s...</div>',
-      '<div style="background:rgba(255,255,255,0.08);border-radius:16px;padding:14px 32px;text-align:center;margin-bottom:28px;">',
+      // Real ad iframe — loads Adsterra direct link visually inside overlay
+      '<iframe id="taskAdFrame" src="https://www.effectivecpmnetwork.com/b1bggwx0?key=f1f69a147759698e8fda4cfd27e423ba" style="width:100%;max-width:360px;height:220px;border:none;border-radius:16px;margin-bottom:16px;background:rgba(255,255,255,0.03);" scrolling="no" frameborder="0" allowfullscreen></iframe>',
+      '<div style="font-size:36px;margin-bottom:8px;">📺</div>',
+      '<div style="color:#fff;font-size:16px;font-weight:800;margin-bottom:4px;">Advertisement</div>',
+      '<div id="taskAdStatus" style="color:rgba(255,255,255,0.55);font-size:13px;margin-bottom:20px;text-align:center;">Reward in 15s...</div>',
+      '<div style="background:rgba(255,255,255,0.08);border-radius:14px;padding:12px 28px;text-align:center;margin-bottom:20px;">',
         '<div style="color:rgba(255,255,255,0.4);font-size:11px;">Aapko milenge</div>',
-        '<div id="taskAdCoinsDisplay" style="color:#6c63ff;font-size:30px;font-weight:800;">+' + coins + '</div>',
+        '<div id="taskAdCoinsDisplay" style="color:#6c63ff;font-size:28px;font-weight:800;">+' + coins + '</div>',
         '<div style="color:rgba(255,255,255,0.4);font-size:11px;">Coins</div>',
       '</div>',
-      '<div id="taskAdLockNote" style="color:rgba(255,255,255,0.35);font-size:11px;margin-bottom:16px;">⚠️ Back button = 0 coins penalty</div>',
-      '<button id="taskAdClaimBtn" disabled style="width:100%;max-width:320px;background:rgba(255,255,255,0.1);border:none;border-radius:16px;padding:14px;color:rgba(255,255,255,0.4);font-size:15px;font-weight:800;cursor:not-allowed;">⏳ Please wait 15s...</button>'
+      '<div id="taskAdLockNote" style="color:rgba(255,165,0,0.7);font-size:11px;margin-bottom:14px;">⚠️ Back button = 0 coins penalty</div>',
+      '<button id="taskAdClaimBtn" disabled style="width:100%;max-width:320px;background:rgba(255,255,255,0.1);border:none;border-radius:16px;padding:14px;color:rgba(255,255,255,0.4);font-size:15px;font-weight:800;cursor:not-allowed;font-family:Segoe UI,sans-serif;">⏳ Please wait 15s...</button>'
     ].join('');
 
     overlay.style.display = 'flex';
@@ -2425,21 +2440,37 @@
       if (bar) bar.style.width = '100%';
     }, 50);
 
-    // Inject Adsterra Direct Link
+    // ── INJECT REAL AD inside overlay ────────────────────────────
+    // Method 1: Direct-link ad opened in WebView via AppInventor
     const directUrl = 'https://www.effectivecpmnetwork.com/b1bggwx0?key=f1f69a147759698e8fda4cfd27e423ba&t=' + Date.now();
     try {
-      window.AppInventor && window.AppInventor.setWebViewString(directUrl);
-    } catch(e) {
-      const a = document.createElement('a');
-      a.href = directUrl; a.target = '_blank'; a.rel = 'noopener';
-      document.body.appendChild(a); a.click(); document.body.removeChild(a);
-    }
+      if (window.AppInventor) {
+        window.AppInventor.setWebViewString(directUrl); // Kodular opens in WebView
+      }
+    } catch(e) {}
 
+    // Method 2: Popunder script (fires ad in background tab / overlay)
     const s = document.createElement('script');
     s.src = 'https://pl29503369.effectivecpmnetwork.com/1c/3b/d0/1c3bd0127e4be2ff172d7c6e0eaa5204.js';
     s.async = true;
     s.setAttribute('data-cfasync', 'false');
     document.head.appendChild(s);
+
+    // Method 3: Social bar (visible bottom-bar ad — most likely to render in WebView)
+    if (!window._socialBarInjected) {
+      window._socialBarInjected = true;
+      const sb = document.createElement('script');
+      sb.src = 'https://www.highperformanceformat.com/68bf9531f68f81be99e32a8350f48396/invoke.js';
+      sb.async = true;
+      sb.setAttribute('data-cfasync', 'false');
+      sb.onload  = () => console.log('[AdListener] SocialBar loaded OK');
+      sb.onerror = () => console.warn('[AdListener] SocialBar failed');
+      document.head.appendChild(sb);
+    }
+
+    // Notify Kodular/AppInventor that ad container is shown
+    try { window.AppInventor && window.AppInventor.setWebViewString('AD_SHOWING:' + type); } catch(e) {}
+    console.log('[AdListener] Ad overlay shown for type:', type);
 
     // ── State tracking ───────────────────────────────────────────
     let secsLeft       = 15;
@@ -2545,21 +2576,12 @@
       clearInterval(hardLockTimer);
       adHardLockActive = false;
       if (overlay) overlay.style.display = 'none';
-      if (btn) { btn.disabled = false; btn.textContent = '📺 Watch Ad and Claim Coin'; }
-      // ❌ 0 coins on ad load failure too
-      showToast('❌ Penalty! Ad skipped early. 0 Coins rewarded.', '#ef4444');
-      console.warn('[AdListener] ' + type + ' ad FAILED — 0 coins');
-      try { window.AppInventor && window.AppInventor.setWebViewString('AD_FAILED:' + type); } catch(e) {}
-      onFail();
-    };
-
-    s.onerror = function() {
-      // Ad failed — 0 coins, close overlay, restore button
-      clearInterval(hardLockTimer);
-      adHardLockActive = false;
-      if (overlay) overlay.style.display = 'none';
-      if (btn) { btn.disabled = false; btn.textContent = '📺 Watch Ad and Claim Coin'; }
-      console.warn('[AdListener] ' + type + ' ad FAILED — 0 coins');
+      if (btn) {
+        btn.disabled = false;
+        btn.textContent = '📺 Watch Ad and Claim Coin';
+        btn.style.background = 'linear-gradient(135deg,#f59e0b,#ef4444)';
+      }
+      console.warn('[AdListener] ' + type + ' ad FAILED — 0 coins. Check: JS enabled? Ad approved? Network?');
       try { window.AppInventor && window.AppInventor.setWebViewString('AD_FAILED:' + type); } catch(e) {}
       showToast('Ad load nahi hua. Dobara try karo! 🔄', '#ef4444');
       onFail();
@@ -2575,12 +2597,14 @@
       onSuccess: function(earned) {
         if (spinResult) spinResult.textContent = earned > 0 ? '✅ +' + earned + ' Coins credited! 🎉' : '';
         if (earned > 0) showToast('+' + earned + ' Coins!', 'linear-gradient(135deg,#6c63ff,#3b82f6)');
-        // Reset button to Spin Now for next round
+        // Show 1-min cooldown on spin button
         if (spinBtn) {
-          spinBtn.style.background = '';
-          spinBtn.onclick = doSpin;
+          spinBtn.disabled = true;
+          spinBtn.style.background = 'rgba(255,165,0,0.2)';
+          spinBtn.style.color = '#ffa500';
+          spinBtn.onclick = null;
         }
-        updateSpinUI();
+        updateSpinUI(); // this will show live countdown
         updateDailyLimitUI();
       },
       onFail: function() {
@@ -2588,6 +2612,8 @@
         if (spinBtn) {
           spinBtn.disabled = false;
           spinBtn.textContent = '📺 Watch Ad and Claim Coin';
+          spinBtn.style.background = 'linear-gradient(135deg,#f59e0b,#ef4444)';
+          spinBtn.style.color = '#fff';
         }
         showToast('Ad load nahi hua. Dobara try karo! 🔄', '#ef4444');
       }
@@ -2603,11 +2629,28 @@
       onSuccess: function(earned) {
         if (scratchResult) scratchResult.textContent = '✅ +' + earned + ' Coins credited! 🎉';
         showToast('+' + earned + ' Coins!', 'linear-gradient(135deg,#f59e0b,#ef4444)');
+        // Show 1-min cooldown on Next Card button
         if (scratchBtn) {
-          scratchBtn.style.background = '';
-          scratchBtn.textContent = '🎴 Next Card';
-          scratchBtn.disabled = false;
-          scratchBtn.onclick = newScratch;
+          scratchBtn.disabled = true;
+          scratchBtn.style.background = 'rgba(255,165,0,0.2)';
+          scratchBtn.style.color = '#ffa500';
+          scratchBtn.textContent = '⏳ Next card in 60s...';
+          scratchBtn.onclick = null;
+          // Live countdown
+          const cdInterval = setInterval(() => {
+            const d = getDailyData();
+            const cd = getCooldownRemaining(d.lastScratch);
+            if (cd <= 0) {
+              clearInterval(cdInterval);
+              scratchBtn.disabled = false;
+              scratchBtn.style.background = '';
+              scratchBtn.style.color = '';
+              scratchBtn.textContent = '🎴 Next Card';
+              scratchBtn.onclick = newScratch;
+            } else {
+              scratchBtn.textContent = '⏳ Next card in ' + Math.ceil(cd/1000) + 's';
+            }
+          }, 1000);
         }
         updateScratchUI();
         updateDailyLimitUI();
@@ -2617,6 +2660,8 @@
         if (scratchBtn) {
           scratchBtn.disabled = false;
           scratchBtn.textContent = '📺 Watch Ad and Claim Coin';
+          scratchBtn.style.background = 'linear-gradient(135deg,#f59e0b,#ef4444)';
+          scratchBtn.style.color = '#fff';
         }
         showToast('Ad load nahi hua. Dobara try karo! 🔄', '#ef4444');
       }
@@ -2632,16 +2677,39 @@
       onSuccess: function(earned) {
         if (quizResult) quizResult.textContent = '✅ +' + earned + ' Coins credited! 🎉';
         showToast('+' + earned + ' Coins!', 'linear-gradient(135deg,#22c55e,#16a34a)');
-        if (claimAdBtn) claimAdBtn.remove();
+        if (claimAdBtn) {
+          claimAdBtn.disabled = true;
+          claimAdBtn.textContent = '⏳ Next question in 60s...';
+          claimAdBtn.style.background = 'rgba(255,165,0,0.2)';
+          claimAdBtn.style.color = '#ffa500';
+          claimAdBtn.style.cursor = 'not-allowed';
+        }
         updateQuizUI();
         updateDailyLimitUI();
-        setTimeout(generateQuiz, 1500);
+
+        // Wait for 1-min cooldown to expire, THEN generate next question
+        const waitFor1Min = setInterval(() => {
+          const d = getDailyData();
+          const cooldown = getCooldownRemaining(d.lastQuiz);
+          if (claimAdBtn) {
+            const secsLeft = Math.ceil(cooldown / 1000);
+            claimAdBtn.textContent = secsLeft > 0 ? '⏳ Next question in ' + secsLeft + 's...' : '✅ Loading next...';
+          }
+          if (cooldown <= 0) {
+            clearInterval(waitFor1Min);
+            if (claimAdBtn) claimAdBtn.remove();
+            generateQuiz();
+          }
+        }, 1000);
       },
       onFail: function() {
         if (quizResult) quizResult.textContent = '❌ Ad load nahi hua — dobara try karo';
         if (claimAdBtn) {
           claimAdBtn.disabled = false;
           claimAdBtn.textContent = '📺 Watch Ad and Claim Coin';
+          claimAdBtn.style.background = 'linear-gradient(135deg,#f59e0b,#ef4444)';
+          claimAdBtn.style.color = '#fff';
+          claimAdBtn.style.cursor = 'pointer';
         }
         showToast('Ad load nahi hua. Dobara try karo! 🔄', '#ef4444');
       }
