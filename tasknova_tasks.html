@@ -833,11 +833,21 @@
     'spinTaskBtn', 'scratchTaskBtn', 'quizTaskBtn'
   ];
 
-  // Task cards to visually freeze during global lock
+  // Task cards to freeze during global lock — Survey & Check-in EXCLUDED
   const GLOBAL_LOCK_CARD_IDS = [
     'spinTaskCard', 'scratchTaskCard', 'quizTaskCard',
-    'watchAdCard', 'checkinCard', 'dailyBonusCard'
+    'watchAdCard', 'dailyBonusCard'
   ];
+
+  // Maps card ID → meta span ID where countdown goes
+  // For dailyBonusCard we inject a separate span (dailyBonusBadge is for claimed state)
+  const CARD_META_SPAN = {
+    'spinTaskCard':    'spinCountBadge',
+    'scratchTaskCard': 'scratchCountBadge',
+    'quizTaskCard':    'quizCountBadge',
+    'watchAdCard':     'adCounter',
+    'dailyBonusCard':  '__inject__'   // special: inject a new span into meta
+  };
 
   function runGlobalLockUI(until) {
     if (globalLockInterval) { clearInterval(globalLockInterval); globalLockInterval = null; }
@@ -845,7 +855,7 @@
     function tick() {
       const secsLeft = Math.max(0, Math.ceil((until - Date.now()) / 1000));
 
-      // ── Lock all buttons ──────────────────────────────────────
+      // ── Lock all action buttons ───────────────────────────────
       GLOBAL_LOCK_BTN_IDS.forEach(id => {
         const btn = document.getElementById(id);
         if (!btn) return;
@@ -855,9 +865,13 @@
             btn.dataset.origText = btn.dataset.origText || btn.textContent;
             btn.textContent = '⏳ ' + secsLeft + 's';
           }
-          btn.style.opacity = '0.7';
+          btn.style.background = 'rgba(245,158,11,0.2)';
+          btn.style.color = '#f59e0b';
+          btn.style.opacity = '1';
         } else {
           btn.disabled = false;
+          btn.style.background = '';
+          btn.style.color = '';
           btn.style.opacity = '';
           if (btn.dataset.origText && !btn.textContent.includes('📺')) {
             btn.textContent = btn.dataset.origText;
@@ -866,40 +880,58 @@
         }
       });
 
-      // ── Lock dynamically created quiz claim button ────────────
+      // ── Lock quiz claim button (dynamic) ─────────────────────
       const qBtn = document.getElementById('quizClaimAdBtn');
       if (qBtn) {
-        if (secsLeft > 0) { qBtn.disabled = true; qBtn.style.opacity = '0.7'; }
+        if (secsLeft > 0) { qBtn.disabled = true; qBtn.style.opacity = '0.6'; }
         else { qBtn.disabled = false; qBtn.style.opacity = ''; }
       }
 
-      // ── Show/hide cooldown badge on each task card ────────────
+      // ── Per-card: lock + show timer IN meta row (no overlap) ─
       GLOBAL_LOCK_CARD_IDS.forEach(id => {
         const card = document.getElementById(id);
         if (!card) return;
-        let badge = card.querySelector('.global-lock-badge');
-        if (secsLeft > 0) {
-          card.style.pointerEvents = 'none';
-          card.style.opacity = '0.65';
-          if (!badge) {
-            badge = document.createElement('div');
-            badge.className = 'global-lock-badge';
-            badge.style.cssText = [
-              'position:absolute', 'top:10px', 'right:12px',
-              'background:linear-gradient(135deg,#f59e0b,#ef4444)',
-              'color:#fff', 'font-size:10px', 'font-weight:800',
-              'padding:3px 10px', 'border-radius:50px',
-              'z-index:5', 'pointer-events:none',
-              'box-shadow:0 2px 8px rgba(245,158,11,0.4)',
-              'letter-spacing:0.3px'
-            ].join(';');
-            card.appendChild(badge);
+
+        card.style.pointerEvents = secsLeft > 0 ? 'none' : '';
+
+        const metaSpanId = CARD_META_SPAN[id];
+
+        // Special case: inject a dedicated span into meta row
+        if (metaSpanId === '__inject__') {
+          const metaRow = card.querySelector('.task-meta');
+          if (!metaRow) return;
+          let injected = metaRow.querySelector('.glk-injected');
+          if (secsLeft > 0) {
+            if (!injected) {
+              injected = document.createElement('span');
+              injected.className = 'glk-injected';
+              injected.style.cssText = 'font-size:11px;font-weight:800;color:#f59e0b;background:rgba(245,158,11,0.15);padding:3px 10px;border-radius:50px;margin-left:6px;';
+              metaRow.appendChild(injected);
+            }
+            injected.textContent = '⏳ ' + secsLeft + 's';
+          } else {
+            if (injected) injected.remove();
           }
-          badge.textContent = '⏳ ' + secsLeft + 's cooldown';
+          return;
+        }
+
+        const metaSpan = metaSpanId ? document.getElementById(metaSpanId) : null;
+        if (!metaSpan) return;
+
+        if (secsLeft > 0) {
+          if (!metaSpan.dataset.lockOrig) {
+            metaSpan.dataset.lockOrig = metaSpan.textContent;
+            metaSpan.dataset.lockOrigStyle = metaSpan.getAttribute('style') || '';
+          }
+          metaSpan.textContent = '⏳ ' + secsLeft + 's';
+          metaSpan.style.cssText = 'font-size:11px;font-weight:800;color:#f59e0b;background:rgba(245,158,11,0.15);padding:3px 10px;border-radius:50px;display:inline-block;';
         } else {
-          card.style.pointerEvents = '';
-          card.style.opacity = '';
-          if (badge) badge.remove();
+          if (metaSpan.dataset.lockOrig !== undefined) {
+            metaSpan.textContent = metaSpan.dataset.lockOrig;
+            metaSpan.setAttribute('style', metaSpan.dataset.lockOrigStyle);
+            delete metaSpan.dataset.lockOrig;
+            delete metaSpan.dataset.lockOrigStyle;
+          }
         }
       });
 
@@ -912,6 +944,7 @@
         updateScratchUI();
         updateQuizUI();
         updateDailyBonusUI();
+        updateDailyLimitUI();
         return;
       }
     }
@@ -1406,6 +1439,8 @@
       // 1-Minute per-ad cooldown
       const oneMinUntil = Date.now() + AD_COOLDOWN_1MIN * 1000;
       set1MinUntil(oneMinUntil);
+      // Sync global lock so all task cards also show 1-min cooldown
+      triggerGlobalLock();
     }
 
     // Update button UI immediately
