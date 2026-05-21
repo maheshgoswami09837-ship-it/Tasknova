@@ -108,7 +108,14 @@
   .daily-limit-bar .limit-fill-inner { height: 100%; background: linear-gradient(135deg, #6c63ff, #3b82f6); border-radius: 3px; transition: width 0.5s; }
 
   /* Full screen modal */
-  .feature-modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(5,5,26,0.97); z-index:999; flex-direction:column; align-items:center; overflow-y:auto; padding:20px 16px 100px; }
+  .feature-modal {
+    display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: #05051a;
+    background-image: radial-gradient(ellipse at 20% 10%, rgba(108,99,255,0.18) 0%, transparent 55%),
+                      radial-gradient(ellipse at 80% 90%, rgba(59,130,246,0.12) 0%, transparent 55%);
+    z-index: 999; flex-direction: column; align-items: center;
+    overflow-y: auto; padding: 20px 16px 100px;
+  }
   .feature-modal.show { display:flex; }
   .modal-header { width:100%; display:flex; align-items:center; gap:12px; margin-bottom:24px; }
   .modal-back { background:rgba(255,255,255,0.08); border:none; color:#fff; width:40px; height:40px; border-radius:12px; font-size:18px; cursor:pointer; }
@@ -121,44 +128,51 @@
   .spin-btn-main { width:100%; max-width:280px; background:linear-gradient(135deg,#6c63ff,#3b82f6); border:none; border-radius:16px; padding:16px; color:#fff; font-size:16px; font-weight:800; cursor:pointer; font-family:'Segoe UI',sans-serif; box-shadow:0 4px 20px rgba(108,99,255,0.4); }
   .spin-btn-main:disabled { background:rgba(255,255,255,0.1); box-shadow:none; cursor:not-allowed; color:rgba(255,255,255,0.4); }
 
-  /* Scratch Card */
-  .scratch-wrap { position:relative; width:280px; height:170px; margin:0 auto 24px; border-radius:20px; overflow:hidden; cursor:crosshair; box-shadow: 0 8px 32px rgba(0,0,0,0.35); }
-  .scratch-canvas { position:absolute; top:0; left:0; width:100%; height:100%; border-radius:20px; }
+  /* Scratch Card — upgraded */
+  .scratch-wrap {
+    position: relative; width: 300px; height: 190px; margin: 0 auto 24px;
+    border-radius: 24px; overflow: hidden; cursor: crosshair;
+    box-shadow: 0 12px 40px rgba(108,99,255,0.35), 0 4px 16px rgba(0,0,0,0.4);
+  }
+  .scratch-canvas { position:absolute; top:0; left:0; width:100%; height:100%; border-radius:24px; }
   .scratch-prize {
-    position:absolute; top:0; left:0; width:100%; height:100%;
-    display:flex; flex-direction:column; align-items:center; justify-content:center;
-    background: #ffffff;
-    border-radius:20px;
-    border: 2.5px solid #e0e0e0;
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    background: linear-gradient(135deg, #1a1a3e 0%, #0d0d2b 100%);
+    border-radius: 24px;
+    border: 2px solid rgba(108,99,255,0.5);
+  }
+  /* Decorative corner stars */
+  .scratch-prize::before {
+    content: '⭐'; position: absolute; top: 10px; left: 14px; font-size: 14px; opacity: 0.5;
+  }
+  .scratch-prize::after {
+    content: '⭐'; position: absolute; top: 10px; right: 14px; font-size: 14px; opacity: 0.5;
+  }
+  .scratch-prize .prize-icon {
+    font-size: 28px; margin-bottom: 4px;
   }
   .scratch-prize .prize-amount {
-    font-size: 52px;
-    font-weight: 900;
-    color: #6c63ff;
-    line-height: 1;
-    letter-spacing: -1px;
-    font-family: 'Segoe UI', sans-serif;
-    text-shadow: 0 2px 12px rgba(108,99,255,0.18);
+    font-size: 58px; font-weight: 900; line-height: 1; letter-spacing: -2px;
+    background: linear-gradient(135deg, #a78bfa, #6c63ff, #3b82f6);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+    filter: drop-shadow(0 2px 8px rgba(108,99,255,0.5));
   }
   .scratch-prize .prize-unit {
-    font-size: 16px;
-    font-weight: 800;
-    color: #444;
-    margin-top: 6px;
-    letter-spacing: 2px;
-    text-transform: uppercase;
+    font-size: 13px; font-weight: 800; color: rgba(255,255,255,0.6);
+    margin-top: 4px; letter-spacing: 3px; text-transform: uppercase;
   }
   .scratch-prize .prize-star {
-    font-size: 13px;
-    color: #aaa;
-    margin-top: 4px;
+    font-size: 11px; color: rgba(255,255,255,0.3); margin-top: 6px;
   }
 
   /* Quiz */
   .quiz-question { background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.08); border-radius:16px; padding:20px; margin-bottom:16px; width:100%; }
   .quiz-question p { font-size:18px; font-weight:700; color:#fff; text-align:center; }
   .quiz-options { display:grid; grid-template-columns:1fr 1fr; gap:10px; width:100%; margin-bottom:16px; }
-  .quiz-opt { background:rgba(255,255,255,0.06); border:1.5px solid rgba(255,255,255,0.1); border-radius:14px; padding:14px; color:#fff; font-size:15px; font-weight:700; cursor:pointer; text-align:center; transition:all 0.2s; font-family:'Segoe UI',sans-serif; }
+  .quiz-opt { background:rgba(255,255,255,0.06); border:1.5px solid rgba(255,255,255,0.1); border-radius:14px; padding:14px; color:#fff; font-size:15px; font-weight:700; cursor:pointer; text-align:center; transition:all 0.18s cubic-bezier(0.34,1.56,0.64,1); font-family:'Segoe UI',sans-serif; }
+  .quiz-opt:hover:not(:disabled) { background:rgba(108,99,255,0.15); border-color:rgba(108,99,255,0.4); transform:scale(1.03); }
   .quiz-opt:active { transform:scale(0.97); }
   .quiz-opt.correct { background:rgba(34,197,94,0.2); border-color:#22c55e; color:#22c55e; }
   .quiz-opt.wrong { background:rgba(239,68,68,0.2); border-color:#ef4444; color:#ef4444; }
@@ -279,20 +293,32 @@
     
 
     <!-- Daily Check-In -->
-    <div class="task-card" data-category="daily" id="checkinCard" onclick="doCheckin()">
-      <div class="task-icon icon-green">📅</div>
-      <div class="task-info">
-        <h3>Daily Check-In</h3>
-        <p>Har roz ek baar claim karo</p>
-        <div class="task-meta">
-          <span class="task-time">⏱ 1 baar/day</span>
-          <span id="checkinBadge" style="display:none;" class="cooldown-badge">✅ Done</span>
+    <div class="task-card" data-category="daily" id="checkinCard" onclick="doCheckin()" style="flex-wrap:wrap;">
+      <div style="display:flex;align-items:center;gap:14px;width:100%;">
+        <div class="task-icon icon-green">📅</div>
+        <div class="task-info">
+          <h3>Daily Check-In</h3>
+          <p>Har roz ek baar claim karo</p>
+          <div class="task-meta">
+            <span class="task-time">⏱ 1 baar/day</span>
+            <span id="checkinBadge" style="display:none;" class="cooldown-badge">✅ Done</span>
+          </div>
+        </div>
+        <div class="task-reward">
+          <div class="coins-reward">+50</div>
+          <div class="rupee">coins</div>
+          <button class="do-btn" id="checkinBtn">Claim</button>
         </div>
       </div>
-      <div class="task-reward">
-        <div class="coins-reward">+50</div>
-        <div class="rupee">coins</div>
-        <button class="do-btn" id="checkinBtn">Claim</button>
+      <!-- Countdown bar — shown after check-in -->
+      <div id="checkinCountdownWrap" style="display:none;width:100%;margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.07);">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+          <span style="font-size:10px;color:rgba(255,255,255,0.35);">Next check-in resets at 7:30 PM</span>
+          <span id="checkinCountdownText" style="font-size:11px;font-weight:800;color:#22c55e;"></span>
+        </div>
+        <div style="height:4px;background:rgba(255,255,255,0.07);border-radius:2px;overflow:hidden;">
+          <div id="checkinCountdownBar" style="height:100%;background:linear-gradient(90deg,#22c55e,#16a34a);border-radius:2px;transition:width 1s linear;width:100%;"></div>
+        </div>
       </div>
     </div>
 
@@ -428,16 +454,36 @@
     <button class="modal-back" onclick="closeModal('spinModal')">←</button>
     <div class="modal-title">🎡 Spin & Win</div>
   </div>
-  <div style="text-align:center;color:rgba(255,255,255,0.4);font-size:13px;margin-bottom:16px;">
-    Spins aaj: <span id="spinCountText">0</span>/15 &nbsp;|&nbsp; <span id="spinCooldownText"></span>
+
+  <!-- Stats row -->
+  <div style="display:flex;gap:10px;width:100%;margin-bottom:20px;">
+    <div style="flex:1;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:10px 14px;text-align:center;">
+      <div style="font-size:10px;color:rgba(255,255,255,0.35);margin-bottom:2px;">Spins Today</div>
+      <div style="font-size:17px;font-weight:800;color:#fff;"><span id="spinCountText">0</span><span style="color:rgba(255,255,255,0.3);font-size:12px;">/15</span></div>
+    </div>
+    <div style="flex:1;background:rgba(108,99,255,0.1);border:1px solid rgba(108,99,255,0.25);border-radius:14px;padding:10px 14px;text-align:center;">
+      <div style="font-size:10px;color:rgba(255,255,255,0.35);margin-bottom:2px;">Win Up To</div>
+      <div style="font-size:17px;font-weight:800;color:#a78bfa;">+20 🪙</div>
+    </div>
+    <div style="flex:1;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:10px 14px;text-align:center;">
+      <div style="font-size:10px;color:rgba(255,255,255,0.35);margin-bottom:2px;">Cooldown</div>
+      <div id="spinCooldownText" style="font-size:13px;font-weight:700;color:#f59e0b;">Ready!</div>
+    </div>
   </div>
+
   <div class="wheel-wrap">
     <div class="wheel-pointer">▼</div>
     <canvas class="wheel-canvas" id="wheelCanvas" width="260" height="260"></canvas>
   </div>
-  <div style="margin-bottom:20px;text-align:center;">
-    <div id="spinResult" style="font-size:22px;font-weight:800;color:#6c63ff;min-height:32px;"></div>
+
+  <!-- Glow ring under wheel -->
+  <div style="width:180px;height:10px;background:radial-gradient(ellipse,rgba(108,99,255,0.5),transparent);border-radius:50%;margin:-16px auto 16px;filter:blur(5px);"></div>
+
+  <!-- Result box -->
+  <div id="spinResultBox" style="width:100%;background:rgba(108,99,255,0.08);border:1px solid rgba(108,99,255,0.2);border-radius:16px;padding:14px;text-align:center;margin-bottom:16px;min-height:54px;display:flex;align-items:center;justify-content:center;">
+    <div id="spinResult" style="font-size:20px;font-weight:800;color:#a78bfa;">Spin the wheel to win coins!</div>
   </div>
+
   <button class="spin-btn-main" id="spinBtnMain" onclick="doSpin()">🎡 Spin Now!</button>
 </div>
 
@@ -447,19 +493,43 @@
     <button class="modal-back" onclick="closeModal('scratchModal')">←</button>
     <div class="modal-title">🎴 Scratch Card</div>
   </div>
-  <div style="text-align:center;color:rgba(255,255,255,0.4);font-size:13px;margin-bottom:16px;">
-    Scratches aaj: <span id="scratchCountText">0</span>/15 &nbsp;|&nbsp; <span id="scratchCooldownText"></span>
+
+  <!-- Stats row -->
+  <div style="display:flex;gap:10px;width:100%;margin-bottom:20px;">
+    <div style="flex:1;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:10px 14px;text-align:center;">
+      <div style="font-size:10px;color:rgba(255,255,255,0.35);margin-bottom:2px;">Scratches Today</div>
+      <div style="font-size:17px;font-weight:800;color:#fff;"><span id="scratchCountText">0</span><span style="color:rgba(255,255,255,0.3);font-size:12px;">/15</span></div>
+    </div>
+    <div style="flex:1;background:rgba(108,99,255,0.1);border:1px solid rgba(108,99,255,0.25);border-radius:14px;padding:10px 14px;text-align:center;">
+      <div style="font-size:10px;color:rgba(255,255,255,0.35);margin-bottom:2px;">Per Card</div>
+      <div style="font-size:17px;font-weight:800;color:#a78bfa;">+5–20 🪙</div>
+    </div>
+    <div style="flex:1;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:10px 14px;text-align:center;">
+      <div style="font-size:10px;color:rgba(255,255,255,0.35);margin-bottom:2px;">Next Card</div>
+      <div id="scratchCooldownText" style="font-size:13px;font-weight:700;color:#f59e0b;">Ready!</div>
+    </div>
   </div>
-  <div style="color:rgba(255,255,255,0.5);font-size:13px;text-align:center;margin-bottom:12px;">Card pe finger ghisao 👇</div>
+
+  <!-- Hint text -->
+  <div style="color:rgba(255,255,255,0.4);font-size:12px;text-align:center;margin-bottom:14px;letter-spacing:0.5px;">
+    ✦ Card pe finger ghisao aur prize reveal karo ✦
+  </div>
+
+  <!-- Scratch card -->
   <div class="scratch-wrap" id="scratchWrap">
     <div class="scratch-prize">
-      <div class="prize-amount" id="scratchPrize">10</div>
+      <div class="prize-icon">🪙</div>
+      <div class="prize-amount" id="scratchPrize">?</div>
       <div class="prize-unit">Coins</div>
-      <div class="prize-star">🪙 Scratch to reveal!</div>
+      <div class="prize-star">Scratch to reveal your prize</div>
     </div>
     <canvas class="scratch-canvas" id="scratchCanvas"></canvas>
   </div>
-  <div id="scratchResult" style="font-size:18px;font-weight:800;color:#6c63ff;text-align:center;min-height:28px;margin-bottom:16px;"></div>
+
+  <!-- Glow ring under card -->
+  <div style="width:200px;height:8px;background:radial-gradient(ellipse,rgba(108,99,255,0.4),transparent);border-radius:50%;margin:-12px auto 20px;filter:blur(4px);"></div>
+
+  <div id="scratchResult" style="font-size:18px;font-weight:800;color:#a78bfa;text-align:center;min-height:28px;margin-bottom:16px;"></div>
   <button class="spin-btn-main" id="newScratchBtn" onclick="newScratch()" style="display:none;">🎴 Next Card</button>
 </div>
 
@@ -469,12 +539,29 @@
     <button class="modal-back" onclick="closeModal('quizModal')">←</button>
     <div class="modal-title">🧮 Math Quiz</div>
   </div>
-  <div style="text-align:center;color:rgba(255,255,255,0.4);font-size:13px;margin-bottom:20px;">
-    Quiz aaj: <span id="quizCountText">0</span>/15 &nbsp;|&nbsp; <span id="quizCooldownText"></span>
+
+  <!-- Stats row -->
+  <div style="display:flex;gap:10px;width:100%;margin-bottom:20px;">
+    <div style="flex:1;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:10px 14px;text-align:center;">
+      <div style="font-size:10px;color:rgba(255,255,255,0.35);margin-bottom:2px;">Quiz Today</div>
+      <div style="font-size:17px;font-weight:800;color:#fff;"><span id="quizCountText">0</span><span style="color:rgba(255,255,255,0.3);font-size:12px;">/15</span></div>
+    </div>
+    <div style="flex:1;background:rgba(59,130,246,0.1);border:1px solid rgba(59,130,246,0.25);border-radius:14px;padding:10px 14px;text-align:center;">
+      <div style="font-size:10px;color:rgba(255,255,255,0.35);margin-bottom:2px;">Per Question</div>
+      <div style="font-size:17px;font-weight:800;color:#60a5fa;">+10 🪙</div>
+    </div>
+    <div style="flex:1;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:10px 14px;text-align:center;">
+      <div style="font-size:10px;color:rgba(255,255,255,0.35);margin-bottom:2px;">Cooldown</div>
+      <div id="quizCooldownText" style="font-size:13px;font-weight:700;color:#f59e0b;">Ready!</div>
+    </div>
   </div>
-  <div class="quiz-question">
-    <p id="quizQuestion">2 + 2 = ?</p>
+
+  <!-- Question card -->
+  <div class="quiz-question" style="width:100%;margin-bottom:16px;">
+    <div style="font-size:11px;color:rgba(255,255,255,0.3);text-align:center;margin-bottom:8px;letter-spacing:1px;text-transform:uppercase;">Solve this</div>
+    <p id="quizQuestion" style="font-size:28px;font-weight:900;letter-spacing:-0.5px;">2 + 2 = ?</p>
   </div>
+
   <div class="quiz-options" id="quizOptions"></div>
   <div id="quizResult" style="font-size:16px;font-weight:800;text-align:center;min-height:24px;margin-bottom:16px;"></div>
 </div>
@@ -791,11 +878,90 @@
     // ── BACK BUTTON BLOCK ─────────────────────────────────────────────
   window.addEventListener('popstate', function(e) {
     if (adHardLockActive) {
-      history.pushState(null, '', location.href);
-      showToast('Ad dekh rahe ho! 15s baad close kar sakte ho.', '#ef4444');
+      history.pushState(null, '', location.href); // block navigation
+      showToast('⚠️ Back button se ad band hua! 1 min ke liye sabke tasks lock hai.', '#ef4444');
+
+      // User pressed back during 15s hard lock — treat as skipped ad
+      // Clear hard lock
+      adHardLockActive = false;
+      if (adTimerInterval)  { clearInterval(adTimerInterval);  adTimerInterval  = null; }
+
+      // Close any open ad overlay (task ad fullscreen)
+      const overlay = document.getElementById('taskAdOverlay');
+      if (overlay) overlay.style.display = 'none';
+
+      // Close watch-ad popup if open
+      const adPopup = document.getElementById('adPopup');
+      if (adPopup) adPopup.classList.remove('show');
+
+      // ── Apply 1-min lock to Spin, Scratch, Quiz buttons ──
+      const penaltyUntil = Date.now() + 60000;
+      localStorage.setItem('tn_backbtn_penalty', penaltyUntil.toString());
+      applyBackBtnPenalty(penaltyUntil);
     }
   });
   history.pushState(null, '', location.href);
+
+  // ── BACK-BUTTON PENALTY: 1-min lock on Spin/Scratch/Quiz ────────
+  let backBtnPenaltyInterval = null;
+
+  function applyBackBtnPenalty(until) {
+    if (backBtnPenaltyInterval) { clearInterval(backBtnPenaltyInterval); backBtnPenaltyInterval = null; }
+
+    const taskBtns = [
+      { id: 'spinBtnMain',   label: '🎡 Spin Now!' },
+      { id: 'newScratchBtn', label: '🎴 Next Card' },
+      { id: 'quizClaimAdBtn', label: null } // dynamic, may not exist
+    ];
+
+    function tick() {
+      const now      = Date.now();
+      const secsLeft = Math.max(0, Math.ceil((until - now) / 1000));
+
+      taskBtns.forEach(({ id, label }) => {
+        const btn = document.getElementById(id);
+        if (!btn) return;
+        if (secsLeft > 0) {
+          btn.disabled = true;
+          btn.dataset.penaltyOrig = btn.dataset.penaltyOrig || btn.textContent;
+          btn.textContent = '⏳ ' + secsLeft + 's — Ad skip penalty';
+          btn.style.background = 'rgba(239,68,68,0.25)';
+          btn.style.color = '#ef4444';
+        } else {
+          btn.disabled = false;
+          btn.textContent = btn.dataset.penaltyOrig || (label || btn.textContent);
+          btn.style.background = '';
+          btn.style.color = '';
+          delete btn.dataset.penaltyOrig;
+        }
+      });
+
+      // Also show countdown on spin result area if spin modal is open
+      const spinResult = document.getElementById('spinResult');
+      if (spinResult && document.getElementById('spinModal').classList.contains('show')) {
+        spinResult.textContent = secsLeft > 0 ? '⛔ Ad skip kiya! ' + secsLeft + 's wait karo' : '';
+        spinResult.style.color = secsLeft > 0 ? '#ef4444' : '#a78bfa';
+      }
+
+      if (secsLeft <= 0) {
+        clearInterval(backBtnPenaltyInterval);
+        backBtnPenaltyInterval = null;
+        localStorage.removeItem('tn_backbtn_penalty');
+        updateSpinUI();
+        updateScratchUI();
+        updateQuizUI();
+      }
+    }
+
+    tick();
+    backBtnPenaltyInterval = setInterval(tick, 1000);
+  }
+
+  // Restore back-btn penalty on page reload
+  function restoreBackBtnPenaltyIfActive() {
+    const until = parseInt(localStorage.getItem('tn_backbtn_penalty') || '0');
+    if (until > Date.now()) applyBackBtnPenalty(until);
+  }
 
   // Daily Bonus: strict 7:30 PM IST reset
   const DAILY_BONUS_KEY = 'tasknova_dailyBonus';
@@ -1540,7 +1706,8 @@
     // Restore persistent timers — resume exactly where left off
     updateAdButtonUI();
     updateDailyBonusUI(); // initialize Daily Bonus button state
-    restoreGlobalLockIfActive(); // resume 1-min global lock if app was restarted
+    restoreGlobalLockIfActive();     // resume 1-min global lock if app was restarted
+    restoreBackBtnPenaltyIfActive(); // resume back-btn skip penalty if app was restarted
 
     // Fetch balance and calculate live rupees from total coins
     window._getAuthToken().then(token => {
@@ -1595,13 +1762,59 @@
     if (scb) scb.textContent = d.scratches + '/15';
     if (qb) qb.textContent = d.quizzes + '/15';
 
-    // Check-in badge
+    // Check-in badge + countdown
     if (d.checkin) {
       const cb = document.getElementById('checkinBadge');
       const cbtn = document.getElementById('checkinBtn');
       if (cb) cb.style.display = 'inline-block';
       if (cbtn) { cbtn.textContent = 'Done'; cbtn.disabled = true; }
+      startCheckinCountdown();
     }
+  }
+
+  // ── CHECK-IN COUNTDOWN TIMER ─────────────────────────────────
+  let checkinCountdownInterval = null;
+
+  function startCheckinCountdown() {
+    const wrap = document.getElementById('checkinCountdownWrap');
+    const txt  = document.getElementById('checkinCountdownText');
+    const bar  = document.getElementById('checkinCountdownBar');
+    if (!wrap) return;
+    wrap.style.display = 'block';
+
+    if (checkinCountdownInterval) clearInterval(checkinCountdownInterval);
+
+    function tick() {
+      const now = new Date();
+      // Next 7:30 PM IST = UTC 14:00
+      let next730 = new Date();
+      next730.setUTCHours(14, 0, 0, 0);
+      if (now.getTime() >= next730.getTime()) {
+        next730.setUTCDate(next730.getUTCDate() + 1);
+      }
+
+      const totalMs  = 24 * 60 * 60 * 1000; // 24h total window
+      const remaining = next730.getTime() - now.getTime();
+      const elapsed   = totalMs - remaining;
+      const pct       = Math.max(0, Math.min(100, (elapsed / totalMs) * 100));
+
+      const h = Math.floor(remaining / 3600000);
+      const m = Math.floor((remaining % 3600000) / 60000);
+      const s = Math.floor((remaining % 60000) / 1000);
+      const fmt = String(h).padStart(2,'0') + ':' + String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+
+      if (txt) txt.textContent = fmt;
+      if (bar) bar.style.width = pct + '%';
+
+      if (remaining <= 0) {
+        clearInterval(checkinCountdownInterval);
+        checkinCountdownInterval = null;
+        if (wrap) wrap.style.display = 'none';
+      }
+    }
+
+    tick();
+    checkinCountdownInterval = setInterval(tick, 1000);
   }
 
   function checkDailyLimit() {
@@ -1715,6 +1928,7 @@
         if (earned > 0) showToast('+' + earned + ' Coins! Check-in complete! 🎉', 'linear-gradient(135deg,#22c55e,#16a34a)');
         if (card) card.style.pointerEvents = '';
         updateDailyLimitUI();
+        startCheckinCountdown(); // start 7:30 PM countdown on card
       });
     };
 
@@ -1731,7 +1945,25 @@
   }
 
   // ── SPIN WHEEL ────────────────────────────────────────────────
-  const SPIN_PRIZES = [5, 10, 10, 15, 10, 5, 10, 20];
+  // Wheel display segments (visual) — 8 slots
+  const SPIN_PRIZES = [5, 5, 10, 5, 5, 10, 5, 5];
+
+  // Weighted prize table: 5 coins = 60%, 10 coins = 30%, 0 = 10%
+  const PRIZE_WEIGHTS = [
+    { prize: 5,  weight: 60 },
+    { prize: 10, weight: 30 },
+    { prize: 0,  weight: 10 }  // Try Again
+  ];
+
+  function getWeightedPrize() {
+    const total = PRIZE_WEIGHTS.reduce((s, p) => s + p.weight, 0);
+    let rand = Math.random() * total;
+    for (const p of PRIZE_WEIGHTS) {
+      rand -= p.weight;
+      if (rand <= 0) return p.prize;
+    }
+    return 5;
+  }
   const SPIN_COLORS = ['#6c63ff','#3b82f6','#8b5cf6','#06b6d4','#6c63ff','#3b82f6','#8b5cf6','#06b6d4'];
   let isSpinning = false;
   let currentSpinAngle = 0;
@@ -1755,10 +1987,12 @@
       ctx.save();
       ctx.translate(cx, cy);
       ctx.rotate(i * angle + angle / 2);
-      ctx.fillStyle = '#fff';
-      ctx.font = 'bold 14px Segoe UI';
+      const prize = SPIN_PRIZES[i];
+      ctx.fillStyle = prize === 0 ? '#ff6b6b' : '#fff';
+      ctx.font = prize === 0 ? 'bold 10px Segoe UI' : 'bold 14px Segoe UI';
       ctx.textAlign = 'right';
-      ctx.fillText(SPIN_PRIZES[i], r - 16, 5);
+      ctx.fillText(prize === 0 ? 'TRY' : prize, r - 16, prize === 0 ? 2 : 5);
+      if (prize === 0) { ctx.font = 'bold 10px Segoe UI'; ctx.fillText('AGAIN', r - 16, 13); }
       ctx.restore();
     }
     ctx.beginPath();
@@ -1796,7 +2030,7 @@
     } else {
       if (btn) { btn.disabled = false; btn.textContent = '🎡 Spin Now!'; btn.style.background = ''; btn.onclick = doSpin; }
     }
-    if (cd) cd.textContent = cooldown > 0 ? 'Cooldown: ' + formatCooldown(cooldown) : '';
+    if (cd) cd.textContent = cooldown > 0 ? formatCooldown(cooldown) : 'Ready!';
   }
 
   function doSpin() {
@@ -1808,8 +2042,11 @@
     if (isSpinning) return;
     isSpinning = true;
 
-    const prizeIdx = Math.floor(Math.random() * SPIN_PRIZES.length);
-    const prize = SPIN_PRIZES[prizeIdx];
+    const prize = getWeightedPrize();
+    // Map prize to nearest visual segment index for wheel animation
+    const prizeIdx = SPIN_PRIZES.findIndex(p => p === prize) !== -1
+      ? SPIN_PRIZES.findIndex(p => p === prize)
+      : 0;
     const sliceAngle = 360 / SPIN_PRIZES.length;
     const targetAngle = 360 * 5 + (360 - prizeIdx * sliceAngle - sliceAngle / 2);
     const canvas = document.getElementById('wheelCanvas');
@@ -1839,12 +2076,23 @@
         const spinBtn    = document.getElementById('spinBtnMain');
         const spinResult = document.getElementById('spinResult');
 
-        if (spinResult) spinResult.textContent = '🎉 Aapne jeeta: +' + prize + ' Coins!';
-        if (spinBtn) {
-          spinBtn.disabled    = false;
-          spinBtn.textContent = '📺 Watch Ad and Claim Coin';
-          spinBtn.style.background = 'linear-gradient(135deg,#f59e0b,#ef4444)';
-          spinBtn.onclick = function() { claimSpinReward(prize, spinBtn, spinResult); };
+        if (prize === 0) {
+          // Try Again slot — no ad, just reset
+          if (spinResult) spinResult.textContent = '😅 Better luck next time!';
+          if (spinBtn) {
+            spinBtn.disabled = false;
+            spinBtn.style.background = '';
+            spinBtn.textContent = '🎡 Spin Now!';
+            spinBtn.onclick = doSpin;
+          }
+        } else {
+          if (spinResult) spinResult.textContent = '🎉 Aapne jeeta: +' + prize + ' Coins!';
+          if (spinBtn) {
+            spinBtn.disabled    = false;
+            spinBtn.textContent = '📺 Watch Ad and Claim Coin';
+            spinBtn.style.background = 'linear-gradient(135deg,#f59e0b,#ef4444)';
+            spinBtn.onclick = function() { claimSpinReward(prize, spinBtn, spinResult); };
+          }
         }
       }
     }
@@ -1903,7 +2151,7 @@
     const cd = document.getElementById('scratchCooldownText');
     if (ct) ct.textContent = d.scratches;
     const cooldown = getCooldownRemaining(d.lastScratch);
-    if (cd) cd.textContent = cooldown > 0 ? 'Cooldown: ' + formatCooldown(cooldown) : '';
+    if (cd) cd.textContent = cooldown > 0 ? formatCooldown(cooldown) : 'Ready!';
     if (cooldown > 0) setTimeout(updateScratchUI, 1000);
   }
 
@@ -2022,7 +2270,7 @@
     const cd = document.getElementById('quizCooldownText');
     if (ct) ct.textContent = d.quizzes;
     const cooldown = getCooldownRemaining(d.lastQuiz);
-    if (cd) cd.textContent = cooldown > 0 ? 'Cooldown: ' + formatCooldown(cooldown) : '';
+    if (cd) cd.textContent = cooldown > 0 ? formatCooldown(cooldown) : 'Ready!';
     if (cooldown > 0) setTimeout(updateQuizUI, 1000);
   }
 
