@@ -248,8 +248,8 @@
         <h3>Watch Video Ad</h3>
         <p>Watch a short video ad & earn coins</p>
         <div class="task-meta">
-          <span class="task-time">⏱ 30 sec</span>
-          <span id="adCounter" style="font-size:11px;color:#6c63ff;font-weight:700;margin-left:8px;">20/20</span>
+          <span class="task-time">⏱ 15 sec</span>
+          <span id="adCounter" style="font-size:11px;color:#6c63ff;font-weight:700;margin-left:8px;">0/20</span>
         </div>
       </div>
       <div class="task-reward">
@@ -296,23 +296,7 @@
       </div>
     </div>
 
-    <!-- Daily Bonus (7:30 PM IST strict reset) -->
-    <div class="task-card" data-category="daily" id="dailyBonusCard" onclick="claimDailyBonus()">
-      <div class="task-icon icon-orange">🎁</div>
-      <div class="task-info">
-        <h3>Daily Bonus</h3>
-        <p>Har din 7:30 PM pe naya bonus milega</p>
-        <div class="task-meta">
-          <span class="task-time">⏱ Resets 7:30 PM</span>
-          <span id="dailyBonusBadge" style="display:none;" class="cooldown-badge">✅ Claimed</span>
-        </div>
-      </div>
-      <div class="task-reward">
-        <div class="coins-reward">+100</div>
-        <div class="rupee">coins</div>
-        <button class="do-btn" id="dailyBonusBtn">Claim</button>
-      </div>
-    </div>
+
 
     <!-- Spin Wheel -->
     <div class="task-card" data-category="daily" id="spinTaskCard" onclick="openSpinModal()">
@@ -416,6 +400,15 @@
     <button id="adClaimBtn" onclick="claimCoins()" style="display:none;width:100%;background:linear-gradient(135deg,#22c55e,#16a34a);border:none;border-radius:16px;padding:16px;color:#fff;font-size:16px;font-weight:800;cursor:pointer;">
       ✅ Coins Claim Karo
     </button>
+
+    <!-- Hard-lock 15s overlay: covers screen during force-watch window -->
+    <div id="adRewardOverlay" style="display:none;position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(5,5,26,0.75);z-index:99;align-items:center;justify-content:center;flex-direction:column;pointer-events:all;">
+      <div style="background:rgba(108,99,255,0.25);border:1.5px solid rgba(108,99,255,0.5);border-radius:20px;padding:20px 32px;text-align:center;">
+        <div style="font-size:32px;margin-bottom:8px;">⏳</div>
+        <div style="color:#fff;font-weight:800;font-size:15px;" id="adHardLockText">Reward in 15s...</div>
+        <div style="color:rgba(255,255,255,0.5);font-size:11px;margin-top:6px;">Back button disabled</div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -446,8 +439,6 @@
     <div id="spinResult" style="font-size:22px;font-weight:800;color:#6c63ff;min-height:32px;"></div>
   </div>
   <button class="spin-btn-main" id="spinBtnMain" onclick="doSpin()">🎡 Spin Now!</button>
-  <!-- Banner Ad 320x50 — loads after spin success -->
-  <div id="spinBannerAd" class="ad-banner-container"></div>
 </div>
 
 <!-- Scratch Modal -->
@@ -470,8 +461,6 @@
   </div>
   <div id="scratchResult" style="font-size:18px;font-weight:800;color:#6c63ff;text-align:center;min-height:28px;margin-bottom:16px;"></div>
   <button class="spin-btn-main" id="newScratchBtn" onclick="newScratch()" style="display:none;">🎴 Next Card</button>
-  <!-- Banner Ad 320x50 — loads after scratch success -->
-  <div id="scratchBannerAd" class="ad-banner-container"></div>
 </div>
 
 <!-- Quiz Modal -->
@@ -578,15 +567,31 @@
   }
 
   const DB_URL = 'https://tasknova-66d0f-default-rtdb.firebaseio.com';
-  const MAX_ADS = 10; // 10 ads per day
-  const MIN_AD_TIME = 15; // 15 seconds minimum on ad page
-  const COOLDOWN_TIME = 30; // 30 seconds cooldown after claim
-  let adsWatchedToday = 0;
+
+  // ── WATCH AD SYSTEM CONSTANTS ────────────────────────────────────
+  const MAX_ADS          = 20;          // 20 ads per batch
+  const MIN_AD_TIME      = 15;          // 15-second hard lock
+  const AD_COOLDOWN_1MIN = 60;          // 60s per-ad cooldown
+  const AD_COOLDOWN_5HR  = 18000;       // 5-hour mega lock (18000s)
+  const AD_1MIN_KEY      = 'tn_ad_1min_until';   // localStorage key
+  const AD_5HR_KEY       = 'tn_ad_5hr_until';    // localStorage key
+  const AD_COUNT_KEY     = 'tn_ad_count';         // ads watched in current batch
+
+  // ── GLOBAL 1-MIN LOCK KEY ───────────────────────────────────────
+  const GLOBAL_LOCK_KEY = 'tn_global_lock_until'; // persists across restarts
+
+  // ── WATCH AD STATE ───────────────────────────────────────────────
+  let adsWatchedToday  = 0;
   let cooldownInterval = null;
-  let adTimeSpent = 0;
-  let adTimerInterval = null;
-  let adBarWidth = 0;
-  let currentCoins = 10;
+  let adTimeSpent      = 0;
+  let adTimerInterval  = null;
+  let adBarWidth       = 0;
+  let currentCoins     = 10;
+  let adHardLockActive = false;   // true during 15s force-watch window
+  let adCountdownInterval = null; // live 1-min / 5-hr countdown
+  let crossTaskFreezeEnd  = 0;    // timestamp until cross-task freeze expires
+  let crossTaskFreezeInterval = null;
+  let globalLockInterval  = null; // universal 1-min countdown interval
 
   // ── STRICT 7:30 PM IST RESET ─────────────────────────────────
   // Reset happens at exactly 19:30 IST every day.
@@ -628,6 +633,169 @@
     const lastResetUTC = getLast730PMReset();
     return new Date(lastClaimed).getTime() < lastResetUTC;
   }
+
+  // ── AD TIMER HELPERS (Persistent localStorage) ───────────────────
+  function getAdBatchCount() {
+    const raw = parseInt(localStorage.getItem(AD_COUNT_KEY) || '0');
+    return isNaN(raw) ? 0 : raw;
+  }
+  function setAdBatchCount(n) { localStorage.setItem(AD_COUNT_KEY, n); }
+
+  function get1MinUntil()   { return parseInt(localStorage.getItem(AD_1MIN_KEY) || '0'); }
+  function get5HrUntil()    { return parseInt(localStorage.getItem(AD_5HR_KEY)  || '0'); }
+  function set1MinUntil(ts) { localStorage.setItem(AD_1MIN_KEY, ts); }
+  function set5HrUntil(ts)  { localStorage.setItem(AD_5HR_KEY,  ts); }
+  function clearAdTimers()  { localStorage.removeItem(AD_1MIN_KEY); localStorage.removeItem(AD_5HR_KEY); }
+
+  // Returns {locked: bool, remaining: secs, isMega: bool}
+  function getAdLockState() {
+    const now = Date.now();
+    const mega = get5HrUntil();
+    if (mega > now) return { locked: true, remaining: Math.ceil((mega - now) / 1000), isMega: true };
+    const mini = get1MinUntil();
+    if (mini > now) return { locked: true, remaining: Math.ceil((mini - now) / 1000), isMega: false };
+    return { locked: false, remaining: 0, isMega: false };
+  }
+
+  function formatAdTimer(secs) {
+    const h = Math.floor(secs / 3600);
+    const m = Math.floor((secs % 3600) / 60);
+    const s = secs % 60;
+    if (h > 0) return String(h).padStart(2,'0') + ':' + String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+    return String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+  }
+
+  // ── CROSS-TASK FREEZE ────────────────────────────────────────────
+  function triggerCrossTaskFreeze() {
+    crossTaskFreezeEnd = Date.now() + 20000;
+    if (crossTaskFreezeInterval) { clearInterval(crossTaskFreezeInterval); crossTaskFreezeInterval = null; }
+    applyCrossTaskFreezeLoop();
+  }
+
+  function applyCrossTaskFreezeLoop() {
+    const ids = ['spinTaskCard', 'scratchTaskCard', 'quizTaskCard'];
+    const now = Date.now();
+    const remaining = Math.max(0, Math.ceil((crossTaskFreezeEnd - now) / 1000));
+    if (remaining <= 0) {
+      ids.forEach(id => {
+        const card = document.getElementById(id);
+        if (card) { card.style.pointerEvents = ''; card.style.opacity = ''; }
+      });
+      if (crossTaskFreezeInterval) { clearInterval(crossTaskFreezeInterval); crossTaskFreezeInterval = null; }
+      return;
+    }
+    ids.forEach(id => {
+      const card = document.getElementById(id);
+      if (card) { card.style.pointerEvents = 'none'; card.style.opacity = '0.4'; }
+    });
+    crossTaskFreezeInterval = setTimeout(applyCrossTaskFreezeLoop, 1000);
+  }
+
+  // ── UNIVERSAL 1-MIN GLOBAL LOCK ────────────────────────────────
+  // Called the moment coins are credited after any ad watch.
+  // Locks ALL task claim/entry buttons for 60 seconds.
+  // Timestamp saved in localStorage so it survives force-close/restart.
+
+  function triggerGlobalLock() {
+    const until = Date.now() + 60000; // 60 seconds from now
+    localStorage.setItem(GLOBAL_LOCK_KEY, until.toString());
+    runGlobalLockUI(until);
+  }
+
+  function getGlobalLockRemaining() {
+    const until = parseInt(localStorage.getItem(GLOBAL_LOCK_KEY) || '0');
+    const remaining = until - Date.now();
+    return remaining > 0 ? Math.ceil(remaining / 1000) : 0;
+  }
+
+  // IDs of every "claim / entry" button in the app
+  const GLOBAL_LOCK_BTN_IDS = [
+    'spinBtnMain', 'newScratchBtn', 'quizClaimAdBtn',
+    'watchAdBtn', 'checkinBtn', 'dailyBonusBtn', 'surveyBtn'
+  ];
+
+  function runGlobalLockUI(until) {
+    if (globalLockInterval) { clearInterval(globalLockInterval); globalLockInterval = null; }
+
+    function tick() {
+      const secsLeft = Math.max(0, Math.ceil((until - Date.now()) / 1000));
+
+      GLOBAL_LOCK_BTN_IDS.forEach(id => {
+        const btn = document.getElementById(id);
+        if (!btn) return;
+        if (secsLeft > 0) {
+          btn.disabled = true;
+          // Only overwrite text if not already showing a "Watch Ad" label (preserve that context)
+          if (!btn.textContent.includes('📺')) {
+            btn.dataset.origText = btn.dataset.origText || btn.textContent;
+            btn.textContent = '⏳ ' + secsLeft + 's';
+          }
+          btn.style.opacity = '0.6';
+        } else {
+          btn.disabled = false;
+          btn.style.opacity = '';
+          // Restore original text if we saved it
+          if (btn.dataset.origText && !btn.textContent.includes('📺')) {
+            btn.textContent = btn.dataset.origText;
+            delete btn.dataset.origText;
+          }
+        }
+      });
+
+      // Also lock any dynamically injected quiz claim button
+      const qBtn = document.getElementById('quizClaimAdBtn');
+      if (qBtn) {
+        if (secsLeft > 0) { qBtn.disabled = true; qBtn.style.opacity = '0.6'; }
+        else { qBtn.disabled = false; qBtn.style.opacity = ''; }
+      }
+
+      if (secsLeft <= 0) {
+        clearInterval(globalLockInterval);
+        globalLockInterval = null;
+        localStorage.removeItem(GLOBAL_LOCK_KEY);
+        // Refresh all task UIs so buttons return to correct state
+        updateAdButtonUI();
+        updateSpinUI();
+        updateScratchUI();
+        updateQuizUI();
+        updateDailyBonusUI();
+        return;
+      }
+    }
+
+    tick(); // run immediately
+    globalLockInterval = setInterval(tick, 1000);
+  }
+
+  // Check on page load if a lock is already active (survived restart)
+  function restoreGlobalLockIfActive() {
+    const secsLeft = getGlobalLockRemaining();
+    if (secsLeft > 0) {
+      const until = parseInt(localStorage.getItem(GLOBAL_LOCK_KEY));
+      runGlobalLockUI(until);
+    }
+  }
+
+  // Guard: call this at the TOP of any claim/entry function to block during lock
+  function isGlobalLocked(showMsg) {
+    const secs = getGlobalLockRemaining();
+    if (secs > 0) {
+      if (showMsg !== false) {
+        showToast('Ad system cooling down... Wait ' + secs + 's before next claim!', '#f59e0b');
+      }
+      return true;
+    }
+    return false;
+  }
+
+    // ── BACK BUTTON BLOCK ─────────────────────────────────────────────
+  window.addEventListener('popstate', function(e) {
+    if (adHardLockActive) {
+      history.pushState(null, '', location.href);
+      showToast('Ad dekh rahe ho! 15s baad close kar sakte ho.', '#ef4444');
+    }
+  });
+  history.pushState(null, '', location.href);
 
   // Daily Bonus: strict 7:30 PM IST reset
   const DAILY_BONUS_KEY = 'tasknova_dailyBonus';
@@ -712,6 +880,7 @@
       showToast('Bonus already claim ho chuka! Aaj 7:30 PM pe reset hoga.', '#f59e0b');
       return;
     }
+    if (isGlobalLocked()) return; // universal 1-min cooldown
     if (!checkDailyLimit()) return;
 
     // Show loading state on button
@@ -820,148 +989,259 @@
     container.appendChild(s);
   }
 
-  function updateCounter() {
-    const remaining = MAX_ADS - adsWatchedToday;
-    document.getElementById('adCounter').textContent = MAX_ADS + '/' + remaining;
-    if (remaining <= 0) {
-      const btn = document.getElementById('watchAdBtn');
-      btn.textContent = 'Limit Done ✅';
-      btn.disabled = true;
-      btn.style.background = 'rgba(255,255,255,0.1)';
-      btn.style.color = 'rgba(255,255,255,0.4)';
-    }
-  }
+  // ── UPDATE AD BUTTON UI (called on load + after each ad) ─────────
+  function updateAdButtonUI() {
+    const btn     = document.getElementById('watchAdBtn');
+    const counter = document.getElementById('adCounter');
+    if (!btn) return;
 
-  function startCooldown() {
-    let secs = COOLDOWN_TIME;
-    const btn = document.getElementById('watchAdBtn');
-    btn.disabled = true;
-    btn.style.background = 'rgba(255,165,0,0.3)';
-    btn.style.color = '#ffa500';
-    cooldownInterval = setInterval(() => {
-      btn.textContent = secs + 's';
-      secs--;
-      if (secs < 0) {
-        clearInterval(cooldownInterval);
-        if (adsWatchedToday < MAX_ADS) {
+    if (adCountdownInterval) { clearInterval(adCountdownInterval); adCountdownInterval = null; }
+
+    const batchCount = getAdBatchCount();
+    if (counter) counter.textContent = batchCount + '/' + MAX_ADS;
+
+    const lock = getAdLockState();
+
+    if (lock.locked) {
+      // Trigger cross-task freeze while any timer is active
+      if (crossTaskFreezeEnd < Date.now()) triggerCrossTaskFreeze();
+
+      btn.disabled = true;
+      if (lock.isMega) {
+        btn.style.background = 'rgba(239,68,68,0.3)';
+        btn.style.color = '#ef4444';
+      } else {
+        btn.style.background = 'rgba(255,165,0,0.3)';
+        btn.style.color = '#ffa500';
+      }
+
+      // Live countdown tick
+      function tick() {
+        const ls = getAdLockState();
+        if (!ls.locked) {
+          clearInterval(adCountdownInterval);
+          adCountdownInterval = null;
           btn.textContent = 'Watch';
           btn.disabled = false;
           btn.style.background = '';
           btn.style.color = '';
+          // Re-check batch count after mega unlock
+          const bc = getAdBatchCount();
+          if (counter) counter.textContent = bc + '/' + MAX_ADS;
+          return;
+        }
+        if (ls.isMega) {
+          btn.textContent = '🚫 ' + formatAdTimer(ls.remaining);
+        } else {
+          btn.textContent = '⏳ ' + formatAdTimer(ls.remaining);
         }
       }
-    }, 1000);
+      tick();
+      adCountdownInterval = setInterval(tick, 1000);
+
+    } else if (batchCount >= MAX_ADS) {
+      // Batch done — already set 5hr lock so this branch only if somehow both clear
+      btn.textContent = 'Limit Done ✅';
+      btn.disabled = true;
+      btn.style.background = 'rgba(255,255,255,0.1)';
+      btn.style.color = 'rgba(255,255,255,0.4)';
+    } else {
+      btn.textContent = 'Watch';
+      btn.disabled = false;
+      btn.style.background = '';
+      btn.style.color = '';
+    }
   }
 
-  // Page Visibility API - track time on ad page
+  // kept for legacy callers
+  function updateCounter() { updateAdButtonUI(); }
+
+  // ── 15-SECOND HARD LOCK AD TRACKING ─────────────────────────────
   function startAdTracking(uid) {
     adTimeSpent = 0;
-    document.getElementById('adAlert').style.display = 'none';
-    document.getElementById('adClaimBtn').style.display = 'none';
-    document.getElementById('adStatusText').textContent = 'Ad khul rahi hai Chrome mein...';
-    document.getElementById('adTimerBar').style.width = '0%';
+    adHardLockActive = true; // engage back-button block
 
-    // Simple 15 sec timer
-    let secs = MIN_AD_TIME;
+    // Block the close overlay (if any) and show Reward in Xs text
+    const statusEl = document.getElementById('adStatusText');
+    const claimBtn = document.getElementById('adClaimBtn');
+    const timerBar = document.getElementById('adTimerBar');
+    const alertBox = document.getElementById('adAlert');
+    const rewardOverlay = document.getElementById('adRewardOverlay');
+
+    if (statusEl)  statusEl.textContent  = 'Reward in ' + MIN_AD_TIME + 's...';
+    if (claimBtn)  claimBtn.style.display = 'none';
+    if (alertBox)  alertBox.style.display  = 'none';
+    if (timerBar)  { timerBar.style.width = '0%'; timerBar.style.transition = 'none'; }
+    if (rewardOverlay) rewardOverlay.style.display = 'flex';
+
+    // Animate timer bar
     setTimeout(() => {
-      document.getElementById('adTimerBar').style.width = '100%';
-      document.getElementById('adTimerBar').style.transition = 'width ' + MIN_AD_TIME + 's linear';
-    }, 100);
+      if (timerBar) {
+        timerBar.style.transition = 'width ' + MIN_AD_TIME + 's linear';
+        timerBar.style.width = '100%';
+      }
+    }, 50);
+
+    // Countdown tick every second
+    let secsLeft = MIN_AD_TIME;
+    if (adTimerInterval) clearInterval(adTimerInterval);
 
     adTimerInterval = setInterval(() => {
-      secs--;
+      secsLeft--;
       adTimeSpent++;
-      document.getElementById('adStatusText').textContent = 'Ad dekho... ' + secs + 's aur ruko';
-      if (secs <= 0) {
+      if (statusEl) statusEl.textContent = 'Reward in ' + Math.max(0, secsLeft) + 's...';
+      if (secsLeft <= 0) {
         clearInterval(adTimerInterval);
-        document.getElementById('adStatusText').textContent = 'Ab coins lo! 🎉';
-        document.getElementById('adAlert').style.display = 'none';
-        document.getElementById('adClaimBtn').style.display = 'block';
-        document.getElementById('adClaimBtn').onclick = function() { claimCoins(uid); };
+        adTimerInterval = null;
+        adHardLockActive = false; // release back-button block
+
+        if (statusEl) statusEl.textContent = 'Ad dekh li! Ab coins lo 🎉';
+        if (rewardOverlay) rewardOverlay.style.display = 'none';
+        if (claimBtn)  { claimBtn.style.display = 'block'; claimBtn.onclick = function() { claimCoins(uid); }; }
       }
     }, 1000);
   }
 
   function watchAd() {
-    const adUrl = "https://www.effectivecpmnetwork.com/b1bggwx0?key=f1f69a147759698e8fda4cfd27e423ba";
     const uid = localStorage.getItem('tasknova_uid');
-    if (!uid || uid === 'null') return;
+    if (!uid || uid === 'null') { showToast('Pehle login karo!', '#ef4444'); return; }
+    if (isGlobalLocked()) return; // universal 1-min cooldown
 
-    const lastAdTime = localStorage.getItem('lastAdTime');
-    const now = Date.now();
-    if (lastAdTime && (now - parseInt(lastAdTime)) < COOLDOWN_TIME * 1000) {
-      const remaining = Math.ceil((COOLDOWN_TIME * 1000 - (now - parseInt(lastAdTime))) / 1000);
-      alert(remaining + ' seconds wait karo!');
+    // Check persistent lock state
+    const lock = getAdLockState();
+    if (lock.locked) {
+      triggerCrossTaskFreeze();
+      if (lock.isMega) {
+        showToast('🚫 Limit Reached! ' + formatAdTimer(lock.remaining) + ' baad try karo.', '#ef4444');
+      } else {
+        showToast('⏳ ' + formatAdTimer(lock.remaining) + ' wait karo!', '#f59e0b');
+      }
       return;
     }
 
-    if (adsWatchedToday >= MAX_ADS) {
-      alert('Aaj ki limit puri ho gayi! Kal 7:30 PM pe reset hogi.');
+    const batchCount = getAdBatchCount();
+    if (batchCount >= MAX_ADS) {
+      showToast('20 ads ho gaye! 5 ghante baad wapas aao.', '#ef4444');
       return;
     }
 
-    currentCoins = Math.floor(Math.random() * 3) + 8; // 8-10 coins
+    // Don't allow any background ad request while in cooldown — already checked above
+    currentCoins = Math.floor(Math.random() * 3) + 8; // 8–10 coins
     document.getElementById('adEarnCoins').textContent = '+' + currentCoins;
-    document.getElementById('adCoins').textContent = '+' + currentCoins;
+    document.getElementById('adCoins').textContent     = '+' + currentCoins;
 
-    // Show popup
+    // Show ad popup
     document.getElementById('adPopup').classList.add('show');
 
-    // Send URL to Kodular via AppInventor only if valid http/https
+    // Send URL to Kodular via AppInventor
+    const adUrl   = 'https://www.effectivecpmnetwork.com/b1bggwx0?key=f1f69a147759698e8fda4cfd27e423ba';
     const finalUrl = adUrl + '&t=' + Date.now();
     if (finalUrl.startsWith('https://') || finalUrl.startsWith('http://')) {
       try {
         window.AppInventor.setWebViewString(finalUrl);
       } catch(e) {
         var a = document.createElement('a');
-        a.href = finalUrl;
-        a.target = '_blank';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
+        a.href = finalUrl; a.target = '_blank';
+        document.body.appendChild(a); a.click(); document.body.removeChild(a);
       }
     }
 
-    // Start tracking
     startAdTracking(uid);
   }
 
   function claimCoins(uid) {
+    // Security: if somehow called before 15s, ignore
+    if (adHardLockActive) {
+      showToast('Abhi 15 seconds poore nahi hue!', '#ef4444');
+      return;
+    }
+
     clearInterval(adTimerInterval);
+    adTimerInterval = null;
     document.getElementById('adPopup').classList.remove('show');
 
+    // Increment batch count
+    const newBatchCount = getAdBatchCount() + 1;
+    setAdBatchCount(newBatchCount);
+    adsWatchedToday = newBatchCount;
 
-    adsWatchedToday++;
-    localStorage.setItem('adsWatchedToday', adsWatchedToday);
-    localStorage.setItem('lastAdTime', Date.now().toString());
-    updateCounter();
+    // 5-Hour Mega Lock after 20th ad
+    if (newBatchCount >= MAX_ADS) {
+      const fiveHrUntil = Date.now() + AD_COOLDOWN_5HR * 1000;
+      set5HrUntil(fiveHrUntil);
+      set1MinUntil(0); // clear 1-min since mega takes over
+      showToast('🚫 20 ads complete! 5 ghante baad unlock hoga.', '#ef4444');
+    } else {
+      // 1-Minute per-ad cooldown
+      const oneMinUntil = Date.now() + AD_COOLDOWN_1MIN * 1000;
+      set1MinUntil(oneMinUntil);
+    }
 
-    // Save to Firebase
-    window._getAuthToken().then(token => {
-      const authParam = token ? '?auth=' + token : '';
-      fetch(DB_URL + '/users/' + uid + '.json' + authParam)
-      .then(r => r.json())
-      .then(data => {
-        const newCoins = (data.coins || 0) + currentCoins;
-        const newBalance = parseFloat(((newCoins) / 100).toFixed(2));
-        const newTasksDone = (data.tasksDone || 0) + 1;
-        return fetch(DB_URL + '/users/' + uid + '.json' + authParam, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ coins: newCoins, balance: newBalance, tasksDone: newTasksDone, totalEarned: newBalance })
-        }).then(() => {
-          document.querySelector('.user-coins').textContent = newCoins + ' Coins';
-          document.querySelector('.user-balance').textContent = '₹' + newBalance.toFixed(2);
-          showReward(currentCoins);
+    // Update button UI immediately
+    updateAdButtonUI();
+
+    // ── Secure reward: creditCoins only INSIDE successful ad-close callback ──
+    // Since this is web-based and claimCoins is called from the button (after 15s),
+    // we fire the popunder ad script here, and credit ONLY on onload.
+    const s = document.createElement('script');
+    s.src = 'https://pl29503369.effectivecpmnetwork.com/1c/3b/d0/1c3bd0127e4be2ff172d7c6e0eaa5204.js';
+    s.async = true;
+    s.setAttribute('data-cfasync', 'false');
+
+    s.onload = function() {
+      // ✅ Ad confirmed — NOW credit coins
+      try { window.AppInventor && window.AppInventor.setWebViewString('AD_SHOWED:watchAd'); } catch(e) {}
+      // Save to Firebase
+      const localUid = uid || localStorage.getItem('tasknova_uid');
+      if (localUid && localUid !== 'null') {
+        window._getAuthToken && window._getAuthToken().then(token => {
+          const authParam = token ? '?auth=' + token : '';
+          fetch(DB_URL + '/users/' + localUid + '.json' + authParam)
+            .then(r => r.json())
+            .then(data => {
+              const newCoins   = (data.coins    || 0) + currentCoins;
+              const newBalance = parseFloat((newCoins / 100).toFixed(2));
+              const newTasks   = (data.tasksDone || 0) + 1;
+              return fetch(DB_URL + '/users/' + localUid + '.json' + authParam, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ coins: newCoins, balance: newBalance, tasksDone: newTasks, totalEarned: newBalance })
+              }).then(() => {
+                document.querySelector('.user-coins').textContent    = newCoins + ' Coins';
+                document.querySelector('.user-balance').textContent  = '₹' + newBalance.toFixed(2);
+                showReward(currentCoins);
+              });
+            })
+            .catch(e => console.log(e));
         });
-      })
-      .catch(e => console.log(e));
-    }); // end getAuthToken
+      }
+    };
 
-    startCooldown();
+    s.onerror = function() {
+      // ❌ Ad failed — coins NOT credited, batch count rolled back
+      try { window.AppInventor && window.AppInventor.setWebViewString('AD_FAILED:watchAd'); } catch(e) {}
+      const rolledBack = Math.max(0, getAdBatchCount() - 1);
+      setAdBatchCount(rolledBack);
+      // Also clear the 1-min timer we just set (ad failed, don't penalise)
+      if (getAdLockState().isMega === false) set1MinUntil(0);
+      updateAdButtonUI();
+      showToast('Ad load nahi hua. Dobara try karo! 🔄', '#ef4444');
+    };
+
+    document.head.appendChild(s);
   }
 
-  function skipAd() {} // disabled
+  function skipAd() {
+    if (adHardLockActive) {
+      showToast('15 seconds poore karo! Skip allowed nahi hai.', '#ef4444');
+      return;
+    }
+    // If 15s done but user tries to skip before claiming — just close
+    clearInterval(adTimerInterval);
+    adTimerInterval = null;
+    adHardLockActive = false;
+    document.getElementById('adPopup').classList.remove('show');
+  }
 
   function collectCoins(uid) { claimCoins(uid); }
   function adWatched(uid) { claimCoins(uid); }
@@ -1248,13 +1528,19 @@
     if (shouldReset()) {
       localStorage.setItem('adsWatchedToday', '0');
       localStorage.setItem('adLastReset', new Date().toISOString());
+      // Reset ad batch count and clear all timers on 7:30 PM reset
+      setAdBatchCount(0);
+      clearAdTimers();
+      localStorage.removeItem(GLOBAL_LOCK_KEY); // clear global lock on daily reset
       adsWatchedToday = 0;
     } else {
-      adsWatchedToday = parseInt(localStorage.getItem('adsWatchedToday') || '0');
+      adsWatchedToday = getAdBatchCount();
     }
 
-    updateCounter();
+    // Restore persistent timers — resume exactly where left off
+    updateAdButtonUI();
     updateDailyBonusUI(); // initialize Daily Bonus button state
+    restoreGlobalLockIfActive(); // resume 1-min global lock if app was restarted
 
     // Fetch balance and calculate live rupees from total coins
     window._getAuthToken().then(token => {
@@ -1406,6 +1692,7 @@
   function doCheckin() {
     const d = getDailyData();
     if (d.checkin) { showToast('Aaj check-in ho chuka hai!', '#f59e0b'); return; }
+    if (isGlobalLocked()) return; // universal 1-min cooldown
     if (!checkDailyLimit()) return;
 
     // Show loading state
@@ -1483,6 +1770,12 @@
   }
 
   function openSpinModal() {
+    // Cross-task freeze check
+    if (Date.now() < crossTaskFreezeEnd) {
+      const secs = Math.ceil((crossTaskFreezeEnd - Date.now()) / 1000);
+      showToast('⏳ Watch Ads timer chal raha hai! Spin ' + secs + 's baad unlock hoga.', '#f59e0b');
+      return;
+    }
     document.getElementById('spinModal').classList.add('show');
     drawWheel();
     updateSpinUI();
@@ -1501,7 +1794,7 @@
       if (btn) { btn.disabled = true; btn.textContent = 'Wait ' + formatCooldown(cooldown) + '...'; }
       setTimeout(updateSpinUI, 1000);
     } else {
-      if (btn) { btn.disabled = false; btn.textContent = '🎡 Spin Now!'; }
+      if (btn) { btn.disabled = false; btn.textContent = '🎡 Spin Now!'; btn.style.background = ''; btn.onclick = doSpin; }
     }
     if (cd) cd.textContent = cooldown > 0 ? 'Cooldown: ' + formatCooldown(cooldown) : '';
   }
@@ -1510,6 +1803,7 @@
     const d = getDailyData();
     if (d.spins >= 15) { showToast('Aaj ke spins khatam!', '#f59e0b'); return; }
     if (getCooldownRemaining(d.lastSpin) > 0) { showToast('60 second wait karo!', '#f59e0b'); return; }
+    if (isGlobalLocked()) return; // universal 1-min cooldown
     if (!checkDailyLimit()) return;
     if (isSpinning) return;
     isSpinning = true;
@@ -1541,43 +1835,17 @@
         currentSpinAngle = angle % 360;
         isSpinning = false;
 
-        // Wheel animation done — now show "Ad load ho raha hai..." then fire ad
-        const spinBtn = document.getElementById('spinBtnMain');
+        // Wheel stopped — show result text + "Watch Ad and Claim Coin" button
+        const spinBtn    = document.getElementById('spinBtnMain');
         const spinResult = document.getElementById('spinResult');
-        if (spinBtn) { spinBtn.disabled = true; spinBtn.textContent = '⏳ Ad load ho raha hai...'; }
-        if (spinResult) spinResult.textContent = '';
 
-        // Inject Adsterra ad — coins credited ONLY on onload (ad showed)
-        const s = document.createElement('script');
-        s.src = 'https://pl29503369.effectivecpmnetwork.com/1c/3b/d0/1c3bd0127e4be2ff172d7c6e0eaa5204.js';
-        s.async = true;
-        s.setAttribute('data-cfasync', 'false');
-
-        s.onload = function() {
-          // ✅ Ad loaded successfully — now credit coins
-          console.log('[AdListener] Spin ad loaded OK');
-          try { window.AppInventor && window.AppInventor.setWebViewString('AD_SHOWED:spin'); } catch(e) {}
-          creditCoins(prize, 'spin').then(earned => {
-            if (spinResult) spinResult.textContent = earned > 0 ? '+' + earned + ' Coins! 🎉' : '';
-            if (earned > 0) showToast('+' + earned + ' Coins!', 'linear-gradient(135deg,#6c63ff,#3b82f6)');
-            // Load banner ad ONLY after coins success
-            loadBannerAd('spinBannerAd');
-            loadSocialBar();
-            updateSpinUI();
-            updateDailyLimitUI();
-          });
-        };
-
-        s.onerror = function() {
-          // ❌ Ad failed — do NOT credit coins, show Try Again
-          console.warn('[AdListener] Spin ad FAILED — coins NOT credited');
-          try { window.AppInventor && window.AppInventor.setWebViewString('AD_FAILED:spin'); } catch(e) {}
-          if (spinResult) spinResult.textContent = '❌ Ad load nahi hua';
-          if (spinBtn) { spinBtn.disabled = false; spinBtn.textContent = '🔄 Try Again'; }
-          showToast('Ad load nahi hua. Dobara spin karo! 🔄', '#ef4444');
-        };
-
-        document.head.appendChild(s);
+        if (spinResult) spinResult.textContent = '🎉 Aapne jeeta: +' + prize + ' Coins!';
+        if (spinBtn) {
+          spinBtn.disabled    = false;
+          spinBtn.textContent = '📺 Watch Ad and Claim Coin';
+          spinBtn.style.background = 'linear-gradient(135deg,#f59e0b,#ef4444)';
+          spinBtn.onclick = function() { claimSpinReward(prize, spinBtn, spinResult); };
+        }
       }
     }
     requestAnimationFrame(animate);
@@ -1618,6 +1886,12 @@
   let isScratchActive = false;
 
   function openScratchModal() {
+    // Cross-task freeze check
+    if (Date.now() < crossTaskFreezeEnd) {
+      const secs = Math.ceil((crossTaskFreezeEnd - Date.now()) / 1000);
+      showToast('⏳ Watch Ads timer chal raha hai! Scratch ' + secs + 's baad unlock hoga.', '#f59e0b');
+      return;
+    }
     document.getElementById('scratchModal').classList.add('show');
     updateScratchUI();
     newScratch();
@@ -1638,6 +1912,7 @@
     if (d.scratches >= 15) { showToast('Aaj ke scratch cards khatam!', '#f59e0b'); return; }
     const cooldown = getCooldownRemaining(d.lastScratch);
     if (cooldown > 0 && d.scratches > 0) { showToast('Wait ' + formatCooldown(cooldown) + '!', '#f59e0b'); return; }
+    if (isGlobalLocked()) return; // universal 1-min cooldown
 
     scratchPrizeAmount = [5, 10, 10, 15, 10, 20][Math.floor(Math.random() * 6)];
     scratchRevealed = false;
@@ -1711,56 +1986,31 @@
     isScratchActive = false;
     if (!checkDailyLimit()) return;
 
-    // Clear the scratch overlay immediately so prize is visible
+    // Clear the scratch overlay so prize is fully visible
     scratchCtx.clearRect(0, 0, 1000, 1000);
 
-    // Show "Ad load ho raha hai..." state
+    // Show result text + "Watch Ad and Claim Coin" button
     const scratchResult = document.getElementById('scratchResult');
     const newScratchBtn = document.getElementById('newScratchBtn');
-    if (scratchResult) scratchResult.textContent = '⏳ Ad load ho raha hai...';
-    if (newScratchBtn) newScratchBtn.style.display = 'none';
-
-    // Inject Adsterra ad — coins credited ONLY on onload (ad showed)
-    const s = document.createElement('script');
-    s.src = 'https://pl29503369.effectivecpmnetwork.com/1c/3b/d0/1c3bd0127e4be2ff172d7c6e0eaa5204.js';
-    s.async = true;
-    s.setAttribute('data-cfasync', 'false');
-
-    s.onload = function() {
-      // ✅ Ad loaded successfully — now credit coins
-      console.log('[AdListener] Scratch ad loaded OK');
-      try { window.AppInventor && window.AppInventor.setWebViewString('AD_SHOWED:scratch'); } catch(e) {}
-      creditCoins(scratchPrizeAmount, 'scratch').then(earned => {
-        if (scratchResult) scratchResult.textContent = '+' + earned + ' Coins! 🎉';
-        if (newScratchBtn) newScratchBtn.style.display = 'block';
-        showToast('+' + earned + ' Coins!', 'linear-gradient(135deg,#f59e0b,#ef4444)');
-        // Load banner ad ONLY after scratch success
-        loadBannerAd('scratchBannerAd');
-        loadSocialBar();
-        updateScratchUI();
-        updateDailyLimitUI();
-      });
-    };
-
-    s.onerror = function() {
-      // ❌ Ad failed — do NOT credit coins, show Try Again
-      console.warn('[AdListener] Scratch ad FAILED — coins NOT credited');
-      try { window.AppInventor && window.AppInventor.setWebViewString('AD_FAILED:scratch'); } catch(e) {}
-      // Reset scratch state so user can try again
-      scratchRevealed = false;
-      isScratchActive = false;
-      if (scratchResult) scratchResult.textContent = '❌ Ad load nahi hua';
-      if (newScratchBtn) { newScratchBtn.style.display = 'block'; newScratchBtn.textContent = '🔄 Try Again'; }
-      showToast('Ad load nahi hua. Dobara try karo! 🔄', '#ef4444');
-    };
-
-    document.head.appendChild(s);
+    if (scratchResult) scratchResult.textContent = '🎉 Aapne jeeta: +' + scratchPrizeAmount + ' Coins!';
+    if (newScratchBtn) {
+      newScratchBtn.style.display   = 'block';
+      newScratchBtn.textContent     = '📺 Watch Ad and Claim Coin';
+      newScratchBtn.style.background = 'linear-gradient(135deg,#f59e0b,#ef4444)';
+      newScratchBtn.onclick = function() { claimScratchReward(scratchPrizeAmount, scratchResult, newScratchBtn); };
+    }
   }
 
   // ── MATH QUIZ ─────────────────────────────────────────────────
   let currentAnswer = 0;
 
   function openQuizModal() {
+    // Cross-task freeze check
+    if (Date.now() < crossTaskFreezeEnd) {
+      const secs = Math.ceil((crossTaskFreezeEnd - Date.now()) / 1000);
+      showToast('⏳ Watch Ads timer chal raha hai! Quiz ' + secs + 's baad unlock hoga.', '#f59e0b');
+      return;
+    }
     document.getElementById('quizModal').classList.add('show');
     updateQuizUI();
     generateQuiz();
@@ -1810,19 +2060,26 @@
     if (!checkDailyLimit()) return;
 
     const allBtns = document.querySelectorAll('.quiz-opt');
+    if (isGlobalLocked()) { allBtns.forEach(b => b.disabled = false); return; } // universal 1-min cooldown
     allBtns.forEach(b => b.disabled = true);
 
     if (selected === currentAnswer) {
       btn.classList.add('correct');
-      creditCoins(10, 'quiz').then(earned => {
-        document.getElementById('quizResult').textContent = '+' + earned + ' Coins! Sahi jawab! ✅';
-        showToast('+' + earned + ' Coins!', 'linear-gradient(135deg,#22c55e,#16a34a)');
-        // Load social bar after correct answer
-        loadSocialBar();
-        updateQuizUI();
-        updateDailyLimitUI();
-        setTimeout(generateQuiz, 1500);
-      });
+      // Show result + "Watch Ad and Claim Coin" button — do NOT credit coins yet
+      const quizResult  = document.getElementById('quizResult');
+      const quizOptions = document.getElementById('quizOptions');
+      if (quizResult) quizResult.textContent = '🎉 Sahi Jawab! +10 Coins milenge!';
+      // Inject a "Watch Ad and Claim Coin" button below result
+      const existing = document.getElementById('quizClaimAdBtn');
+      if (existing) existing.remove();
+      const claimAdBtn = document.createElement('button');
+      claimAdBtn.id = 'quizClaimAdBtn';
+      claimAdBtn.textContent = '📺 Watch Ad and Claim Coin';
+      claimAdBtn.style.cssText = "display:block;width:100%;margin:14px 0 0;padding:14px;background:linear-gradient(135deg,#f59e0b,#ef4444);border:none;border-radius:16px;color:#fff;font-size:15px;font-weight:800;cursor:pointer;font-family:'Segoe UI',sans-serif;";
+      claimAdBtn.onclick = function() { claimQuizReward(10, quizResult, claimAdBtn); };
+      if (quizOptions && quizOptions.parentNode) {
+        quizOptions.parentNode.insertBefore(claimAdBtn, quizOptions.nextSibling);
+      }
     } else {
       btn.classList.add('wrong');
       allBtns.forEach(b => { if (parseInt(b.textContent) === currentAnswer) b.classList.add('correct'); });
@@ -1831,7 +2088,246 @@
     }
   }
 
-  // ── MODAL HELPERS ─────────────────────────────────────────────
+  // ── SHARED AD CLAIM HELPER ───────────────────────────────────────
+  // Plays Adsterra Full-Screen Interstitial / Direct Link.
+  // coins credited ONLY inside onload callback (ad confirmed played).
+  // ── TASK AD INTERSTITIAL OVERLAY ────────────────────────────────
+  // Shows a full-screen ad overlay with 15s hard-lock before closing.
+  // Coins credited ONLY inside the successful onAdClosed path.
+
+  function _playAdAndClaim({ coins, type, onSuccess, onFail, btn }) {
+    // Global lock guard — block if 1-min cooldown is active
+    if (isGlobalLocked()) {
+      if (btn) { btn.disabled = false; }
+      return;
+    }
+
+    if (btn) { btn.disabled = true; btn.textContent = '⏳ Ad load ho raha hai...'; }
+
+    // Build or reuse the task-ad overlay
+    let overlay = document.getElementById('taskAdOverlay');
+    if (!overlay) {
+      overlay = document.createElement('div');
+      overlay.id = 'taskAdOverlay';
+      overlay.style.cssText = [
+        'position:fixed','top:0','left:0','width:100%','height:100%',
+        'background:#000','z-index:99999','display:flex',
+        'flex-direction:column','align-items:center','justify-content:center',
+        'padding:24px','box-sizing:border-box'
+      ].join(';');
+      document.body.appendChild(overlay);
+    }
+
+    // Progress bar
+    overlay.innerHTML = [
+      '<div style="position:absolute;top:0;left:0;height:4px;width:0%;background:linear-gradient(135deg,#6c63ff,#f59e0b);transition:width 15s linear;" id="taskAdBar"></div>',
+      '<div style="font-size:48px;margin-bottom:12px;">📺</div>',
+      '<div style="color:#fff;font-size:18px;font-weight:800;margin-bottom:8px;">Advertisement</div>',
+      '<div id="taskAdStatus" style="color:rgba(255,255,255,0.55);font-size:14px;margin-bottom:24px;text-align:center;">Reward in 15s...</div>',
+      '<div style="background:rgba(255,255,255,0.08);border-radius:16px;padding:14px 32px;text-align:center;margin-bottom:28px;">',
+        '<div style="color:rgba(255,255,255,0.4);font-size:11px;">Aapko milenge</div>',
+        '<div style="color:#6c63ff;font-size:30px;font-weight:800;">+' + coins + '</div>',
+        '<div style="color:rgba(255,255,255,0.4);font-size:11px;">Coins</div>',
+      '</div>',
+      '<div id="taskAdLockNote" style="color:rgba(255,255,255,0.35);font-size:11px;margin-bottom:16px;">Back button disabled during ad</div>',
+      '<button id="taskAdClaimBtn" disabled style="width:100%;max-width:320px;background:rgba(255,255,255,0.1);border:none;border-radius:16px;padding:14px;color:rgba(255,255,255,0.4);font-size:15px;font-weight:800;cursor:not-allowed;">⏳ Please wait...</button>'
+    ].join('');
+
+    overlay.style.display = 'flex';
+
+    // Animate progress bar
+    setTimeout(() => {
+      const bar = document.getElementById('taskAdBar');
+      if (bar) bar.style.width = '100%';
+    }, 50);
+
+    // Inject actual Adsterra Direct Link + script
+    const directUrl = 'https://www.effectivecpmnetwork.com/b1bggwx0?key=f1f69a147759698e8fda4cfd27e423ba&t=' + Date.now();
+    try {
+      window.AppInventor && window.AppInventor.setWebViewString(directUrl);
+    } catch(e) {
+      const a = document.createElement('a');
+      a.href = directUrl; a.target = '_blank'; a.rel = 'noopener';
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    }
+
+    const s = document.createElement('script');
+    s.src = 'https://pl29503369.effectivecpmnetwork.com/1c/3b/d0/1c3bd0127e4be2ff172d7c6e0eaa5204.js';
+    s.async = true;
+    s.setAttribute('data-cfasync', 'false');
+    document.head.appendChild(s);
+
+    // ── 15-second hard lock countdown ───────────────────────────
+    let secsLeft = 15;
+    let adWatchSuccess = false; // set true only after onload fires
+    let hardLockTimer = null;
+    adHardLockActive = true; // block back-button
+
+    // Push history state so popstate fires on back
+    history.pushState({ adLock: true }, '', location.href);
+
+    const statusEl    = document.getElementById('taskAdStatus');
+    const claimBtn    = document.getElementById('taskAdClaimBtn');
+
+    hardLockTimer = setInterval(() => {
+      secsLeft--;
+      if (statusEl) statusEl.textContent = 'Reward in ' + Math.max(0, secsLeft) + 's...';
+
+      if (secsLeft <= 0) {
+        clearInterval(hardLockTimer);
+        adHardLockActive = false;
+
+        // Ad script already fired — check if onload came back
+        if (adWatchSuccess) {
+          // onload already confirmed — credit coins now
+          _doCredit();
+        } else {
+          // Still waiting for ad server response — enable claim button
+          if (claimBtn) {
+            claimBtn.disabled = false;
+            claimBtn.textContent = '✅ Collect Reward';
+            claimBtn.style.background = 'linear-gradient(135deg,#22c55e,#16a34a)';
+            claimBtn.style.color = '#fff';
+            claimBtn.style.cursor = 'pointer';
+            claimBtn.onclick = _doCredit;
+          }
+          if (statusEl) statusEl.textContent = 'Ad dekh li! Reward collect karo 🎉';
+        }
+      }
+    }, 1000);
+
+    // Called once: either from onload (if 15s already done) or from claimBtn
+    let creditFired = false;
+    function _doCredit() {
+      if (creditFired) return;
+      creditFired = true;
+
+      if (claimBtn) { claimBtn.disabled = true; claimBtn.textContent = '⏳ Crediting...'; }
+
+      // ✅ Strict: credit only here — inside successful ad-closed path
+      s.onload = null; // prevent double-fire
+      creditCoins(coins, type).then(earned => {
+        // Close overlay
+        if (overlay) overlay.style.display = 'none';
+
+        // ── TRIGGER UNIVERSAL 1-MINUTE GLOBAL LOCK ──────────────
+        triggerGlobalLock();
+
+        // Notify AppInventor
+        try { window.AppInventor && window.AppInventor.setWebViewString('AD_SHOWED:' + type); } catch(e) {}
+        console.log('[AdListener] ' + type + ' ad coins credited:', earned);
+
+        onSuccess(earned);
+      });
+    }
+
+    // onload = ad confirmed served (fires when script executes)
+    s.onload = function() {
+      adWatchSuccess = true;
+      console.log('[AdListener] ' + type + ' ad script loaded OK');
+      // If 15s already elapsed by the time onload fires, credit immediately
+      if (secsLeft <= 0 && !creditFired) {
+        _doCredit();
+      }
+      // else: wait for hard-lock countdown to finish
+    };
+
+    s.onerror = function() {
+      // Ad failed — 0 coins, close overlay, restore button
+      clearInterval(hardLockTimer);
+      adHardLockActive = false;
+      if (overlay) overlay.style.display = 'none';
+      if (btn) { btn.disabled = false; btn.textContent = '📺 Watch Ad and Claim Coin'; }
+      console.warn('[AdListener] ' + type + ' ad FAILED — 0 coins');
+      try { window.AppInventor && window.AppInventor.setWebViewString('AD_FAILED:' + type); } catch(e) {}
+      showToast('Ad load nahi hua. Dobara try karo! 🔄', '#ef4444');
+      onFail();
+    };
+  }
+
+  // ── SPIN CLAIM ────────────────────────────────────────────────
+  function claimSpinReward(prize, spinBtn, spinResult) {
+    _playAdAndClaim({
+      coins: prize,
+      type: 'spin',
+      btn: spinBtn,
+      onSuccess: function(earned) {
+        if (spinResult) spinResult.textContent = earned > 0 ? '✅ +' + earned + ' Coins credited! 🎉' : '';
+        if (earned > 0) showToast('+' + earned + ' Coins!', 'linear-gradient(135deg,#6c63ff,#3b82f6)');
+        // Reset button to Spin Now for next round
+        if (spinBtn) {
+          spinBtn.style.background = '';
+          spinBtn.onclick = doSpin;
+        }
+        updateSpinUI();
+        updateDailyLimitUI();
+      },
+      onFail: function() {
+        if (spinResult) spinResult.textContent = '❌ Ad load nahi hua — dobara try karo';
+        if (spinBtn) {
+          spinBtn.disabled = false;
+          spinBtn.textContent = '📺 Watch Ad and Claim Coin';
+        }
+        showToast('Ad load nahi hua. Dobara try karo! 🔄', '#ef4444');
+      }
+    });
+  }
+
+  // ── SCRATCH CLAIM ─────────────────────────────────────────────
+  function claimScratchReward(prize, scratchResult, scratchBtn) {
+    _playAdAndClaim({
+      coins: prize,
+      type: 'scratch',
+      btn: scratchBtn,
+      onSuccess: function(earned) {
+        if (scratchResult) scratchResult.textContent = '✅ +' + earned + ' Coins credited! 🎉';
+        showToast('+' + earned + ' Coins!', 'linear-gradient(135deg,#f59e0b,#ef4444)');
+        if (scratchBtn) {
+          scratchBtn.style.background = '';
+          scratchBtn.textContent = '🎴 Next Card';
+          scratchBtn.disabled = false;
+          scratchBtn.onclick = newScratch;
+        }
+        updateScratchUI();
+        updateDailyLimitUI();
+      },
+      onFail: function() {
+        if (scratchResult) scratchResult.textContent = '❌ Ad load nahi hua — dobara try karo';
+        if (scratchBtn) {
+          scratchBtn.disabled = false;
+          scratchBtn.textContent = '📺 Watch Ad and Claim Coin';
+        }
+        showToast('Ad load nahi hua. Dobara try karo! 🔄', '#ef4444');
+      }
+    });
+  }
+
+  // ── QUIZ CLAIM ────────────────────────────────────────────────
+  function claimQuizReward(coins, quizResult, claimAdBtn) {
+    _playAdAndClaim({
+      coins: coins,
+      type: 'quiz',
+      btn: claimAdBtn,
+      onSuccess: function(earned) {
+        if (quizResult) quizResult.textContent = '✅ +' + earned + ' Coins credited! 🎉';
+        showToast('+' + earned + ' Coins!', 'linear-gradient(135deg,#22c55e,#16a34a)');
+        if (claimAdBtn) claimAdBtn.remove();
+        updateQuizUI();
+        updateDailyLimitUI();
+        setTimeout(generateQuiz, 1500);
+      },
+      onFail: function() {
+        if (quizResult) quizResult.textContent = '❌ Ad load nahi hua — dobara try karo';
+        if (claimAdBtn) {
+          claimAdBtn.disabled = false;
+          claimAdBtn.textContent = '📺 Watch Ad and Claim Coin';
+        }
+        showToast('Ad load nahi hua. Dobara try karo! 🔄', '#ef4444');
+      }
+    });
+  }
+
+    // ── MODAL HELPERS ─────────────────────────────────────────────
   function closeModal(id) {
     document.getElementById(id).classList.remove('show');
     updateDailyLimitUI();
