@@ -43,6 +43,7 @@
     justify-content: space-between;
     gap: 14px;
     cursor: pointer;
+    position: relative;
     transition: transform 0.18s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.18s ease, background 0.18s ease;
     box-shadow: 0 4px 18px rgba(0,0,0,0.25), 0 1px 4px rgba(0,0,0,0.15);
     will-change: transform;
@@ -879,15 +880,22 @@
         let badge = card.querySelector('.global-lock-badge');
         if (secsLeft > 0) {
           card.style.pointerEvents = 'none';
-          card.style.opacity = '0.7';
+          card.style.opacity = '0.65';
           if (!badge) {
             badge = document.createElement('div');
             badge.className = 'global-lock-badge';
-            badge.style.cssText = 'position:absolute;top:8px;right:8px;background:rgba(245,158,11,0.9);color:#000;font-size:10px;font-weight:800;padding:3px 8px;border-radius:50px;z-index:5;pointer-events:none;';
-            card.style.position = 'relative';
+            badge.style.cssText = [
+              'position:absolute', 'top:10px', 'right:12px',
+              'background:linear-gradient(135deg,#f59e0b,#ef4444)',
+              'color:#fff', 'font-size:10px', 'font-weight:800',
+              'padding:3px 10px', 'border-radius:50px',
+              'z-index:5', 'pointer-events:none',
+              'box-shadow:0 2px 8px rgba(245,158,11,0.4)',
+              'letter-spacing:0.3px'
+            ].join(';');
             card.appendChild(badge);
           }
-          badge.textContent = '⏳ ' + secsLeft + 's';
+          badge.textContent = '⏳ ' + secsLeft + 's cooldown';
         } else {
           card.style.pointerEvents = '';
           card.style.opacity = '';
@@ -912,13 +920,17 @@
     globalLockInterval = setInterval(tick, 1000);
   }
 
-  // Check on page load if a lock is already active (survived restart)
+  // Check on page load if a lock is already active (survived restart/refresh)
   function restoreGlobalLockIfActive() {
-    const secsLeft = getGlobalLockRemaining();
-    if (secsLeft > 0) {
-      const until = parseInt(localStorage.getItem(GLOBAL_LOCK_KEY));
-      runGlobalLockUI(until);
-    }
+    const raw = localStorage.getItem(GLOBAL_LOCK_KEY);
+    if (!raw) return;
+    const until = parseInt(raw);
+    if (!until || isNaN(until)) { localStorage.removeItem(GLOBAL_LOCK_KEY); return; }
+    const secsLeft = Math.ceil((until - Date.now()) / 1000);
+    if (secsLeft <= 0) { localStorage.removeItem(GLOBAL_LOCK_KEY); return; }
+    // Valid lock found — resume UI immediately
+    console.log('[GlobalLock] Restoring lock on refresh —', secsLeft + 's remaining');
+    runGlobalLockUI(until);
   }
 
   // Guard: call this at the TOP of any claim/entry function to block during lock
@@ -1759,11 +1771,11 @@
     // Restore persistent timers — resume exactly where left off
     updateAdButtonUI();
     updateDailyBonusUI(); // initialize Daily Bonus button state
-    // Clean stale/corrupted localStorage values before restoring locks
-    ['tn_global_lock_until','tn_ad_1min_until','tn_ad_5hr_until','tn_backbtn_penalty'].forEach(function(k) {
+    // Clean stale/corrupted localStorage values — but NOT global lock key (it must survive refresh)
+    ['tn_ad_1min_until','tn_ad_5hr_until','tn_backbtn_penalty'].forEach(function(k) {
       const v = parseInt(localStorage.getItem(k));
       if (localStorage.getItem(k) !== null && (!v || isNaN(v) || v <= Date.now())) {
-        localStorage.removeItem(k); // wipe expired or corrupt entries
+        localStorage.removeItem(k);
       }
     });
     restoreGlobalLockIfActive();     // resume 1-min global lock if app was restarted
