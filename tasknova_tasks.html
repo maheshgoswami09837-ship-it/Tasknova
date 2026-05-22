@@ -316,7 +316,7 @@
           </div>
         </div>
         <div class="task-reward">
-          <div class="coins-reward">+50</div>
+          <div class="coins-reward">+20</div>
           <div class="rupee">coins</div>
           <button class="do-btn" id="checkinBtn">Claim</button>
         </div>
@@ -1807,11 +1807,31 @@
     if (shouldReset()) {
       localStorage.setItem('adsWatchedToday', '0');
       localStorage.setItem('adLastReset', new Date().toISOString());
-      // Reset ad batch count and clear all timers on 7:30 PM reset
       setAdBatchCount(0);
       clearAdTimers();
-      localStorage.removeItem(GLOBAL_LOCK_KEY); // clear global lock on daily reset
+      localStorage.removeItem(GLOBAL_LOCK_KEY);
       adsWatchedToday = 0;
+
+      // ── Saare task counters reset ────────────────────────────
+      // DailyData (spin/scratch/quiz/checkin/earned) — new key banate hi auto reset
+      // Badges update
+      const sb  = document.getElementById('spinCountBadge');
+      const scb = document.getElementById('scratchCountBadge');
+      const qb  = document.getElementById('quizCountBadge');
+      if (sb)  sb.textContent  = '0/15';
+      if (scb) scb.textContent = '0/15';
+      if (qb)  qb.textContent  = '0/15';
+
+      // Check-in UI reset
+      const cbtn = document.getElementById('checkinBtn');
+      const cb   = document.getElementById('checkinBadge');
+      const wrap = document.getElementById('checkinCountdownWrap');
+      const card = document.getElementById('checkinCard');
+      if (cbtn) { cbtn.style.display = ''; cbtn.textContent = 'Claim'; cbtn.disabled = false; }
+      if (cb)   cb.style.display = 'none';
+      if (wrap) wrap.style.display = 'none';
+      if (card) card.style.pointerEvents = '';
+      // ─────────────────────────────────────────────────────────
     } else {
       adsWatchedToday = getAdBatchCount();
     }
@@ -1851,7 +1871,18 @@
   const COOLDOWN_60S = 60 * 1000;
 
   function getTodayKey() {
-    return new Date().toISOString().split('T')[0];
+    // 7:30 PM IST = UTC 14:00 ko naya din maano
+    const istOffset = 5.5 * 60 * 60 * 1000;
+    const now = new Date();
+    const nowIST = new Date(now.getTime() + istOffset - (now.getTimezoneOffset() * 60 * 1000));
+    // Agar 7:30 PM se pehle hai toh "yesterday's key" use karo
+    const reset = new Date(nowIST);
+    reset.setHours(19, 30, 0, 0);
+    const effectiveIST = nowIST < reset
+      ? new Date(nowIST.getTime() - 24 * 60 * 60 * 1000) // pichla din
+      : nowIST;
+    // Key = YYYY-MM-DD based on 7:30 PM IST boundary
+    return effectiveIST.toISOString().split('T')[0];
   }
 
   function getDailyData() {
@@ -1886,8 +1917,10 @@
     if (d.checkin) {
       const cb = document.getElementById('checkinBadge');
       const cbtn = document.getElementById('checkinBtn');
+      const card = document.getElementById('checkinCard');
       if (cb) cb.style.display = 'inline-block';
-      if (cbtn) { cbtn.textContent = 'Done'; cbtn.disabled = true; }
+      if (cbtn) { cbtn.style.display = 'none'; } // button bilkul hide
+      if (card) card.style.pointerEvents = 'none'; // card click band
       startCheckinCountdown();
     }
   }
@@ -1930,6 +1963,32 @@
         clearInterval(checkinCountdownInterval);
         checkinCountdownInterval = null;
         if (wrap) wrap.style.display = 'none';
+        // 7:30 PM aa gaya — saare tasks reset karo
+        const cbtn2 = document.getElementById('checkinBtn');
+        const cb2   = document.getElementById('checkinBadge');
+        const card2 = document.getElementById('checkinCard');
+        if (cbtn2) { cbtn2.style.display = ''; cbtn2.textContent = 'Claim'; cbtn2.disabled = false; }
+        if (cb2)   cb2.style.display = 'none';
+        if (card2) card2.style.pointerEvents = '';
+
+        // Spin / Scratch / Quiz badges reset
+        const sb2  = document.getElementById('spinCountBadge');
+        const scb2 = document.getElementById('scratchCountBadge');
+        const qb2  = document.getElementById('quizCountBadge');
+        if (sb2)  sb2.textContent  = '0/15';
+        if (scb2) scb2.textContent = '0/15';
+        if (qb2)  qb2.textContent  = '0/15';
+
+        // Watch Ads counter reset
+        setAdBatchCount(0);
+        clearAdTimers();
+        localStorage.removeItem(GLOBAL_LOCK_KEY);
+        adsWatchedToday = 0;
+        localStorage.setItem('adLastReset', new Date().toISOString());
+        updateAdButtonUI();
+        updateDailyLimitUI();
+
+        showToast('🔄 Saare tasks reset ho gaye! Ab firse earn karo.', 'linear-gradient(135deg,#6c63ff,#3b82f6)');
       }
     }
 
@@ -2051,44 +2110,29 @@
   // ── CHECK-IN ──────────────────────────────────────────────────
   function doCheckin() {
     const d = getDailyData();
-    if (d.checkin) { showToast('Aaj check-in ho chuka hai!', '#f59e0b'); return; }
-    if (isGlobalLocked()) return; // universal 1-min cooldown
+    if (d.checkin) { showToast('Aaj check-in ho chuka hai! 7:30 PM pe reset hoga.', '#f59e0b'); return; }
     if (!checkDailyLimit()) return;
 
-    // Show loading state
-    const btn = document.getElementById('checkinBtn');
+    const btn  = document.getElementById('checkinBtn');
     const card = document.getElementById('checkinCard');
-    if (btn) { btn.textContent = '⏳ Ad...'; btn.disabled = true; }
+    const cb   = document.getElementById('checkinBadge');
+
+    // Loading state
+    if (btn) { btn.textContent = '⏳...'; btn.disabled = true; }
     if (card) card.style.pointerEvents = 'none';
 
-    // Inject Adsterra ad — coins credited ONLY on onload (ad showed)
-    const s = document.createElement('script');
-    s.src = 'https://pl29503369.effectivecpmnetwork.com/1c/3b/d0/1c3bd0127e4be2ff172d7c6e0eaa5204.js';
-    s.async = true;
-    s.setAttribute('data-cfasync', 'false');
+    // ✅ Direct credit — no ad for check-in
+    creditCoins(20, 'checkin').then(earned => {
+      // Button hide karo, sirf Done badge dikhao
+      if (btn) btn.style.display = 'none';
+      if (cb)  cb.style.display = 'inline-block';
 
-    s.onload = function() {
-      // ✅ Ad loaded successfully — now credit coins
-      console.log('[AdListener] Check-in ad loaded OK');
-      try { window.AppInventor && window.AppInventor.setWebViewString('AD_SHOWED:checkin'); } catch(e) {}
-      creditCoins(50, 'checkin').then(earned => {
-        if (earned > 0) showToast('+' + earned + ' Coins! Check-in complete! 🎉', 'linear-gradient(135deg,#22c55e,#16a34a)');
-        if (card) card.style.pointerEvents = '';
-        updateDailyLimitUI();
-        startCheckinCountdown(); // start 7:30 PM countdown on card
-      });
-    };
-
-    s.onerror = function() {
-      // ❌ Ad failed — do NOT credit coins, show Try Again
-      console.warn('[AdListener] Check-in ad FAILED — coins NOT credited');
-      try { window.AppInventor && window.AppInventor.setWebViewString('AD_FAILED:checkin'); } catch(e) {}
-      if (btn) { btn.textContent = '🔄 Try Again'; btn.disabled = false; }
-      if (card) card.style.pointerEvents = '';
-      showToast('Ad load nahi hua. Dobara try karo! 🔄', '#ef4444');
-    };
-
-    document.head.appendChild(s);
+      if (earned > 0) {
+        showToast('+20 Coins! Daily Check-in complete! 🎉', 'linear-gradient(135deg,#22c55e,#16a34a)');
+      }
+      updateDailyLimitUI();
+      startCheckinCountdown();
+    });
   }
 
   // ── SPIN WHEEL ────────────────────────────────────────────────
