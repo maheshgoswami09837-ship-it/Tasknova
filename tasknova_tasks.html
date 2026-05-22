@@ -1267,8 +1267,7 @@
     const lock = getAdLockState();
 
     if (lock.locked) {
-      // Trigger cross-task freeze while any timer is active
-      if (crossTaskFreezeEnd < Date.now()) triggerCrossTaskFreeze();
+      // Watch Ads locked hai — sirf watch ad button disable karo, baaki cards nahi
 
       btn.disabled = true;
       if (lock.isMega) {
@@ -1369,12 +1368,10 @@
   function watchAd() {
     const uid = localStorage.getItem('tasknova_uid');
     if (!uid || uid === 'null') { showToast('Pehle login karo!', '#ef4444'); return; }
-    if (isGlobalLocked()) return; // universal 1-min cooldown
+    if (isGlobalLocked()) return;
 
-    // Check persistent lock state
     const lock = getAdLockState();
     if (lock.locked) {
-      triggerCrossTaskFreeze();
       if (lock.isMega) {
         showToast('🚫 Limit Reached! ' + formatAdTimer(lock.remaining) + ' baad try karo.', '#ef4444');
       } else {
@@ -1475,6 +1472,22 @@
               }).then(() => {
                 document.querySelector('.user-coins').textContent    = newCoins + ' Coins';
                 document.querySelector('.user-balance').textContent  = '₹' + newBalance.toFixed(2);
+
+                // ── TASK HISTORY SAVE ──────────────────────────────
+                const histEntry = {
+                  title: '📺 Video Watch Task',
+                  type: 'watchAd',
+                  coinsEarned: currentCoins,
+                  status: 'completed',
+                  completedAt: Date.now()
+                };
+                fetch(DB_URL + '/users/' + localUid + '/taskHistory.json' + authParam, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify(histEntry)
+                }).catch(e => console.warn('[TaskHistory] watchAd save failed:', e));
+                // ─────────────────────────────────────────────────
+
                 showReward(currentCoins);
               });
             })
@@ -1933,6 +1946,17 @@
     return true;
   }
 
+  // Task type ke liye readable names
+  const TASK_NAMES = {
+    'watchAd': '📺 Video Watch Task',
+    'spin':    '🎡 Spin the Wheel',
+    'scratch': '🎴 Scratch Card',
+    'quiz':    '🧠 Quiz Task',
+    'checkin': '✅ Daily Check-in',
+    'bonus':   '🎁 Daily Bonus',
+    'survey':  '📋 Survey Task',
+  };
+
   async function creditCoins(amount, type) {
     const d = getDailyData();
     const remaining = DAILY_CAP - d.earned;
@@ -1963,6 +1987,22 @@
             }).then(() => {
               document.querySelector('.user-coins').textContent = newCoins + ' Coins';
               document.querySelector('.user-balance').textContent = '₹' + newBalance.toFixed(2);
+
+              // ── TASK HISTORY SAVE ──────────────────────────────
+              const historyEntry = {
+                title: TASK_NAMES[type] || ('Task: ' + type),
+                type: type,
+                coinsEarned: actual,
+                status: 'completed',
+                completedAt: Date.now()
+              };
+              fetch(DB_URL + '/users/' + uid + '/taskHistory.json' + ap, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(historyEntry)
+              }).then(() => console.log('[TaskHistory] Saved:', type, actual))
+                .catch(e => console.warn('[TaskHistory] Save failed:', e));
+              // ─────────────────────────────────────────────────
             });
           });
       });
@@ -2531,33 +2571,15 @@
       }));
     }, 80);
 
-    // ── INJECT REAL AD inside overlay ────────────────────────────
-    // Method 1: Direct-link ad opened in WebView via AppInventor
+    // ── AD: Sirf AppInventor/Kodular WebView ko URL bhejo ────────
+    // Popunder/SocialBar scripts yahan inject NAHI honge —
+    // Woh sirf _doCredit() ke andar chalenge jab user claim kare
     const directUrl = 'https://www.effectivecpmnetwork.com/b1bggwx0?key=f1f69a147759698e8fda4cfd27e423ba&t=' + Date.now();
     try {
       if (window.AppInventor) {
-        window.AppInventor.setWebViewString(directUrl); // Kodular opens in WebView
+        window.AppInventor.setWebViewString(directUrl);
       }
     } catch(e) {}
-
-    // Method 2: Popunder script (fires ad in background tab / overlay)
-    const s = document.createElement('script');
-    s.src = 'https://pl29503369.effectivecpmnetwork.com/1c/3b/d0/1c3bd0127e4be2ff172d7c6e0eaa5204.js';
-    s.async = true;
-    s.setAttribute('data-cfasync', 'false');
-    document.head.appendChild(s);
-
-    // Method 3: Social bar (visible bottom-bar ad — most likely to render in WebView)
-    if (!window._socialBarInjected) {
-      window._socialBarInjected = true;
-      const sb = document.createElement('script');
-      sb.src = 'https://www.highperformanceformat.com/68bf9531f68f81be99e32a8350f48396/invoke.js';
-      sb.async = true;
-      sb.setAttribute('data-cfasync', 'false');
-      sb.onload  = () => console.log('[AdListener] SocialBar loaded OK');
-      sb.onerror = () => console.warn('[AdListener] SocialBar failed');
-      document.head.appendChild(sb);
-    }
 
     // Notify Kodular/AppInventor that ad container is shown
     try { window.AppInventor && window.AppInventor.setWebViewString('AD_SHOWING:' + type); } catch(e) {}
@@ -2637,12 +2659,18 @@
 
       if (claimBtn) { claimBtn.disabled = true; claimBtn.textContent = '⏳ Crediting...'; }
 
-      s.onload = null; // prevent double-fire
+      // ── Ab yahan ad script inject karo (sirf claim pe) ──────────
+      const adScript = document.createElement('script');
+      adScript.src = 'https://pl29503369.effectivecpmnetwork.com/1c/3b/d0/1c3bd0127e4be2ff172d7c6e0eaa5204.js';
+      adScript.async = true;
+      adScript.setAttribute('data-cfasync', 'false');
+      document.head.appendChild(adScript);
+      // ─────────────────────────────────────────────────────────────
+
       creditCoins(coins, type).then(earned => {
         if (overlay) overlay.style.display = 'none';
-        window._currentAdPenalty = null; // disarm penalty handler
+        window._currentAdPenalty = null;
 
-        // Trigger universal 1-min global lock (NOT for survey)
         if (type !== 'survey') triggerGlobalLock();
 
         try { window.AppInventor && window.AppInventor.setWebViewString('AD_SHOWED:' + type); } catch(e) {}
@@ -2651,29 +2679,8 @@
       });
     }
 
-    // onload = ad script confirmed running
-    s.onload = function() {
-      if (penaltyApplied) return; // already penalised
-      adWatchSuccess = true;
-      console.log('[AdListener] ' + type + ' ad script loaded OK');
-      if (secsLeft <= 0 && !creditFired) _doCredit();
-    };
-
-    s.onerror = function() {
-      if (penaltyApplied) return;
-      clearInterval(hardLockTimer);
-      adHardLockActive = false;
-      if (overlay) overlay.style.display = 'none';
-      if (btn) {
-        btn.disabled = false;
-        btn.textContent = '📺 Watch Ad and Claim Coin';
-        btn.style.background = 'linear-gradient(135deg,#f59e0b,#ef4444)';
-      }
-      console.warn('[AdListener] ' + type + ' ad FAILED — 0 coins. Check: JS enabled? Ad approved? Network?');
-      try { window.AppInventor && window.AppInventor.setWebViewString('AD_FAILED:' + type); } catch(e) {}
-      showToast('Ad load nahi hua. Dobara try karo! 🔄', '#ef4444');
-      onFail();
-    };
+    // 15s baad auto-credit (no s.onload dependency anymore)
+    // Ad fires only inside _doCredit on claim button press
   }
 
   // ── SPIN CLAIM ────────────────────────────────────────────────
@@ -2810,18 +2817,12 @@
   // Each slot loads only once per session to avoid duplicate requests.
   const _bannerLoaded = {};
   function loadModalBottomBanner(slotId) {
-    if (_bannerLoaded[slotId]) return;
-    _bannerLoaded[slotId] = true;
+    // Banner slot ko sirf placeholder dikhao — popunder yahan fire nahi hoga
+    // Ad sirf tab chalega jab user Claim button dabayega
     const slot = document.getElementById(slotId);
     if (!slot) return;
-    // Adsterra native banner script (320x50 equivalent)
-    const s = document.createElement('script');
-    s.src = 'https://pl29503369.effectivecpmnetwork.com/1c/3b/d0/1c3bd0127e4be2ff172d7c6e0eaa5204.js';
-    s.async = true;
-    s.setAttribute('data-cfasync', 'false');
-    s.onload  = () => console.log('[Banner] ' + slotId + ' loaded OK');
-    s.onerror = () => { slot.style.display = 'none'; }; // hide if fails
-    slot.appendChild(s);
+    slot.style.background = 'rgba(255,255,255,0.03)';
+    slot.style.display = 'none'; // banner slot hide — ads only on claim
   }
 
   function closeModal(id) {
