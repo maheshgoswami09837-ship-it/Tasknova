@@ -135,6 +135,8 @@
   .toast.error { background: rgba(239,68,68,0.2); border: 1px solid rgba(239,68,68,0.4); color: #ef4444; }
   .toast.show { display: block; }
   @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+  .bg-yellow { background: rgba(234,179,8,0.2); }
+  .bg-teal   { background: rgba(20,184,166,0.2); }
 </style>
 </head>
 <body>
@@ -181,7 +183,7 @@
     </div>
     <div class="rule-item">
       <div class="rule-num">4</div>
-      <div class="rule-text"><strong>Tasks:</strong> Har task honest tarike se complete karo. Fake activity se account ban ho sakta hai.</div>
+      <div class="rule-text"><strong>Tasks:</strong> Har task honest tarike se complete karo. Fake activity se account ban ho sakta hai. Available tasks: Watch Ads (20/day), Spin (15/day), Scratch (15/day), Quiz (15/day), Check-In (1/day), Survey.</div>
     </div>
     <div class="rule-item">
       <div class="rule-num">5</div>
@@ -289,13 +291,33 @@
     <div class="earn-cards">
       <div class="earn-card" onclick="window.location.href='tasknova_tasks.html'">
         <div class="earn-card-icon bg-purple">📺</div>
-        <div class="earn-card-info"><h3>Watch Video Ad</h3><p>Watch short ads & earn coins</p></div>
-        <div class="earn-card-reward">+10 coins</div>
+        <div class="earn-card-info"><h3>Watch Video Ad</h3><p>Watch short ads & earn coins · 20/day</p></div>
+        <div class="earn-card-reward">+8–10 coins</div>
       </div>
       <div class="earn-card" onclick="window.location.href='tasknova_tasks.html'">
         <div class="earn-card-icon bg-blue">📝</div>
         <div class="earn-card-info"><h3>Complete Survey</h3><p>Answer questions & earn</p></div>
-        <div class="earn-card-reward" style="background:linear-gradient(135deg,#22c55e,#16a34a);font-size:11px;">✅ Active Now</div>
+        <div class="earn-card-reward" style="background:linear-gradient(135deg,#22c55e,#16a34a);font-size:11px;">500–2000 🪙</div>
+      </div>
+      <div class="earn-card" onclick="window.location.href='tasknova_tasks.html'">
+        <div class="earn-card-icon bg-orange">🎡</div>
+        <div class="earn-card-info"><h3>Spin & Win</h3><p>Wheel spin karo aur coins jeeto · 15/day</p></div>
+        <div class="earn-card-reward">5–10 coins</div>
+      </div>
+      <div class="earn-card" onclick="window.location.href='tasknova_tasks.html'">
+        <div class="earn-card-icon bg-green">🎴</div>
+        <div class="earn-card-info"><h3>Scratch Card</h3><p>Card scratch karo aur coins pao · 15/day</p></div>
+        <div class="earn-card-reward">5–20 coins</div>
+      </div>
+      <div class="earn-card" onclick="window.location.href='tasknova_tasks.html'">
+        <div class="earn-card-icon bg-teal">🧮</div>
+        <div class="earn-card-info"><h3>Math Quiz</h3><p>Sawaal solve karo aur coins pao · 15/day</p></div>
+        <div class="earn-card-reward">+10 coins</div>
+      </div>
+      <div class="earn-card" onclick="window.location.href='tasknova_tasks.html'">
+        <div class="earn-card-icon bg-yellow">📅</div>
+        <div class="earn-card-info"><h3>Daily Check-In</h3><p>Har roz ek baar claim karo</p></div>
+        <div class="earn-card-reward">+50 coins</div>
       </div>
 
       <div class="earn-card" onclick="window.location.href='tasknova_tasks.html'">
