@@ -607,38 +607,93 @@
 
     const newBalance = userBalance - selectedAmount;
 
-    window._getAuthToken().then(token => {
+    window._getAuthToken().then(async token => {
     const ap = token ? '?auth=' + token : '';
-    fetch(DB + '/withdrawals/' + uid + '.json' + ap, {
-      method: 'POST',
-      body  : JSON.stringify({
-        amount        : selectedAmount,
-        fee           : Math.round(selectedAmount * 0.1),
-        receive       : selectedAmount - Math.round(selectedAmount * 0.1),
-        method        : selectedMethod,
-        paymentDetails,
-        status        : 'pending',
-        date          : new Date().toISOString()
-      })
-    }).then(() => {
+
+    try {
+      // Step 1: Withdrawal request save karo
+      await fetch(DB + '/withdrawals/' + uid + '.json' + ap, {
+        method: 'POST',
+        body  : JSON.stringify({
+          amount        : selectedAmount,
+          fee           : Math.round(selectedAmount * 0.1),
+          receive       : selectedAmount - Math.round(selectedAmount * 0.1),
+          method        : selectedMethod,
+          paymentDetails,
+          status        : 'pending',
+          date          : new Date().toISOString()
+        })
+      });
+
+      // Step 2: User ka balance update karo
       const remainingCoins = Math.round(newBalance * 100);
-      return fetch(DB + '/users/' + uid + '.json' + ap, {
+      await fetch(DB + '/users/' + uid + '.json' + ap, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ balance: newBalance, coins: remainingCoins })
       });
-    }).then(() => {
+
+      // ── Step 3: REFERRAL REWARD LOGIC ────────────────────────
+      // Pehle check karo — kya is user ko kisine refer kiya tha?
+      const userRes  = await fetch(DB + '/users/' + uid + '.json' + ap);
+      const userData = await userRes.json();
+      const referredBy = userData.referredBy || ''; // referrer ka referral code
+
+      if (referredBy) {
+        // Referrer ka referral code se uska UID dhundo
+        const allUsersRes  = await fetch(DB + '/users.json' + ap + (ap ? '&' : '?') + 'orderBy="referralCode"&equalTo="' + referredBy + '"');
+        const allUsers     = await allUsersRes.json();
+
+        if (allUsers) {
+          const referrerUID  = Object.keys(allUsers)[0];
+          const referrerData = allUsers[referrerUID];
+
+          // Check karo — kya referral reward pehle diya ja chuka hai?
+          const referralRes  = await fetch(DB + '/referrals/' + referredBy + '/' + uid + '.json' + ap);
+          const referralData = await referralRes.json();
+
+          if (referralData && referralData.withdrawn === false) {
+            // Reward nahi mili abhi tak — ab do!
+            const REFERRAL_REWARD_COINS = 5000; // ₹50 = 5000 coins
+            const referrerNewCoins = (referrerData.coins || 0) + REFERRAL_REWARD_COINS;
+
+            // Referrer ke coins update karo
+            await fetch(DB + '/users/' + referrerUID + '.json' + ap, {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                coins       : referrerNewCoins,
+                referrals   : (referrerData.referrals || 0) + 1,
+                totalEarned : (referrerData.totalEarned || 0) + 50
+              })
+            });
+
+            // Referral record update karo — withdrawn: true taaki dobara reward na mile
+            await fetch(DB + '/referrals/' + referredBy + '/' + uid + '.json' + ap, {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ withdrawn: true, rewardedOn: new Date().toISOString() })
+            });
+
+            console.log('✅ Referral reward of ₹50 credited to referrer:', referrerUID);
+          }
+        }
+      }
+      // ── REFERRAL LOGIC END ────────────────────────────────────
+
       showToast('Withdrawal request submitted! ✅', 'success');
       document.querySelector('.user-balance').textContent = '₹' + newBalance.toFixed(2);
-      document.querySelector('.user-coins').textContent = Math.round(newBalance * 100) + ' Coins';
+      document.querySelector('.user-coins').textContent   = remainingCoins + ' Coins';
       userBalance = newBalance;
       loadHistory(uid);
-    }).catch(err => {
+
+    } catch(err) {
       showToast('Error: ' + err.message, 'error');
-    }).finally(() => {
+    } finally {
       btn.textContent = 'REQUEST WITHDRAWAL';
       btn.disabled    = false;
-    });
+    }
+
     }); // end _getAuthToken
   }
 
