@@ -239,40 +239,49 @@
     <div class="menu-arrow">›</div>
   </div>
 
-  <!-- TASK HISTORY MODAL -->
-  <div id="taskHistoryModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.75);z-index:1000;align-items:center;justify-content:center;">
-    <div style="background:#1a1a2e;border-radius:24px;padding:24px;width:92%;max-width:420px;max-height:88vh;overflow-y:auto;">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
-        <h3 style="color:#fff;font-size:18px;">📜 Task History</h3>
-        <span onclick="closeModal('taskHistoryModal')" style="color:rgba(255,255,255,0.5);font-size:24px;cursor:pointer;">✕</span>
-      </div>
+  <!-- TASK HISTORY FULL SCREEN -->
+  <div id="taskHistoryScreen" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:#05051a;z-index:500;overflow-y:auto;">
 
-      <!-- Summary bar -->
-      <div id="taskSummaryBar" style="display:flex;gap:10px;margin-bottom:18px;">
-        <div style="flex:1;background:rgba(108,99,255,0.15);border:1px solid rgba(108,99,255,0.3);border-radius:14px;padding:12px;text-align:center;">
-          <div id="thTotalTasks" style="font-size:22px;font-weight:800;color:#6c63ff;">0</div>
-          <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-top:2px;">Total Tasks</div>
+    <!-- Fixed Header -->
+    <div style="position:sticky;top:0;z-index:10;background:rgba(5,5,26,0.97);backdrop-filter:blur(20px);border-bottom:1px solid rgba(255,255,255,0.07);padding:16px 20px;display:flex;align-items:center;gap:14px;">
+      <div onclick="closeTaskHistory()" style="width:38px;height:38px;background:rgba(255,255,255,0.08);border-radius:12px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:18px;">←</div>
+      <div style="flex:1;">
+        <div style="color:#fff;font-size:17px;font-weight:800;">📜 Task History</div>
+        <div style="color:rgba(255,255,255,0.4);font-size:11px;margin-top:1px;">Aapke saare completed tasks</div>
+      </div>
+    </div>
+
+    <div style="padding:20px 16px 100px;">
+
+      <!-- Summary cards -->
+      <div style="display:flex;gap:10px;margin-bottom:20px;">
+        <div style="flex:1;background:rgba(108,99,255,0.12);border:1px solid rgba(108,99,255,0.25);border-radius:18px;padding:16px;text-align:center;">
+          <div style="font-size:28px;margin-bottom:6px;">📋</div>
+          <div id="thTotalTasks" style="font-size:26px;font-weight:900;color:#6c63ff;">0</div>
+          <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:4px;">Total Tasks</div>
         </div>
-        <div style="flex:1;background:rgba(34,197,94,0.15);border:1px solid rgba(34,197,94,0.3);border-radius:14px;padding:12px;text-align:center;">
-          <div id="thTotalEarned" style="font-size:22px;font-weight:800;color:#22c55e;">₹0</div>
-          <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-top:2px;">Total Earned</div>
+        <div style="flex:1;background:rgba(34,197,94,0.12);border:1px solid rgba(34,197,94,0.25);border-radius:18px;padding:16px;text-align:center;">
+          <div style="font-size:28px;margin-bottom:6px;">💰</div>
+          <div id="thTotalEarned" style="font-size:26px;font-weight:900;color:#22c55e;">₹0</div>
+          <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:4px;">Total Earned</div>
         </div>
       </div>
 
       <!-- Filter tabs -->
-      <div style="display:flex;gap:8px;margin-bottom:16px;">
-        <button onclick="filterHistory('all')" id="filterAll" style="flex:1;background:linear-gradient(135deg,#6c63ff,#3b82f6);border:none;border-radius:10px;padding:8px;color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:'Segoe UI',sans-serif;">All</button>
-        <button onclick="filterHistory('completed')" id="filterCompleted" style="flex:1;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:8px;color:rgba(255,255,255,0.6);font-size:12px;font-weight:600;cursor:pointer;font-family:'Segoe UI',sans-serif;">✅ Done</button>
-        <button onclick="filterHistory('pending')" id="filterPending" style="flex:1;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:8px;color:rgba(255,255,255,0.6);font-size:12px;font-weight:600;cursor:pointer;font-family:'Segoe UI',sans-serif;">⏳ Pending</button>
+      <div style="display:flex;gap:8px;margin-bottom:18px;background:rgba(255,255,255,0.05);border-radius:14px;padding:5px;">
+        <button onclick="filterHistory('all')" id="filterAll" style="flex:1;background:linear-gradient(135deg,#6c63ff,#3b82f6);border:none;border-radius:10px;padding:10px 6px;color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:'Segoe UI',sans-serif;">All</button>
+        <button onclick="filterHistory('completed')" id="filterCompleted" style="flex:1;background:transparent;border:none;border-radius:10px;padding:10px 6px;color:rgba(255,255,255,0.5);font-size:12px;font-weight:600;cursor:pointer;font-family:'Segoe UI',sans-serif;">✅ Done</button>
+        <button onclick="filterHistory('pending')" id="filterPending" style="flex:1;background:transparent;border:none;border-radius:10px;padding:10px 6px;color:rgba(255,255,255,0.5);font-size:12px;font-weight:600;cursor:pointer;font-family:'Segoe UI',sans-serif;">⏳ Pending</button>
       </div>
 
       <!-- Task list -->
       <div id="taskHistoryList">
-        <div style="text-align:center;padding:30px;color:rgba(255,255,255,0.3);">
-          <div style="font-size:32px;margin-bottom:10px;">⏳</div>
-          <div style="font-size:13px;">Loading tasks...</div>
+        <div style="text-align:center;padding:60px 20px;color:rgba(255,255,255,0.3);">
+          <div style="font-size:40px;margin-bottom:12px;">⏳</div>
+          <div style="font-size:14px;">Loading tasks...</div>
         </div>
       </div>
+
     </div>
   </div>
 
@@ -454,8 +463,14 @@
   let currentFilter = 'all';
 
   window.openTaskHistory = function() {
-    document.getElementById('taskHistoryModal').style.display = 'flex';
+    document.getElementById('taskHistoryScreen').style.display = 'block';
+    document.body.style.overflow = 'hidden';
     loadTaskHistory();
+  }
+
+  window.closeTaskHistory = function() {
+    document.getElementById('taskHistoryScreen').style.display = 'none';
+    document.body.style.overflow = '';
   }
 
   async function loadTaskHistory() {
@@ -463,53 +478,64 @@
     if (!uid || uid === 'null') return;
 
     document.getElementById('taskHistoryList').innerHTML = `
-      <div style="text-align:center;padding:30px;color:rgba(255,255,255,0.3);">
-        <div style="font-size:32px;margin-bottom:10px;">⏳</div>
-        <div style="font-size:13px;">Loading tasks...</div>
+      <div style="text-align:center;padding:60px 20px;color:rgba(255,255,255,0.3);">
+        <div style="font-size:40px;margin-bottom:12px;">⏳</div>
+        <div style="font-size:14px;">Loading tasks...</div>
       </div>`;
 
     const token = await window._getAuthToken();
     const ap = token ? '?auth=' + token : '';
+    const base = 'https://tasknova-66d0f-default-rtdb.firebaseio.com';
 
     try {
-      const res = await fetch('https://tasknova-66d0f-default-rtdb.firebaseio.com/users/' + uid + '/taskHistory.json' + ap);
-      const data = await res.json();
+      // Multiple paths try karo — jo bhi data ho
+      const [r1, r2, r3] = await Promise.all([
+        fetch(base + '/users/' + uid + '/taskHistory.json' + ap).then(r => r.json()).catch(() => null),
+        fetch(base + '/users/' + uid + '/completedTasks.json' + ap).then(r => r.json()).catch(() => null),
+        fetch(base + '/taskSubmissions/' + uid + '.json' + ap).then(r => r.json()).catch(() => null),
+      ]);
 
-      if (!data) {
-        allTaskHistory = [];
-        renderTaskHistory();
-        return;
-      }
+      const combined = {};
 
-      // Object ya array dono handle karo
-      allTaskHistory = Object.entries(data).map(([key, val]) => ({
-        id: key,
-        ...val
-      })).sort((a, b) => (b.completedAt || 0) - (a.completedAt || 0));
+      const addData = (data, defaultStatus) => {
+        if (!data || typeof data !== 'object') return;
+        Object.entries(data).forEach(([key, val]) => {
+          if (typeof val === 'object' && val !== null) {
+            combined[key] = { status: defaultStatus, ...val };
+          }
+        });
+      };
+
+      addData(r1, 'completed');
+      addData(r2, 'completed');
+      addData(r3, 'completed');
+
+      allTaskHistory = Object.entries(combined).map(([key, val]) => ({
+        id: key, ...val
+      })).sort((a, b) => (b.completedAt || b.timestamp || b.date || 0) - (a.completedAt || a.timestamp || a.date || 0));
 
       renderTaskHistory();
     } catch(e) {
       document.getElementById('taskHistoryList').innerHTML = `
-        <div style="text-align:center;padding:30px;color:rgba(239,68,68,0.7);">
-          <div style="font-size:28px;margin-bottom:8px;">⚠️</div>
-          <div style="font-size:13px;">Data load karne mein error aaya</div>
+        <div style="text-align:center;padding:60px 20px;color:rgba(239,68,68,0.6);">
+          <div style="font-size:36px;margin-bottom:12px;">⚠️</div>
+          <div style="font-size:14px;">Data load nahi hua, dobara try karo</div>
+          <button onclick="loadTaskHistory()" style="margin-top:16px;background:rgba(108,99,255,0.3);border:1px solid rgba(108,99,255,0.5);border-radius:12px;padding:10px 24px;color:#fff;font-size:13px;cursor:pointer;font-family:'Segoe UI',sans-serif;">🔄 Retry</button>
         </div>`;
     }
   }
 
   window.filterHistory = function(filter) {
     currentFilter = filter;
-    // Button styles update
     ['all','completed','pending'].forEach(f => {
       const btn = document.getElementById('filter' + f.charAt(0).toUpperCase() + f.slice(1));
+      if (!btn) return;
       if (f === filter) {
         btn.style.background = 'linear-gradient(135deg,#6c63ff,#3b82f6)';
         btn.style.color = '#fff';
-        btn.style.border = 'none';
       } else {
-        btn.style.background = 'rgba(255,255,255,0.07)';
-        btn.style.color = 'rgba(255,255,255,0.6)';
-        btn.style.border = '1px solid rgba(255,255,255,0.1)';
+        btn.style.background = 'transparent';
+        btn.style.color = 'rgba(255,255,255,0.5)';
       }
     });
     renderTaskHistory();
@@ -518,47 +544,57 @@
   function renderTaskHistory() {
     const filtered = currentFilter === 'all'
       ? allTaskHistory
-      : allTaskHistory.filter(t => (currentFilter === 'completed' ? t.status === 'completed' : t.status !== 'completed'));
+      : allTaskHistory.filter(t =>
+          currentFilter === 'completed'
+            ? (t.status === 'completed' || t.status === 'done' || t.status === 'approved')
+            : (t.status !== 'completed' && t.status !== 'done' && t.status !== 'approved')
+        );
 
-    // Summary update
     const totalEarned = allTaskHistory
-      .filter(t => t.status === 'completed')
-      .reduce((sum, t) => sum + (t.coinsEarned || t.reward || 0), 0);
+      .filter(t => t.status === 'completed' || t.status === 'done' || t.status === 'approved')
+      .reduce((sum, t) => sum + parseFloat(t.coinsEarned || t.coins || t.reward || t.amount || 0), 0);
+
     document.getElementById('thTotalTasks').textContent = allTaskHistory.length;
     document.getElementById('thTotalEarned').textContent = '₹' + (totalEarned / 100).toFixed(2);
 
     if (filtered.length === 0) {
       document.getElementById('taskHistoryList').innerHTML = `
-        <div style="text-align:center;padding:36px;color:rgba(255,255,255,0.3);">
-          <div style="font-size:36px;margin-bottom:10px;">📭</div>
-          <div style="font-size:13px;">Koi task nahi mila</div>
+        <div style="text-align:center;padding:60px 20px;color:rgba(255,255,255,0.25);">
+          <div style="font-size:48px;margin-bottom:14px;">📭</div>
+          <div style="font-size:15px;font-weight:600;color:rgba(255,255,255,0.4);">Koi task nahi mila</div>
+          <div style="font-size:12px;margin-top:8px;">Abhi tak koi task complete nahi kiya</div>
         </div>`;
       return;
     }
 
     const html = filtered.map(task => {
-      const isCompleted = task.status === 'completed';
-      const coins = task.coinsEarned || task.reward || 0;
+      const isDone = ['completed','done','approved'].includes(task.status);
+      const coins = parseFloat(task.coinsEarned || task.coins || task.reward || task.amount || 0);
       const rupees = (coins / 100).toFixed(2);
-      const date = task.completedAt
-        ? new Date(task.completedAt).toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' })
-        : (task.date || '—');
-      const time = task.completedAt
-        ? new Date(task.completedAt).toLocaleTimeString('en-IN', { hour:'2-digit', minute:'2-digit' })
+      const ts = task.completedAt || task.timestamp || task.date || null;
+      const dateStr = ts
+        ? new Date(typeof ts === 'number' && ts < 99999999999 ? ts * 1000 : ts)
+            .toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' })
+        : '—';
+      const timeStr = ts
+        ? new Date(typeof ts === 'number' && ts < 99999999999 ? ts * 1000 : ts)
+            .toLocaleTimeString('en-IN', { hour:'2-digit', minute:'2-digit' })
         : '';
 
       return `
-        <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,${isCompleted ? '0.1' : '0.06'});border-radius:16px;padding:14px 16px;margin-bottom:10px;display:flex;align-items:center;gap:14px;">
-          <div style="width:44px;height:44px;border-radius:12px;background:${isCompleted ? 'rgba(34,197,94,0.15)' : 'rgba(234,179,8,0.12)'};display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;">
-            ${task.icon || (isCompleted ? '✅' : '⏳')}
+        <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,${isDone ? '0.1' : '0.06'});border-radius:18px;padding:16px;margin-bottom:12px;display:flex;align-items:center;gap:14px;">
+          <div style="width:50px;height:50px;border-radius:14px;background:${isDone ? 'rgba(34,197,94,0.15)' : 'rgba(234,179,8,0.12)'};display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;">
+            ${task.icon || (isDone ? '✅' : '⏳')}
           </div>
           <div style="flex:1;min-width:0;">
-            <div style="color:#fff;font-size:14px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${task.title || task.taskName || 'Task'}</div>
-            <div style="color:rgba(255,255,255,0.4);font-size:11px;margin-top:3px;">${date}${time ? ' · ' + time : ''}</div>
+            <div style="color:#fff;font-size:15px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${task.title || task.taskName || task.name || 'Task'}</div>
+            <div style="color:rgba(255,255,255,0.35);font-size:11px;margin-top:4px;">${dateStr}${timeStr ? ' · ' + timeStr : ''}</div>
+            <div style="display:inline-block;margin-top:6px;padding:2px 10px;border-radius:50px;font-size:10px;font-weight:700;background:${isDone ? 'rgba(34,197,94,0.15)' : 'rgba(234,179,8,0.15)'};color:${isDone ? '#22c55e' : '#eab308'};">
+              ${isDone ? '✅ Completed' : '⏳ Pending'}
+            </div>
           </div>
           <div style="text-align:right;flex-shrink:0;">
-            <div style="color:${isCompleted ? '#22c55e' : '#eab308'};font-size:14px;font-weight:800;">+₹${rupees}</div>
-            <div style="font-size:10px;margin-top:3px;color:${isCompleted ? 'rgba(34,197,94,0.6)' : 'rgba(234,179,8,0.6)'};">${isCompleted ? 'Completed' : 'Pending'}</div>
+            <div style="color:${isDone ? '#22c55e' : '#eab308'};font-size:16px;font-weight:900;">+₹${rupees}</div>
           </div>
         </div>`;
     }).join('');
@@ -566,6 +602,7 @@
     document.getElementById('taskHistoryList').innerHTML = html;
   }
   // ─────────────────────────────────────────────────────────────
+
 
   // Page load hote hi profile data fetch karo
   window.addEventListener('load', () => {
