@@ -161,11 +161,16 @@
   }
 
   @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* TOAST */
+  .toast { position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%); padding: 11px 22px; border-radius: 50px; font-size: 13px; font-weight: 600; z-index: 9999; white-space: nowrap; display: none; }
+  .toast.show { display: block; }
 </style>
 </head>
 <body>
 
 <div class="stars" id="stars"></div>
+<div class="toast" id="toast"></div>
 <div class="glow-circle glow-1"></div>
 <div class="glow-circle glow-2"></div>
 
@@ -208,10 +213,17 @@
     </div>
   </div>
 
-  <!-- MENU -->
+
+    <!-- MENU -->
   <div class="menu-item" onclick="openModal('accountModal')">
     <div class="menu-icon" style="background:rgba(108,99,255,0.15);">⚙️</div>
     <div class="menu-info"><h4>Account Settings</h4><p>Edit profile & password</p></div>
+    <div class="menu-arrow">›</div>
+  </div>
+
+  <div class="menu-item" onclick="openModal('historyModal')">
+    <div class="menu-icon" style="background:rgba(108,99,255,0.15);">📊</div>
+    <div class="menu-info"><h4>Task History</h4><p>Aapki sabhi earnings ka record</p></div>
     <div class="menu-arrow">›</div>
   </div>
 
@@ -234,7 +246,31 @@
   </div>
 
   <!-- MODALS -->
-  <div id="accountModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);z-index:1000;align-items:center;justify-content:center;">
+  <!-- Task History Modal — Simple & Clean -->
+  <div id="historyModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.75);backdrop-filter:blur(6px);z-index:1000;align-items:flex-end;justify-content:center;">
+    <div style="background:#0d0d2b;border-radius:28px 28px 0 0;border:1px solid rgba(108,99,255,0.2);width:100%;max-height:85vh;overflow-y:auto;padding:24px 20px 40px;">
+
+      <!-- Header -->
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+        <div>
+          <h3 style="color:#fff;font-size:18px;font-weight:800;">📊 Task History</h3>
+          <p style="color:rgba(255,255,255,0.35);font-size:12px;margin-top:3px;">Aapki sabhi earnings ka record</p>
+        </div>
+        <span onclick="closeModal('historyModal')" style="color:rgba(255,255,255,0.4);font-size:26px;cursor:pointer;line-height:1;">✕</span>
+      </div>
+
+      <!-- Drag handle -->
+      <div style="width:40px;height:4px;background:rgba(255,255,255,0.15);border-radius:2px;margin:0 auto 20px;"></div>
+
+      <!-- List -->
+      <div id="historyList">
+        <div style="text-align:center;padding:40px 0;color:rgba(255,255,255,0.25);font-size:13px;">⏳ Loading...</div>
+      </div>
+
+    </div>
+  </div>
+
+    <div id="accountModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);z-index:1000;align-items:center;justify-content:center;">
     <div style="background:#1a1a2e;border-radius:24px;padding:24px;width:90%;max-width:400px;max-height:85vh;overflow-y:auto;">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
         <h3 style="color:#fff;font-size:18px;">⚙️ Account Settings</h3>
@@ -321,7 +357,7 @@
 
 <!-- BOTTOM NAV -->
 <div class="bottom-nav">
-  <div class="nav-item" onclick="window.location.href='tasknova_login-1.html'"><span>🏠</span><p>Home</p></div>
+  <div class="nav-item" onclick="window.location.href='tasknova_home_v2.html'"><span>🏠</span><p>Home</p></div>
   <div class="nav-item" onclick="window.location.href='tasknova_tasks.html'"><span>📋</span><p>Tasks</p></div>
   <div class="nav-center" onclick="window.location.href='tasknova_withdraw.html'">💰</div>
   <div class="nav-item" onclick="window.location.href='tasknova_refer.html'"><span>👥</span><p>Refer</p></div>
@@ -359,7 +395,76 @@
     starsContainer.appendChild(star);
   }
 
-  // Logout function
+  // ── TASK HISTORY (Simple) ───────────────────────────────────────
+  const DB_URL_H = 'https://tasknova-66d0f-default-rtdb.firebaseio.com';
+
+  const TASK_ICONS = {
+    watchad:  { icon: '📺', label: 'Watch Video Ad',  color: '#6c63ff' },
+    spin:     { icon: '🎡', label: 'Spin & Win',      color: '#a855f7' },
+    scratch:  { icon: '🎴', label: 'Scratch Card',    color: '#f59e0b' },
+    quiz:     { icon: '🧮', label: 'Math Quiz',       color: '#3b82f6' },
+    checkin:  { icon: '📅', label: 'Daily Check-In',  color: '#22c55e' },
+    survey:   { icon: '📝', label: 'Survey',          color: '#10b981' },
+    referral: { icon: '👥', label: 'Referral Bonus',  color: '#ec4899' },
+    welcome:  { icon: '🎁', label: 'Welcome Bonus',   color: '#f59e0b' },
+    bonus:    { icon: '🎁', label: 'Daily Bonus',     color: '#f59e0b' },
+  };
+
+  function loadTaskHistory(uid) {
+    const list = document.getElementById('historyList');
+    if (!list) return;
+    list.innerHTML = '<div style="text-align:center;padding:40px 0;color:rgba(255,255,255,0.25);font-size:13px;">⏳ Loading...</div>';
+
+    window._getAuthToken().then(function(token) {
+      const ap = token ? '?auth=' + token : '';
+      fetch(DB_URL_H + '/users/' + uid + '/taskHistory.json' + ap)
+        .then(function(r){ return r.json(); })
+        .then(function(data) {
+          if (!data || Object.keys(data).length === 0) {
+            list.innerHTML = '<div style="text-align:center;padding:40px 0;"><div style="font-size:40px;margin-bottom:12px;">📭</div><div style="color:rgba(255,255,255,0.3);font-size:13px;">Abhi koi earning nahi hui<br>Tasks complete karo aur yahan dikhega!</div></div>';
+            return;
+          }
+
+          // Sort newest first
+          var items = Object.values(data).filter(Boolean).sort(function(a,b){ return (b.time||0)-(a.time||0); });
+
+          list.innerHTML = items.map(function(item) {
+            var meta = TASK_ICONS[item.type] || { icon: '🪙', label: item.type || 'Task', color: '#6c63ff' };
+            var date = item.time ? new Date(item.time) : null;
+            var day  = date ? date.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}) : '';
+            var time = date ? date.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'}) : '';
+
+            return '<div style="display:flex;align-items:center;gap:12px;padding:13px 14px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);border-radius:16px;margin-bottom:8px;">'
+              + '<div style="width:44px;height:44px;border-radius:14px;background:rgba(255,255,255,0.06);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;">' + meta.icon + '</div>'
+              + '<div style="flex:1;min-width:0;">'
+              +   '<div style="font-size:14px;font-weight:700;color:#fff;">' + meta.label + '</div>'
+              +   '<div style="font-size:11px;color:rgba(255,255,255,0.3);margin-top:3px;">' + day + ' &nbsp;·&nbsp; ' + time + '</div>'
+              + '</div>'
+              + '<div style="text-align:right;flex-shrink:0;">'
+              +   '<div style="font-size:15px;font-weight:800;color:' + meta.color + ';">+' + (item.coins||0) + ' 🪙</div>'
+              +   '<div style="font-size:11px;color:rgba(255,255,255,0.3);margin-top:2px;">₹' + ((item.coins||0)/100).toFixed(2) + '</div>'
+              + '</div>'
+              + '</div>';
+          }).join('');
+        })
+        .catch(function() {
+          list.innerHTML = '<div style="text-align:center;padding:30px 0;color:rgba(239,68,68,0.6);font-size:13px;">❌ Load nahi hua, dobara try karo</div>';
+        });
+    });
+  }
+
+  // Navigate to tasks page
+    // Toast helper
+  window.showToast = function(msg, color) {
+    const t = document.getElementById('toast');
+    if (!t) return;
+    t.textContent = msg;
+    t.style.background = color || 'rgba(108,99,255,0.9)';
+    t.style.color = '#fff';
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 3000);
+  }
+
   window.logoutUser = function() {
     localStorage.removeItem('tasknova_uid');
     localStorage.setItem('tasknova_uid', 'null');
@@ -377,10 +482,14 @@
   // Modal functions
   window.openModal = function(id) {
     const modal = document.getElementById(id);
-    modal.style.display = 'flex';
+    if (modal) modal.style.display = 'flex';
     if (id === 'accountModal') {
       document.getElementById('editName').value = document.querySelector('.user-name').textContent;
       document.getElementById('editEmail').value = document.querySelector('.user-email').textContent;
+    }
+    if (id === 'historyModal') {
+      const uid = localStorage.getItem('tasknova_uid');
+      if (uid && uid !== 'null') loadTaskHistory(uid);
     }
   }
 
