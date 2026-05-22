@@ -122,8 +122,8 @@
 
   <div class="refer-banner">
     <div class="refer-emoji">🤝</div>
-    <h2>Invite Friends & Earn ₹10!</h2>
-    <p>Share your code — when your friend<br>joins & <strong>withdraws ₹100</strong>, you get <strong>₹10!</strong></p>
+    <h2>Invite Friends & Earn ₹50!</h2>
+    <p>Share your code — when your friend<br>joins & <strong>withdraws ₹100</strong>, you get <strong>₹50!</strong></p>
   </div>
 
   <div class="how-it-works">
@@ -131,7 +131,7 @@
     <div class="step"><div class="step-num">1</div><div class="step-text"><h4>Share your referral code</h4><p>Send your code to friends & family</p></div></div>
     <div class="step"><div class="step-num">2</div><div class="step-text"><h4>Friend joins TaskNova</h4><p>They register using your code</p></div></div>
     <div class="step"><div class="step-num">3</div><div class="step-text"><h4>Friend withdraws ₹100</h4><p>They complete tasks & withdraw</p></div></div>
-    <div class="step"><div class="step-num">4</div><div class="step-text"><h4>You earn ₹10!</h4><p>Automatically added to your balance</p></div></div>
+    <div class="step"><div class="step-num">4</div><div class="step-text"><h4>You earn ₹50!</h4><p>Automatically added to your balance</p></div></div>
   </div>
 
   <div class="code-section">
@@ -157,7 +157,7 @@
     <div class="empty-state">
       <div class="emoji">👀</div>
       <h4>No referrals yet!</h4>
-      <p>Share your code and start earning ₹10 per friend</p>
+      <p>Share your code and start earning ₹50 per friend</p>
     </div>
   </div>
 </div>
@@ -202,7 +202,7 @@
 
   // Milestones data
   const milestones = [
-    { count: 1,    reward: 10,     icon: '🎯', label: '1 Friend' },
+    { count: 1,    reward: 50,     icon: '🎯', label: '1 Friend' },
     { count: 5,    reward: 50,     icon: '⚡', label: '5 Friends' },
     { count: 10,   reward: 100,    icon: '🚀', label: '10 Friends' },
     { count: 50,   reward: 500,    icon: '💎', label: '50 Friends' },
@@ -299,7 +299,7 @@
         // Stats update karo
         const totalRefers = data.referrals || 0;
         const completedRefers = data.completedReferrals || 0;
-        const referEarned = completedRefers * 10;
+        const referEarned = completedRefers * 50;
 
         document.querySelector('.user-referrals').textContent = totalRefers;
         document.getElementById('completedReferrals').textContent = completedRefers;
@@ -323,7 +323,7 @@
             <div class="empty-state">
               <div class="emoji">👀</div>
               <h4>No referrals yet!</h4>
-              <p>Share your code and start earning ₹10 per friend</p>
+              <p>Share your code and start earning ₹50 per friend</p>
             </div>`;
           return;
         }
@@ -339,7 +339,7 @@
               <div style="padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600;background:${item.status === 'completed' ? 'rgba(34,197,94,0.2)' : 'rgba(234,179,8,0.2)'};color:${item.status === 'completed' ? '#22c55e' : '#eab308'};">
                 ${item.status === 'completed' ? '✅ Completed' : '⏳ Pending'}
               </div>
-              ${item.status === 'completed' ? '<div style="font-size:12px;color:#22c55e;margin-top:4px;">+₹10 earned</div>' : ''}
+              ${item.status === 'completed' ? '<div style="font-size:12px;color:#22c55e;margin-top:4px;">+₹50 earned</div>' : ''}
             </div>
           </div>
         `).join('');
