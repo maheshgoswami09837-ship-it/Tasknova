@@ -245,41 +245,38 @@
   renderMilestones(0);
 
   function getCode() {
-    return document.querySelector('.user-referral-code').textContent;
+    return document.querySelector(".user-referral-code").textContent.trim();
   }
 
-  function copyCode() {
+  window.copyCode = function() {
     const code = getCode();
     navigator.clipboard.writeText(code).then(() => {
-      const toast = document.getElementById('toast');
-      toast.classList.add('show');
-      setTimeout(() => toast.classList.remove('show'), 2000);
-    });
+      const toast = document.getElementById("toast");
+      toast.textContent = "✅ Code Copied!";
+      toast.classList.add("show");
+      setTimeout(() => toast.classList.remove("show"), 2000);
+    }).catch(() => { alert("Code: " + code); });
   }
 
-  function shareWhatsApp() {
+  window.shareWhatsApp = function() {
     const code = getCode();
-    const link = `https://maheshgoswami09837-ship-it.github.io/Tasknova/tasknova_login-1.html?ref=${code}`;
-    const msg = `🚀 Join TaskNova & earn money!\n\nUse my referral code: *${code}*\n\nClick to join & start earning:\n${link}`;
-    window.open('https://wa.me/?text=' + encodeURIComponent(msg));
+    const link = "https://maheshgoswami09837-ship-it.github.io/Tasknova/tasknova_login-1.html?ref=" + code;
+    const msg = "🚀 Join TaskNova & earn money!\n\nUse my referral code: *" + code + "*\n\nClick to join & start earning:\n" + link;
+    window.open("https://wa.me/?text=" + encodeURIComponent(msg), "_blank");
   }
 
-  function shareNow() {
+  window.shareNow = function() {
     const code = getCode();
-    const link = `https://maheshgoswami09837-ship-it.github.io/Tasknova/tasknova_login-1.html?ref=${code}`;
-    const shareData = {
-      title: 'TaskNova - Earn While You Explore',
-      text: `Join TaskNova & earn money! Use my referral code: ${code}`,
-      url: link
-    };
+    const link = "https://maheshgoswami09837-ship-it.github.io/Tasknova/tasknova_login-1.html?ref=" + code;
     if (navigator.share) {
-      navigator.share(shareData);
+      navigator.share({ title: "TaskNova", text: "Join TaskNova! Use code: " + code, url: link }).catch(e => console.log(e));
     } else {
-      navigator.clipboard.writeText(link);
-      const toast = document.getElementById('toast');
-      toast.textContent = '✅ Link Copied!';
-      toast.classList.add('show');
-      setTimeout(() => toast.classList.remove('show'), 2000);
+      navigator.clipboard.writeText(link).then(() => {
+        const toast = document.getElementById("toast");
+        toast.textContent = "✅ Link Copied!";
+        toast.classList.add("show");
+        setTimeout(() => toast.classList.remove("show"), 2000);
+      });
     }
   }
 
