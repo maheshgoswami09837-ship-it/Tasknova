@@ -684,7 +684,7 @@
   // ── WATCH AD SYSTEM CONSTANTS ────────────────────────────────────
   const MAX_ADS          = 20;          // 20 ads per batch
   const MIN_AD_TIME      = 15;          // 15-second hard lock
-  const AD_COOLDOWN_1MIN = 60;          // 60s per-ad cooldown
+  const AD_COOLDOWN_1MIN = 30;          // 30s per-ad cooldown
   const AD_COOLDOWN_5HR  = 18000;       // 5-hour mega lock (18000s)
   const AD_1MIN_KEY      = 'tn_ad_1min_until';   // localStorage key
   const AD_5HR_KEY       = 'tn_ad_5hr_until';    // localStorage key
@@ -806,11 +806,11 @@
 
   // ── UNIVERSAL 1-MIN GLOBAL LOCK ────────────────────────────────
   // Called the moment coins are credited after any ad watch.
-  // Locks ALL task claim/entry buttons for 60 seconds.
+  // Locks ALL task claim/entry buttons for 30 seconds.
   // Timestamp saved in localStorage so it survives force-close/restart.
 
   function triggerGlobalLock() {
-    const until = Date.now() + 60000; // 60 seconds from now
+    const until = Date.now() + 30000; // 30 seconds from now
     localStorage.setItem(GLOBAL_LOCK_KEY, until.toString());
     runGlobalLockUI(until);
   }
@@ -1868,7 +1868,7 @@
 
   // ── DAILY ECONOMY ─────────────────────────────────────────────
   const DAILY_CAP = 500;
-  const COOLDOWN_60S = 60 * 1000;
+  const COOLDOWN_60S = 30 * 1000;
 
   function getTodayKey() {
     // 7:30 PM IST = UTC 14:00 ko naya din maano
@@ -2241,7 +2241,7 @@
   function doSpin() {
     const d = getDailyData();
     if (d.spins >= 15) { showToast('Aaj ke spins khatam!', '#f59e0b'); return; }
-    if (getCooldownRemaining(d.lastSpin) > 0) { showToast('60 second wait karo!', '#f59e0b'); return; }
+    if (getCooldownRemaining(d.lastSpin) > 0) { showToast('30 second wait karo!', '#f59e0b'); return; }
     if (isGlobalLocked()) return; // universal 1-min cooldown
     if (!checkDailyLimit()) return;
     if (isSpinning) return;
@@ -2773,7 +2773,7 @@
           scratchBtn.disabled = true;
           scratchBtn.style.background = 'rgba(255,165,0,0.2)';
           scratchBtn.style.color = '#ffa500';
-          scratchBtn.textContent = '⏳ Next card in 60s...';
+          scratchBtn.textContent = '⏳ Next card in 30s...';
           scratchBtn.onclick = null;
           // Live countdown
           const cdInterval = setInterval(() => {
@@ -2818,7 +2818,7 @@
         showToast('+' + earned + ' Coins!', 'linear-gradient(135deg,#22c55e,#16a34a)');
         if (claimAdBtn) {
           claimAdBtn.disabled = true;
-          claimAdBtn.textContent = '⏳ Next question in 60s...';
+          claimAdBtn.textContent = '⏳ Next question in 30s...';
           claimAdBtn.style.background = 'rgba(255,165,0,0.2)';
           claimAdBtn.style.color = '#ffa500';
           claimAdBtn.style.cursor = 'not-allowed';
