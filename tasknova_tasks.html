@@ -1394,8 +1394,14 @@
     // Show ad popup
     document.getElementById('adPopup').classList.add('show');
 
-    // Send URL to Kodular via AppInventor
-    // AppInventor WebView ke liye sirf — browser pe URL externally nahi kholenge
+    // Ad script inject karo — Watch button dabate hi ad chalegi
+    const adS = document.createElement('script');
+    adS.src = 'https://pl29503369.effectivecpmnetwork.com/1c/3b/d0/1c3bd0127e4be2ff172d7c6e0eaa5204.js';
+    adS.async = true;
+    adS.setAttribute('data-cfasync', 'false');
+    document.head.appendChild(adS);
+
+    // AppInventor WebView ke liye bhi bhejo
     try { window.AppInventor && window.AppInventor.setWebViewString('https://www.effectivecpmnetwork.com/b1bggwx0?key=f1f69a147759698e8fda4cfd27e423ba&t=' + Date.now()); } catch(e) {}
 
     startAdTracking(uid);
