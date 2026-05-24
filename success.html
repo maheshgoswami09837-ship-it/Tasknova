@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TaskNova - Success!</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: linear-gradient(135deg, #0a0a1a, #1a1a3e);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Segoe UI', sans-serif;
+      color: #fff;
+      padding: 20px;
+    }
+    .card {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(108,99,255,0.3);
+      border-radius: 24px;
+      padding: 36px 28px;
+      max-width: 380px;
+      width: 100%;
+      text-align: center;
+    }
+    .icon { font-size: 60px; margin-bottom: 16px; }
+    h1 { font-size: 24px; font-weight: 800; margin-bottom: 8px; color: #22c55e; }
+    .sub { color: rgba(255,255,255,0.5); font-size: 14px; margin-bottom: 28px; }
+
+    .code-box {
+      background: linear-gradient(135deg, #6c63ff, #3b82f6);
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 24px;
+    }
+    .code-label { font-size: 12px; color: rgba(255,255,255,0.7); margin-bottom: 8px; }
+    .code-value {
+      font-size: 42px;
+      font-weight: 900;
+      letter-spacing: 10px;
+      color: #fff;
+      text-shadow: 0 0 20px rgba(255,255,255,0.5);
+    }
+
+    .instruction {
+      background: rgba(34,197,94,0.1);
+      border: 1px solid rgba(34,197,94,0.3);
+      border-radius: 12px;
+      padding: 14px;
+      font-size: 13px;
+      color: rgba(255,255,255,0.7);
+      line-height: 1.7;
+      margin-bottom: 20px;
+      text-align: left;
+    }
+
+    .copy-btn {
+      width: 100%;
+      background: linear-gradient(135deg, #22c55e, #16a34a);
+      border: none;
+      border-radius: 14px;
+      padding: 14px;
+      color: #fff;
+      font-size: 16px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+    .copy-btn:active { opacity: 0.8; }
+
+    .warning {
+      margin-top: 16px;
+      font-size: 11px;
+      color: rgba(255,165,0,0.7);
+    }
+  </style>
+</head>
+<body>
+<div class="card">
+  <div class="icon">🎉</div>
+  <h1>Task Complete!</h1>
+  <p class="sub">Shortlink successfully paar kiya! Neeche apna secret code lo.</p>
+
+  <div class="code-box">
+    <div class="code-label">🔐 Your Secret Code</div>
+    <div class="code-value" id="secretCode">----</div>
+  </div>
+
+  <div class="instruction">
+    📌 <strong style="color:#a78bfa;">Coins kaise milenge:</strong><br>
+    1. Upar diya code copy karo<br>
+    2. TaskNova app mein wapas jao<br>
+    3. Shortlink Task mein code daalo<br>
+    4. ✅ 20 coins turant credit!
+  </div>
+
+  <button class="copy-btn" onclick="copyCode()">📋 Code Copy Karo</button>
+  <div class="warning">⚠️ Ye code sirf ek baar kaam karega. Kisi ko share mat karo!</div>
+</div>
+
+<script>
+  // URL se uid aur taskIndex lo
+  function getParam(name) {
+    return new URLSearchParams(window.location.search).get(name);
+  }
+
+  const uid       = getParam('uid') || '';
+  const taskIndex = getParam('t')   || '0';
+
+  // Secret code generate karo — uid + taskIndex + date se
+  // Deterministic: same user same task same day = same code
+  function generateCode(uid, taskIndex) {
+    const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+    const raw   = uid.slice(-4) + taskIndex + today;
+    let hash = 0;
+    for (let i = 0; i < raw.length; i++) {
+      hash = ((hash << 5) - hash) + raw.charCodeAt(i);
+      hash |= 0;
+    }
+    // 4 digit alphanumeric uppercase
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    let code = '';
+    let n = Math.abs(hash);
+    for (let i = 0; i < 4; i++) {
+      code += chars[n % chars.length];
+      n = Math.floor(n / chars.length);
+    }
+    return code;
+  }
+
+  const code = uid ? generateCode(uid, taskIndex) : 'DEMO';
+  document.getElementById('secretCode').textContent = code;
+
+  function copyCode() {
+    navigator.clipboard.writeText(code).then(() => {
+      const btn = document.querySelector('.copy-btn');
+      btn.textContent = '✅ Copied!';
+      setTimeout(() => btn.textContent = '📋 Code Copy Karo', 2000);
+    }).catch(() => {
+      alert('Code: ' + code);
+    });
+  }
+</script>
+</body>
+</html>
