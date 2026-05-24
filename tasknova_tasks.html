@@ -465,10 +465,18 @@
           style="width:100%;background:linear-gradient(135deg,#6c63ff,#3b82f6);border:none;border-radius:16px;padding:16px;color:#fff;font-size:16px;font-weight:800;cursor:pointer;margin-bottom:12px;">
           🔗 Visit Link
         </button>
-        <button id="slClaimBtn" onclick="claimShortlink()" disabled
-          style="width:100%;background:rgba(255,255,255,0.08);border:1.5px solid rgba(255,255,255,0.12);border-radius:16px;padding:16px;color:rgba(255,255,255,0.35);font-size:15px;font-weight:800;cursor:not-allowed;">
-          ⏳ Pehle link visit karo
-        </button>
+
+        <!-- Secret Code Input — Visit ke baad dikhega -->
+        <div id="slCodeArea" style="display:none;margin-bottom:12px;">
+          <div style="color:rgba(255,255,255,0.5);font-size:12px;margin-bottom:8px;">🔐 Success page se code daalo:</div>
+          <input id="slCodeInput" type="text" maxlength="4" placeholder="CODE"
+            style="width:100%;background:rgba(255,255,255,0.08);border:1.5px solid rgba(108,99,255,0.5);border-radius:12px;padding:14px;color:#fff;font-size:24px;font-weight:900;text-align:center;letter-spacing:8px;text-transform:uppercase;outline:none;margin-bottom:10px;"
+            oninput="this.value=this.value.toUpperCase()">
+          <button id="slClaimBtn" onclick="claimShortlink()"
+            style="width:100%;background:linear-gradient(135deg,#22c55e,#16a34a);border:none;border-radius:14px;padding:14px;color:#fff;font-size:15px;font-weight:800;cursor:pointer;">
+            🎁 Claim 20 Coins
+          </button>
+        </div>
       </div>
 
       <!-- Reset info -->
@@ -2954,19 +2962,8 @@
   const SL_API     = 'https://shrinkearn.com/api?api=7e797b664e29f22c0dd93aaf2a4333387f22305c&url=';
   const SL_LIMIT   = 10;
   const SL_COINS   = 20;
-  // Har task ke liye ek fixed unique URL — sequence mein milegi
-  const SL_URLS    = [
-    'https://www.wikipedia.org',
-    'https://www.bing.com',
-    'https://www.yahoo.com',
-    'https://www.imdb.com',
-    'https://www.ndtv.com',
-    'https://www.timesofindia.com',
-    'https://www.cricbuzz.com',
-    'https://www.flipkart.com',
-    'https://www.amazon.in',
-    'https://www.instagram.com'
-  ];
+  // Success page URL — ShrinkEarn destination yahi hogi
+  const SUCCESS_BASE = 'https://tasknovaofficial.vercel.app/success.html';
 
   let slVisited = false;
 
@@ -3093,9 +3090,10 @@
     visitBtn.textContent = '⏳ Link generate ho raha hai...';
     visitBtn.disabled = true;
 
-    // Sequence mein URL pick karo — Task 1 = URL[0], Task 2 = URL[1] etc.
-    const taskIndex = d.done; // current completed count = next task index
-    const targetUrl = SL_URLS[taskIndex % SL_URLS.length];
+    // Success page URL mein uid aur taskIndex pass karo
+    const taskIndex = d.done;
+    const uid2      = localStorage.getItem('tasknova_uid') || '';
+    const targetUrl = SUCCESS_BASE + '?uid=' + uid2 + '&t=' + taskIndex;
     const apiUrl    = SL_API + encodeURIComponent(targetUrl);
 
     fetch(apiUrl)
@@ -3111,14 +3109,13 @@
         visitBtn.textContent = '✅ Link Visited!';
         visitBtn.style.background = 'rgba(34,197,94,0.15)';
         visitBtn.style.color = '#22c55e';
+        visitBtn.style.cursor = 'not-allowed';
 
-        // Claim button enable karo
-        const claimBtn = document.getElementById('slClaimBtn');
-        claimBtn.disabled = false;
-        claimBtn.textContent = '🎁 Claim 20 Coins';
-        claimBtn.style.background = 'linear-gradient(135deg,#22c55e,#16a34a)';
-        claimBtn.style.color = '#fff';
-        claimBtn.style.cursor = 'pointer';
+        // Code input dikhao
+        const codeArea = document.getElementById('slCodeArea');
+        if (codeArea) codeArea.style.display = 'block';
+        const codeInput = document.getElementById('slCodeInput');
+        if (codeInput) { codeInput.value = ''; codeInput.focus(); }
       })
       .catch(err => {
         console.error('ShrinkEarn error:', err);
@@ -3126,6 +3123,25 @@
         visitBtn.textContent = '🔗 Visit Link';
         visitBtn.disabled = false;
       });
+  }
+
+  // Same code generator jo success.html mein hai
+  function generateSlCode(uid, taskIndex) {
+    const today = new Date().toISOString().slice(0, 10);
+    const raw   = uid.slice(-4) + taskIndex + today;
+    let hash = 0;
+    for (let i = 0; i < raw.length; i++) {
+      hash = ((hash << 5) - hash) + raw.charCodeAt(i);
+      hash |= 0;
+    }
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    let code = '';
+    let n = Math.abs(hash);
+    for (let i = 0; i < 4; i++) {
+      code += chars[n % chars.length];
+      n = Math.floor(n / chars.length);
+    }
+    return code;
   }
 
   function claimShortlink() {
@@ -3142,6 +3158,14 @@
 
     const uid = localStorage.getItem('tasknova_uid');
     if (!uid || uid === 'null') { showToast('Pehle login karo!', '#ef4444'); return; }
+
+    // Code verify karo
+    const inputCode   = (document.getElementById('slCodeInput').value || '').trim().toUpperCase();
+    const correctCode = generateSlCode(uid, d.done);
+    if (inputCode !== correctCode) {
+      showToast('❌ Galat code! Success page se sahi code daalo.', '#ef4444');
+      return;
+    }
 
     const claimBtn = document.getElementById('slClaimBtn');
     claimBtn.disabled = true;
@@ -3185,10 +3209,11 @@
               visitBtn.style.cursor = 'pointer';
             }
 
-            claimBtn.textContent = '⏳ Pehle link visit karo';
-            claimBtn.style.background = 'rgba(255,255,255,0.08)';
-            claimBtn.style.color = 'rgba(255,255,255,0.35)';
-            claimBtn.style.cursor = 'not-allowed';
+            // Code area hide karo aur reset karo
+            const codeArea = document.getElementById('slCodeArea');
+            if (codeArea) codeArea.style.display = 'none';
+            const codeInput = document.getElementById('slCodeInput');
+            if (codeInput) codeInput.value = '';
           });
         })
         .catch(err => {
