@@ -268,12 +268,12 @@
   <div class="daily-limit-bar">
     <div class="limit-label">
       <span>📊 Aaj ki Earning</span>
-      <span id="dailyLimitText">0 / 850 Coins</span>
+      <span id="dailyLimitText">0 / 1000 Coins</span>
     </div>
     <div class="limit-fill">
       <div class="limit-fill-inner" id="dailyLimitBar" style="width:0%"></div>
     </div>
-    <div style="font-size:10px;color:rgba(255,255,255,0.25);margin-top:5px;text-align:right;">Max: SL(200)+Ads(180)+Spin(150)+Scratch(150)+Quiz(150)+Check-in(20)</div>
+    <div style="font-size:10px;color:rgba(255,255,255,0.25);margin-top:5px;text-align:right;">Max: SL(40)+Ads(180)+Spin(150)+Scratch(150)+Quiz(150)+Check-in(20)</div>
   </div>
 
   <div class="cat-tabs">
@@ -294,8 +294,8 @@
         <h3>Shortlink Task</h3>
         <p>Link visit karo aur coins pao</p>
         <div class="task-meta">
-          <span class="task-time">⏱ 10/day</span>
-          <span id="shortlinkCountBadge" class="cooldown-badge">0/10</span>
+          <span class="task-time">⏱ 2/day</span>
+          <span id="shortlinkCountBadge" class="cooldown-badge">0/2</span>
         </div>
       </div>
       <div class="task-reward">
@@ -454,7 +454,7 @@
           <div style="color:rgba(255,255,255,0.4);font-size:11px;">Completed</div>
         </div>
         <div style="text-align:center;">
-          <div style="color:#22c55e;font-size:20px;font-weight:800;">10</div>
+          <div style="color:#22c55e;font-size:20px;font-weight:800;">2</div>
           <div style="color:rgba(255,255,255,0.4);font-size:11px;">Daily Limit</div>
         </div>
         <div style="text-align:center;">
@@ -552,7 +552,7 @@
   <div class="popup-box">
     <div style="font-size:48px;margin-bottom:12px;">🚫</div>
     <div style="font-size:20px;font-weight:800;color:#fff;margin-bottom:8px;">Today's Limit Reached!</div>
-    <div style="font-size:13px;color:rgba(255,255,255,0.5);margin-bottom:20px;">Aapne aaj 850 coins kama liye! Kal wapas aao 🎉</div>
+    <div style="font-size:13px;color:rgba(255,255,255,0.5);margin-bottom:20px;">Aapne aaj 1000 coins kama liye! Kal wapas aao 🎉</div>
     <button onclick="document.getElementById('limitPopup').classList.remove('show')" style="background:linear-gradient(135deg,#6c63ff,#3b82f6);border:none;border-radius:12px;padding:12px 32px;color:#fff;font-size:14px;font-weight:700;cursor:pointer;">OK</button>
   </div>
 </div>
@@ -1974,7 +1974,7 @@
   });
 
   // ── DAILY ECONOMY ─────────────────────────────────────────────
-  const DAILY_CAP = 850;
+  const DAILY_CAP = 1000;
   const COOLDOWN_60S = 30 * 1000;
 
   function getTodayKey() {
@@ -2978,7 +2978,7 @@
     setTimeout(loadSlDataFromFirebase, 1500); // auth ready hone ka wait
   });
   const SL_API     = 'https://shrinkearn.com/api?api=7e797b664e29f22c0dd93aaf2a4333387f22305c&url=';
-  const SL_LIMIT   = 10;
+  const SL_LIMIT   = 2;
   const SL_COINS   = 20;
   // Success page URL — ShrinkEarn destination yahi hogi
   const SUCCESS_BASE = 'https://tasknovaofficial.vercel.app/success.html';
