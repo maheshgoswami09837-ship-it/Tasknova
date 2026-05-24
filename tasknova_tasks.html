@@ -2947,19 +2947,30 @@
 
 
   // ── SHORTLINK TASK ────────────────────────────────────────────
+  // Page load pe badge update karo Firebase se
+  window.addEventListener('load', function() {
+    setTimeout(loadSlDataFromFirebase, 1500); // auth ready hone ka wait
+  });
   const SL_API     = 'https://shrinkearn.com/api?api=7e797b664e29f22c0dd93aaf2a4333387f22305c&url=';
   const SL_LIMIT   = 10;
   const SL_COINS   = 20;
+  // Har task ke liye ek fixed unique URL — sequence mein milegi
   const SL_URLS    = [
-    'https://google.com','https://youtube.com','https://wikipedia.org',
-    'https://bing.com','https://yahoo.com','https://reddit.com',
-    'https://twitter.com','https://linkedin.com','https://github.com',
-    'https://stackoverflow.com','https://amazon.com','https://flipkart.com',
-    'https://instagram.com','https://facebook.com','https://pinterest.com'
+    'https://www.wikipedia.org',
+    'https://www.bing.com',
+    'https://www.yahoo.com',
+    'https://www.imdb.com',
+    'https://www.ndtv.com',
+    'https://www.timesofindia.com',
+    'https://www.cricbuzz.com',
+    'https://www.flipkart.com',
+    'https://www.amazon.in',
+    'https://www.instagram.com'
   ];
 
   let slVisited = false;
 
+  // LocalStorage as cache + Firebase as source of truth
   function getSlData() {
     const today = new Date().toDateString();
     const raw   = localStorage.getItem('sl_data');
@@ -2974,6 +2985,38 @@
 
   function saveSlData(d) {
     localStorage.setItem('sl_data', JSON.stringify(d));
+    // Firebase mein bhi save karo
+    const uid = localStorage.getItem('tasknova_uid');
+    if (!uid || uid === 'null') return;
+    window._getAuthToken && window._getAuthToken().then(token => {
+      const ap = token ? '?auth=' + token : '';
+      fetch(DB_URL + '/users/' + uid + '/slData.json' + ap, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(d)
+      }).catch(e => console.log('SL save error:', e));
+    });
+  }
+
+  // Page load pe Firebase se shortlink data load karo
+  function loadSlDataFromFirebase() {
+    const uid = localStorage.getItem('tasknova_uid');
+    if (!uid || uid === 'null') return;
+    const today = new Date().toDateString();
+    window._getAuthToken && window._getAuthToken().then(token => {
+      const ap = token ? '?auth=' + token : '';
+      fetch(DB_URL + '/users/' + uid + '/slData.json' + ap)
+        .then(r => r.json())
+        .then(data => {
+          if (data && data.date === today) {
+            // Firebase data aaj ka hai — localStorage update karo
+            localStorage.setItem('sl_data', JSON.stringify(data));
+            const badge = document.getElementById('shortlinkCountBadge');
+            if (badge) badge.textContent = data.done + '/10';
+          }
+        })
+        .catch(e => console.log('SL load error:', e));
+    });
   }
 
   function updateSlUI() {
@@ -3008,7 +3051,25 @@
   function openShortlinkModal() {
     slVisited = false;
     document.getElementById('shortlinkModal').classList.add('show');
-    updateSlUI();
+    // Firebase se latest data load karo pehle
+    const uid = localStorage.getItem('tasknova_uid');
+    const today = new Date().toDateString();
+    if (uid && uid !== 'null') {
+      window._getAuthToken && window._getAuthToken().then(token => {
+        const ap = token ? '?auth=' + token : '';
+        fetch(DB_URL + '/users/' + uid + '/slData.json' + ap)
+          .then(r => r.json())
+          .then(data => {
+            if (data && data.date === today) {
+              localStorage.setItem('sl_data', JSON.stringify(data));
+            }
+            updateSlUI();
+          })
+          .catch(() => updateSlUI());
+      });
+    } else {
+      updateSlUI();
+    }
 
     // Claim button reset
     const claimBtn = document.getElementById('slClaimBtn');
@@ -3032,9 +3093,10 @@
     visitBtn.textContent = '⏳ Link generate ho raha hai...';
     visitBtn.disabled = true;
 
-    // Random URL pick karo
-    const randomUrl = SL_URLS[Math.floor(Math.random() * SL_URLS.length)];
-    const apiUrl    = SL_API + encodeURIComponent(randomUrl);
+    // Sequence mein URL pick karo — Task 1 = URL[0], Task 2 = URL[1] etc.
+    const taskIndex = d.done; // current completed count = next task index
+    const targetUrl = SL_URLS[taskIndex % SL_URLS.length];
+    const apiUrl    = SL_API + encodeURIComponent(targetUrl);
 
     fetch(apiUrl)
       .then(res => res.json())
