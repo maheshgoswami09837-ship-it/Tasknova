@@ -459,24 +459,29 @@
         4. ✅ 20 coins wallet mein credit!
       </div>
 
-      <!-- Task Button -->
+      <!-- Task Buttons -->
       <div id="slTaskArea" style="text-align:center;">
+
+        <!-- Step 1: Visit Button -->
         <button id="slVisitBtn" onclick="doShortlinkTask()"
-          style="width:100%;background:linear-gradient(135deg,#6c63ff,#3b82f6);border:none;border-radius:16px;padding:16px;color:#fff;font-size:16px;font-weight:800;cursor:pointer;margin-bottom:12px;">
+          style="width:100%;background:linear-gradient(135deg,#6c63ff,#3b82f6);border:none;border-radius:16px;padding:16px;color:#fff;font-size:16px;font-weight:800;cursor:pointer;margin-bottom:14px;">
           🔗 Visit Link
         </button>
 
-        <!-- Secret Code Input — Visit ke baad dikhega -->
-        <div id="slCodeArea" style="display:none;margin-bottom:12px;">
-          <div style="color:rgba(255,255,255,0.5);font-size:12px;margin-bottom:8px;">🔐 Success page se code daalo:</div>
-          <input id="slCodeInput" type="text" maxlength="4" placeholder="CODE"
-            style="width:100%;background:rgba(255,255,255,0.08);border:1.5px solid rgba(108,99,255,0.5);border-radius:12px;padding:14px;color:#fff;font-size:24px;font-weight:900;text-align:center;letter-spacing:8px;text-transform:uppercase;outline:none;margin-bottom:10px;"
-            oninput="this.value=this.value.toUpperCase()">
-          <button id="slClaimBtn" onclick="claimShortlink()"
-            style="width:100%;background:linear-gradient(135deg,#22c55e,#16a34a);border:none;border-radius:14px;padding:14px;color:#fff;font-size:15px;font-weight:800;cursor:pointer;margin-bottom:20px;">
-            🎁 Claim 20 Coins
-          </button>
+        <!-- Step 2: Code Input (hidden by default) -->
+        <div id="slCodeLabel" style="display:none;color:rgba(255,255,255,0.5);font-size:12px;margin-bottom:8px;">
+          🔐 Success page se code daalo:
         </div>
+        <input id="slCodeInput" type="text" maxlength="4" placeholder="CODE"
+          style="display:none;width:100%;background:rgba(255,255,255,0.08);border:1.5px solid rgba(108,99,255,0.5);border-radius:12px;padding:14px;color:#fff;font-size:24px;font-weight:900;text-align:center;letter-spacing:8px;text-transform:uppercase;outline:none;margin-bottom:10px;box-sizing:border-box;"
+          oninput="this.value=this.value.toUpperCase()">
+
+        <!-- Step 3: Claim Button (hidden by default) -->
+        <button id="slClaimBtn" onclick="claimShortlink()"
+          style="display:none;width:100%;background:linear-gradient(135deg,#22c55e,#16a34a);border:none;border-radius:14px;padding:16px;color:#fff;font-size:16px;font-weight:800;cursor:pointer;margin-bottom:20px;">
+          🎁 Claim 20 Coins
+        </button>
+
       </div>
 
       <!-- Reset info -->
@@ -3068,14 +3073,20 @@
       updateSlUI();
     }
 
-    // Claim button reset
-    const claimBtn = document.getElementById('slClaimBtn');
-    if (claimBtn) {
-      claimBtn.disabled = true;
-      claimBtn.textContent = '⏳ Pehle link visit karo';
-      claimBtn.style.background = 'rgba(255,255,255,0.08)';
-      claimBtn.style.color = 'rgba(255,255,255,0.35)';
-      claimBtn.style.cursor = 'not-allowed';
+    // Sab reset karo
+    const lbl2 = document.getElementById('slCodeLabel');
+    const inp2 = document.getElementById('slCodeInput');
+    const clm2 = document.getElementById('slClaimBtn');
+    const vBtn = document.getElementById('slVisitBtn');
+    if (lbl2) lbl2.style.display = 'none';
+    if (inp2) { inp2.style.display = 'none'; inp2.value = ''; }
+    if (clm2) clm2.style.display = 'none';
+    if (vBtn) {
+      vBtn.textContent = '🔗 Visit Link';
+      vBtn.disabled = false;
+      vBtn.style.background = 'linear-gradient(135deg,#6c63ff,#3b82f6)';
+      vBtn.style.color = '#fff';
+      vBtn.style.cursor = 'pointer';
     }
   }
 
@@ -3110,12 +3121,15 @@
         visitBtn.style.background = 'rgba(34,197,94,0.15)';
         visitBtn.style.color = '#22c55e';
         visitBtn.style.cursor = 'not-allowed';
+        visitBtn.disabled = true;
 
-        // Code input dikhao
-        const codeArea = document.getElementById('slCodeArea');
-        if (codeArea) codeArea.style.display = 'block';
-        const codeInput = document.getElementById('slCodeInput');
-        if (codeInput) { codeInput.value = ''; codeInput.focus(); }
+        // Code input aur claim button dikhao
+        const lbl = document.getElementById('slCodeLabel');
+        const inp = document.getElementById('slCodeInput');
+        const clm = document.getElementById('slClaimBtn');
+        if (lbl) lbl.style.display = 'block';
+        if (inp) { inp.style.display = 'block'; inp.value = ''; inp.focus(); }
+        if (clm) clm.style.display = 'block';
       })
       .catch(err => {
         console.error('ShrinkEarn error:', err);
@@ -3210,10 +3224,20 @@
             }
 
             // Code area hide karo aur reset karo
-            const codeArea = document.getElementById('slCodeArea');
-            if (codeArea) codeArea.style.display = 'none';
-            const codeInput = document.getElementById('slCodeInput');
-            if (codeInput) codeInput.value = '';
+            const lbl3 = document.getElementById('slCodeLabel');
+            const inp3 = document.getElementById('slCodeInput');
+            const clm3 = document.getElementById('slClaimBtn');
+            const vBtn3 = document.getElementById('slVisitBtn');
+            if (lbl3) lbl3.style.display = 'none';
+            if (inp3) { inp3.style.display = 'none'; inp3.value = ''; }
+            if (clm3) clm3.style.display = 'none';
+            if (vBtn3) {
+              vBtn3.textContent = '🔗 Visit Link';
+              vBtn3.disabled = false;
+              vBtn3.style.background = 'linear-gradient(135deg,#6c63ff,#3b82f6)';
+              vBtn3.style.color = '#fff';
+              vBtn3.style.cursor = 'pointer';
+            }
           });
         })
         .catch(err => {
