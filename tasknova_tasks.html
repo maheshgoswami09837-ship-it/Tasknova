@@ -1394,18 +1394,8 @@
     // Show ad popup
     document.getElementById('adPopup').classList.add('show');
 
-    // Send URL to Kodular via AppInventor
-    const adUrl   = 'https://www.effectivecpmnetwork.com/b1bggwx0?key=f1f69a147759698e8fda4cfd27e423ba';
-    const finalUrl = adUrl + '&t=' + Date.now();
-    if (finalUrl.startsWith('https://') || finalUrl.startsWith('http://')) {
-      try {
-        window.AppInventor.setWebViewString(finalUrl);
-      } catch(e) {
-        var a = document.createElement('a');
-        a.href = finalUrl; a.target = '_blank';
-        document.body.appendChild(a); a.click(); document.body.removeChild(a);
-      }
-    }
+    // Send URL to Kodular via AppInventor only (browser pe bahar nahi kholenge)
+    try { window.AppInventor && window.AppInventor.setWebViewString('https://www.effectivecpmnetwork.com/b1bggwx0?key=f1f69a147759698e8fda4cfd27e423ba&t=' + Date.now()); } catch(e) {}
 
     startAdTracking(uid);
   }
@@ -2703,13 +2693,8 @@
 
       if (claimBtn) { claimBtn.disabled = true; claimBtn.textContent = '⏳ Crediting...'; }
 
-      // ── Ab yahan ad script inject karo (sirf claim pe) ──────────
-      const adScript = document.createElement('script');
-      adScript.src = 'https://pl29503369.effectivecpmnetwork.com/1c/3b/d0/1c3bd0127e4be2ff172d7c6e0eaa5204.js';
-      adScript.async = true;
-      adScript.setAttribute('data-cfasync', 'false');
-      document.head.appendChild(adScript);
-      // ─────────────────────────────────────────────────────────────
+      // Sirf AppInventor ko notify karo — browser pe bahar ad nahi kholenge
+      try { window.AppInventor && window.AppInventor.setWebViewString('AD_CLAIM:' + type); } catch(e) {}
 
       creditCoins(coins, type).then(earned => {
         if (overlay) overlay.style.display = 'none';
