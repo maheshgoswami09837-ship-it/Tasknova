@@ -267,6 +267,24 @@
   <div class="section-title">🔥 Available Tasks</div>
   <div class="tasks-grid" id="tasksGrid">
 
+    <!-- Shortlink Task -->
+    <div class="task-card" data-category="daily" id="shortlinkTaskCard" onclick="openShortlinkModal()">
+      <div class="task-icon icon-green">🔗</div>
+      <div class="task-info">
+        <h3>Shortlink Task</h3>
+        <p>Link visit karo aur coins pao</p>
+        <div class="task-meta">
+          <span class="task-time">⏱ 10/day</span>
+          <span id="shortlinkCountBadge" class="cooldown-badge">0/10</span>
+        </div>
+      </div>
+      <div class="task-reward">
+        <div class="coins-reward">+20</div>
+        <div class="rupee">coins/link</div>
+        <button class="do-btn" id="shortlinkTaskBtn">Visit</button>
+      </div>
+    </div>
+
     <div class="task-card" data-category="watchads" id="watchAdCard">
       <div class="task-icon icon-purple">📺</div>
       <div class="task-info">
@@ -387,6 +405,7 @@
       </div>
     </div>
 
+
     <div class="task-card disabled" data-category="instagram">
       <div class="task-icon icon-pink">📸</div>
       <div class="task-info">
@@ -405,6 +424,61 @@
   </div>
 </div>
 
+
+<!-- Shortlink Modal -->
+<div class="feature-modal" id="shortlinkModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <button class="back-btn" onclick="closeModal('shortlinkModal')">←</button>
+      <h2>🔗 Shortlink Task</h2>
+    </div>
+    <div style="padding:20px;">
+
+      <!-- Stats -->
+      <div style="display:flex;justify-content:space-between;background:rgba(255,255,255,0.05);border-radius:14px;padding:14px 20px;margin-bottom:20px;">
+        <div style="text-align:center;">
+          <div style="color:#6c63ff;font-size:20px;font-weight:800;" id="slDoneCount">0</div>
+          <div style="color:rgba(255,255,255,0.4);font-size:11px;">Completed</div>
+        </div>
+        <div style="text-align:center;">
+          <div style="color:#22c55e;font-size:20px;font-weight:800;">10</div>
+          <div style="color:rgba(255,255,255,0.4);font-size:11px;">Daily Limit</div>
+        </div>
+        <div style="text-align:center;">
+          <div style="color:#f59e0b;font-size:20px;font-weight:800;">+20</div>
+          <div style="color:rgba(255,255,255,0.4);font-size:11px;">Coins/Link</div>
+        </div>
+      </div>
+
+      <!-- Instructions -->
+      <div style="background:rgba(108,99,255,0.1);border:1px solid rgba(108,99,255,0.3);border-radius:12px;padding:14px;margin-bottom:20px;font-size:12px;color:rgba(255,255,255,0.6);line-height:1.7;">
+        📌 <strong style="color:#a78bfa;">Kaise kaam karta hai:</strong><br>
+        1. "Visit Link" button dabao<br>
+        2. Link open hoga — thoda wait karo<br>
+        3. Wapas aao aur "Claim 20 Coins" dabao<br>
+        4. ✅ 20 coins wallet mein credit!
+      </div>
+
+      <!-- Task Button -->
+      <div id="slTaskArea" style="text-align:center;">
+        <button id="slVisitBtn" onclick="doShortlinkTask()"
+          style="width:100%;background:linear-gradient(135deg,#6c63ff,#3b82f6);border:none;border-radius:16px;padding:16px;color:#fff;font-size:16px;font-weight:800;cursor:pointer;margin-bottom:12px;">
+          🔗 Visit Link
+        </button>
+        <button id="slClaimBtn" onclick="claimShortlink()" disabled
+          style="width:100%;background:rgba(255,255,255,0.08);border:1.5px solid rgba(255,255,255,0.12);border-radius:16px;padding:16px;color:rgba(255,255,255,0.35);font-size:15px;font-weight:800;cursor:not-allowed;">
+          ⏳ Pehle link visit karo
+        </button>
+      </div>
+
+      <!-- Reset info -->
+      <div style="text-align:center;margin-top:16px;color:rgba(255,255,255,0.3);font-size:11px;">
+        🕛 Raat 12 baje reset hota hai
+      </div>
+
+    </div>
+  </div>
+</div>
 <!-- Ad Popup -->
 <div id="adPopup">
   <div style="width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;">
@@ -2871,6 +2945,198 @@
     slot.style.display = 'none'; // banner slot hide — ads only on claim
   }
 
+
+  // ── SHORTLINK TASK ────────────────────────────────────────────
+  const SL_API     = 'https://shrinkearn.com/api?api=7e797b664e29f22c0dd93aaf2a4333387f22305c&url=';
+  const SL_LIMIT   = 10;
+  const SL_COINS   = 20;
+  const SL_URLS    = [
+    'https://google.com','https://youtube.com','https://wikipedia.org',
+    'https://bing.com','https://yahoo.com','https://reddit.com',
+    'https://twitter.com','https://linkedin.com','https://github.com',
+    'https://stackoverflow.com','https://amazon.com','https://flipkart.com',
+    'https://instagram.com','https://facebook.com','https://pinterest.com'
+  ];
+
+  let slVisited = false;
+
+  function getSlData() {
+    const today = new Date().toDateString();
+    const raw   = localStorage.getItem('sl_data');
+    if (raw) {
+      const d = JSON.parse(raw);
+      if (d.date === today) return d;
+    }
+    const fresh = { date: today, done: 0 };
+    localStorage.setItem('sl_data', JSON.stringify(fresh));
+    return fresh;
+  }
+
+  function saveSlData(d) {
+    localStorage.setItem('sl_data', JSON.stringify(d));
+  }
+
+  function updateSlUI() {
+    const d    = getSlData();
+    const done = d.done;
+    const badge = document.getElementById('shortlinkCountBadge');
+    const doneEl = document.getElementById('slDoneCount');
+    if (badge)  badge.textContent = done + '/10';
+    if (doneEl) doneEl.textContent = done;
+
+    const visitBtn = document.getElementById('slVisitBtn');
+    const claimBtn = document.getElementById('slClaimBtn');
+    if (!visitBtn || !claimBtn) return;
+
+    if (done >= SL_LIMIT) {
+      visitBtn.textContent = '✅ Aaj ke sab tasks complete!';
+      visitBtn.disabled = true;
+      visitBtn.style.background = 'rgba(255,255,255,0.08)';
+      visitBtn.style.color = 'rgba(255,255,255,0.35)';
+      visitBtn.style.cursor = 'not-allowed';
+      claimBtn.disabled = true;
+      claimBtn.textContent = '🎉 Kal wapas aao!';
+    } else {
+      visitBtn.textContent = '🔗 Visit Link';
+      visitBtn.disabled = false;
+      visitBtn.style.background = 'linear-gradient(135deg,#6c63ff,#3b82f6)';
+      visitBtn.style.color = '#fff';
+      visitBtn.style.cursor = 'pointer';
+    }
+  }
+
+  function openShortlinkModal() {
+    slVisited = false;
+    document.getElementById('shortlinkModal').classList.add('show');
+    updateSlUI();
+
+    // Claim button reset
+    const claimBtn = document.getElementById('slClaimBtn');
+    if (claimBtn) {
+      claimBtn.disabled = true;
+      claimBtn.textContent = '⏳ Pehle link visit karo';
+      claimBtn.style.background = 'rgba(255,255,255,0.08)';
+      claimBtn.style.color = 'rgba(255,255,255,0.35)';
+      claimBtn.style.cursor = 'not-allowed';
+    }
+  }
+
+  function doShortlinkTask() {
+    const d = getSlData();
+    if (d.done >= SL_LIMIT) {
+      showToast('Aaj ke 10 tasks complete ho gaye! Kal aao.', '#ef4444');
+      return;
+    }
+
+    const visitBtn = document.getElementById('slVisitBtn');
+    visitBtn.textContent = '⏳ Link generate ho raha hai...';
+    visitBtn.disabled = true;
+
+    // Random URL pick karo
+    const randomUrl = SL_URLS[Math.floor(Math.random() * SL_URLS.length)];
+    const apiUrl    = SL_API + encodeURIComponent(randomUrl);
+
+    fetch(apiUrl)
+      .then(res => res.json())
+      .then(data => {
+        const shortUrl = data.shortenedUrl || data.short_url || data.url || null;
+        if (!shortUrl) throw new Error('URL nahi mili');
+
+        // New tab mein kholo
+        window.open(shortUrl, '_blank');
+        slVisited = true;
+
+        visitBtn.textContent = '✅ Link Visited!';
+        visitBtn.style.background = 'rgba(34,197,94,0.15)';
+        visitBtn.style.color = '#22c55e';
+
+        // Claim button enable karo
+        const claimBtn = document.getElementById('slClaimBtn');
+        claimBtn.disabled = false;
+        claimBtn.textContent = '🎁 Claim 20 Coins';
+        claimBtn.style.background = 'linear-gradient(135deg,#22c55e,#16a34a)';
+        claimBtn.style.color = '#fff';
+        claimBtn.style.cursor = 'pointer';
+      })
+      .catch(err => {
+        console.error('ShrinkEarn error:', err);
+        showToast('Link generate nahi hua. Dobara try karo!', '#ef4444');
+        visitBtn.textContent = '🔗 Visit Link';
+        visitBtn.disabled = false;
+      });
+  }
+
+  function claimShortlink() {
+    if (!slVisited) {
+      showToast('Pehle link visit karo!', '#ef4444');
+      return;
+    }
+
+    const d = getSlData();
+    if (d.done >= SL_LIMIT) {
+      showToast('Daily limit complete!', '#ef4444');
+      return;
+    }
+
+    const uid = localStorage.getItem('tasknova_uid');
+    if (!uid || uid === 'null') { showToast('Pehle login karo!', '#ef4444'); return; }
+
+    const claimBtn = document.getElementById('slClaimBtn');
+    claimBtn.disabled = true;
+    claimBtn.textContent = '⏳ Crediting...';
+
+    // Firebase mein coins update karo
+    window._getAuthToken && window._getAuthToken().then(token => {
+      const ap = token ? '?auth=' + token : '';
+      fetch(DB_URL + '/users/' + uid + '.json' + ap)
+        .then(r => r.json())
+        .then(userData => {
+          const newCoins   = (userData.coins || 0) + SL_COINS;
+          const newBalance = parseFloat((newCoins / 100).toFixed(2));
+          const newTasks   = (userData.tasksDone || 0) + 1;
+          return fetch(DB_URL + '/users/' + uid + '.json' + ap, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ coins: newCoins, balance: newBalance, tasksDone: newTasks, totalEarned: newBalance })
+          }).then(() => {
+            // UI update
+            const coinsEl = document.querySelector('.user-coins');
+            const balEl   = document.querySelector('.user-balance');
+            if (coinsEl) coinsEl.textContent = newCoins + ' Coins';
+            if (balEl)   balEl.textContent   = '₹' + newBalance.toFixed(2);
+
+            // Local data update
+            d.done++;
+            saveSlData(d);
+            slVisited = false;
+
+            showToast('+20 Coins! Shortlink task complete! 🔗', 'linear-gradient(135deg,#6c63ff,#3b82f6)');
+            updateSlUI();
+
+            // Visit button reset for next task
+            const visitBtn = document.getElementById('slVisitBtn');
+            if (visitBtn && d.done < SL_LIMIT) {
+              visitBtn.textContent = '🔗 Visit Link';
+              visitBtn.disabled = false;
+              visitBtn.style.background = 'linear-gradient(135deg,#6c63ff,#3b82f6)';
+              visitBtn.style.color = '#fff';
+              visitBtn.style.cursor = 'pointer';
+            }
+
+            claimBtn.textContent = '⏳ Pehle link visit karo';
+            claimBtn.style.background = 'rgba(255,255,255,0.08)';
+            claimBtn.style.color = 'rgba(255,255,255,0.35)';
+            claimBtn.style.cursor = 'not-allowed';
+          });
+        })
+        .catch(err => {
+          showToast('Error: ' + err.message, '#ef4444');
+          claimBtn.disabled = false;
+          claimBtn.textContent = '🎁 Claim 20 Coins';
+        });
+    });
+  }
+  // ── SHORTLINK TASK END ────────────────────────────────────────
   function closeModal(id) {
     document.getElementById(id).classList.remove('show');
     updateDailyLimitUI();
