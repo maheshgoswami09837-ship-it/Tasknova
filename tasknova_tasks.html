@@ -327,9 +327,7 @@
           <span style="font-size:10px;color:rgba(255,255,255,0.35);">Next check-in resets at 7:30 PM</span>
           <span id="checkinCountdownText" style="font-size:11px;font-weight:800;color:#22c55e;"></span>
         </div>
-        <div style="height:4px;background:rgba(255,255,255,0.07);border-radius:2px;overflow:hidden;">
-          <div id="checkinCountdownBar" style="height:100%;background:linear-gradient(90deg,#22c55e,#16a34a);border-radius:2px;transition:width 1s linear;width:100%;"></div>
-        </div>
+
       </div>
     </div>
 
@@ -1388,16 +1386,35 @@
 
     // Don't allow any background ad request while in cooldown — already checked above
     currentCoins = Math.floor(Math.random() * 3) + 8; // 8–10 coins
-    document.getElementById('adEarnCoins').textContent = '+' + currentCoins;
-    document.getElementById('adCoins').textContent     = '+' + currentCoins;
+    document.getElementById('adCoins').textContent = '+' + currentCoins;
 
-    // Show ad popup
-    document.getElementById('adPopup').classList.add('show');
+    // Bilkul Spin/Scratch/Quiz jaisa _playAdAndClaim use karo
+    const btn = document.getElementById('watchAdBtn');
+    _playAdAndClaim({
+      coins: currentCoins,
+      type: 'watchAd',
+      btn: btn,
+      onSuccess: function(earned) {
+        if (earned > 0) {
+          // Batch count aur cooldown update karo
+          const newBatchCount = getAdBatchCount() + 1;
+          setAdBatchCount(newBatchCount);
+          adsWatchedToday = newBatchCount;
 
-    // Send URL to Kodular via AppInventor only (browser pe bahar nahi kholenge)
-    try { window.AppInventor && window.AppInventor.setWebViewString('https://www.effectivecpmnetwork.com/b1bggwx0?key=f1f69a147759698e8fda4cfd27e423ba&t=' + Date.now()); } catch(e) {}
-
-    startAdTracking(uid);
+          if (newBatchCount >= MAX_ADS) {
+            const fiveHrUntil = Date.now() + AD_COOLDOWN_5HR * 1000;
+            set5HrUntil(fiveHrUntil);
+            set1MinUntil(0);
+            showToast('🚫 20 ads complete! 5 ghante baad unlock hoga.', '#ef4444');
+          } else {
+            const oneMinUntil = Date.now() + AD_COOLDOWN_1MIN * 1000;
+            set1MinUntil(oneMinUntil);
+            triggerGlobalLock();
+          }
+          updateAdButtonUI();
+        }
+      }
+    });
   }
 
   function claimCoins(uid) {
