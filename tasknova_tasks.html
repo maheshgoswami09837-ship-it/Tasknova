@@ -3051,7 +3051,7 @@
             // Firebase data aaj ka hai — localStorage update karo
             localStorage.setItem('sl_data', JSON.stringify(data));
             const badge = document.getElementById('shortlinkCountBadge');
-            if (badge) badge.textContent = data.done + '/10';
+            if (badge) badge.textContent = data.done + '/' + SL_LIMIT;
           }
         })
         .catch(e => console.log('SL load error:', e));
@@ -3063,7 +3063,7 @@
     const done = d.done;
     const badge = document.getElementById('shortlinkCountBadge');
     const doneEl = document.getElementById('slDoneCount');
-    if (badge)  badge.textContent = done + '/10';
+    if (badge)  badge.textContent = done + '/' + SL_LIMIT;
     if (doneEl) doneEl.textContent = done;
 
     const visitBtn = document.getElementById('slVisitBtn');
