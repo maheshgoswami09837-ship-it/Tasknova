@@ -2213,44 +2213,29 @@
   // ── AD TRIGGER FUNCTIONS ─────────────────────────────────────
   let popunderFired = false;
 
-  // ══════════════════════════════════════════════════════════════════
-  //  GLOBAL AD LOADER — Single High-CPM Adsterra Popunder for ALL tasks
-  //  Watch Ads (20) + Spin (15) + Scratch (15) + Quiz (15) = 65 tasks
-  //  Purane low-CPM smartlinks/direct links REMOVE kiye gaye hain.
-  //  Sirf yahi ek script chalti hai — baar-baar 65 jagah change nahi.
-  // ══════════════════════════════════════════════════════════════════
-  const GLOBAL_AD_SRC = 'https://pl29503369.effectivecpmnetwork.com/1c/3b/d0/1c3bd0127e4be2ff172d7c6e0eaa5204.js';
-  let _globalAdLoaderReady = false;
-
-  function globalAdLoader() {
-    // Ek hi session mein pehli baar inject karo
-    if (_globalAdLoaderReady) {
-      console.log('[GlobalAdLoader] Already loaded — popunder active');
-      return;
-    }
-    _globalAdLoaderReady = true;
-
-    const s = document.createElement('script');
-    s.src = GLOBAL_AD_SRC;
-    s.async = true;
-    s.setAttribute('data-cfasync', 'false');
-    s.onload  = () => console.log('[GlobalAdLoader] ✅ Adsterra High-CPM Popunder loaded');
-    s.onerror = () => {
-      console.warn('[GlobalAdLoader] ❌ Ad load failed — retrying once');
-      _globalAdLoaderReady = false; // allow 1 retry
-    };
-    document.head.appendChild(s);
-  }
-
   function firePopunder() {
-    // Unified: delegate to Global Ad Loader
-    globalAdLoader();
+    if (!popunderFired) {
+      const s = document.createElement('script');
+      s.src = 'https://pl29503369.effectivecpmnetwork.com/1c/3b/d0/1c3bd0127e4be2ff172d7c6e0eaa5204.js';
+      s.async = true;
+      s.setAttribute('data-cfasync', 'false');
+      s.onload = () => console.log('[AdListener] Popunder script loaded OK');
+      s.onerror = () => console.warn('[AdListener] Popunder script FAILED — check WebView JS setting and network');
+      document.head.appendChild(s);
+      popunderFired = true;
+    }
   }
 
   function loadSocialBar() {
-    // ── LOW-CPM SOCIAL BAR REMOVED — replaced by Global Adsterra Popunder ──
-    // Old: highperformanceformat.com (low CPM) → DELETED
-    firePopunder(); // Use high-CPM Adsterra popunder instead
+    if (window._socialBarLoaded) return;
+    window._socialBarLoaded = true;
+    const s = document.createElement('script');
+    s.src = 'https://www.highperformanceformat.com/68bf9531f68f81be99e32a8350f48396/invoke.js';
+    s.async = true;
+    s.setAttribute('data-cfasync', 'false');
+    s.onload = () => console.log('[AdListener] SocialBar loaded OK');
+    s.onerror = () => console.warn('[AdListener] SocialBar FAILED');
+    document.head.appendChild(s);
   }
 
   // ── CHECK-IN ──────────────────────────────────────────────────
@@ -2718,15 +2703,12 @@
         '<div id="taskAdBar" style="height:100%;width:0%;background:linear-gradient(90deg,#6c63ff,#f59e0b);transition:width 15s linear;"></div>' +
       '</div>' +
 
-      // FULL-SCREEN AD AREA — Global Adsterra Popunder fires here (HIGH CPM)
-      // Old low-CPM direct link iframe REMOVED → replaced by Global Ad Loader
-      '<div id="taskAdFrame"' +
-        ' style="position:absolute;top:0;left:0;width:100%;height:100%;border:none;z-index:1;' +
-        'background:radial-gradient(ellipse at center,#0d0d2b 0%,#05051a 100%);' +
-        'display:flex;align-items:center;justify-content:center;flex-direction:column;">' +
-        '<div style="font-size:48px;margin-bottom:12px;">📺</div>' +
-        '<div style="color:rgba(255,255,255,0.5);font-size:13px;font-weight:600;text-align:center;">Ad Loading...</div>' +
-      '</div>' +
+      // FULL-SCREEN AD IFRAME — covers entire overlay behind the bottom bar
+      '<iframe id="taskAdFrame"' +
+        ' src="https://www.effectivecpmnetwork.com/b1bggwx0?key=f1f69a147759698e8fda4cfd27e423ba&t=' + Date.now() + '"' +
+        ' style="position:absolute;top:0;left:0;width:100%;height:100%;border:none;z-index:1;"' +
+        ' scrolling="yes" frameborder="0" allowfullscreen allow="autoplay;fullscreen">'+
+      '</iframe>' +
 
       // Semi-transparent bottom bar — pinned over iframe (z-index:3)
       '<div style="position:absolute;bottom:0;left:0;right:0;z-index:3;' +
@@ -2764,9 +2746,15 @@
       }));
     }, 80);
 
-    // ── GLOBAL AD LOADER: Fire High-CPM Adsterra Popunder ──────────
-    // Old low-CPM direct link REMOVED → Global firePopunder() takes over
-    globalAdLoader(); // Central ad loader fires for ALL task types
+    // ── AD: Sirf AppInventor/Kodular WebView ko URL bhejo ────────
+    // Popunder/SocialBar scripts yahan inject NAHI honge —
+    // Woh sirf _doCredit() ke andar chalenge jab user claim kare
+    const directUrl = 'https://www.effectivecpmnetwork.com/b1bggwx0?key=f1f69a147759698e8fda4cfd27e423ba&t=' + Date.now();
+    try {
+      if (window.AppInventor) {
+        window.AppInventor.setWebViewString(directUrl);
+      }
+    } catch(e) {}
 
     // Notify Kodular/AppInventor that ad container is shown
     try { window.AppInventor && window.AppInventor.setWebViewString('AD_SHOWING:' + type); } catch(e) {}
@@ -2846,8 +2834,6 @@
 
       if (claimBtn) { claimBtn.disabled = true; claimBtn.textContent = '⏳ Crediting...'; }
 
-      // ── GLOBAL AD LOADER: Fire High-CPM Popunder on every successful claim ──
-      globalAdLoader();
       // Sirf AppInventor ko notify karo — browser pe bahar ad nahi kholenge
       try { window.AppInventor && window.AppInventor.setWebViewString('AD_CLAIM:' + type); } catch(e) {}
 
