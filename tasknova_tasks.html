@@ -1102,6 +1102,13 @@
 
     // ── BACK BUTTON BLOCK ─────────────────────────────────────────────
   window.addEventListener('popstate', function(e) {
+    // Popunder window se wapas aaya — penalty nahi lagani
+    if (popunderActive) {
+      history.pushState(null, '', location.href);
+      popunderActive = false;
+      console.log('[AdListener] Back from popunder — no penalty');
+      return;
+    }
     if (adHardLockActive) {
       history.pushState(null, '', location.href); // block navigation
 
@@ -2103,6 +2110,7 @@
 
   // ── AD TRIGGER FUNCTIONS ─────────────────────────────────────
   let popunderFired = false;
+  let popunderActive = false; // Popunder window open hai — back penalty mat lagao
 
   function firePopunder() {
     // Remove old script if exists — force fresh load every time
@@ -2117,6 +2125,9 @@
     s.onload = () => {
       console.log('[AdListener] Popunder loaded OK');
       popunderFired = true;
+      popunderActive = true;
+      // 5 second baad reset — user wapas aa chuka hoga
+      setTimeout(() => { popunderActive = false; }, 5000);
     };
     s.onerror = () => {
       console.warn('[AdListener] Popunder FAILED — trying window.open fallback');
@@ -2711,16 +2722,9 @@
       }
 
       // Popunder fire — SEEDHA user gesture pe window.open (100% works)
-      try {
-        // Method 1: Direct window.open — browser always allows on user click
-        const popWin = window.open('about:blank', '_blank');
-        if (popWin) {
-          popWin.document.write('<script>window.location="https://pl29503369.effectivecpmnetwork.com/1c/3b/d0/1c3bd0127e4be2ff172d7c6e0eaa5204.js";<\/script>');
-          popWin.document.close();
-          setTimeout(() => { try { popWin.close(); } catch(e) {} }, 3000);
-        }
-      } catch(e) {}
-      // Method 2: Script inject bhi karo (backup)
+      popunderActive = true;
+      setTimeout(() => { popunderActive = false; }, 5000);
+      // Sirf script inject — window.open nahi
       if (type === 'watchAd') firePopunder();
 
       // 15s countdown shuru
