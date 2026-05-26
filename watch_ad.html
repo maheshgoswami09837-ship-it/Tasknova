@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Watch Ad – TaskNova</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&family=Noto+Sans:wght@400;500;700&display=swap');
+
+  :root {
+    --bg:        #05051a;
+    --surface:   #0e0e2c;
+    --border:    rgba(108,99,255,0.2);
+    --purple:    #6c63ff;
+    --blue:      #3b82f6;
+    --green:     #22c55e;
+    --gold:      #f59e0b;
+    --text:      #e2e2f0;
+    --muted:     rgba(226,226,240,0.45);
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    font-family: 'Noto Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    position: relative;
+  }
+
+  /* ── Background glow ── */
+  body::before {
+    content:'';
+    position:fixed; inset:0;
+    background:
+      radial-gradient(ellipse 60% 50% at 20% 30%, rgba(108,99,255,0.12) 0%, transparent 70%),
+      radial-gradient(ellipse 50% 40% at 80% 70%, rgba(59,130,246,0.10) 0%, transparent 70%);
+    pointer-events:none;
+  }
+
+  /* Floating particles */
+  .particle {
+    position:fixed;
+    border-radius:50%;
+    background: rgba(108,99,255,0.15);
+    animation: float linear infinite;
+    pointer-events:none;
+  }
+  @keyframes float {
+    0%   { transform: translateY(100vh) scale(0); opacity:0; }
+    10%  { opacity:1; }
+    90%  { opacity:0.6; }
+    100% { transform: translateY(-10vh) scale(1); opacity:0; }
+  }
+
+  /* ── Card ── */
+  .card {
+    position: relative;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 28px;
+    padding: 36px 28px 32px;
+    width: 92%;
+    max-width: 400px;
+    text-align: center;
+    box-shadow: 0 0 60px rgba(108,99,255,0.08), 0 20px 60px rgba(0,0,0,0.5);
+    z-index: 10;
+  }
+
+  /* ── Logo / Header ── */
+  .logo {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--purple);
+    letter-spacing: 2px;
+    margin-bottom: 24px;
+    opacity: 0.85;
+  }
+
+  /* ── Timer Ring ── */
+  .timer-wrap {
+    position: relative;
+    width: 130px;
+    height: 130px;
+    margin: 0 auto 24px;
+  }
+  .timer-svg {
+    width: 130px;
+    height: 130px;
+    transform: rotate(-90deg);
+  }
+  .timer-bg {
+    fill: none;
+    stroke: rgba(108,99,255,0.12);
+    stroke-width: 8;
+  }
+  .timer-bar {
+    fill: none;
+    stroke: url(#grad);
+    stroke-width: 8;
+    stroke-linecap: round;
+    stroke-dasharray: 345;
+    stroke-dashoffset: 0;
+    transition: stroke-dashoffset 1s linear;
+  }
+  .timer-num {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+  .timer-sec {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 42px;
+    font-weight: 700;
+    line-height: 1;
+    color: #fff;
+  }
+  .timer-label {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 3px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  /* ── Status text ── */
+  .status-text {
+    font-size: 15px;
+    color: var(--muted);
+    margin-bottom: 10px;
+    min-height: 22px;
+    transition: all 0.3s;
+  }
+  .status-text.active { color: var(--text); }
+
+  /* ── Progress bar (bottom) ── */
+  .progress-wrap {
+    background: rgba(255,255,255,0.06);
+    border-radius: 99px;
+    height: 6px;
+    margin: 18px 0 24px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    border-radius: 99px;
+    background: linear-gradient(90deg, var(--purple), var(--blue));
+    width: 100%;
+    transform-origin: left;
+    transition: transform 1s linear;
+  }
+
+  /* ── Ad info box ── */
+  .ad-info {
+    background: rgba(108,99,255,0.08);
+    border: 1px solid rgba(108,99,255,0.18);
+    border-radius: 16px;
+    padding: 14px 16px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    text-align: left;
+  }
+  .ad-icon {
+    font-size: 28px;
+    flex-shrink: 0;
+  }
+  .ad-info-text h4 {
+    font-size: 14px;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 3px;
+  }
+  .ad-info-text p {
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.4;
+  }
+
+  /* ── Claim button ── */
+  .claim-btn {
+    display: none;
+    width: 100%;
+    padding: 16px;
+    border: none;
+    border-radius: 16px;
+    background: linear-gradient(135deg, var(--green), #16a34a);
+    color: #fff;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.3s;
+    box-shadow: 0 6px 30px rgba(34,197,94,0.35);
+    animation: pulse-green 1.5s ease-in-out infinite;
+  }
+  .claim-btn:hover  { transform: translateY(-2px); box-shadow: 0 10px 36px rgba(34,197,94,0.45); }
+  .claim-btn:active { transform: translateY(0); }
+  @keyframes pulse-green {
+    0%,100% { box-shadow: 0 6px 30px rgba(34,197,94,0.35); }
+    50%      { box-shadow: 0 6px 40px rgba(34,197,94,0.6); }
+  }
+
+  /* ── Waiting hint ── */
+  .wait-hint {
+    font-size: 13px;
+    color: var(--muted);
+    margin-top: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+  .wait-hint .dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--purple);
+    animation: blink 1.2s ease-in-out infinite;
+  }
+  .wait-hint .dot:nth-child(2) { animation-delay: 0.2s; }
+  .wait-hint .dot:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes blink { 0%,100%{opacity:0.2} 50%{opacity:1} }
+
+  /* Coin burst animation */
+  @keyframes coinPop {
+    0%   { transform: translateY(0) scale(0); opacity:1; }
+    100% { transform: translateY(-80px) scale(1.4); opacity:0; }
+  }
+  .coin-burst {
+    position: absolute;
+    font-size: 22px;
+    animation: coinPop 0.8s ease-out forwards;
+    pointer-events: none;
+    z-index: 20;
+  }
+</style>
+</head>
+<body>
+
+<!-- Particles (JS se inject honge) -->
+
+<div class="card" id="mainCard">
+
+  <div class="logo">⚡ TASKNOVA</div>
+
+  <!-- SVG Timer Ring -->
+  <div class="timer-wrap">
+    <svg class="timer-svg" viewBox="0 0 130 130">
+      <defs>
+        <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%"   stop-color="#6c63ff"/>
+          <stop offset="100%" stop-color="#3b82f6"/>
+        </linearGradient>
+      </defs>
+      <circle class="timer-bg" cx="65" cy="65" r="55"/>
+      <circle class="timer-bar" id="timerBar" cx="65" cy="65" r="55"/>
+    </svg>
+    <div class="timer-num">
+      <span class="timer-sec" id="timerSec">15</span>
+      <span class="timer-label">seconds</span>
+    </div>
+  </div>
+
+  <p class="status-text" id="statusText">Ad khulne ka wait karo...</p>
+
+  <!-- Progress bar -->
+  <div class="progress-wrap">
+    <div class="progress-fill" id="progressFill"></div>
+  </div>
+
+  <!-- Ad Info -->
+  <div class="ad-info">
+    <div class="ad-icon">📺</div>
+    <div class="ad-info-text">
+      <h4>Video Watch Task</h4>
+      <p>15 seconds baad <strong style="color:#f59e0b;">+10 Coins</strong> milenge.<br>Ad band mat karo!</p>
+    </div>
+  </div>
+
+  <!-- Claim button (15s ke baad dikhega) -->
+  <button class="claim-btn" id="claimBtn" onclick="claimCoins()">
+    🎉 Claim 10 Coins
+  </button>
+
+  <!-- Waiting dots -->
+  <div class="wait-hint" id="waitHint">
+    <div class="dot"></div>
+    <div class="dot"></div>
+    <div class="dot"></div>
+    <span style="margin-left:4px;">Ad chal raha hai, ruko...</span>
+  </div>
+
+</div>
+
+<script>
+  // ── Config ──────────────────────────────────────────────────
+  const AD_URL      = 'https://pl29503369.effectivecpmnetwork.com/1c/3b/d0/1c3bd0127e4be2ff172d7c6e0eaa5204.js';
+  const RETURN_URL  = 'https://tasknovaofficial.vercel.app/tasknova_tasks.html?status=success&task=video1';
+  const TOTAL_SECS  = 15;
+  const CIRCUMF     = 2 * Math.PI * 55; // ~345.4
+
+  // ── State ────────────────────────────────────────────────────
+  let secsLeft    = TOTAL_SECS;
+  let adOpened    = false;
+  let timerStarted = false;
+  let interval    = null;
+
+  const timerBar    = document.getElementById('timerBar');
+  const timerSec    = document.getElementById('timerSec');
+  const progressFill = document.getElementById('progressFill');
+  const statusText  = document.getElementById('statusText');
+  const claimBtn    = document.getElementById('claimBtn');
+  const waitHint    = document.getElementById('waitHint');
+
+  // Circumference set
+  timerBar.style.strokeDasharray  = CIRCUMF;
+  timerBar.style.strokeDashoffset = 0;
+
+  // ── Open Ad ──────────────────────────────────────────────────
+  function openAd() {
+    if (adOpened) return;
+    adOpened = true;
+
+    // JS script inject karo (Adsterra popunder script)
+    const s = document.createElement('script');
+    s.src = AD_URL;
+    s.async = true;
+    s.setAttribute('data-cfasync', 'false');
+    s.onload = () => console.log('[Ad] Script loaded OK');
+    document.head.appendChild(s);
+
+    statusText.textContent = '✅ Ad chal raha hai! Timer shuru...';
+    statusText.classList.add('active');
+  }
+
+  // ── Start Timer ──────────────────────────────────────────────
+  function startTimer() {
+    if (timerStarted) return;
+    timerStarted = true;
+
+    interval = setInterval(() => {
+      secsLeft--;
+
+      // Update ring
+      const offset = CIRCUMF * (secsLeft / TOTAL_SECS);
+      timerBar.style.strokeDashoffset = offset;
+
+      // Update number
+      timerSec.textContent = secsLeft;
+
+      // Update progress bar
+      const pct = ((TOTAL_SECS - secsLeft) / TOTAL_SECS) * 100;
+      progressFill.style.transform = `scaleX(${1 - pct/100})`;
+
+      // Color shift on last 5 seconds
+      if (secsLeft <= 5) {
+        timerBar.style.stroke = '#f59e0b';
+        timerSec.style.color  = '#f59e0b';
+      }
+
+      if (secsLeft <= 0) {
+        clearInterval(interval);
+        timerSec.textContent = '0';
+        progressFill.style.transform = 'scaleX(0)';
+        showClaim();
+      }
+    }, 1000);
+  }
+
+  // ── Show Claim Button ─────────────────────────────────────────
+  function showClaim() {
+    waitHint.style.display  = 'none';
+    claimBtn.style.display  = 'block';
+    statusText.textContent  = '🎉 Timer khatam! Ab claim karo!';
+    statusText.style.color  = '#22c55e';
+    statusText.style.fontWeight = '700';
+
+    // Coin burst effect
+    for (let i = 0; i < 5; i++) {
+      setTimeout(() => spawnCoin(), i * 120);
+    }
+  }
+
+  function spawnCoin() {
+    const card = document.getElementById('mainCard');
+    const coin = document.createElement('div');
+    coin.className = 'coin-burst';
+    coin.textContent = '🪙';
+    coin.style.left = (30 + Math.random() * 40) + '%';
+    coin.style.top  = '60%';
+    card.appendChild(coin);
+    setTimeout(() => coin.remove(), 900);
+  }
+
+  // ── Claim ─────────────────────────────────────────────────────
+  function claimCoins() {
+    claimBtn.disabled = true;
+    claimBtn.textContent = '✅ Redirecting...';
+    claimBtn.style.background = 'linear-gradient(135deg,#6c63ff,#3b82f6)';
+
+    // Coins localStorage mein save karo (tasks page pe claim hoga)
+    localStorage.setItem('pendingAdReward', JSON.stringify({
+      coins:  10,
+      type:   'watchAd',
+      ts:     Date.now()
+    }));
+
+    setTimeout(() => {
+      window.location.href = RETURN_URL;
+    }, 400);
+  }
+
+  // ── Page Load Logic ───────────────────────────────────────────
+  // Strategy: pehle click pe ad khulta hai (Chrome block bypass)
+  // Agar user 1s mein click nahi karta — setTimeout fallback
+
+  let clickHandlerAdded = false;
+
+  function setupAdTrigger() {
+    if (clickHandlerAdded) return;
+    clickHandlerAdded = true;
+
+    // Click pe ad kholo aur timer shuru karo
+    const openAndStart = () => {
+      openAd();
+      startTimer();
+      document.removeEventListener('click', openAndStart);
+    };
+
+    document.addEventListener('click', openAndStart);
+
+    // 1 second fallback — agar user click nahi karta
+    setTimeout(() => {
+      if (!adOpened) {
+        openAd();
+      }
+      if (!timerStarted) {
+        startTimer();
+      }
+      document.removeEventListener('click', openAndStart);
+    }, 1000);
+  }
+
+  // ── Particles ─────────────────────────────────────────────────
+  function spawnParticles() {
+    for (let i = 0; i < 12; i++) {
+      const p = document.createElement('div');
+      p.className = 'particle';
+      const size = 4 + Math.random() * 8;
+      p.style.cssText = `
+        width:${size}px; height:${size}px;
+        left:${Math.random()*100}vw;
+        animation-duration:${6 + Math.random()*8}s;
+        animation-delay:${Math.random()*6}s;
+      `;
+      document.body.appendChild(p);
+    }
+  }
+
+  // ── Init ──────────────────────────────────────────────────────
+  spawnParticles();
+  setupAdTrigger();
+</script>
+</body>
+</html>
