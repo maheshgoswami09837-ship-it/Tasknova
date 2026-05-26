@@ -3150,8 +3150,16 @@
         const shortUrl = data.shortenedUrl || data.short_url || data.url || null;
         if (!shortUrl) throw new Error('URL nahi mili');
 
-        // New tab mein kholo
-        window.open(shortUrl, '_blank');
+        // Kodular WebView mein link kholo
+        try {
+          if (window.AppInventor) {
+            window.AppInventor.setWebViewString(shortUrl);
+          } else {
+            window.open(shortUrl, '_blank');
+          }
+        } catch(e) {
+          window.open(shortUrl, '_blank');
+        }
         slVisited = true;
 
         visitBtn.textContent = '✅ Link Visited!';
