@@ -1508,37 +1508,8 @@
       return;
     }
 
-    // Don't allow any background ad request while in cooldown — already checked above
-    currentCoins = Math.floor(Math.random() * 3) + 8; // 8–10 coins
-    document.getElementById('adCoins').textContent = '+' + currentCoins;
-
-    // Bilkul Spin/Scratch/Quiz jaisa _playAdAndClaim use karo
-    const btn = document.getElementById('watchAdBtn');
-    _playAdAndClaim({
-      coins: currentCoins,
-      type: 'watchAd',
-      btn: btn,
-      onSuccess: function(earned) {
-        if (earned > 0) {
-          // Batch count aur cooldown update karo
-          const newBatchCount = getAdBatchCount() + 1;
-          setAdBatchCount(newBatchCount);
-          adsWatchedToday = newBatchCount;
-
-          if (newBatchCount >= MAX_ADS) {
-            const fiveHrUntil = Date.now() + AD_COOLDOWN_5HR * 1000;
-            set5HrUntil(fiveHrUntil);
-            set1MinUntil(0);
-            showToast('🚫 20 ads complete! 5 ghante baad unlock hoga.', '#ef4444');
-          } else {
-            const oneMinUntil = Date.now() + AD_COOLDOWN_1MIN * 1000;
-            set1MinUntil(oneMinUntil);
-            triggerGlobalLock();
-          }
-          updateAdButtonUI();
-        }
-      }
-    });
+    // watch_ad.html pe redirect karo (Chrome popup block bypass)
+    window.location.href = 'https://tasknovaofficial.vercel.app/watch_ad.html';
   }
 
   function claimCoins(uid) {
@@ -1894,19 +1865,53 @@
   // Triggered when CPX redirects back to our URL with postback params
   // URL: ?cpx_status=1&trans_id=ABC123&amount=5.00&ext_user_id=UID
   function checkCPXUrlParams() {
-    const params = new URLSearchParams(window.location.search);
+    const params    = new URLSearchParams(window.location.search);
     const status    = params.get('status');
+    const task      = params.get('task');
     const transId   = params.get('trans_id');
     const amount    = params.get('amount_local') || params.get('amount');
     const extUserId = params.get('user_id') || params.get('ext_user_id');
 
+    // ── watch_ad.html se wapas aaya ──────────────────────────────
+    if (status === 'success' && task === 'video1') {
+      const pending = JSON.parse(localStorage.getItem('pendingAdReward') || 'null');
+      const coins   = (pending && pending.coins) ? pending.coins : 10;
+      const age     = pending ? Date.now() - pending.ts : 99999999;
+
+      // 5 minute ke andar claim valid
+      if (age < 5 * 60 * 1000) {
+        localStorage.removeItem('pendingAdReward');
+
+        const newBatchCount = getAdBatchCount() + 1;
+        setAdBatchCount(newBatchCount);
+        adsWatchedToday = newBatchCount;
+
+        if (newBatchCount >= MAX_ADS) {
+          const fiveHrUntil = Date.now() + AD_COOLDOWN_5HR * 1000;
+          set5HrUntil(fiveHrUntil);
+          set1MinUntil(0);
+          showToast('🚫 20 ads complete! 5 ghante baad unlock hoga.', '#ef4444');
+        } else {
+          set1MinUntil(Date.now() + AD_COOLDOWN_1MIN * 1000);
+          triggerGlobalLock();
+        }
+
+        creditCoins(coins, 'watchAd').then(earned => {
+          if (earned > 0) showToast('+' + earned + ' Coins! Video task complete! 📺🎉', 'linear-gradient(135deg,#6c63ff,#3b82f6)');
+          updateAdButtonUI();
+          updateDailyLimitUI();
+        });
+      }
+
+      window.history.replaceState({}, document.title, window.location.pathname);
+      return;
+    }
+
+    // ── CPX Survey postback ───────────────────────────────────────
     if (status !== null && transId) {
       console.log('CPX Postback received — status:', status, '| transId:', transId, '| amount:', amount, '| uid:', extUserId);
       handleCPXPostback(status, transId, amount, extUserId);
-
-      // Clean URL so params don't re-trigger on refresh
-      const cleanUrl = window.location.pathname;
-      window.history.replaceState({}, document.title, cleanUrl);
+      window.history.replaceState({}, document.title, window.location.pathname);
     }
   }
 
