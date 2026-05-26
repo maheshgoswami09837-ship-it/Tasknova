@@ -532,14 +532,21 @@
 <!-- Ad Popup -->
 <div id="adPopup">
   <div style="width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;">
+    
+    <!-- Timer bar -->
     <div style="width:100%;height:4px;background:rgba(255,255,255,0.1);border-radius:2px;margin-bottom:30px;">
       <div id="adTimerBar" style="height:100%;width:0%;background:linear-gradient(135deg,#6c63ff,#3b82f6);border-radius:2px;transition:width 1s linear;"></div>
     </div>
-    <div style="font-size:50px;margin-bottom:16px;">📺</div>
-    <div style="color:#fff;font-size:20px;font-weight:800;margin-bottom:8px;">Watch Video Task</div>
-    <div id="adStatusText" style="color:rgba(255,255,255,0.5);font-size:13px;text-align:center;margin-bottom:24px;">Click the button below to start the ad and timer!</div>
 
-    <button id="adStartBtn" onclick="startPopunderAndTimer()" style="width:100%;max-width:280px;background:linear-gradient(135deg,#6c63ff,#3b82f6);border:none;padding:16px;color:#fff;font-size:16px;font-weight:bold;border-radius:16px;cursor:pointer;margin-bottom:20px;box-shadow:0 4px 15px rgba(108,99,255,0.4);">🎬 Start Video Ad</button>
+    <div style="font-size:50px;margin-bottom:16px;">📺</div>
+    <div style="color:#fff;font-size:20px;font-weight:800;margin-bottom:8px;">Advertisement</div>
+    <div id="adStatusText" style="color:rgba(255,255,255,0.5);font-size:13px;text-align:center;margin-bottom:24px;">Ad page par ja rahe ho...</div>
+
+    <!-- Alert box for cheating -->
+    <div id="adAlert" style="display:none;background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.4);border-radius:14px;padding:14px;text-align:center;margin-bottom:16px;width:100%;">
+      <div style="color:#ef4444;font-weight:700;font-size:14px;">⚠️ Ad puri dekho!</div>
+      <div style="color:rgba(255,255,255,0.6);font-size:12px;margin-top:4px;" id="adAlertText">Abhi tak <span id="adTimeSpent">0</span>s dekhi hai, 15s chahiye</div>
+    </div>
 
     <div style="background:rgba(255,255,255,0.08);border-radius:16px;padding:16px 32px;text-align:center;margin-bottom:24px;">
       <div style="color:rgba(255,255,255,0.5);font-size:11px;">Aapko milenge</div>
@@ -549,7 +556,18 @@
 
     <div id="adCountdown" style="color:rgba(255,255,255,0.6);font-size:14px;font-weight:600;margin-bottom:16px;"></div>
 
-    <button id="adClaimBtn" style="display:none;width:100%;max-width:280px;background:linear-gradient(135deg,#22c55e,#16a34a);border:none;border-radius:16px;padding:16px;color:#fff;font-size:16px;font-weight:800;cursor:pointer;box-shadow:0 4px 15px rgba(34,197,94,0.4);">🎁 Claim Coins</button>
+    <button id="adClaimBtn" onclick="claimCoins()" style="display:none;width:100%;background:linear-gradient(135deg,#22c55e,#16a34a);border:none;border-radius:16px;padding:16px;color:#fff;font-size:16px;font-weight:800;cursor:pointer;">
+      ✅ Coins Claim Karo
+    </button>
+
+    <!-- Hard-lock 15s overlay: covers screen during force-watch window -->
+    <div id="adRewardOverlay" style="display:none;position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(5,5,26,0.75);z-index:99;align-items:center;justify-content:center;flex-direction:column;pointer-events:all;">
+      <div style="background:rgba(108,99,255,0.25);border:1.5px solid rgba(108,99,255,0.5);border-radius:20px;padding:20px 32px;text-align:center;">
+        <div style="font-size:32px;margin-bottom:8px;">⏳</div>
+        <div style="color:#fff;font-weight:800;font-size:15px;" id="adHardLockText">Reward in 15s...</div>
+        <div style="color:rgba(255,255,255,0.5);font-size:11px;margin-top:6px;">Back button disabled</div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -1084,13 +1102,6 @@
 
     // ── BACK BUTTON BLOCK ─────────────────────────────────────────────
   window.addEventListener('popstate', function(e) {
-    // Popunder window se wapas aaya — penalty nahi lagani
-    if (popunderActive) {
-      history.pushState(null, '', location.href);
-      popunderActive = false;
-      console.log('[AdListener] Back from popunder — no penalty');
-      return;
-    }
     if (adHardLockActive) {
       history.pushState(null, '', location.href); // block navigation
 
@@ -1477,98 +1488,174 @@
   }
 
   function watchAd() {
-    // Outer Watch Button: Cleanly opens the popup panel. ABSOLUTELY NO ADS HERE.
-    const popup = document.getElementById('adPopup');
-    if (popup) popup.classList.add('show');
-    document.getElementById('adStartBtn').style.display = 'block';
-    document.getElementById('adClaimBtn').style.display = 'none';
-    document.getElementById('adCountdown').textContent = "Click below to watch the ad!";
-    document.getElementById('adTimerBar').style.width = '0%';
-  }
+    const uid = localStorage.getItem('tasknova_uid');
+    if (!uid || uid === 'null') { showToast('Pehle login karo!', '#ef4444'); return; }
+    if (isGlobalLocked()) return;
 
-  function startPopunderAndTimer() {
-    // Inner Button: Inject Adsterra script on real user gesture
-    const script = document.createElement('script');
-    script.src = '//pl29503369.effectivecpmnetwork.com/1c/3b/d0/1c3bd0127e4be2ff172d7c6e0eaa5204.js';
-    document.body.appendChild(script);
-
-    // Start 15-second watch timer
-    document.getElementById('adStartBtn').style.display = 'none';
-    let watchTime = 15;
-    const progressBar = document.getElementById('adTimerBar');
-
-    const watchInterval = setInterval(() => {
-      watchTime--;
-      if (progressBar) progressBar.style.width = (((15 - watchTime) / 15) * 100) + '%';
-      document.getElementById('adCountdown').textContent = `Watching Ad: Please wait ${watchTime}s`;
-      if (watchTime <= 0) {
-        clearInterval(watchInterval);
-        document.getElementById('adCountdown').textContent = "Ad Watched Successfully!";
-        document.getElementById('adClaimBtn').style.display = 'block';
+    const lock = getAdLockState();
+    if (lock.locked) {
+      if (lock.isMega) {
+        showToast('🚫 Limit Reached! ' + formatAdTimer(lock.remaining) + ' baad try karo.', '#ef4444');
+      } else {
+        showToast('⏳ ' + formatAdTimer(lock.remaining) + ' wait karo!', '#f59e0b');
       }
-    }, 1000);
-  }
-
-  // Claim button: credit coins + 30s cooldown
-  document.getElementById('adClaimBtn').onclick = function() {
-    // 1. Credit coins via existing function
-    if (typeof claimAdCoins === 'function') {
-      claimAdCoins();
+      return;
     }
 
-    // 2. Hide claim button + start 30s cooldown
-    this.style.display = 'none';
-    let cooldownTime = 30;
-    document.getElementById('adTimerBar').style.width = '0%';
-
-    const cooldownInterval = setInterval(() => {
-      cooldownTime--;
-      document.getElementById('adCountdown').textContent = `Next ad available in ${cooldownTime}s`;
-      if (cooldownTime <= 0) {
-        clearInterval(cooldownInterval);
-        document.getElementById('adCountdown').textContent = "Ready for next ad!";
-        const popup = document.getElementById('adPopup');
-        if (popup) popup.classList.remove('show');
-      }
-    }, 1000);
-  };
-
-  function claimAdCoins() {
-    const popup = document.getElementById('adPopup');
-    if (popup) popup.classList.remove('show');
-
     const batchCount = getAdBatchCount();
-    const earned = currentCoins || 10;
+    if (batchCount >= MAX_ADS) {
+      showToast('20 ads ho gaye! 5 ghante baad wapas aao.', '#ef4444');
+      return;
+    }
 
-    creditCoins(earned, 'watchAd').then(credited => {
-      if (credited > 0) {
-        const newBatchCount = batchCount + 1;
-        setAdBatchCount(newBatchCount);
-        adsWatchedToday = newBatchCount;
+    // Don't allow any background ad request while in cooldown — already checked above
+    currentCoins = Math.floor(Math.random() * 3) + 8; // 8–10 coins
+    document.getElementById('adCoins').textContent = '+' + currentCoins;
 
-        if (newBatchCount >= MAX_ADS) {
-          const fiveHrUntil = Date.now() + AD_COOLDOWN_5HR * 1000;
-          set5HrUntil(fiveHrUntil);
-          set1MinUntil(0);
-          showToast('🚫 20 ads complete! 5 ghante baad unlock hoga.', '#ef4444');
-        } else {
-          const oneMinUntil = Date.now() + AD_COOLDOWN_1MIN * 1000;
-          set1MinUntil(oneMinUntil);
-          triggerGlobalLock();
+    // Bilkul Spin/Scratch/Quiz jaisa _playAdAndClaim use karo
+    const btn = document.getElementById('watchAdBtn');
+    _playAdAndClaim({
+      coins: currentCoins,
+      type: 'watchAd',
+      btn: btn,
+      onSuccess: function(earned) {
+        if (earned > 0) {
+          // Batch count aur cooldown update karo
+          const newBatchCount = getAdBatchCount() + 1;
+          setAdBatchCount(newBatchCount);
+          adsWatchedToday = newBatchCount;
+
+          if (newBatchCount >= MAX_ADS) {
+            const fiveHrUntil = Date.now() + AD_COOLDOWN_5HR * 1000;
+            set5HrUntil(fiveHrUntil);
+            set1MinUntil(0);
+            showToast('🚫 20 ads complete! 5 ghante baad unlock hoga.', '#ef4444');
+          } else {
+            const oneMinUntil = Date.now() + AD_COOLDOWN_1MIN * 1000;
+            set1MinUntil(oneMinUntil);
+            triggerGlobalLock();
+          }
+          updateAdButtonUI();
         }
-        showToast('+' + credited + ' Coins credited! 🎉', 'linear-gradient(135deg,#22c55e,#16a34a)');
-        updateAdButtonUI();
-        updateDailyLimitUI();
       }
     });
   }
 
-  // Legacy stubs
-  function claimCoins(uid)   { console.log('[stub] claimCoins — not used'); }
-  function skipAd()          { console.log('[stub] skipAd — not used'); }
-  function collectCoins(uid) { console.log('[stub] collectCoins — not used'); }
-  function adWatched(uid)    { console.log('[stub] adWatched — not used'); }
-  function onAdComplete(uid) { console.log('[stub] onAdComplete — not used'); }
+  function claimCoins(uid) {
+    // Security: if somehow called before 15s, ignore
+    if (adHardLockActive) {
+      showToast('Abhi 15 seconds poore nahi hue!', '#ef4444');
+      return;
+    }
+
+    clearInterval(adTimerInterval);
+    adTimerInterval = null;
+    document.getElementById('adPopup').classList.remove('show');
+
+    // Increment batch count
+    const newBatchCount = getAdBatchCount() + 1;
+    setAdBatchCount(newBatchCount);
+    adsWatchedToday = newBatchCount;
+
+    // 5-Hour Mega Lock after 20th ad
+    if (newBatchCount >= MAX_ADS) {
+      const fiveHrUntil = Date.now() + AD_COOLDOWN_5HR * 1000;
+      set5HrUntil(fiveHrUntil);
+      set1MinUntil(0); // clear 1-min since mega takes over
+      showToast('🚫 20 ads complete! 5 ghante baad unlock hoga.', '#ef4444');
+    } else {
+      // 1-Minute per-ad cooldown
+      const oneMinUntil = Date.now() + AD_COOLDOWN_1MIN * 1000;
+      set1MinUntil(oneMinUntil);
+      // Sync global lock so all task cards also show 1-min cooldown
+      triggerGlobalLock();
+    }
+
+    // Update button UI immediately
+    updateAdButtonUI();
+
+    // ── Secure reward: creditCoins only INSIDE successful ad-close callback ──
+    // Since this is web-based and claimCoins is called from the button (after 15s),
+    // we fire the popunder ad script here, and credit ONLY on onload.
+    const s = document.createElement('script');
+    s.src = 'https://pl29503369.effectivecpmnetwork.com/1c/3b/d0/1c3bd0127e4be2ff172d7c6e0eaa5204.js';
+    s.async = true;
+    s.setAttribute('data-cfasync', 'false');
+
+    s.onload = function() {
+      // ✅ Ad confirmed — NOW credit coins
+      try { window.AppInventor && window.AppInventor.setWebViewString('AD_SHOWED:watchAd'); } catch(e) {}
+      // Save to Firebase
+      const localUid = uid || localStorage.getItem('tasknova_uid');
+      if (localUid && localUid !== 'null') {
+        window._getAuthToken && window._getAuthToken().then(token => {
+          const authParam = token ? '?auth=' + token : '';
+          fetch(DB_URL + '/users/' + localUid + '.json' + authParam)
+            .then(r => r.json())
+            .then(data => {
+              const newCoins   = (data.coins    || 0) + currentCoins;
+              const newBalance = parseFloat((newCoins / 100).toFixed(2));
+              const newTasks   = (data.tasksDone || 0) + 1;
+              return fetch(DB_URL + '/users/' + localUid + '.json' + authParam, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ coins: newCoins, balance: newBalance, tasksDone: newTasks, totalEarned: newBalance })
+              }).then(() => {
+                document.querySelector('.user-coins').textContent    = newCoins + ' Coins';
+                document.querySelector('.user-balance').textContent  = '₹' + newBalance.toFixed(2);
+
+                // ── TASK HISTORY SAVE ──────────────────────────────
+                const histEntry = {
+                  title: '📺 Video Watch Task',
+                  type: 'watchAd',
+                  coinsEarned: currentCoins,
+                  status: 'completed',
+                  completedAt: Date.now()
+                };
+                fetch(DB_URL + '/users/' + localUid + '/taskHistory.json' + authParam, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify(histEntry)
+                }).catch(e => console.warn('[TaskHistory] watchAd save failed:', e));
+                // ─────────────────────────────────────────────────
+
+                showReward(currentCoins);
+              });
+            })
+            .catch(e => console.log(e));
+        });
+      }
+    };
+
+    s.onerror = function() {
+      // ❌ Ad failed — coins NOT credited, batch count rolled back
+      try { window.AppInventor && window.AppInventor.setWebViewString('AD_FAILED:watchAd'); } catch(e) {}
+      const rolledBack = Math.max(0, getAdBatchCount() - 1);
+      setAdBatchCount(rolledBack);
+      // Also clear the 1-min timer we just set (ad failed, don't penalise)
+      if (getAdLockState().isMega === false) set1MinUntil(0);
+      updateAdButtonUI();
+      showToast('Ad load nahi hua. Dobara try karo! 🔄', '#ef4444');
+    };
+
+    document.head.appendChild(s);
+  }
+
+  function skipAd() {
+    if (adHardLockActive) {
+      showToast('15 seconds poore karo! Skip allowed nahi hai.', '#ef4444');
+      return;
+    }
+    // If 15s done but user tries to skip before claiming — just close
+    clearInterval(adTimerInterval);
+    adTimerInterval = null;
+    adHardLockActive = false;
+    document.getElementById('adPopup').classList.remove('show');
+  }
+
+  function collectCoins(uid) { claimCoins(uid); }
+  function adWatched(uid) { claimCoins(uid); }
+  function onAdComplete(uid) { claimCoins(uid); }
 
   // ── CPX Research Config ──────────────────────────────────────────
   const CPX_APP_ID = 33101;
@@ -2125,34 +2212,18 @@
 
   // ── AD TRIGGER FUNCTIONS ─────────────────────────────────────
   let popunderFired = false;
-  let popunderActive = false; // Popunder window open hai — back penalty mat lagao
 
   function firePopunder() {
-    // Remove old script if exists — force fresh load every time
-    const old = document.getElementById('popunder-script');
-    if (old) old.remove();
-
-    const s = document.createElement('script');
-    s.id = 'popunder-script';
-    s.src = 'https://pl29503369.effectivecpmnetwork.com/1c/3b/d0/1c3bd0127e4be2ff172d7c6e0eaa5204.js?_t=' + Date.now();
-    s.async = true;
-    s.setAttribute('data-cfasync', 'false');
-    s.onload = () => {
-      console.log('[AdListener] Popunder loaded OK');
+    if (!popunderFired) {
+      const s = document.createElement('script');
+      s.src = 'https://pl29503369.effectivecpmnetwork.com/1c/3b/d0/1c3bd0127e4be2ff172d7c6e0eaa5204.js';
+      s.async = true;
+      s.setAttribute('data-cfasync', 'false');
+      s.onload = () => console.log('[AdListener] Popunder script loaded OK');
+      s.onerror = () => console.warn('[AdListener] Popunder script FAILED — check WebView JS setting and network');
+      document.head.appendChild(s);
       popunderFired = true;
-      popunderActive = true;
-      // 5 second baad reset — user wapas aa chuka hoga
-      setTimeout(() => { popunderActive = false; }, 5000);
-    };
-    s.onerror = () => {
-      console.warn('[AdListener] Popunder FAILED — trying window.open fallback');
-      // Fallback: direct link open
-      try {
-        window.open('https://pl29503369.effectivecpmnetwork.com/1c/3b/d0/1c3bd0127e4be2ff172d7c6e0eaa5204.js', '_blank');
-      } catch(e) {}
-    };
-    document.head.appendChild(s);
-    console.log('[AdListener] Popunder script injected');
+    }
   }
 
   function loadSocialBar() {
@@ -2618,7 +2689,7 @@
       overlay.id = 'taskAdOverlay';
       overlay.style.cssText =
         'position:fixed;top:0;left:0;width:100%;height:100%;' +
-        'background:#000;z-index:99999;overflow:hidden;pointer-events:all;touch-action:none;';
+        'background:#000;z-index:99999;overflow:hidden;';
       document.body.appendChild(overlay);
     }
     overlay.style.display = 'block';
@@ -2627,160 +2698,107 @@
     // Ad iframe = 100% width & height of screen (behind bottom bar)
     // Bottom bar pinned with timer + coin reward + claim button
     overlay.innerHTML =
-      '<div style="width:100%;height:100%;background:linear-gradient(180deg,#05051a 0%,#0d0d2b 100%);' +
-           'display:flex;flex-direction:column;align-items:center;justify-content:space-between;' +
-           'padding:0;box-sizing:border-box;">' +
+      // Top progress bar
+      '<div style="position:absolute;top:0;left:0;right:0;height:5px;background:rgba(255,255,255,0.08);z-index:2;">' +
+        '<div id="taskAdBar" style="height:100%;width:0%;background:linear-gradient(90deg,#6c63ff,#f59e0b);transition:width 15s linear;"></div>' +
+      '</div>' +
 
-        // ── TOP HEADER ──
-        '<div style="width:100%;padding:20px 20px 0;box-sizing:border-box;">' +
-          '<div style="text-align:center;padding:14px 0 10px;">' +
-            '<div style="font-size:13px;color:rgba(255,255,255,0.35);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:4px;">Task</div>' +
-            '<div style="font-size:22px;font-weight:900;color:#fff;letter-spacing:0.3px;">📺 Watch Ads</div>' +
-          '</div>' +
-          // Progress bar
-          '<div style="width:100%;height:4px;background:rgba(255,255,255,0.08);border-radius:2px;margin-top:10px;">' +
-            '<div id="taskAdBar" style="height:100%;width:0%;background:linear-gradient(90deg,#6c63ff,#f59e0b);border-radius:2px;transition:none;"></div>' +
+      // FULL-SCREEN AD IFRAME — covers entire overlay behind the bottom bar
+      '<iframe id="taskAdFrame"' +
+        ' src="https://www.effectivecpmnetwork.com/b1bggwx0?key=f1f69a147759698e8fda4cfd27e423ba&t=' + Date.now() + '"' +
+        ' style="position:absolute;top:0;left:0;width:100%;height:100%;border:none;z-index:1;"' +
+        ' scrolling="yes" frameborder="0" allowfullscreen allow="autoplay;fullscreen">'+
+      '</iframe>' +
+
+      // Semi-transparent bottom bar — pinned over iframe (z-index:3)
+      '<div style="position:absolute;bottom:0;left:0;right:0;z-index:3;' +
+           'background:linear-gradient(to top,rgba(0,0,0,0.97) 70%,transparent);' +
+           'padding:18px 20px 28px;">' +
+
+        // Countdown row
+        '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">' +
+          '<div id="taskAdStatus" style="color:rgba(255,255,255,0.7);font-size:13px;font-weight:700;">⏳ Reward in 15s...</div>' +
+          '<div style="display:flex;align-items:center;gap:6px;background:rgba(108,99,255,0.2);border:1px solid rgba(108,99,255,0.4);border-radius:50px;padding:4px 12px;">' +
+            '<span style="color:#a78bfa;font-size:13px;font-weight:800;">+<span id="taskAdCoinsDisplay">' + coins + '</span> 🪙</span>' +
           '</div>' +
         '</div>' +
 
-        // ── CENTER — big countdown circle ──
-        '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;gap:18px;">' +
+        // Warning
+        '<div style="color:rgba(255,165,0,0.65);font-size:10px;text-align:center;margin-bottom:10px;">⚠️ Back button dabaoge toh 0 coins milenge</div>' +
 
-          // Circular countdown
-          '<div style="position:relative;width:160px;height:160px;">' +
-            '<svg width="160" height="160" style="transform:rotate(-90deg);">' +
-              '<circle cx="80" cy="80" r="70" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="8"/>' +
-              '<circle id="taskAdRing" cx="80" cy="80" r="70" fill="none" stroke="url(#adGrad)" stroke-width="8"' +
-                ' stroke-dasharray="439.8" stroke-dashoffset="0" stroke-linecap="round"' +
-                ' style="transition:stroke-dashoffset 1s linear;"/>' +
-              '<defs>' +
-                '<linearGradient id="adGrad" x1="0%" y1="0%" x2="100%" y2="0%">' +
-                  '<stop offset="0%" stop-color="#6c63ff"/>' +
-                  '<stop offset="100%" stop-color="#f59e0b"/>' +
-                '</linearGradient>' +
-              '</defs>' +
-            '</svg>' +
-            '<div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;">' +
-              '<div id="taskAdCountNum" style="font-size:42px;font-weight:900;color:#fff;line-height:1;">15</div>' +
-              '<div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:2px;">seconds</div>' +
-            '</div>' +
-          '</div>' +
-
-          // Status text
-          '<div id="taskAdStatus" style="color:rgba(255,255,255,0.6);font-size:14px;font-weight:600;text-align:center;">⏳ Ad dekh rahe ho...</div>' +
-
-          // Coins badge
-          '<div style="display:flex;align-items:center;gap:8px;background:rgba(108,99,255,0.15);' +
-               'border:1.5px solid rgba(108,99,255,0.35);border-radius:50px;padding:8px 20px;">' +
-            '<span style="font-size:18px;">🪙</span>' +
-            '<span style="color:#a78bfa;font-size:16px;font-weight:800;">+<span id="taskAdCoinsDisplay">' + coins + '</span> Coins</span>' +
-          '</div>' +
-
-        '</div>' +
-
-        // ── BOTTOM ──
-        '<div style="width:100%;padding:0 20px 36px;box-sizing:border-box;">' +
-          '<div style="color:rgba(255,165,0,0.6);font-size:11px;text-align:center;margin-bottom:12px;">' +
-            '⚠️ Back button dabaoge toh 0 coins milenge (penalty)' +
-          '</div>' +
-          // Watch Ad button — starts countdown + fires popunder
-          '<button id="taskAdWatchBtn" ' +
-            'style="width:100%;background:linear-gradient(135deg,#6c63ff,#3b82f6);border:none;' +
-            'border-radius:16px;padding:16px;color:#fff;font-size:16px;font-weight:800;' +
-            'cursor:pointer;font-family:Segoe UI,sans-serif;letter-spacing:0.3px;margin-bottom:10px;' +
-            'box-shadow:0 4px 20px rgba(108,99,255,0.4);">📺 Watch Ad</button>' +
-          // Claim button — hidden until 15s done
-          '<button id="taskAdClaimBtn" disabled ' +
-            'style="display:none;width:100%;background:rgba(255,255,255,0.08);border:1.5px solid rgba(255,255,255,0.12);' +
-            'border-radius:16px;padding:16px;color:rgba(255,255,255,0.3);font-size:16px;font-weight:800;' +
-            'cursor:not-allowed;font-family:Segoe UI,sans-serif;letter-spacing:0.3px;transition:all 0.3s;">' +
-            '⏳ Please wait 15s...' +
-          '</button>' +
-        '</div>' +
-
+        // Claim button
+        '<button id="taskAdClaimBtn" disabled ' +
+          'style="width:100%;background:rgba(255,255,255,0.12);border:1.5px solid rgba(255,255,255,0.15);' +
+          'border-radius:14px;padding:14px;color:rgba(255,255,255,0.4);font-size:15px;font-weight:800;' +
+          'cursor:not-allowed;font-family:Segoe UI,sans-serif;letter-spacing:0.3px;">' +
+          '⏳ Please wait 15s...' +
+        '</button>' +
       '</div>';
 
-    overlay.style.display = 'block';
+    overlay.style.display = 'block'; // ensure visible
+
+    // Animate progress bar
+    setTimeout(() => {
+      const bar = document.getElementById('taskAdBar');
+      if (bar) { bar.style.width = '0%'; bar.style.transition = 'none'; }
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        if (bar) { bar.style.transition = 'width 15s linear'; bar.style.width = '100%'; }
+      }));
+    }, 80);
+
+    // ── AD: Sirf AppInventor/Kodular WebView ko URL bhejo ────────
+    // Popunder/SocialBar scripts yahan inject NAHI honge —
+    // Woh sirf _doCredit() ke andar chalenge jab user claim kare
+    const directUrl = 'https://www.effectivecpmnetwork.com/b1bggwx0?key=f1f69a147759698e8fda4cfd27e423ba&t=' + Date.now();
+    try {
+      if (window.AppInventor) {
+        window.AppInventor.setWebViewString(directUrl);
+      }
+    } catch(e) {}
+
+    // Notify Kodular/AppInventor that ad container is shown
+    try { window.AppInventor && window.AppInventor.setWebViewString('AD_SHOWING:' + type); } catch(e) {}
+    console.log('[AdListener] Ad overlay shown for type:', type);
 
     // ── State tracking ───────────────────────────────────────────
     let secsLeft       = 15;
+    let adWatchSuccess = false; // true only if onload fires
     let hardLockTimer  = null;
-    let penaltyApplied = false;
+    let penaltyApplied = false; // true if back-btn pressed mid-ad
     let creditFired    = false;
-    adHardLockActive   = false; // Watch Ad button dabaane se pehle KUCH NAHI hoga
+    adHardLockActive   = true;
 
     history.pushState({ adLock: true }, '', location.href);
 
     const statusEl = document.getElementById('taskAdStatus');
     const claimBtn = document.getElementById('taskAdClaimBtn');
-    const watchBtn = document.getElementById('taskAdWatchBtn');
+    const coinsEl  = document.getElementById('taskAdCoinsDisplay');
 
-    // ── Watch Ad button — Step 1: Sirf button change karo, NO script inject ──
-    if (watchBtn) watchBtn.onclick = function() {
-      if (adHardLockActive) return;
+    // ── 15-second hard-lock countdown ───────────────────────────
+    hardLockTimer = setInterval(() => {
+      if (penaltyApplied) { clearInterval(hardLockTimer); return; }
+      secsLeft--;
+      if (statusEl) statusEl.textContent = '⏳ Reward in ' + Math.max(0, secsLeft) + 's...';
 
-      // Step 1: KOI SCRIPT INJECT NAHI — sirf UI change karo
-      // Script Step 2 pe inject hoga jab user dobara click karega
-      watchBtn.textContent = '🎬 Start Video Ad';
-      watchBtn.style.background = 'linear-gradient(135deg,#f59e0b,#ef4444)';
-      watchBtn.style.boxShadow = '0 4px 20px rgba(245,158,11,0.4)';
-      if (statusEl) statusEl.textContent = '👆 Start dabao — ad chalega aur timer shuru hoga!';
+      if (secsLeft <= 0) {
+        clearInterval(hardLockTimer);
+        adHardLockActive = false;
 
-      // Step 2: Dobara click pe — script inject + timer start
-      watchBtn.onclick = function() {
-        if (adHardLockActive) return;
-        adHardLockActive = true;
-
-        // ABHI script inject karo — user ke real click gesture se popunder fire hoga
-        const existingScript = document.getElementById('popunder-inject');
-        if (existingScript) existingScript.remove();
-        const s = document.createElement('script');
-        s.id = 'popunder-inject';
-        s.src = 'https://pl29503369.effectivecpmnetwork.com/1c/3b/d0/1c3bd0127e4be2ff172d7c6e0eaa5204.js';
-        s.setAttribute('data-cfasync', 'false');
-        document.body.appendChild(s);
-        console.log('[Ad] Popunder script injected on user click — firing naturally');
-
-        // Watch button hide, Claim show (disabled)
-        watchBtn.style.display = 'none';
-        if (claimBtn) claimBtn.style.display = 'block';
-        if (statusEl) statusEl.textContent = '⏳ Ad dekh rahe ho...';
-
-        // Progress bar animate
-        const bar = document.getElementById('taskAdBar');
-        if (bar) {
-          bar.style.width = '0%';
-          bar.style.transition = 'none';
-          requestAnimationFrame(() => requestAnimationFrame(() => {
-            bar.style.transition = 'width 15s linear';
-            bar.style.width = '100%';
-          }));
-        }
-
-        // 15s countdown shuru
-      hardLockTimer = setInterval(() => {
-        if (penaltyApplied) { clearInterval(hardLockTimer); return; }
-        secsLeft--;
-        const numEl = document.getElementById('taskAdCountNum');
-        if (numEl) numEl.textContent = Math.max(0, secsLeft);
-        const ring = document.getElementById('taskAdRing');
-        if (ring) ring.style.strokeDashoffset = (439.8 * (1 - (15 - secsLeft) / 15)).toFixed(1);
-        if (statusEl) statusEl.textContent = secsLeft > 0 ? '⏳ Ad dekh rahe ho...' : '🎉 Ab collect karo!';
-
-        if (secsLeft <= 0) {
-          clearInterval(hardLockTimer);
-          adHardLockActive = false;
+        if (adWatchSuccess) {
+          // onload already confirmed — credit immediately
+          _doCredit();
+        } else {
+          // Waiting for ad server — show Collect button (only after 15s done)
           if (claimBtn) {
             claimBtn.disabled = false;
-            claimBtn.textContent = '✅ Claim +' + coins + ' Coins';
-            claimBtn.style.cssText = 'width:100%;background:linear-gradient(135deg,#22c55e,#16a34a);border:none;border-radius:16px;padding:16px;color:#fff;font-size:16px;font-weight:800;cursor:pointer;font-family:Segoe UI,sans-serif;letter-spacing:0.3px;box-shadow:0 4px 24px rgba(34,197,94,0.4);';
+            claimBtn.textContent = '✅ Collect +' + coins + ' Coins';
+            claimBtn.style.cssText = 'width:100%;background:linear-gradient(135deg,#22c55e,#16a34a);border:none;border-radius:14px;padding:14px;color:#fff;font-size:15px;font-weight:800;cursor:pointer;font-family:Segoe UI,sans-serif;box-shadow:0 4px 20px rgba(34,197,94,0.4);';
             claimBtn.onclick = _doCredit;
           }
+          if (statusEl) statusEl.textContent = '🎉 Ab collect karo!';
         }
-      }, 1000);
-      }; // end Step 2 onclick
-    }; // end Step 1 onclick
-
+      }
+    }, 1000);
 
     // ── Strict penalty: called when back pressed before 15s ─────
     window._currentAdPenalty = function() {
@@ -2815,6 +2833,8 @@
       creditFired = true;
 
       if (claimBtn) { claimBtn.disabled = true; claimBtn.textContent = '⏳ Crediting...'; }
+
+      // Sirf AppInventor ko notify karo — browser pe bahar ad nahi kholenge
       try { window.AppInventor && window.AppInventor.setWebViewString('AD_CLAIM:' + type); } catch(e) {}
 
       creditCoins(coins, type).then(earned => {
