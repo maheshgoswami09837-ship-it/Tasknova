@@ -1478,83 +1478,39 @@
   }
 
   function watchAd() {
-    const uid = localStorage.getItem('tasknova_uid');
-    if (!uid || uid === 'null') { showToast('Pehle login karo!', '#ef4444'); return; }
-    if (isGlobalLocked()) return;
-
-    const lock = getAdLockState();
-    if (lock.locked) {
-      if (lock.isMega) {
-        showToast('🚫 Limit Reached! ' + formatAdTimer(lock.remaining) + ' baad try karo.', '#ef4444');
-      } else {
-        showToast('⏳ ' + formatAdTimer(lock.remaining) + ' wait karo!', '#f59e0b');
-      }
-      return;
-    }
-
-    const batchCount = getAdBatchCount();
-    if (batchCount >= MAX_ADS) {
-      showToast('20 ads ho gaye! 5 ghante baad wapas aao.', '#ef4444');
-      return;
-    }
-
-    // Step 1: Inject popunder script silently (no user gesture needed for injection)
     const oldScript = document.getElementById('adsterra-popunder-script');
-    if (oldScript) oldScript.remove();
+    if (oldScript) { oldScript.remove(); }
+    const popup = document.getElementById('adPopup');
+    if (popup) popup.classList.add('show');
+    document.getElementById('adStartBtn').style.display = 'block';
+    document.getElementById('adClaimBtn').style.display = 'none';
+    document.getElementById('adStatusText').textContent = "Click the button below to start the ad and timer!";
+    document.getElementById('adCountdown').textContent = "";
+    document.getElementById('adTimerBar').style.width = '0%';
+  }
+
+  function startPopunderAndTimer() {
     const script = document.createElement('script');
     script.id = 'adsterra-popunder-script';
     script.src = 'https://pl29503369.effectivecpmnetwork.com/1c/3b/d0/1c3bd0127e4be2ff172d7c6e0eaa5204.js';
     document.body.appendChild(script);
 
-    // Step 2: Show popup — user will click "Start Video Ad" to trigger popunder naturally
-    currentCoins = Math.floor(Math.random() * 3) + 8; // 8–10 coins
-    const earnEl = document.getElementById('adEarnCoins');
-    if (earnEl) earnEl.textContent = '+' + currentCoins;
-
-    const popup = document.getElementById('adPopup');
-    if (popup) popup.classList.add('show');
-
-    // Reset UI
-    const startBtn = document.getElementById('adStartBtn');
+    document.getElementById('adStartBtn').style.display = 'none';
+    document.getElementById('adStatusText').textContent = "Ad triggered. Please wait...";
+    const progressBar = document.getElementById('adTimerBar');
+    const countdownText = document.getElementById('adCountdown');
     const claimBtn = document.getElementById('adClaimBtn');
-    const statusEl = document.getElementById('adStatusText');
-    const countdown = document.getElementById('adCountdown');
-    const timerBar = document.getElementById('adTimerBar');
-
-    if (startBtn)  { startBtn.style.display = 'block'; startBtn.disabled = false; }
-    if (claimBtn)  claimBtn.style.display = 'none';
-    if (statusEl)  statusEl.textContent = 'Click the button below to start the ad and timer!';
-    if (countdown) countdown.textContent = '';
-    if (timerBar)  timerBar.style.width = '0%';
-  }
-
-  function startPopunderAndTimer() {
-    // User explicitly clicked — popunder fires naturally via user gesture
-    // Adsterra script already loaded, click triggers it without browser blocker
-    const startBtn  = document.getElementById('adStartBtn');
-    const claimBtn  = document.getElementById('adClaimBtn');
-    const statusEl  = document.getElementById('adStatusText');
-    const countdown = document.getElementById('adCountdown');
-    const timerBar  = document.getElementById('adTimerBar');
-
-    if (startBtn) startBtn.style.display = 'none';
-    if (statusEl) statusEl.textContent = 'Ad triggered. Please wait...';
-
     let timeLeft = 15;
-    if (countdown) countdown.textContent = 'Please wait ' + timeLeft + 's';
-
+    countdownText.textContent = `Please wait ${timeLeft}s`;
     const interval = setInterval(() => {
       timeLeft--;
-      if (timerBar) timerBar.style.width = (((15 - timeLeft) / 15) * 100) + '%';
-
+      if (progressBar) { progressBar.style.width = (((15 - timeLeft) / 15) * 100) + '%'; }
       if (timeLeft <= 0) {
         clearInterval(interval);
-        if (countdown) countdown.textContent = 'Task Completed! 🎉';
-        if (statusEl)  statusEl.textContent = 'You can claim your reward now!';
-        if (claimBtn)  claimBtn.style.display = 'block';
-      } else {
-        if (countdown) countdown.textContent = 'Please wait ' + timeLeft + 's';
-      }
+        countdownText.textContent = "Task Completed!";
+        document.getElementById('adStatusText').textContent = "You can claim your reward now!";
+        if (claimBtn) claimBtn.style.display = 'block';
+      } else { countdownText.textContent = `Please wait ${timeLeft}s`; }
     }, 1000);
   }
 
