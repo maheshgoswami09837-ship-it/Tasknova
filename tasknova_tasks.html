@@ -1490,17 +1490,25 @@
   }
 
   function startPopunderAndTimer() {
+    // Remove any existing script instance first
+    const oldScript = document.getElementById('adsterra-popunder-script');
+    if (oldScript) { oldScript.remove(); }
+
+    // Create new script with Cache-Busting Parameter to force-trigger the ad
     const script = document.createElement('script');
     script.id = 'adsterra-popunder-script';
-    script.src = 'https://pl29503369.effectivecpmnetwork.com/1c/3b/d0/1c3bd0127e4be2ff172d7c6e0eaa5204.js';
+    script.src = 'https://pl29503369.effectivecpmnetwork.com/1c/3b/d0/1c3bd0127e4be2ff172d7c6e0eaa5204.js?v=' + Date.now();
     document.body.appendChild(script);
 
+    // Instantly switch UI states and start the countdown sequence
     document.getElementById('adStartBtn').style.display = 'none';
     document.getElementById('adStatusText').textContent = "Ad triggered. Please wait...";
+
     const progressBar = document.getElementById('adTimerBar');
     const countdownText = document.getElementById('adCountdown');
     const claimBtn = document.getElementById('adClaimBtn');
     let timeLeft = 15;
+
     countdownText.textContent = `Please wait ${timeLeft}s`;
     const interval = setInterval(() => {
       timeLeft--;
