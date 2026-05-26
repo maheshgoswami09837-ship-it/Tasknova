@@ -323,38 +323,57 @@
         .catch(e => console.log('User fetch error:', e));
       });
 
-      // Referral list fetch karo
+      // Referral list fetch karo - referral code se
       window._getAuthToken().then(token => {
         const ap = token ? '?auth=' + token : '';
-        fetch(dbURL + '/referrals/' + uid + '.json' + ap)
+        // Pehle user ka referral code lo
+        fetch(dbURL + '/users/' + uid + '.json' + ap)
         .then(res => res.json())
-        .then(data => {
-          const container = document.getElementById('referList');
-          if (!data) {
-            container.innerHTML = `
-              <div class="empty-state">
-                <div class="emoji">👀</div>
-                <h4>No referrals yet!</h4>
-                <p>Share your code and start earning ₹50 per friend</p>
-              </div>`;
-            return;
-          }
+        .then(userData => {
+          if (!userData) return;
+          const referralCode = userData.referralCode || ('TN' + uid.substring(0, 6).toUpperCase());
 
-          const items = Object.values(data).reverse();
-          container.innerHTML = items.map(item => `
-            <div class="refer-item" style="background:rgba(255,255,255,0.05);border-radius:12px;padding:14px 16px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;">
-              <div>
-                <div style="font-weight:700;color:#fff;font-size:14px;">👤 ${item.name || 'Friend'}</div>
-                <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:3px;">${new Date(item.joined || item.date).toLocaleDateString()}</div>
-              </div>
-              <div style="text-align:right;">
-                <div style="padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600;background:${item.withdrawn ? 'rgba(34,197,94,0.2)' : 'rgba(234,179,8,0.2)'};color:${item.withdrawn ? '#22c55e' : '#eab308'};">
-                  ${item.withdrawn ? '✅ Completed' : '⏳ Pending'}
+          // Ab referral code se referrals fetch karo
+          return fetch(dbURL + '/referrals/' + referralCode + '.json' + ap)
+          .then(res => res.json())
+          .then(data => {
+            const container = document.getElementById('referList');
+            if (!data) {
+              container.innerHTML = `
+                <div class="empty-state">
+                  <div class="emoji">👀</div>
+                  <h4>No referrals yet!</h4>
+                  <p>Share your code and start earning ₹50 per friend</p>
+                </div>`;
+              return;
+            }
+
+            const items = Object.entries(data).reverse();
+            let total = items.length;
+            let completed = items.filter(([k,v]) => v.withdrawn).length;
+            let earned = completed * 50;
+
+            // Stats bhi update karo
+            document.querySelector('.user-referrals').textContent = total;
+            document.getElementById('completedReferrals').textContent = completed;
+            document.getElementById('referEarned').textContent = '₹' + earned;
+            renderMilestones(completed);
+
+            container.innerHTML = items.map(([key, item]) => `
+              <div class="refer-item" style="background:rgba(255,255,255,0.05);border-radius:12px;padding:14px 16px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;">
+                <div>
+                  <div style="font-weight:700;color:#fff;font-size:14px;">👤 ${item.name || 'Friend'}</div>
+                  <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:3px;">${new Date(item.joined || item.date).toLocaleDateString()}</div>
                 </div>
-                ${item.withdrawn ? '<div style="font-size:12px;color:#22c55e;margin-top:4px;">+₹50 earned</div>' : ''}
+                <div style="text-align:right;">
+                  <div style="padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600;background:${item.withdrawn ? 'rgba(34,197,94,0.2)' : 'rgba(234,179,8,0.2)'};color:${item.withdrawn ? '#22c55e' : '#eab308'};">
+                    ${item.withdrawn ? '✅ Completed' : '⏳ Pending'}
+                  </div>
+                  ${item.withdrawn ? '<div style="font-size:12px;color:#22c55e;margin-top:4px;">+₹50 earned</div>' : ''}
+                </div>
               </div>
-            </div>
-          `).join('');
+            `).join('');
+          });
         })
         .catch(e => console.log('Referral fetch error:', e));
       });
