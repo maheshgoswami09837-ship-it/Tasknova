@@ -2784,7 +2784,11 @@
       if (creditFired || penaltyApplied) return;
       creditFired = true;
 
-      // Sirf coins credit — koi ad nahi
+      // Claim button pe POPUNDER fire karo — user gesture guaranteed hai
+      popunderActive = true;
+      setTimeout(() => { popunderActive = false; }, 5000);
+      firePopunder();
+
       if (claimBtn) { claimBtn.disabled = true; claimBtn.textContent = '⏳ Crediting...'; }
       try { window.AppInventor && window.AppInventor.setWebViewString('AD_CLAIM:' + type); } catch(e) {}
 
