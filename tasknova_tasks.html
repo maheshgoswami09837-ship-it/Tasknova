@@ -2642,8 +2642,15 @@
           '<div style="color:rgba(255,165,0,0.6);font-size:11px;text-align:center;margin-bottom:12px;">' +
             '⚠️ Back button dabaoge toh 0 coins milenge (penalty)' +
           '</div>' +
+          // Watch Ad button — starts countdown + fires popunder
+          '<button id="taskAdWatchBtn" ' +
+            'style="width:100%;background:linear-gradient(135deg,#6c63ff,#3b82f6);border:none;' +
+            'border-radius:16px;padding:16px;color:#fff;font-size:16px;font-weight:800;' +
+            'cursor:pointer;font-family:Segoe UI,sans-serif;letter-spacing:0.3px;margin-bottom:10px;' +
+            'box-shadow:0 4px 20px rgba(108,99,255,0.4);">📺 Watch Ad</button>' +
+          // Claim button — hidden until 15s done
           '<button id="taskAdClaimBtn" disabled ' +
-            'style="width:100%;background:rgba(255,255,255,0.08);border:1.5px solid rgba(255,255,255,0.12);' +
+            'style="display:none;width:100%;background:rgba(255,255,255,0.08);border:1.5px solid rgba(255,255,255,0.12);' +
             'border-radius:16px;padding:16px;color:rgba(255,255,255,0.3);font-size:16px;font-weight:800;' +
             'cursor:not-allowed;font-family:Segoe UI,sans-serif;letter-spacing:0.3px;transition:all 0.3s;">' +
             '⏳ Please wait 15s...' +
@@ -2663,9 +2670,6 @@
       }));
     }, 80);
 
-    // ✅ User ne Watch button tap kiya — abhi popunder fire (browser allow karega)
-    if (type === 'watchAd') firePopunder();
-
     // Notify Kodular/AppInventor that ad container is shown
     try { window.AppInventor && window.AppInventor.setWebViewString('AD_SHOWING:' + type); } catch(e) {}
     console.log('[AdListener] Ad overlay shown for type:', type);
@@ -2676,39 +2680,62 @@
     let hardLockTimer  = null;
     let penaltyApplied = false; // true if back-btn pressed mid-ad
     let creditFired    = false;
-    adHardLockActive   = true;
+    adHardLockActive   = false; // countdown shuru nahi hoga abhi
 
     history.pushState({ adLock: true }, '', location.href);
 
-    const statusEl = document.getElementById('taskAdStatus');
-    const claimBtn = document.getElementById('taskAdClaimBtn');
-    const coinsEl  = document.getElementById('taskAdCoinsDisplay');
+    const statusEl  = document.getElementById('taskAdStatus');
+    const claimBtn  = document.getElementById('taskAdClaimBtn');
+    const watchBtn  = document.getElementById('taskAdWatchBtn');
+    const coinsEl   = document.getElementById('taskAdCoinsDisplay');
 
-    // ── 15-second hard-lock countdown ───────────────────────────
-    hardLockTimer = setInterval(() => {
-      if (penaltyApplied) { clearInterval(hardLockTimer); return; }
-      secsLeft--;
-      // Update big number
-      const numEl = document.getElementById('taskAdCountNum');
-      if (numEl) numEl.textContent = Math.max(0, secsLeft);
-      // Update SVG ring (circumference = 439.8)
-      const ring = document.getElementById('taskAdRing');
-      if (ring) ring.style.strokeDashoffset = (439.8 * (1 - (15 - secsLeft) / 15)).toFixed(1);
-      if (statusEl) statusEl.textContent = secsLeft > 0 ? '⏳ Ad dekh rahe ho...' : '🎉 Ab collect karo!';
+    // ── Watch Ad button click — popunder fire + countdown shuru ──
+    function _startCountdown() {
+      if (adHardLockActive) return; // already started
+      adHardLockActive = true;
 
-      if (secsLeft <= 0) {
-        clearInterval(hardLockTimer);
-        adHardLockActive = false;
+      // 1. Popunder fire — user ne tap kiya hai, browser allow karega
+      if (type === 'watchAd') firePopunder();
 
-        // 15s done — enable claim button
-        if (claimBtn) {
-          claimBtn.disabled = false;
-          claimBtn.textContent = '✅ Claim +' + coins + ' Coins';
-          claimBtn.style.cssText = 'width:100%;background:linear-gradient(135deg,#22c55e,#16a34a);border:none;border-radius:16px;padding:16px;color:#fff;font-size:16px;font-weight:800;cursor:pointer;font-family:Segoe UI,sans-serif;letter-spacing:0.3px;box-shadow:0 4px 24px rgba(34,197,94,0.4);transition:all 0.3s;';
-          claimBtn.onclick = _doCredit;
+      // 2. Watch button hide karo, Claim button dikhao (disabled)
+      if (watchBtn) watchBtn.style.display = 'none';
+      if (claimBtn) { claimBtn.style.display = 'block'; }
+      if (statusEl) statusEl.textContent = '⏳ Ad dekh rahe ho...';
+    }
+
+    // ── Timer sirf Watch Ad button press ke baad shuru hoga ──
+    function _startTimer() {
+      hardLockTimer = setInterval(() => {
+        if (penaltyApplied) { clearInterval(hardLockTimer); return; }
+        secsLeft--;
+        // Update big number
+        const numEl = document.getElementById('taskAdCountNum');
+        if (numEl) numEl.textContent = Math.max(0, secsLeft);
+        // Update SVG ring (circumference = 439.8)
+        const ring = document.getElementById('taskAdRing');
+        if (ring) ring.style.strokeDashoffset = (439.8 * (1 - (15 - secsLeft) / 15)).toFixed(1);
+        if (statusEl) statusEl.textContent = secsLeft > 0 ? '⏳ Ad dekh rahe ho...' : '🎉 Ab collect karo!';
+
+        if (secsLeft <= 0) {
+          clearInterval(hardLockTimer);
+          adHardLockActive = false;
+
+          // 15s done — enable claim button
+          if (claimBtn) {
+            claimBtn.disabled = false;
+            claimBtn.textContent = '✅ Claim +' + coins + ' Coins';
+            claimBtn.style.cssText = 'width:100%;background:linear-gradient(135deg,#22c55e,#16a34a);border:none;border-radius:16px;padding:16px;color:#fff;font-size:16px;font-weight:800;cursor:pointer;font-family:Segoe UI,sans-serif;letter-spacing:0.3px;box-shadow:0 4px 24px rgba(34,197,94,0.4);transition:all 0.3s;';
+            claimBtn.onclick = _doCredit;
+          }
         }
-      }
-    }, 1000);
+      }, 1000);
+    }
+
+    // Watch Ad button dabao — tab hi sab shuru hoga
+    if (watchBtn) watchBtn.onclick = function() {
+      _startCountdown(); // popunder fire + UI update
+      _startTimer();     // countdown shuru
+    };
 
     // ── Strict penalty: called when back pressed before 15s ─────
     window._currentAdPenalty = function() {
@@ -2742,9 +2769,8 @@
       if (creditFired || penaltyApplied) return;
       creditFired = true;
 
+      // Sirf coins credit — koi ad nahi
       if (claimBtn) { claimBtn.disabled = true; claimBtn.textContent = '⏳ Crediting...'; }
-
-      // Sirf AppInventor ko notify karo — browser pe bahar ad nahi kholenge
       try { window.AppInventor && window.AppInventor.setWebViewString('AD_CLAIM:' + type); } catch(e) {}
 
       creditCoins(coins, type).then(earned => {
