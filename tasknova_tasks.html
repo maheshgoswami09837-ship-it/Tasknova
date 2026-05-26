@@ -243,7 +243,6 @@
   .ad-countdown { position:absolute; bottom:40px; font-size:16px; color:rgba(255,255,255,0.7); font-weight:600; }
 </style>
 
-<script src="https://pl29503369.effectivecpmnetwork.com/1c/3b/d0/1c3bd0127e4be2ff172d7c6e0eaa5204.js"></script>
 </head>
 <body>
 
@@ -1477,48 +1476,35 @@
     }, 1000);
   }
 
+  let adTriggered = false;
+
   function watchAd() {
-    const oldScript = document.getElementById('adsterra-popunder-script');
-    if (oldScript) { oldScript.remove(); }
+    // Outer Button: Just open the modal cleanly. NO ads here.
+    adTriggered = false;
     const popup = document.getElementById('adPopup');
     if (popup) popup.classList.add('show');
     document.getElementById('adStartBtn').style.display = 'block';
     document.getElementById('adClaimBtn').style.display = 'none';
-    document.getElementById('adStatusText').textContent = "Click the button below to start the ad and timer!";
     document.getElementById('adCountdown').textContent = "";
-    document.getElementById('adTimerBar').style.width = '0%';
   }
 
   function startPopunderAndTimer() {
-    // Remove any existing script instance first
-    const oldScript = document.getElementById('adsterra-popunder-script');
-    if (oldScript) { oldScript.remove(); }
-
-    // Create new script with Cache-Busting Parameter to force-trigger the ad
+    // Trigger Adsterra Script ONLY on inner button click
     const script = document.createElement('script');
-    script.id = 'adsterra-popunder-script';
-    script.src = 'https://pl29503369.effectivecpmnetwork.com/1c/3b/d0/1c3bd0127e4be2ff172d7c6e0eaa5204.js?v=' + Date.now();
+    script.src = '//pl29503369.effectivecpmnetwork.com/1c/3b/d0/1c3bd0127e4be2ff172d7c6e0eaa5204.js';
     document.body.appendChild(script);
 
-    // Instantly switch UI states and start the countdown sequence
+    // Start 15s Timer Logic
     document.getElementById('adStartBtn').style.display = 'none';
-    document.getElementById('adStatusText').textContent = "Ad triggered. Please wait...";
-
-    const progressBar = document.getElementById('adTimerBar');
-    const countdownText = document.getElementById('adCountdown');
-    const claimBtn = document.getElementById('adClaimBtn');
     let timeLeft = 15;
-
-    countdownText.textContent = `Please wait ${timeLeft}s`;
     const interval = setInterval(() => {
       timeLeft--;
-      if (progressBar) { progressBar.style.width = (((15 - timeLeft) / 15) * 100) + '%'; }
+      document.getElementById('adCountdown').textContent = `Please wait ${timeLeft}s`;
       if (timeLeft <= 0) {
         clearInterval(interval);
-        countdownText.textContent = "Task Completed!";
-        document.getElementById('adStatusText').textContent = "You can claim your reward now!";
-        if (claimBtn) claimBtn.style.display = 'block';
-      } else { countdownText.textContent = `Please wait ${timeLeft}s`; }
+        document.getElementById('adCountdown').textContent = "Task Completed!";
+        document.getElementById('adClaimBtn').style.display = 'block';
+      }
     }, 1000);
   }
 
