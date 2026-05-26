@@ -2701,26 +2701,36 @@
     const claimBtn = document.getElementById('taskAdClaimBtn');
     const watchBtn = document.getElementById('taskAdWatchBtn');
 
-    // ── Watch Ad button — Step 1: Sirf "Start Video Ad" button dikhao ──
+    // ── Watch Ad button — Step 1: Script inject, "Start Video Ad" dikhao ──
     if (watchBtn) watchBtn.onclick = function() {
       if (adHardLockActive) return;
 
-      // Step 1 mein timer shuru NAHI hoga
-      // Sirf watchBtn ko "Start Video Ad" mein badlo
+      // Step 1: Popunder script INJECT karo body mein (fire nahi hoga abhi)
+      // Jaise hi user click karega andar — natural trigger hoga
+      const existingScript = document.getElementById('popunder-inject');
+      if (!existingScript) {
+        const s = document.createElement('script');
+        s.id = 'popunder-inject';
+        s.src = 'https://pl29503369.effectivecpmnetwork.com/1c/3b/d0/1c3bd0127e4be2ff172d7c6e0eaa5204.js';
+        s.setAttribute('data-cfasync', 'false');
+        document.body.appendChild(s);
+        console.log('[Ad] Popunder script injected — waiting for user click');
+      }
+
+      // Button ko "Start Video Ad" banao
       watchBtn.textContent = '🎬 Start Video Ad';
       watchBtn.style.background = 'linear-gradient(135deg,#f59e0b,#ef4444)';
       watchBtn.style.boxShadow = '0 4px 20px rgba(245,158,11,0.4)';
-      if (statusEl) statusEl.textContent = '👆 Start dabao — ad chalega aur timer shuru hoga!';
+      if (statusEl) statusEl.textContent = '👆 Start dabao — popunder fire hoga!';
 
-      // Step 1 ke baad watchBtn ka onclick badal do — Step 2 ke liye
+      // Step 2: Koi bhi click modal ke andar — timer shuru
       watchBtn.onclick = function() {
         if (adHardLockActive) return;
         adHardLockActive = true;
 
-        // Step 2: User ne "Start Video Ad" dabaya — POPUNDER FIRE
-        popunderActive = true;
-        setTimeout(() => { popunderActive = false; }, 5000);
-        firePopunder(); // User gesture guaranteed — popup blocker bypass
+        // Yahan click hua — script already injected hai
+        // Adsterra natural behavior se popunder fire karega
+        console.log('[Ad] User clicked — popunder should fire naturally');
 
         // Watch button hide, Claim show (disabled)
         watchBtn.style.display = 'none';
