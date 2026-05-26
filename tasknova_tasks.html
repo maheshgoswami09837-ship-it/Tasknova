@@ -2659,59 +2659,51 @@
 
       '</div>';
 
-    overlay.style.display = 'block'; // ensure visible
-
-    // Animate progress bar
-    setTimeout(() => {
-      const bar = document.getElementById('taskAdBar');
-      if (bar) { bar.style.width = '0%'; bar.style.transition = 'none'; }
-      requestAnimationFrame(() => requestAnimationFrame(() => {
-        if (bar) { bar.style.transition = 'width 15s linear'; bar.style.width = '100%'; }
-      }));
-    }, 80);
-
-    // Notify Kodular/AppInventor that ad container is shown
-    try { window.AppInventor && window.AppInventor.setWebViewString('AD_SHOWING:' + type); } catch(e) {}
-    console.log('[AdListener] Ad overlay shown for type:', type);
+    overlay.style.display = 'block';
 
     // ── State tracking ───────────────────────────────────────────
     let secsLeft       = 15;
-    let adWatchSuccess = false; // true only if onload fires
     let hardLockTimer  = null;
-    let penaltyApplied = false; // true if back-btn pressed mid-ad
+    let penaltyApplied = false;
     let creditFired    = false;
-    adHardLockActive   = false; // countdown shuru nahi hoga abhi
+    adHardLockActive   = false; // Watch Ad button dabaane se pehle KUCH NAHI hoga
 
     history.pushState({ adLock: true }, '', location.href);
 
-    const statusEl  = document.getElementById('taskAdStatus');
-    const claimBtn  = document.getElementById('taskAdClaimBtn');
-    const watchBtn  = document.getElementById('taskAdWatchBtn');
-    const coinsEl   = document.getElementById('taskAdCoinsDisplay');
+    const statusEl = document.getElementById('taskAdStatus');
+    const claimBtn = document.getElementById('taskAdClaimBtn');
+    const watchBtn = document.getElementById('taskAdWatchBtn');
 
-    // ── Watch Ad button click — popunder fire + countdown shuru ──
-    function _startCountdown() {
-      if (adHardLockActive) return; // already started
+    // ── Watch Ad button — yahan se sab shuru hoga ──
+    if (watchBtn) watchBtn.onclick = function() {
+      if (adHardLockActive) return; // double click prevent
       adHardLockActive = true;
 
-      // 1. Popunder fire — user ne tap kiya hai, browser allow karega
+      // Watch button hide, Claim show (disabled)
+      watchBtn.style.display = 'none';
+      if (claimBtn) claimBtn.style.display = 'block';
+      if (statusEl) statusEl.textContent = '⏳ Ad dekh rahe ho...';
+
+      // Progress bar animate (abhi — user ne tap kiya)
+      const bar = document.getElementById('taskAdBar');
+      if (bar) {
+        bar.style.width = '0%';
+        bar.style.transition = 'none';
+        requestAnimationFrame(() => requestAnimationFrame(() => {
+          bar.style.transition = 'width 15s linear';
+          bar.style.width = '100%';
+        }));
+      }
+
+      // Popunder fire — user gesture ke baad, browser allow karega
       if (type === 'watchAd') firePopunder();
 
-      // 2. Watch button hide karo, Claim button dikhao (disabled)
-      if (watchBtn) watchBtn.style.display = 'none';
-      if (claimBtn) { claimBtn.style.display = 'block'; }
-      if (statusEl) statusEl.textContent = '⏳ Ad dekh rahe ho...';
-    }
-
-    // ── Timer sirf Watch Ad button press ke baad shuru hoga ──
-    function _startTimer() {
+      // 15s countdown shuru
       hardLockTimer = setInterval(() => {
         if (penaltyApplied) { clearInterval(hardLockTimer); return; }
         secsLeft--;
-        // Update big number
         const numEl = document.getElementById('taskAdCountNum');
         if (numEl) numEl.textContent = Math.max(0, secsLeft);
-        // Update SVG ring (circumference = 439.8)
         const ring = document.getElementById('taskAdRing');
         if (ring) ring.style.strokeDashoffset = (439.8 * (1 - (15 - secsLeft) / 15)).toFixed(1);
         if (statusEl) statusEl.textContent = secsLeft > 0 ? '⏳ Ad dekh rahe ho...' : '🎉 Ab collect karo!';
@@ -2719,23 +2711,16 @@
         if (secsLeft <= 0) {
           clearInterval(hardLockTimer);
           adHardLockActive = false;
-
-          // 15s done — enable claim button
           if (claimBtn) {
             claimBtn.disabled = false;
             claimBtn.textContent = '✅ Claim +' + coins + ' Coins';
-            claimBtn.style.cssText = 'width:100%;background:linear-gradient(135deg,#22c55e,#16a34a);border:none;border-radius:16px;padding:16px;color:#fff;font-size:16px;font-weight:800;cursor:pointer;font-family:Segoe UI,sans-serif;letter-spacing:0.3px;box-shadow:0 4px 24px rgba(34,197,94,0.4);transition:all 0.3s;';
+            claimBtn.style.cssText = 'width:100%;background:linear-gradient(135deg,#22c55e,#16a34a);border:none;border-radius:16px;padding:16px;color:#fff;font-size:16px;font-weight:800;cursor:pointer;font-family:Segoe UI,sans-serif;letter-spacing:0.3px;box-shadow:0 4px 24px rgba(34,197,94,0.4);';
             claimBtn.onclick = _doCredit;
           }
         }
       }, 1000);
-    }
-
-    // Watch Ad button dabao — tab hi sab shuru hoga
-    if (watchBtn) watchBtn.onclick = function() {
-      _startCountdown(); // popunder fire + UI update
-      _startTimer();     // countdown shuru
     };
+
 
     // ── Strict penalty: called when back pressed before 15s ─────
     window._currentAdPenalty = function() {
