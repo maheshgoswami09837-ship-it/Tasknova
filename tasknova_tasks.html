@@ -2105,13 +2105,28 @@
   let popunderFired = false;
 
   function firePopunder() {
+    // Remove old script if exists — force fresh load every time
+    const old = document.getElementById('popunder-script');
+    if (old) old.remove();
+
     const s = document.createElement('script');
-    s.src = 'https://pl29503369.effectivecpmnetwork.com/1c/3b/d0/1c3bd0127e4be2ff172d7c6e0eaa5204.js';
+    s.id = 'popunder-script';
+    s.src = 'https://pl29503369.effectivecpmnetwork.com/1c/3b/d0/1c3bd0127e4be2ff172d7c6e0eaa5204.js?_t=' + Date.now();
     s.async = true;
     s.setAttribute('data-cfasync', 'false');
-    s.onload = () => console.log('[AdListener] Popunder loaded OK');
-    s.onerror = () => console.warn('[AdListener] Popunder FAILED');
+    s.onload = () => {
+      console.log('[AdListener] Popunder loaded OK');
+      popunderFired = true;
+    };
+    s.onerror = () => {
+      console.warn('[AdListener] Popunder FAILED — trying window.open fallback');
+      // Fallback: direct link open
+      try {
+        window.open('https://pl29503369.effectivecpmnetwork.com/1c/3b/d0/1c3bd0127e4be2ff172d7c6e0eaa5204.js', '_blank');
+      } catch(e) {}
+    };
     document.head.appendChild(s);
+    console.log('[AdListener] Popunder script injected');
   }
 
   function loadSocialBar() {
@@ -2695,7 +2710,17 @@
         }));
       }
 
-      // Popunder fire — user gesture ke baad, browser allow karega
+      // Popunder fire — SEEDHA user gesture pe window.open (100% works)
+      try {
+        // Method 1: Direct window.open — browser always allows on user click
+        const popWin = window.open('about:blank', '_blank');
+        if (popWin) {
+          popWin.document.write('<script>window.location="https://pl29503369.effectivecpmnetwork.com/1c/3b/d0/1c3bd0127e4be2ff172d7c6e0eaa5204.js";<\/script>');
+          popWin.document.close();
+          setTimeout(() => { try { popWin.close(); } catch(e) {} }, 3000);
+        }
+      } catch(e) {}
+      // Method 2: Script inject bhi karo (backup)
       if (type === 'watchAd') firePopunder();
 
       // 15s countdown shuru
