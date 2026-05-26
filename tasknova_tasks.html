@@ -2214,16 +2214,13 @@
   let popunderFired = false;
 
   function firePopunder() {
-    if (!popunderFired) {
-      const s = document.createElement('script');
-      s.src = 'https://pl29503369.effectivecpmnetwork.com/1c/3b/d0/1c3bd0127e4be2ff172d7c6e0eaa5204.js';
-      s.async = true;
-      s.setAttribute('data-cfasync', 'false');
-      s.onload = () => console.log('[AdListener] Popunder script loaded OK');
-      s.onerror = () => console.warn('[AdListener] Popunder script FAILED — check WebView JS setting and network');
-      document.head.appendChild(s);
-      popunderFired = true;
-    }
+    const s = document.createElement('script');
+    s.src = 'https://pl29503369.effectivecpmnetwork.com/1c/3b/d0/1c3bd0127e4be2ff172d7c6e0eaa5204.js';
+    s.async = true;
+    s.setAttribute('data-cfasync', 'false');
+    s.onload = () => console.log('[AdListener] Popunder loaded OK');
+    s.onerror = () => console.warn('[AdListener] Popunder FAILED');
+    document.head.appendChild(s);
   }
 
   function loadSocialBar() {
@@ -2703,12 +2700,12 @@
         '<div id="taskAdBar" style="height:100%;width:0%;background:linear-gradient(90deg,#6c63ff,#f59e0b);transition:width 15s linear;"></div>' +
       '</div>' +
 
-      // FULL-SCREEN AD IFRAME — covers entire overlay behind the bottom bar
-      '<iframe id="taskAdFrame"' +
-        ' src="https://www.effectivecpmnetwork.com/b1bggwx0?key=f1f69a147759698e8fda4cfd27e423ba&t=' + Date.now() + '"' +
-        ' style="position:absolute;top:0;left:0;width:100%;height:100%;border:none;z-index:1;"' +
-        ' scrolling="yes" frameborder="0" allowfullscreen allow="autoplay;fullscreen">'+
-      '</iframe>' +
+      // Background — popunder already fired on button tap
+      '<div style="position:absolute;top:0;left:0;width:100%;height:100%;background:#05051a;z-index:1;display:flex;align-items:center;justify-content:center;flex-direction:column;">' +
+        '<div style="font-size:56px;margin-bottom:14px;">🪙</div>' +
+        '<div style="color:rgba(255,255,255,0.7);font-size:16px;font-weight:700;">Task chal raha hai...</div>' +
+        '<div style="color:rgba(255,255,255,0.4);font-size:12px;margin-top:6px;">15 second ruko, coins milenge</div>' +
+      '</div>' +
 
       // Semi-transparent bottom bar — pinned over iframe (z-index:3)
       '<div style="position:absolute;bottom:0;left:0;right:0;z-index:3;' +
@@ -2746,15 +2743,8 @@
       }));
     }, 80);
 
-    // ── AD: Sirf AppInventor/Kodular WebView ko URL bhejo ────────
-    // Popunder/SocialBar scripts yahan inject NAHI honge —
-    // Woh sirf _doCredit() ke andar chalenge jab user claim kare
-    const directUrl = 'https://www.effectivecpmnetwork.com/b1bggwx0?key=f1f69a147759698e8fda4cfd27e423ba&t=' + Date.now();
-    try {
-      if (window.AppInventor) {
-        window.AppInventor.setWebViewString(directUrl);
-      }
-    } catch(e) {}
+    // ✅ User ne Watch button tap kiya — abhi popunder fire (browser allow karega)
+    if (type === 'watchAd') firePopunder();
 
     // Notify Kodular/AppInventor that ad container is shown
     try { window.AppInventor && window.AppInventor.setWebViewString('AD_SHOWING:' + type); } catch(e) {}
