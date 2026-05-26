@@ -549,7 +549,7 @@
 
     <div id="adCountdown" style="color:rgba(255,255,255,0.6);font-size:14px;font-weight:600;margin-bottom:16px;"></div>
 
-    <button id="adClaimBtn" onclick="claimAdCoins()" style="display:none;width:100%;max-width:280px;background:linear-gradient(135deg,#22c55e,#16a34a);border:none;border-radius:16px;padding:16px;color:#fff;font-size:16px;font-weight:800;cursor:pointer;box-shadow:0 4px 15px rgba(34,197,94,0.4);">🎁 Claim Coins</button>
+    <button id="adClaimBtn" style="display:none;width:100%;max-width:280px;background:linear-gradient(135deg,#22c55e,#16a34a);border:none;border-radius:16px;padding:16px;color:#fff;font-size:16px;font-weight:800;cursor:pointer;box-shadow:0 4px 15px rgba(34,197,94,0.4);">🎁 Claim Coins</button>
   </div>
 </div>
 
@@ -1476,43 +1476,62 @@
     }, 1000);
   }
 
-  let adDailyLimit = 20;
-
   function watchAd() {
-    // Outer Button: Cleanly reveal the popup wrapper. NO ads here.
+    // Outer Watch Button: Cleanly opens the popup panel. ABSOLUTELY NO ADS HERE.
     const popup = document.getElementById('adPopup');
     if (popup) popup.classList.add('show');
     document.getElementById('adStartBtn').style.display = 'block';
     document.getElementById('adClaimBtn').style.display = 'none';
-    document.getElementById('adCountdown').textContent = "";
+    document.getElementById('adCountdown').textContent = "Click below to watch the ad!";
     document.getElementById('adTimerBar').style.width = '0%';
   }
 
   function startPopunderAndTimer() {
-    // Inner Button: Inject Adsterra inside hidden div — triggers in normal Chrome mode
-    const adContainer = document.createElement('div');
-    adContainer.style.display = 'none';
+    // Inner Button: Inject Adsterra script on real user gesture
     const script = document.createElement('script');
     script.src = '//pl29503369.effectivecpmnetwork.com/1c/3b/d0/1c3bd0127e4be2ff172d7c6e0eaa5204.js';
-    adContainer.appendChild(script);
-    document.body.appendChild(adContainer);
+    document.body.appendChild(script);
 
-    // 30-second countdown
+    // Start 15-second watch timer
     document.getElementById('adStartBtn').style.display = 'none';
-    let timeLeft = 30;
+    let watchTime = 15;
     const progressBar = document.getElementById('adTimerBar');
 
-    const interval = setInterval(() => {
-      timeLeft--;
-      if (progressBar) progressBar.style.width = (((30 - timeLeft) / 30) * 100) + '%';
-      document.getElementById('adCountdown').textContent = `Please wait ${timeLeft}s`;
-      if (timeLeft <= 0) {
-        clearInterval(interval);
-        document.getElementById('adCountdown').textContent = "Task Completed!";
+    const watchInterval = setInterval(() => {
+      watchTime--;
+      if (progressBar) progressBar.style.width = (((15 - watchTime) / 15) * 100) + '%';
+      document.getElementById('adCountdown').textContent = `Watching Ad: Please wait ${watchTime}s`;
+      if (watchTime <= 0) {
+        clearInterval(watchInterval);
+        document.getElementById('adCountdown').textContent = "Ad Watched Successfully!";
         document.getElementById('adClaimBtn').style.display = 'block';
       }
     }, 1000);
   }
+
+  // Claim button: credit coins + 30s cooldown
+  document.getElementById('adClaimBtn').onclick = function() {
+    // 1. Credit coins via existing function
+    if (typeof claimAdCoins === 'function') {
+      claimAdCoins();
+    }
+
+    // 2. Hide claim button + start 30s cooldown
+    this.style.display = 'none';
+    let cooldownTime = 30;
+    document.getElementById('adTimerBar').style.width = '0%';
+
+    const cooldownInterval = setInterval(() => {
+      cooldownTime--;
+      document.getElementById('adCountdown').textContent = `Next ad available in ${cooldownTime}s`;
+      if (cooldownTime <= 0) {
+        clearInterval(cooldownInterval);
+        document.getElementById('adCountdown').textContent = "Ready for next ad!";
+        const popup = document.getElementById('adPopup');
+        if (popup) popup.classList.remove('show');
+      }
+    }, 1000);
+  };
 
   function claimAdCoins() {
     const popup = document.getElementById('adPopup');
