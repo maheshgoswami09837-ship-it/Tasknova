@@ -2701,34 +2701,44 @@
     const claimBtn = document.getElementById('taskAdClaimBtn');
     const watchBtn = document.getElementById('taskAdWatchBtn');
 
-    // ── Watch Ad button — yahan se sab shuru hoga ──
+    // ── Watch Ad button — Step 1: Sirf "Start Video Ad" button dikhao ──
     if (watchBtn) watchBtn.onclick = function() {
-      if (adHardLockActive) return; // double click prevent
-      adHardLockActive = true;
+      if (adHardLockActive) return;
 
-      // Watch button hide, Claim show (disabled)
-      watchBtn.style.display = 'none';
-      if (claimBtn) claimBtn.style.display = 'block';
-      if (statusEl) statusEl.textContent = '⏳ Ad dekh rahe ho...';
+      // Step 1 mein timer shuru NAHI hoga
+      // Sirf watchBtn ko "Start Video Ad" mein badlo
+      watchBtn.textContent = '🎬 Start Video Ad';
+      watchBtn.style.background = 'linear-gradient(135deg,#f59e0b,#ef4444)';
+      watchBtn.style.boxShadow = '0 4px 20px rgba(245,158,11,0.4)';
+      if (statusEl) statusEl.textContent = '👆 Start dabao — ad chalega aur timer shuru hoga!';
 
-      // Progress bar animate (abhi — user ne tap kiya)
-      const bar = document.getElementById('taskAdBar');
-      if (bar) {
-        bar.style.width = '0%';
-        bar.style.transition = 'none';
-        requestAnimationFrame(() => requestAnimationFrame(() => {
-          bar.style.transition = 'width 15s linear';
-          bar.style.width = '100%';
-        }));
-      }
+      // Step 1 ke baad watchBtn ka onclick badal do — Step 2 ke liye
+      watchBtn.onclick = function() {
+        if (adHardLockActive) return;
+        adHardLockActive = true;
 
-      // Popunder fire — SEEDHA user gesture pe window.open (100% works)
-      popunderActive = true;
-      setTimeout(() => { popunderActive = false; }, 5000);
-      // Sirf script inject — window.open nahi
-      if (type === 'watchAd') firePopunder();
+        // Step 2: User ne "Start Video Ad" dabaya — POPUNDER FIRE
+        popunderActive = true;
+        setTimeout(() => { popunderActive = false; }, 5000);
+        firePopunder(); // User gesture guaranteed — popup blocker bypass
 
-      // 15s countdown shuru
+        // Watch button hide, Claim show (disabled)
+        watchBtn.style.display = 'none';
+        if (claimBtn) claimBtn.style.display = 'block';
+        if (statusEl) statusEl.textContent = '⏳ Ad dekh rahe ho...';
+
+        // Progress bar animate
+        const bar = document.getElementById('taskAdBar');
+        if (bar) {
+          bar.style.width = '0%';
+          bar.style.transition = 'none';
+          requestAnimationFrame(() => requestAnimationFrame(() => {
+            bar.style.transition = 'width 15s linear';
+            bar.style.width = '100%';
+          }));
+        }
+
+        // 15s countdown shuru
       hardLockTimer = setInterval(() => {
         if (penaltyApplied) { clearInterval(hardLockTimer); return; }
         secsLeft--;
@@ -2749,7 +2759,8 @@
           }
         }
       }, 1000);
-    };
+      }; // end Step 2 onclick
+    }; // end Step 1 onclick
 
 
     // ── Strict penalty: called when back pressed before 15s ─────
@@ -2783,11 +2794,6 @@
     function _doCredit() {
       if (creditFired || penaltyApplied) return;
       creditFired = true;
-
-      // Claim button pe POPUNDER fire karo — user gesture guaranteed hai
-      popunderActive = true;
-      setTimeout(() => { popunderActive = false; }, 5000);
-      firePopunder();
 
       if (claimBtn) { claimBtn.disabled = true; claimBtn.textContent = '⏳ Crediting...'; }
       try { window.AppInventor && window.AppInventor.setWebViewString('AD_CLAIM:' + type); } catch(e) {}
