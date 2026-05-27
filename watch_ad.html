@@ -131,11 +131,21 @@
     </div>
   </div>
 
-  <!-- Tutorial Button -->
-  <button class="btn" onclick="window.open('https://youtube.com/shorts/8iuEBvn8Gi4?si=kSL_BFANjhptw6K5','_blank')"
+  <!-- Tutorial Toggle Button -->
+  <button class="btn" id="tutorialToggle" onclick="toggleTutorial()"
     style="background:rgba(255,0,0,0.15);border:1px solid rgba(255,0,0,0.3);color:#ff4444;font-size:14px;font-weight:600;padding:12px;margin-bottom:10px;">
-    ▶️ Tutorial देखो — Wapas Kaise Aayein?
+    ▶️ Tutorial — Wapas Kaise Aayein?
   </button>
+
+  <!-- Tutorial Video (pehle hidden) -->
+  <div id="tutorialBox" class="hidden" style="margin-bottom:12px;border-radius:16px;overflow:hidden;border:1px solid rgba(255,0,0,0.2);">
+    <iframe
+      src="https://www.youtube.com/embed/8iuEBvn8Gi4"
+      style="width:100%;height:480px;border:none;display:block;"
+      allow="autoplay; encrypted-media"
+      allowfullscreen>
+    </iframe>
+  </div>
 
   <!-- Warning (hidden) -->
   <div class="warn hidden" id="warnBox">⚠️ Ad nahi dekhi! Pehle ad tab pe jao.</div>
@@ -176,6 +186,19 @@
 
   timerBar.style.strokeDasharray  = CIRCUMF;
   timerBar.style.strokeDashoffset = 0;
+
+  // ── Tutorial toggle ───────────────────────────────────────────
+  function toggleTutorial() {
+    const box = document.getElementById('tutorialBox');
+    const btn = document.getElementById('tutorialToggle');
+    if (box.classList.contains('hidden')) {
+      box.classList.remove('hidden');
+      btn.textContent = '✖️ Tutorial Band Karo';
+    } else {
+      box.classList.add('hidden');
+      btn.textContent = '▶️ Tutorial — Wapas Kaise Aayein?';
+    }
+  }
 
   // ── STEP 1: Watch button dabaya ──────────────────────────────
   function startWatch() {
