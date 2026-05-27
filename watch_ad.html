@@ -255,8 +255,8 @@
 
   <div class="logo">⚡ TASKNOVA</div>
 
-  <!-- SVG Timer Ring -->
-  <div class="timer-wrap">
+  <!-- SVG Timer Ring (pehle hidden) -->
+  <div class="timer-wrap" id="timerWrap" style="display:none;">
     <svg class="timer-svg" viewBox="0 0 130 130">
       <defs>
         <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="0%">
@@ -268,15 +268,15 @@
       <circle class="timer-bar" id="timerBar" cx="65" cy="65" r="55"/>
     </svg>
     <div class="timer-num">
-      <span class="timer-sec" id="timerSec">15</span>
+      <span class="timer-sec" id="timerSec">20</span>
       <span class="timer-label">seconds</span>
     </div>
   </div>
 
-  <p class="status-text" id="statusText">Ad khulne ka wait karo...</p>
+  <p class="status-text" id="statusText">Neeche button dabao aur ad dekho!</p>
 
-  <!-- Progress bar -->
-  <div class="progress-wrap">
+  <!-- Progress bar (pehle hidden) -->
+  <div class="progress-wrap" id="progressWrap" style="display:none;">
     <div class="progress-fill" id="progressFill"></div>
   </div>
 
@@ -285,17 +285,23 @@
     <div class="ad-icon">📺</div>
     <div class="ad-info-text">
       <h4>Video Watch Task</h4>
-      <p>15 seconds baad <strong style="color:#f59e0b;">+10 Coins</strong> milenge.<br>Ad band mat karo!</p>
+      <p>Ad dekho aur <strong style="color:#f59e0b;">+10 Coins</strong> pao!<br>20 seconds baad claim hoga.</p>
     </div>
   </div>
 
-  <!-- Claim button (15s ke baad dikhega) -->
+  <!-- WATCH AD BUTTON (pehle dikhega) -->
+  <button class="claim-btn" id="watchBtn" onclick="startWatching()"
+    style="display:block;background:linear-gradient(135deg,#6c63ff,#3b82f6);box-shadow:0 6px 30px rgba(108,99,255,0.4);animation:none;">
+    📺 Watch Ad &amp; Earn
+  </button>
+
+  <!-- Claim button (20s ke baad dikhega) -->
   <button class="claim-btn" id="claimBtn" onclick="claimCoins()">
     🎉 Claim 10 Coins
   </button>
 
-  <!-- Waiting dots -->
-  <div class="wait-hint" id="waitHint">
+  <!-- Waiting dots (timer ke waqt dikhega) -->
+  <div class="wait-hint" id="waitHint" style="display:none;">
     <div class="dot"></div>
     <div class="dot"></div>
     <div class="dot"></div>
@@ -306,43 +312,56 @@
 
 <script>
   // ── Config ──────────────────────────────────────────────────
-  const AD_URL      = 'https://pl29503369.effectivecpmnetwork.com/1c/3b/d0/1c3bd0127e4be2ff172d7c6e0eaa5204.js';
+  const AD_URL      = 'https://omg10.com/4/11063028';
   const RETURN_URL  = 'https://tasknovaofficial.vercel.app/tasknova_tasks.html?status=success&task=video1';
-  const TOTAL_SECS  = 15;
-  const CIRCUMF     = 2 * Math.PI * 55; // ~345.4
+  const TOTAL_SECS  = 20;
+  const CIRCUMF     = 2 * Math.PI * 55;
 
-  // ── State ────────────────────────────────────────────────────
-  let secsLeft    = TOTAL_SECS;
-  let adOpened    = false;
+  let secsLeft     = TOTAL_SECS;
+  let adOpened     = false;
   let timerStarted = false;
-  let interval    = null;
+  let interval     = null;
 
-  const timerBar    = document.getElementById('timerBar');
-  const timerSec    = document.getElementById('timerSec');
+  const timerBar     = document.getElementById('timerBar');
+  const timerSec     = document.getElementById('timerSec');
+  const timerWrap    = document.getElementById('timerWrap');
   const progressFill = document.getElementById('progressFill');
-  const statusText  = document.getElementById('statusText');
-  const claimBtn    = document.getElementById('claimBtn');
-  const waitHint    = document.getElementById('waitHint');
+  const progressWrap = document.getElementById('progressWrap');
+  const statusText   = document.getElementById('statusText');
+  const claimBtn     = document.getElementById('claimBtn');
+  const watchBtn     = document.getElementById('watchBtn');
+  const waitHint     = document.getElementById('waitHint');
 
-  // Circumference set
   timerBar.style.strokeDasharray  = CIRCUMF;
   timerBar.style.strokeDashoffset = 0;
+
+  // ── Watch Ad Button click ─────────────────────────────────────
+  function startWatching() {
+    // Button hide karo
+    watchBtn.style.display = 'none';
+
+    // Timer aur progress dikhao
+    timerWrap.style.display  = 'block';
+    progressWrap.style.display = 'block';
+    waitHint.style.display   = 'flex';
+
+    statusText.textContent = '✅ Ad khul gaya! 20 sec ruko...';
+    statusText.classList.add('active');
+
+    // Ad kholo (user gesture se — Chrome block nahi karega)
+    openAd();
+    startTimer();
+  }
 
   // ── Open Ad ──────────────────────────────────────────────────
   function openAd() {
     if (adOpened) return;
     adOpened = true;
-
-    // JS script inject karo (Adsterra popunder script)
-    const s = document.createElement('script');
-    s.src = AD_URL;
-    s.async = true;
-    s.setAttribute('data-cfasync', 'false');
-    s.onload = () => console.log('[Ad] Script loaded OK');
-    document.head.appendChild(s);
-
-    statusText.textContent = '✅ Ad chal raha hai! Timer shuru...';
-    statusText.classList.add('active');
+    try {
+      window.open(AD_URL, '_blank');
+    } catch(e) {
+      console.warn('[Ad] window.open failed:', e);
+    }
   }
 
   // ── Start Timer ──────────────────────────────────────────────
@@ -379,18 +398,13 @@
     }, 1000);
   }
 
-  // ── Show Claim Button ─────────────────────────────────────────
   function showClaim() {
     waitHint.style.display  = 'none';
     claimBtn.style.display  = 'block';
     statusText.textContent  = '🎉 Timer khatam! Ab claim karo!';
     statusText.style.color  = '#22c55e';
     statusText.style.fontWeight = '700';
-
-    // Coin burst effect
-    for (let i = 0; i < 5; i++) {
-      setTimeout(() => spawnCoin(), i * 120);
-    }
+    for (let i = 0; i < 5; i++) setTimeout(() => spawnCoin(), i * 120);
   }
 
   function spawnCoin() {
@@ -422,56 +436,20 @@
     }, 400);
   }
 
-  // ── Page Load Logic ───────────────────────────────────────────
-  // Strategy: pehle click pe ad khulta hai (Chrome block bypass)
-  // Agar user 1s mein click nahi karta — setTimeout fallback
-
-  let clickHandlerAdded = false;
-
-  function setupAdTrigger() {
-    if (clickHandlerAdded) return;
-    clickHandlerAdded = true;
-
-    // Click pe ad kholo aur timer shuru karo
-    const openAndStart = () => {
-      openAd();
-      startTimer();
-      document.removeEventListener('click', openAndStart);
-    };
-
-    document.addEventListener('click', openAndStart);
-
-    // 1 second fallback — agar user click nahi karta
-    setTimeout(() => {
-      if (!adOpened) {
-        openAd();
-      }
-      if (!timerStarted) {
-        startTimer();
-      }
-      document.removeEventListener('click', openAndStart);
-    }, 1000);
-  }
-
   // ── Particles ─────────────────────────────────────────────────
   function spawnParticles() {
     for (let i = 0; i < 12; i++) {
       const p = document.createElement('div');
       p.className = 'particle';
       const size = 4 + Math.random() * 8;
-      p.style.cssText = `
-        width:${size}px; height:${size}px;
-        left:${Math.random()*100}vw;
-        animation-duration:${6 + Math.random()*8}s;
-        animation-delay:${Math.random()*6}s;
-      `;
+      p.style.cssText = `width:${size}px;height:${size}px;left:${Math.random()*100}vw;animation-duration:${6+Math.random()*8}s;animation-delay:${Math.random()*6}s;`;
       document.body.appendChild(p);
     }
   }
 
   // ── Init ──────────────────────────────────────────────────────
   spawnParticles();
-  setupAdTrigger();
+  // Auto-start nahi — user "Watch Ad" button dabayega
 </script>
 </body>
 </html>
