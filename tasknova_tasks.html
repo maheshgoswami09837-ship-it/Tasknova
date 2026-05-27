@@ -372,7 +372,7 @@
         <p>Wheel spin karo aur coins jeeto</p>
         <div class="task-meta">
           <span class="task-time">⏱ 15/day</span>
-          <span id="spinCountBadge" class="cooldown-badge">0/15</span>
+          <span id="spinCountBadge" class="cooldown-badge">0/5</span>
         </div>
       </div>
       <div class="task-reward">
@@ -383,40 +383,10 @@
     </div>
 
     <!-- Scratch Card -->
-    <div class="task-card" data-category="daily" id="scratchTaskCard" onclick="openScratchModal()">
-      <div class="task-icon icon-orange">🎴</div>
-      <div class="task-info">
-        <h3>Scratch Card</h3>
-        <p>Card scratch karo aur coins pao</p>
-        <div class="task-meta">
-          <span class="task-time">⏱ 15/day</span>
-          <span id="scratchCountBadge" class="cooldown-badge">0/15</span>
-        </div>
-      </div>
-      <div class="task-reward">
-        <div class="coins-reward">~10</div>
-        <div class="rupee">coins/scratch</div>
-        <button class="do-btn" id="scratchTaskBtn">Scratch</button>
-      </div>
-    </div>
+    
 
     <!-- Math Quiz -->
-    <div class="task-card" data-category="daily" id="quizTaskCard" onclick="openQuizModal()">
-      <div class="task-icon icon-blue">🧮</div>
-      <div class="task-info">
-        <h3>Math Quiz</h3>
-        <p>Sawaal solve karo aur coins pao</p>
-        <div class="task-meta">
-          <span class="task-time">⏱ 15/day</span>
-          <span id="quizCountBadge" class="cooldown-badge">0/15</span>
-        </div>
-      </div>
-      <div class="task-reward">
-        <div class="coins-reward">+10</div>
-        <div class="rupee">coins/quiz</div>
-        <button class="do-btn" id="quizTaskBtn">Play</button>
-      </div>
-    </div>
+    
 
 
     <div class="task-card disabled" data-category="instagram">
@@ -592,7 +562,7 @@
   <div style="display:flex;gap:10px;width:100%;margin-bottom:20px;">
     <div style="flex:1;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:10px 14px;text-align:center;">
       <div style="font-size:10px;color:rgba(255,255,255,0.35);margin-bottom:2px;">Spins Today</div>
-      <div style="font-size:17px;font-weight:800;color:#fff;"><span id="spinCountText">0</span><span style="color:rgba(255,255,255,0.3);font-size:12px;">/15</span></div>
+      <div style="font-size:17px;font-weight:800;color:#fff;"><span id="spinCountText">0</span><span style="color:rgba(255,255,255,0.3);font-size:12px;">/5</span></div>
     </div>
     <div style="flex:1;background:rgba(108,99,255,0.1);border:1px solid rgba(108,99,255,0.25);border-radius:14px;padding:10px 14px;text-align:center;">
       <div style="font-size:10px;color:rgba(255,255,255,0.35);margin-bottom:2px;">Win Up To</div>
@@ -621,7 +591,7 @@
 
   <!-- Fixed bottom native/banner ad -->
   <div class="modal-bottom-banner" id="spinBottomBanner">
-    <div id="spinBannerSlot" style="width:320px;height:50px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.03);border-radius:8px;overflow:hidden;"></div>
+    <!-- spinBannerSlot removed — Monetag popunder used instead -->
   </div>
 </div>
 
@@ -804,9 +774,9 @@
   const DB_URL = 'https://tasknova-66d0f-default-rtdb.firebaseio.com';
 
   // ── WATCH AD SYSTEM CONSTANTS ────────────────────────────────────
-  const MAX_ADS          = 20;          // 20 ads per batch
+  const MAX_ADS          = 5;           // 5 ads per batch
   const MIN_AD_TIME      = 15;          // 15-second hard lock
-  const AD_COOLDOWN_1MIN = 30;          // 30s per-ad cooldown
+  const AD_COOLDOWN_1MIN = 60;          // 60s per-ad cooldown
   const AD_COOLDOWN_5HR  = 18000;       // 5-hour mega lock (18000s)
   const AD_1MIN_KEY      = 'tn_ad_1min_until';   // localStorage key
   const AD_5HR_KEY       = 'tn_ad_5hr_until';    // localStorage key
@@ -2045,9 +2015,9 @@
     const sb = document.getElementById('spinCountBadge');
     const scb = document.getElementById('scratchCountBadge');
     const qb = document.getElementById('quizCountBadge');
-    if (sb) sb.textContent = d.spins + '/15';
-    if (scb) scb.textContent = d.scratches + '/15';
-    if (qb) qb.textContent = d.quizzes + '/15';
+    if (sb) sb.textContent = d.spins + '/5';
+    if (scb) scb.textContent = d.scratches + '/5';
+    if (qb) qb.textContent = d.quizzes + '/5';
 
     // Check-in badge + countdown
     if (d.checkin) {
@@ -2235,7 +2205,7 @@
     if (window._socialBarLoaded) return;
     window._socialBarLoaded = true;
     const s = document.createElement('script');
-    s.src = 'https://www.highperformanceformat.com/68bf9531f68f81be99e32a8350f48396/invoke.js';
+    // s.src = 'https://www.highperformanceformat.com/...'; // Adsterra removed
     s.async = true;
     s.setAttribute('data-cfasync', 'false');
     s.onload = () => console.log('[AdListener] SocialBar loaded OK');
@@ -2340,7 +2310,7 @@
     document.getElementById('spinModal').classList.add('show');
     drawWheel();
     updateSpinUI();
-    loadModalBottomBanner('spinBannerSlot');
+    // Adsterra banner removed — Monetag popunder fires on spin tap
   }
 
   function updateSpinUI() {
@@ -2350,7 +2320,7 @@
     const btn = document.getElementById('spinBtnMain');
     if (ct) ct.textContent = d.spins;
     const cooldown = getCooldownRemaining(d.lastSpin);
-    if (d.spins >= 15) {
+    if (d.spins >= 5) {
       if (btn) { btn.disabled = true; btn.textContent = '✅ Aaj ke spins khatam!'; btn.style.background = 'rgba(255,255,255,0.1)'; btn.style.color = 'rgba(255,255,255,0.4)'; }
     } else if (cooldown > 0) {
       const secsLeft = Math.ceil(cooldown / 1000);
@@ -2375,8 +2345,9 @@
   }
 
   function doSpin() {
+    firePopunder(); // Monetag popunder — user gesture se fire
     const d = getDailyData();
-    if (d.spins >= 15) { showToast('Aaj ke spins khatam!', '#f59e0b'); return; }
+    if (d.spins >= 5) { showToast('Aaj ke spins khatam!', '#f59e0b'); return; }
     if (getCooldownRemaining(d.lastSpin) > 0) { showToast('30 second wait karo!', '#f59e0b'); return; }
     if (isGlobalLocked()) return; // universal 1-min cooldown
     if (!checkDailyLimit()) return;
