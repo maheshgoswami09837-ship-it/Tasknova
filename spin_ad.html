@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Watch Ad - TaskNova</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Segoe UI',sans-serif; background:#05051a; min-height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:24px; color:#fff; }
+  .stars { position:fixed; top:0; left:0; width:100%; height:100%; z-index:0; pointer-events:none; }
+  .star { position:absolute; background:#fff; border-radius:50%; animation:twinkle 3s infinite; }
+  @keyframes twinkle { 0%,100%{opacity:0.2;} 50%{opacity:1;} }
+  .container { position:relative; z-index:1; width:100%; max-width:380px; text-align:center; }
+  .header { margin-bottom:32px; }
+  .header h1 { font-size:22px; font-weight:800; color:#fff; margin-bottom:6px; }
+  .header p { font-size:13px; color:rgba(255,255,255,0.4); }
+
+  /* Ring Timer */
+  .ring-wrap { position:relative; width:180px; height:180px; margin:0 auto 24px; }
+  .ring-bg { fill:none; stroke:rgba(255,255,255,0.08); stroke-width:10; }
+  .ring-fill { fill:none; stroke:url(#ringGrad); stroke-width:10; stroke-linecap:round;
+    stroke-dasharray:502; stroke-dashoffset:0; transform:rotate(-90deg); transform-origin:50% 50%;
+    transition:stroke-dashoffset 1s linear; }
+  .ring-num { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); text-align:center; }
+  .ring-num span { font-size:48px; font-weight:800; color:#fff; display:block; line-height:1; }
+  .ring-num small { font-size:12px; color:rgba(255,255,255,0.4); }
+
+  .status-text { font-size:14px; color:rgba(255,255,255,0.6); margin-bottom:8px; min-height:20px; }
+  .prize-badge { display:inline-flex; align-items:center; gap:6px; background:rgba(108,99,255,0.15);
+    border:1px solid rgba(108,99,255,0.3); border-radius:50px; padding:8px 20px;
+    font-size:15px; font-weight:800; color:#a78bfa; margin-bottom:28px; }
+
+  .btn-main { width:100%; border:none; border-radius:16px; padding:16px; font-size:16px;
+    font-weight:800; cursor:pointer; font-family:'Segoe UI',sans-serif; transition:all 0.2s;
+    letter-spacing:0.3px; margin-bottom:10px; }
+  .btn-watch { background:linear-gradient(135deg,#6c63ff,#3b82f6); color:#fff;
+    box-shadow:0 4px 20px rgba(108,99,255,0.4); }
+  .btn-claim { background:linear-gradient(135deg,#22c55e,#16a34a); color:#fff;
+    box-shadow:0 4px 20px rgba(34,197,94,0.4); display:none; }
+  .btn-disabled { background:rgba(255,255,255,0.08); color:rgba(255,255,255,0.3);
+    cursor:not-allowed; border:1.5px solid rgba(255,255,255,0.1); }
+
+  .warning { font-size:11px; color:#f59e0b; margin-top:8px; }
+  .penalty-box { background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.3);
+    border-radius:14px; padding:16px; margin-bottom:20px; display:none; }
+  .penalty-box p { font-size:13px; color:#ef4444; font-weight:600; }
+  .cooldown-box { background:rgba(245,158,11,0.1); border:1px solid rgba(245,158,11,0.3);
+    border-radius:14px; padding:16px; margin-bottom:20px; display:none; text-align:center; }
+  .cooldown-box p { font-size:13px; color:#f59e0b; font-weight:600; }
+  .cooldown-box .cd-time { font-size:28px; font-weight:800; color:#f59e0b; margin-top:6px; }
+
+  .spins-info { font-size:12px; color:rgba(255,255,255,0.3); margin-top:16px; }
+  .back-btn { background:none; border:1.5px solid rgba(255,255,255,0.1); border-radius:12px;
+    padding:10px 24px; color:rgba(255,255,255,0.4); font-size:13px; cursor:pointer;
+    font-family:'Segoe UI',sans-serif; margin-top:12px; width:100%; }
+</style>
+</head>
+<body>
+
+<div class="stars" id="stars"></div>
+
+<div class="container">
+  <div class="header">
+    <h1>📺 Watch Ad & Earn</h1>
+    <p>Ad dekho aur coins kamao</p>
+  </div>
+
+  <!-- Cooldown Box (1 min) -->
+  <div class="cooldown-box" id="cooldownBox">
+    <p>⏳ Next ad ke liye wait karo</p>
+    <div class="cd-time" id="cooldownTime">1:00</div>
+  </div>
+
+  <!-- Penalty Box -->
+  <div class="penalty-box" id="penaltyBox">
+    <p>❌ Ad skip ki! 10 min penalty chal rahi hai</p>
+    <div class="cd-time" style="font-size:22px;color:#ef4444;margin-top:6px;" id="penaltyTime">10:00</div>
+  </div>
+
+  <!-- Ring Timer -->
+  <div class="ring-wrap" id="ringWrap">
+    <svg width="180" height="180" viewBox="0 0 180 180">
+      <defs>
+        <linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" style="stop-color:#f59e0b"/>
+          <stop offset="50%" style="stop-color:#6c63ff"/>
+          <stop offset="100%" style="stop-color:#3b82f6"/>
+        </linearGradient>
+      </defs>
+      <circle class="ring-bg" cx="90" cy="90" r="80"/>
+      <circle class="ring-fill" id="ringFill" cx="90" cy="90" r="80"/>
+    </svg>
+    <div class="ring-num">
+      <span id="timerNum">20</span>
+      <small>seconds</small>
+    </div>
+  </div>
+
+  <div class="status-text" id="statusText">Watch Ad button dabao</div>
+  <div class="prize-badge" id="prizeBadge">🪙 <span id="prizeAmount">10</span> Coins</div>
+
+  <!-- Watch Ad Button -->
+  <button class="btn-main btn-watch" id="watchBtn" onclick="startAd()">📺 Watch Ad</button>
+
+  <!-- Claim Button (hidden until timer done) -->
+  <button class="btn-main btn-claim" id="claimBtn" onclick="claimCoins()">✅ Claim Coins</button>
+
+  <div class="warning" id="warningText">⚠️ Ad skip kiya toh 0 coins + 10 min penalty</div>
+  <div class="spins-info" id="spinsInfo"></div>
+  <button class="back-btn" onclick="goBack()">← Wapas Jao</button>
+</div>
+
+<!-- Adsterra Popunder Script — loads on page -->
+<script src="https://pl29503369.effectivecpmnetwork.com/1c/3b/d0/1c3bd0127e4be2ff172d7c6e0eaa5204.js"></script>
+
+<script>
+  // ── Stars ─────────────────────────────────────────────────────
+  const starsEl = document.getElementById('stars');
+  for (let i = 0; i < 50; i++) {
+    const s = document.createElement('div');
+    s.className = 'star';
+    const sz = Math.random() * 2 + 0.5;
+    s.style.cssText = `width:${sz}px;height:${sz}px;top:${Math.random()*100}%;left:${Math.random()*100}%;animation-delay:${Math.random()*3}s;animation-duration:${Math.random()*3+2}s;`;
+    starsEl.appendChild(s);
+  }
+
+  // ── Config ────────────────────────────────────────────────────
+  const DB_URL = 'https://tasknova-66d0f-default-rtdb.firebaseio.com';
+  const AD_DURATION = 20;       // seconds
+  const MAX_SPINS_PER_DAY = 3;  // max spin+watch per day
+  const PENALTY_DURATION = 600; // 10 min in seconds
+  const COOLDOWN_DURATION = 60; // 1 min cooldown after claim
+
+  // Keys
+  const KEY_SPIN_WATCH_COUNT = 'tn_spin_watch_count';
+  const KEY_SPIN_WATCH_DATE  = 'tn_spin_watch_date';
+  const KEY_PENALTY_UNTIL    = 'tn_watch_penalty_until';
+  const KEY_COOLDOWN_UNTIL   = 'tn_watch_cooldown_until';
+  const KEY_PRIZE            = 'tn_spin_prize';
+
+  // ── State ─────────────────────────────────────────────────────
+  let secsLeft = AD_DURATION;
+  let timerInterval = null;
+  let adStarted = false;
+  let creditFired = false;
+  let penaltyApplied = false;
+  let adVisible = true;
+
+  const uid = localStorage.getItem('tasknova_uid');
+  const prize = parseInt(localStorage.getItem(KEY_PRIZE) || '10');
+
+  // ── Init ──────────────────────────────────────────────────────
+  document.getElementById('prizeAmount').textContent = prize;
+
+  function getTodayKey() { return new Date().toISOString().split('T')[0]; }
+
+  function getWatchCount() {
+    const d = localStorage.getItem(KEY_SPIN_WATCH_DATE);
+    if (d !== getTodayKey()) { localStorage.setItem(KEY_SPIN_WATCH_DATE, getTodayKey()); localStorage.setItem(KEY_SPIN_WATCH_COUNT, '0'); return 0; }
+    return parseInt(localStorage.getItem(KEY_SPIN_WATCH_COUNT) || '0');
+  }
+
+  function incrementWatchCount() {
+    localStorage.setItem(KEY_SPIN_WATCH_COUNT, String(getWatchCount() + 1));
+    localStorage.setItem(KEY_SPIN_WATCH_DATE, getTodayKey());
+  }
+
+  function checkInitialState() {
+    const count = getWatchCount();
+    document.getElementById('spinsInfo').textContent = `Aaj ke watch: ${count}/${MAX_SPINS_PER_DAY}`;
+
+    // Check penalty
+    const penaltyUntil = parseInt(localStorage.getItem(KEY_PENALTY_UNTIL) || '0');
+    if (penaltyUntil > Date.now()) {
+      showPenaltyCountdown(penaltyUntil);
+      return;
+    }
+
+    // Check cooldown
+    const cooldownUntil = parseInt(localStorage.getItem(KEY_COOLDOWN_UNTIL) || '0');
+    if (cooldownUntil > Date.now()) {
+      showCooldownCountdown(cooldownUntil);
+      return;
+    }
+
+    // Check daily limit
+    if (count >= MAX_SPINS_PER_DAY) {
+      document.getElementById('watchBtn').textContent = '🚫 Aaj ki limit khatam!';
+      document.getElementById('watchBtn').classList.add('btn-disabled');
+      document.getElementById('watchBtn').onclick = null;
+      document.getElementById('statusText').textContent = 'Kal wapas aao!';
+      document.getElementById('warningText').textContent = '';
+      return;
+    }
+  }
+
+  checkInitialState();
+
+  // ── Ring Update ───────────────────────────────────────────────
+  function updateRing() {
+    const pct = secsLeft / AD_DURATION;
+    const circumference = 2 * Math.PI * 80; // 502.65
+    const offset = circumference * (1 - pct);
+    document.getElementById('ringFill').style.strokeDashoffset = offset;
+    document.getElementById('timerNum').textContent = Math.max(0, secsLeft);
+  }
+
+  // ── Start Ad ──────────────────────────────────────────────────
+  function startAd() {
+    if (adStarted) return;
+
+    const count = getWatchCount();
+    if (count >= MAX_SPINS_PER_DAY) {
+      document.getElementById('statusText').textContent = 'Aaj ki limit khatam!';
+      return;
+    }
+
+    const penaltyUntil = parseInt(localStorage.getItem(KEY_PENALTY_UNTIL) || '0');
+    if (penaltyUntil > Date.now()) { showPenaltyCountdown(penaltyUntil); return; }
+
+    const cooldownUntil = parseInt(localStorage.getItem(KEY_COOLDOWN_UNTIL) || '0');
+    if (cooldownUntil > Date.now()) { showCooldownCountdown(cooldownUntil); return; }
+
+    adStarted = true;
+
+    // Hide watch button
+    document.getElementById('watchBtn').style.display = 'none';
+    document.getElementById('warningText').style.color = '#ef4444';
+    document.getElementById('statusText').textContent = '⏳ Ad dekh rahe ho...';
+
+    // Push history state for back button detection
+    history.pushState({ adActive: true }, '', location.href);
+
+    // Start 20s timer
+    updateRing();
+    timerInterval = setInterval(() => {
+      if (penaltyApplied) { clearInterval(timerInterval); return; }
+      secsLeft--;
+      updateRing();
+      document.getElementById('statusText').textContent = `⏳ Ad dekh rahe ho... ${Math.max(0,secsLeft)}s`;
+      if (secsLeft <= 0) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+        onTimerComplete();
+      }
+    }, 1000);
+
+    // Visibility change — user ne tab switch kiya
+    document.addEventListener('visibilitychange', onVisChange);
+  }
+
+  // ── Visibility Change ─────────────────────────────────────────
+  function onVisChange() {
+    if (!adStarted || penaltyApplied || creditFired) return;
+    if (document.hidden) {
+      adVisible = false;
+      // User ad tab pe gaya — timer chalte rehne do
+    } else {
+      // User wapas aaya — check karo kitna bacha hai
+      if (secsLeft > 0 && !creditFired && !penaltyApplied) {
+        document.getElementById('statusText').textContent = `⏳ Ad dekh rahe ho... ${Math.max(0,secsLeft)}s`;
+      }
+    }
+  }
+
+  // ── Back Button ───────────────────────────────────────────────
+  window.addEventListener('popstate', function(e) {
+    if (adStarted && !creditFired && secsLeft > 0) {
+      // Penalty!
+      applyPenalty();
+      history.pushState(null, '', location.href); // block navigation
+    }
+  });
+
+  // ── Timer Complete ────────────────────────────────────────────
+  function onTimerComplete() {
+    document.removeEventListener('visibilitychange', onVisChange);
+    document.getElementById('statusText').textContent = '🎉 Ab claim karo!';
+    document.getElementById('warningText').textContent = '';
+    document.getElementById('claimBtn').style.display = 'block';
+    document.getElementById('ringWrap').style.opacity = '0.4';
+  }
+
+  // ── Claim Coins ───────────────────────────────────────────────
+  function claimCoins() {
+    if (creditFired || penaltyApplied) return;
+    if (secsLeft > 0) { alert('Abhi 20 seconds poore nahi hue!'); return; }
+    creditFired = true;
+
+    document.getElementById('claimBtn').disabled = true;
+    document.getElementById('claimBtn').textContent = '⏳ Crediting...';
+    document.getElementById('statusText').textContent = '✅ Coins credit ho rahe hain...';
+
+    incrementWatchCount();
+
+    // 1 min cooldown
+    const cooldownUntil = Date.now() + COOLDOWN_DURATION * 1000;
+    localStorage.setItem(KEY_COOLDOWN_UNTIL, cooldownUntil.toString());
+
+    // Firebase credit
+    if (uid && uid !== 'null') {
+      fetch(DB_URL + '/users/' + uid + '.json')
+        .then(r => r.json())
+        .then(data => {
+          if (!data) return;
+          const newCoins = (data.coins || 0) + prize;
+          const newBalance = parseFloat((newCoins / 100).toFixed(2));
+          return fetch(DB_URL + '/users/' + uid + '.json', {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ coins: newCoins, balance: newBalance, tasksDone: (data.tasksDone || 0) + 1 })
+          });
+        })
+        .then(() => {
+          document.getElementById('statusText').textContent = `🎉 +${prize} Coins credited!`;
+          document.getElementById('claimBtn').textContent = `✅ +${prize} Coins Claimed!`;
+          document.getElementById('spinsInfo').textContent = `Aaj ke watch: ${getWatchCount()}/${MAX_SPINS_PER_DAY}`;
+
+          // Show 1 min cooldown then auto redirect
+          setTimeout(() => {
+            showCooldownAndRedirect(cooldownUntil);
+          }, 1500);
+        })
+        .catch(e => {
+          console.error(e);
+          document.getElementById('statusText').textContent = 'Error! Wapas try karo.';
+          document.getElementById('claimBtn').disabled = false;
+          document.getElementById('claimBtn').textContent = '✅ Claim Coins';
+          creditFired = false;
+        });
+    } else {
+      document.getElementById('statusText').textContent = '❌ Login karo pehle!';
+    }
+  }
+
+  // ── Penalty ───────────────────────────────────────────────────
+  function applyPenalty() {
+    if (penaltyApplied || creditFired) return;
+    penaltyApplied = true;
+    clearInterval(timerInterval);
+    timerInterval = null;
+    document.removeEventListener('visibilitychange', onVisChange);
+
+    const penaltyUntil = Date.now() + PENALTY_DURATION * 1000;
+    localStorage.setItem(KEY_PENALTY_UNTIL, penaltyUntil.toString());
+
+    document.getElementById('watchBtn').style.display = 'none';
+    document.getElementById('claimBtn').style.display = 'none';
+    document.getElementById('warningText').textContent = '';
+    document.getElementById('ringWrap').style.display = 'none';
+    document.getElementById('statusText').textContent = '❌ Ad skip ki!';
+
+    showPenaltyCountdown(penaltyUntil);
+  }
+
+  // ── Show Penalty Countdown ────────────────────────────────────
+  function showPenaltyCountdown(until) {
+    document.getElementById('penaltyBox').style.display = 'block';
+    document.getElementById('watchBtn').style.display = 'none';
+    document.getElementById('ringWrap').style.display = 'none';
+    document.getElementById('prizeBadge').style.display = 'none';
+    document.getElementById('statusText').textContent = '';
+    document.getElementById('warningText').textContent = '';
+
+    const interval = setInterval(() => {
+      const rem = Math.max(0, Math.ceil((until - Date.now()) / 1000));
+      const m = Math.floor(rem / 60);
+      const s = rem % 60;
+      document.getElementById('penaltyTime').textContent = m + ':' + String(s).padStart(2,'0');
+      if (rem <= 0) {
+        clearInterval(interval);
+        localStorage.removeItem(KEY_PENALTY_UNTIL);
+        location.reload();
+      }
+    }, 1000);
+  }
+
+  // ── Show Cooldown Countdown ───────────────────────────────────
+  function showCooldownCountdown(until) {
+    document.getElementById('cooldownBox').style.display = 'block';
+    document.getElementById('watchBtn').style.display = 'none';
+    document.getElementById('ringWrap').style.display = 'none';
+    document.getElementById('prizeBadge').style.display = 'none';
+    document.getElementById('claimBtn').style.display = 'none';
+    document.getElementById('warningText').textContent = '';
+
+    const interval = setInterval(() => {
+      const rem = Math.max(0, Math.ceil((until - Date.now()) / 1000));
+      const m = Math.floor(rem / 60);
+      const s = rem % 60;
+      document.getElementById('cooldownTime').textContent = m + ':' + String(s).padStart(2,'0');
+      if (rem <= 0) {
+        clearInterval(interval);
+        localStorage.removeItem(KEY_COOLDOWN_UNTIL);
+        location.reload();
+      }
+    }, 1000);
+  }
+
+  // ── Show Cooldown then Redirect ───────────────────────────────
+  function showCooldownAndRedirect(until) {
+    document.getElementById('cooldownBox').style.display = 'block';
+    document.getElementById('claimBtn').style.display = 'none';
+    document.getElementById('ringWrap').style.display = 'none';
+    document.getElementById('prizeBadge').style.display = 'none';
+
+    const interval = setInterval(() => {
+      const rem = Math.max(0, Math.ceil((until - Date.now()) / 1000));
+      const m = Math.floor(rem / 60);
+      const s = rem % 60;
+      document.getElementById('cooldownTime').textContent = m + ':' + String(s).padStart(2,'0');
+      if (rem <= 0) {
+        clearInterval(interval);
+        localStorage.removeItem(KEY_COOLDOWN_UNTIL);
+        goBack();
+      }
+    }, 1000);
+  }
+
+  // ── Go Back ───────────────────────────────────────────────────
+  function goBack() {
+    window.location.href = "tasknova_tasks.html";;
+  }
+</script>
+</body>
+</html>
