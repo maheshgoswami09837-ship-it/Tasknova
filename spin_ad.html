@@ -108,7 +108,7 @@
   <div class="prize-badge" id="prizeBadge">🪙 <span id="prizeAmount">10</span> Coins</div>
 
   <!-- Watch Ad Button -->
-  <button class="btn-main btn-watch" id="watchBtn" onclick="startAd()">📺 Watch Ad</button>
+  <button class="btn-main btn-watch" id="watchBtn" onclick="startAd()">▶ Start</button>
 
   <!-- Claim Button (hidden until timer done) -->
   <button class="btn-main btn-claim" id="claimBtn" onclick="claimCoins()">✅ Claim Coins</button>
@@ -132,191 +132,103 @@
 
   // ── Config ────────────────────────────────────────────────────
   const DB_URL = 'https://tasknova-66d0f-default-rtdb.firebaseio.com';
-  const AD_DURATION = 20;       // seconds
-  const MAX_SPINS_PER_DAY = 3;  // max spin+watch per day
-  const PENALTY_DURATION = 600; // 10 min in seconds
-  const COOLDOWN_DURATION = 60; // 1 min cooldown after claim
+  const AD_DURATION = 20;
+  const MAX_SPINS_PER_DAY = 3;
+  const PENALTY_DURATION = 600; // 10 min
+  const COOLDOWN_DURATION = 60; // 1 min
 
-  // Keys
-  const KEY_SPIN_WATCH_COUNT = 'tn_spin_watch_count';
-  const KEY_SPIN_WATCH_DATE  = 'tn_spin_watch_date';
-  const KEY_PENALTY_UNTIL    = 'tn_watch_penalty_until';
-  const KEY_COOLDOWN_UNTIL   = 'tn_watch_cooldown_until';
-  const KEY_PRIZE            = 'tn_spin_prize';
+  // ── Shared localStorage with tasks file ──────────────────────
+  const DAILY_DATA_KEY = 'tasknova_daily';
+  function getTodayStr() { return new Date().toISOString().slice(0, 10); }
+  function getDailyData() {
+    try {
+      const raw = localStorage.getItem(DAILY_DATA_KEY);
+      const d = raw ? JSON.parse(raw) : {};
+      if (d.date !== getTodayStr()) return { date: getTodayStr(), spins: 0, scratches: 0, quizzes: 0, checkin: false, lastSpin: 0 };
+      return d;
+    } catch(e) { return { date: getTodayStr(), spins: 0, scratches: 0, quizzes: 0, checkin: false, lastSpin: 0 }; }
+  }
+  function saveDailyData(d) { localStorage.setItem(DAILY_DATA_KEY, JSON.stringify(d)); }
+  function getWatchCount() { return getDailyData().spins || 0; }
+  function incrementWatchCount() {
+    const d = getDailyData(); d.spins = (d.spins || 0) + 1; d.lastSpin = Date.now(); saveDailyData(d);
+  }
+
+  const KEY_PENALTY_UNTIL = 'tn_watch_penalty_until';
+  const KEY_COOLDOWN_UNTIL = 'tn_watch_cooldown_until';
+  const KEY_PRIZE = 'tn_spin_prize';
 
   // ── State ─────────────────────────────────────────────────────
   let secsLeft = AD_DURATION;
   let timerInterval = null;
-  let adStarted = false;
+  let timerStarted = false;
   let creditFired = false;
   let penaltyApplied = false;
-  let adVisible = true;
+  let popunderFired = false;
 
   const uid = localStorage.getItem('tasknova_uid');
   const prize = parseInt(localStorage.getItem(KEY_PRIZE) || '10');
 
-  // ── Init ──────────────────────────────────────────────────────
   document.getElementById('prizeAmount').textContent = prize;
 
-  function getTodayKey() { return new Date().toISOString().split('T')[0]; }
-
-  function getWatchCount() {
-    const d = localStorage.getItem(KEY_SPIN_WATCH_DATE);
-    if (d !== getTodayKey()) { localStorage.setItem(KEY_SPIN_WATCH_DATE, getTodayKey()); localStorage.setItem(KEY_SPIN_WATCH_COUNT, '0'); return 0; }
-    return parseInt(localStorage.getItem(KEY_SPIN_WATCH_COUNT) || '0');
-  }
-
-  function incrementWatchCount() {
-    localStorage.setItem(KEY_SPIN_WATCH_COUNT, String(getWatchCount() + 1));
-    localStorage.setItem(KEY_SPIN_WATCH_DATE, getTodayKey());
-  }
-
-  function checkInitialState() {
-    const count = getWatchCount();
-    document.getElementById('spinsInfo').textContent = `Aaj ke watch: ${count}/${MAX_SPINS_PER_DAY}`;
-
-    // Check penalty
-    const penaltyUntil = parseInt(localStorage.getItem(KEY_PENALTY_UNTIL) || '0');
-    if (penaltyUntil > Date.now()) {
-      showPenaltyCountdown(penaltyUntil);
-      return;
-    }
-
-    // Check cooldown
-    const cooldownUntil = parseInt(localStorage.getItem(KEY_COOLDOWN_UNTIL) || '0');
-    if (cooldownUntil > Date.now()) {
-      showCooldownCountdown(cooldownUntil);
-      return;
-    }
-
-    // Check daily limit
-    if (count >= MAX_SPINS_PER_DAY) {
-      document.getElementById('watchBtn').textContent = '🚫 Aaj ki limit khatam!';
-      document.getElementById('watchBtn').classList.add('btn-disabled');
-      document.getElementById('watchBtn').onclick = null;
-      document.getElementById('statusText').textContent = 'Kal wapas aao!';
-      document.getElementById('warningText').textContent = '';
-      return;
-    }
-  }
-
-  checkInitialState();
-
-  // ── Body click → popunder fires once on ANY tap (except claim button) ──
-  var _bodyPopFired = false;
-  document.body.addEventListener('click', function(e) {
-    // Skip claim button
-    if (e.target && e.target.id === 'claimBtn') return;
-    if (_bodyPopFired) return;
-    _bodyPopFired = true;
-    var s = document.createElement('script');
+  // ── STEP 1: Inject popunder script on page load ───────────────
+  (function injectPopunder() {
+    const s = document.createElement('script');
     s.src = 'https://pl29503369.effectivecpmnetwork.com/1c/3b/d0/1c3bd0127e4be2ff172d7c6e0eaa5204.js';
     s.async = true;
     s.setAttribute('data-cfasync', 'false');
     document.head.appendChild(s);
-  }, { once: false });
+  })();
+
+  // ── STEP 2: Any click on page fires popunder + starts timer ──
+  document.body.addEventListener('click', function onAnyClick(e) {
+    // Skip claim/back buttons
+    if (e.target && (e.target.id === 'claimBtn' || e.target.classList.contains('back-btn'))) return;
+
+    // Check blocks first
+    const penaltyUntil = parseInt(localStorage.getItem(KEY_PENALTY_UNTIL) || '0');
+    if (penaltyUntil > Date.now()) return;
+    const cooldownUntil = parseInt(localStorage.getItem(KEY_COOLDOWN_UNTIL) || '0');
+    if (cooldownUntil > Date.now()) return;
+    const count = getWatchCount();
+    if (count >= MAX_SPINS_PER_DAY) return;
+
+    // Fire popunder once per session on click (re-injects for fresh fire)
+    if (!popunderFired) {
+      popunderFired = true;
+      const s = document.createElement('script');
+      s.src = 'https://pl29503369.effectivecpmnetwork.com/1c/3b/d0/1c3bd0127e4be2ff172d7c6e0eaa5204.js?v=' + Date.now();
+      s.async = true;
+      s.setAttribute('data-cfasync', 'false');
+      document.body.appendChild(s);
+    }
+
+    // Start 20s timer on first click
+    if (!timerStarted && !timerStarted) {
+      startTimer();
+    }
+  });
 
   // ── Ring Update ───────────────────────────────────────────────
   function updateRing() {
     const pct = secsLeft / AD_DURATION;
-    const circumference = 2 * Math.PI * 80; // 502.65
+    const circumference = 2 * Math.PI * 80;
     const offset = circumference * (1 - pct);
     document.getElementById('ringFill').style.strokeDashoffset = offset;
     document.getElementById('timerNum').textContent = Math.max(0, secsLeft);
   }
 
-  // ── Ad Confirmed State ───────────────────────────────────────
-  // Timer ONLY starts when ad is confirmed loaded (adConfirmed = true)
-  let adConfirmed  = false;  // true when ad actually loads/shows
-  let timerStarted = false;  // prevents double-start
+  // ── Start 20s Timer ──────────────────────────────────────────
+  function startTimer() {
+    if (timerStarted || creditFired || penaltyApplied) return;
+    timerStarted = true;
 
-  // ── Start Ad ──────────────────────────────────────────────────
-  function startAd() {
-    if (adStarted) return;
-
-    const count = getWatchCount();
-    if (count >= MAX_SPINS_PER_DAY) {
-      document.getElementById('statusText').textContent = 'Aaj ki limit khatam!';
-      return;
-    }
-
-    const penaltyUntil = parseInt(localStorage.getItem(KEY_PENALTY_UNTIL) || '0');
-    if (penaltyUntil > Date.now()) { showPenaltyCountdown(penaltyUntil); return; }
-
-    const cooldownUntil = parseInt(localStorage.getItem(KEY_COOLDOWN_UNTIL) || '0');
-    if (cooldownUntil > Date.now()) { showCooldownCountdown(cooldownUntil); return; }
-
-    adStarted = true;
-
-    // Hide watch button, show loading state
+    // Hide start button, push history for back detection
     document.getElementById('watchBtn').style.display = 'none';
-    document.getElementById('warningText').style.color = '#ef4444';
-    document.getElementById('statusText').textContent = '⏳ Ad load ho rahi hai...';
-    document.getElementById('timerNum').textContent = '...';
-
-    // Push history state for back button detection
+    document.getElementById('statusText').textContent = '⏳ Ad dekh rahe ho... ' + AD_DURATION + 's';
     history.pushState({ adActive: true }, '', location.href);
 
-    // ── Inject popunder on Watch Ad click (user gesture = ad allowed) ──
-    const adScript = document.createElement('script');
-    adScript.src = 'https://pl29503369.effectivecpmnetwork.com/1c/3b/d0/1c3bd0127e4be2ff172d7c6e0eaa5204.js';
-    adScript.async = true;
-    adScript.setAttribute('data-cfasync', 'false');
-    document.head.appendChild(adScript);
-
-    // Confirm ad & start timer after 1s (popunder scripts don't fire onload reliably)
-    setTimeout(function() {
-      if (!adStarted || penaltyApplied || creditFired) return;
-      adConfirmed = true;
-      document.getElementById('statusText').textContent = '⏳ Ad dekh rahe ho... ' + AD_DURATION + 's';
-      startCountdownTimer();
-    }, 1000);
-
-    // visibilitychange — timer pauses when user leaves, resumes when returns
-    document.addEventListener('visibilitychange', onVisChange);
-  }
-
-  // ── Visibility Change ─────────────────────────────────────────
-  // Timer PAUSES when user minimizes/switches away (ad not visible)
-  // Timer RESUMES when user comes back (ad confirmed was loaded)
-  // Penalty timer is NOT affected — it always runs
-  function onVisChange() {
-    if (!adStarted || penaltyApplied || creditFired) return;
-    if (document.hidden) {
-      // User left — pause ad timer
-      if (timerInterval) {
-        clearInterval(timerInterval);
-        timerInterval = null;
-      }
-      document.getElementById('statusText').textContent = '⏸ Wapas aao ad dekhne ke liye...';
-    } else {
-      // User returned — resume ONLY if ad was confirmed loaded
-      if (adConfirmed && timerStarted && secsLeft > 0 && !creditFired && !penaltyApplied) {
-        document.getElementById('statusText').textContent = '⏳ Ad dekh rahe ho... ' + secsLeft + 's';
-        timerInterval = setInterval(() => {
-          if (penaltyApplied || creditFired) { clearInterval(timerInterval); return; }
-          secsLeft--;
-          updateRing();
-          document.getElementById('statusText').textContent = '⏳ Ad dekh rahe ho... ' + Math.max(0, secsLeft) + 's';
-          if (secsLeft <= 0) {
-            clearInterval(timerInterval);
-            timerInterval = null;
-            onTimerComplete();
-          }
-        }, 1000);
-      }
-    }
-  }
-
-  // ── Start Countdown (only after ad confirmed) ─────────────────
-  function startCountdownTimer() {
-    if (timerStarted || penaltyApplied || creditFired) return;
-    timerStarted = true;
-    secsLeft = AD_DURATION;
-    updateRing();
-    document.getElementById('statusText').textContent = '⏳ Ad dekh rahe ho... ' + secsLeft + 's';
-
-    timerInterval = setInterval(() => {
+    timerInterval = setInterval(function() {
       if (penaltyApplied || creditFired) { clearInterval(timerInterval); return; }
       secsLeft--;
       updateRing();
@@ -329,21 +241,48 @@
     }, 1000);
   }
 
-  // ── Back Button ───────────────────────────────────────────────
+  // ── startAd — called by Start button ─────────────────────────
+  function startAd() {
+    const penaltyUntil = parseInt(localStorage.getItem(KEY_PENALTY_UNTIL) || '0');
+    if (penaltyUntil > Date.now()) { showPenaltyCountdown(penaltyUntil); return; }
+    const cooldownUntil = parseInt(localStorage.getItem(KEY_COOLDOWN_UNTIL) || '0');
+    if (cooldownUntil > Date.now()) { showCooldownCountdown(cooldownUntil); return; }
+    const count = getWatchCount();
+    if (count >= MAX_SPINS_PER_DAY) {
+      document.getElementById('statusText').textContent = 'Aaj ki limit khatam!';
+      return;
+    }
+    // Button click also triggers body listener above — timer starts automatically
+    // This function just validates state
+  }
+
+  // ── Init check ───────────────────────────────────────────────
+  function checkInitialState() {
+    const count = getWatchCount();
+    document.getElementById('spinsInfo').textContent = `Aaj ke watch: ${count}/${MAX_SPINS_PER_DAY}`;
+
+    const penaltyUntil = parseInt(localStorage.getItem(KEY_PENALTY_UNTIL) || '0');
+    if (penaltyUntil > Date.now()) { showPenaltyCountdown(penaltyUntil); return; }
+
+    const cooldownUntil = parseInt(localStorage.getItem(KEY_COOLDOWN_UNTIL) || '0');
+    if (cooldownUntil > Date.now()) { showCooldownCountdown(cooldownUntil); return; }
+
+    if (count >= MAX_SPINS_PER_DAY) {
+      document.getElementById('watchBtn').textContent = '🚫 Aaj ki limit khatam!';
+      document.getElementById('watchBtn').classList.add('btn-disabled');
+      document.getElementById('watchBtn').onclick = null;
+      document.getElementById('statusText').textContent = 'Kal wapas aao!';
+      document.getElementById('warningText').textContent = '';
+    }
+  }
+
+  checkInitialState();
+
+  // ── Back Button — Penalty if timer started but not done ──────
   window.addEventListener('popstate', function(e) {
-    if (adStarted && !creditFired) {
-      if (!adConfirmed) {
-        // Ad not even loaded yet — just go back, no penalty
-        adStarted = false;
-        history.back();
-        return;
-      }
-      if (secsLeft > 0) {
-        // Ad was running — apply penalty
-        history.pushState(null, '', location.href); // block navigation
-        applyPenalty();
-      }
-      // secsLeft === 0 means timer done, back is fine
+    if (timerStarted && !creditFired && secsLeft > 0) {
+      history.pushState(null, '', location.href); // block navigation
+      applyPenalty();
     }
   });
 
@@ -359,8 +298,7 @@
   // ── Claim Coins ───────────────────────────────────────────────
   function claimCoins() {
     if (creditFired || penaltyApplied) return;
-    if (!adConfirmed) { alert('Ad load nahi hua tha!'); return; }
-    if (secsLeft > 0) { alert('Abhi 20 seconds poore nahi hue!'); return; }
+    if (secsLeft > 0) { alert('Abhi ' + secsLeft + ' seconds baaki hain!'); return; }
     creditFired = true;
 
     document.getElementById('claimBtn').disabled = true;
