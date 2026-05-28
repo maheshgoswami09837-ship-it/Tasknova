@@ -312,7 +312,7 @@
         <p>Watch a short video ad & earn coins</p>
         <div class="task-meta">
           <span class="task-time">⏱ 15 sec</span>
-          <span id="adCounter" style="font-size:11px;color:#6c63ff;font-weight:700;margin-left:8px;">0/20</span>
+          <span id="adCounter" style="font-size:11px;color:#6c63ff;font-weight:700;margin-left:8px;">0/5</span>
         </div>
       </div>
       <div class="task-reward">
@@ -562,7 +562,7 @@
   <div style="display:flex;gap:10px;width:100%;margin-bottom:20px;">
     <div style="flex:1;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:10px 14px;text-align:center;">
       <div style="font-size:10px;color:rgba(255,255,255,0.35);margin-bottom:2px;">Spins Today</div>
-      <div style="font-size:17px;font-weight:800;color:#fff;"><span id="spinCountText">0</span><span style="color:rgba(255,255,255,0.3);font-size:12px;">/5</span></div>
+      <div style="font-size:17px;font-weight:800;color:#fff;"><span id="spinCountText">0</span><span style="color:rgba(255,255,255,0.3);font-size:12px;">/3</span></div>
     </div>
     <div style="flex:1;background:rgba(108,99,255,0.1);border:1px solid rgba(108,99,255,0.25);border-radius:14px;padding:10px 14px;text-align:center;">
       <div style="font-size:10px;color:rgba(255,255,255,0.35);margin-bottom:2px;">Win Up To</div>
@@ -1474,7 +1474,7 @@
 
     const batchCount = getAdBatchCount();
     if (batchCount >= MAX_ADS) {
-      showToast('20 ads ho gaye! 5 ghante baad wapas aao.', '#ef4444');
+      showToast('5 ads ho gaye! 5 ghante baad wapas aao.', '#ef4444');
       return;
     }
 
@@ -1503,7 +1503,7 @@
       const fiveHrUntil = Date.now() + AD_COOLDOWN_5HR * 1000;
       set5HrUntil(fiveHrUntil);
       set1MinUntil(0); // clear 1-min since mega takes over
-      showToast('🚫 20 ads complete! 5 ghante baad unlock hoga.', '#ef4444');
+      showToast('🚫 5 ads complete! 5 ghante baad unlock hoga.', '#ef4444');
     } else {
       // 1-Minute per-ad cooldown
       const oneMinUntil = Date.now() + AD_COOLDOWN_1MIN * 1000;
@@ -1860,7 +1860,7 @@
           const fiveHrUntil = Date.now() + AD_COOLDOWN_5HR * 1000;
           set5HrUntil(fiveHrUntil);
           set1MinUntil(0);
-          showToast('🚫 20 ads complete! 5 ghante baad unlock hoga.', '#ef4444');
+          showToast('🚫 5 ads complete! 5 ghante baad unlock hoga.', '#ef4444');
         } else {
           set1MinUntil(Date.now() + AD_COOLDOWN_1MIN * 1000);
           triggerGlobalLock();
@@ -1943,6 +1943,10 @@
     }
 
     // Restore persistent timers — resume exactly where left off
+    // Force immediate UI update from localStorage (prevents stale flash)
+    const _initCounter = document.getElementById('adCounter');
+    const _initBatch   = getAdBatchCount();
+    if (_initCounter) _initCounter.textContent = _initBatch + '/' + MAX_ADS;
     updateAdButtonUI();
     updateDailyBonusUI(); // initialize Daily Bonus button state
     // Clean stale/corrupted localStorage values — but NOT global lock key (it must survive refresh)
