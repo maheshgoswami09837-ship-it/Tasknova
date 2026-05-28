@@ -50,9 +50,17 @@
   .cooldown-box .cd-time { font-size:28px; font-weight:800; color:#f59e0b; margin-top:6px; }
 
   .spins-info { font-size:12px; color:rgba(255,255,255,0.3); margin-top:16px; }
-  .back-btn { background:none; border:1.5px solid rgba(255,255,255,0.1); border-radius:12px;
-    padding:10px 24px; color:rgba(255,255,255,0.4); font-size:13px; cursor:pointer;
-    font-family:'Segoe UI',sans-serif; margin-top:12px; width:100%; }
+  .back-btn {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    background: rgba(255,255,255,0.08);
+    border: 1.5px solid rgba(255,255,255,0.22);
+    border-radius: 14px; padding: 14px 24px;
+    color: #fff; font-size: 15px; font-weight: 700;
+    cursor: pointer; font-family: 'Segoe UI', sans-serif;
+    margin-top: 16px; width: 100%; letter-spacing: 0.3px;
+    transition: background 0.2s, border-color 0.2s;
+  }
+  .back-btn:active { background: rgba(255,255,255,0.15); border-color: rgba(255,255,255,0.4); }
 </style>
 </head>
 <body>
@@ -107,11 +115,9 @@
 
   <div class="warning" id="warningText">⚠️ Ad skip kiya toh 0 coins + 10 min penalty</div>
   <div class="spins-info" id="spinsInfo"></div>
-  <button class="back-btn" onclick="goBack()">← Wapas Jao</button>
+  <button class="back-btn" onclick="goBack()">← &nbsp; Wapas Jao</button>
 </div>
 
-<!-- Adsterra Popunder Script — loads on page -->
-<script src="https://pl29503369.effectivecpmnetwork.com/1c/3b/d0/1c3bd0127e4be2ff172d7c6e0eaa5204.js"></script>
 
 <script>
   // ── Stars ─────────────────────────────────────────────────────
@@ -205,6 +211,11 @@
     document.getElementById('timerNum').textContent = Math.max(0, secsLeft);
   }
 
+  // ── Ad Confirmed State ───────────────────────────────────────
+  // Timer ONLY starts when ad is confirmed loaded (adConfirmed = true)
+  let adConfirmed  = false;  // true when ad actually loads/shows
+  let timerStarted = false;  // prevents double-start
+
   // ── Start Ad ──────────────────────────────────────────────────
   function startAd() {
     if (adStarted) return;
@@ -223,52 +234,110 @@
 
     adStarted = true;
 
-    // Hide watch button
+    // Hide watch button, show loading state
     document.getElementById('watchBtn').style.display = 'none';
     document.getElementById('warningText').style.color = '#ef4444';
-    document.getElementById('statusText').textContent = '⏳ Ad dekh rahe ho...';
+    document.getElementById('statusText').textContent = '⏳ Ad load ho rahi hai...';
+    document.getElementById('timerNum').textContent = '...';
 
     // Push history state for back button detection
     history.pushState({ adActive: true }, '', location.href);
 
-    // Start 20s timer
+    // Inject Adsterra script dynamically — timer starts ONLY on onload
+    const adScript = document.createElement('script');
+    adScript.src = 'https://pl29503369.effectivecpmnetwork.com/1c/3b/d0/1c3bd0127e4be2ff172d7c6e0eaa5204.js';
+    adScript.async = true;
+    adScript.setAttribute('data-cfasync', 'false');
+
+    adScript.onload = function() {
+      // ✅ Ad confirmed loaded — NOW start the timer
+      adConfirmed = true;
+      startCountdownTimer();
+    };
+
+    adScript.onerror = function() {
+      // ❌ Ad failed to load — timer stays stopped, show retry
+      adStarted = false;
+      document.getElementById('watchBtn').style.display = 'block';
+      document.getElementById('statusText').textContent = '❌ Ad load nahi hua, retry karo';
+      document.getElementById('timerNum').textContent = AD_DURATION;
+      updateRing();
+    };
+
+    document.head.appendChild(adScript);
+
+    // visibilitychange — timer pauses when user leaves, resumes when returns
+    document.addEventListener('visibilitychange', onVisChange);
+  }
+
+  // ── Visibility Change ─────────────────────────────────────────
+  // Timer PAUSES when user minimizes/switches away (ad not visible)
+  // Timer RESUMES when user comes back (ad confirmed was loaded)
+  // Penalty timer is NOT affected — it always runs
+  function onVisChange() {
+    if (!adStarted || penaltyApplied || creditFired) return;
+    if (document.hidden) {
+      // User left — pause ad timer
+      if (timerInterval) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+      }
+      document.getElementById('statusText').textContent = '⏸ Wapas aao ad dekhne ke liye...';
+    } else {
+      // User returned — resume ONLY if ad was confirmed loaded
+      if (adConfirmed && timerStarted && secsLeft > 0 && !creditFired && !penaltyApplied) {
+        document.getElementById('statusText').textContent = '⏳ Ad dekh rahe ho... ' + secsLeft + 's';
+        timerInterval = setInterval(() => {
+          if (penaltyApplied || creditFired) { clearInterval(timerInterval); return; }
+          secsLeft--;
+          updateRing();
+          document.getElementById('statusText').textContent = '⏳ Ad dekh rahe ho... ' + Math.max(0, secsLeft) + 's';
+          if (secsLeft <= 0) {
+            clearInterval(timerInterval);
+            timerInterval = null;
+            onTimerComplete();
+          }
+        }, 1000);
+      }
+    }
+  }
+
+  // ── Start Countdown (only after ad confirmed) ─────────────────
+  function startCountdownTimer() {
+    if (timerStarted || penaltyApplied || creditFired) return;
+    timerStarted = true;
+    secsLeft = AD_DURATION;
     updateRing();
+    document.getElementById('statusText').textContent = '⏳ Ad dekh rahe ho... ' + secsLeft + 's';
+
     timerInterval = setInterval(() => {
-      if (penaltyApplied) { clearInterval(timerInterval); return; }
+      if (penaltyApplied || creditFired) { clearInterval(timerInterval); return; }
       secsLeft--;
       updateRing();
-      document.getElementById('statusText').textContent = `⏳ Ad dekh rahe ho... ${Math.max(0,secsLeft)}s`;
+      document.getElementById('statusText').textContent = '⏳ Ad dekh rahe ho... ' + Math.max(0, secsLeft) + 's';
       if (secsLeft <= 0) {
         clearInterval(timerInterval);
         timerInterval = null;
         onTimerComplete();
       }
     }, 1000);
-
-    // Visibility change — user ne tab switch kiya
-    document.addEventListener('visibilitychange', onVisChange);
-  }
-
-  // ── Visibility Change ─────────────────────────────────────────
-  function onVisChange() {
-    if (!adStarted || penaltyApplied || creditFired) return;
-    if (document.hidden) {
-      adVisible = false;
-      // User ad tab pe gaya — timer chalte rehne do
-    } else {
-      // User wapas aaya — check karo kitna bacha hai
-      if (secsLeft > 0 && !creditFired && !penaltyApplied) {
-        document.getElementById('statusText').textContent = `⏳ Ad dekh rahe ho... ${Math.max(0,secsLeft)}s`;
-      }
-    }
   }
 
   // ── Back Button ───────────────────────────────────────────────
   window.addEventListener('popstate', function(e) {
-    if (adStarted && !creditFired && secsLeft > 0) {
-      // Penalty!
-      applyPenalty();
-      history.pushState(null, '', location.href); // block navigation
+    if (adStarted && !creditFired) {
+      if (!adConfirmed) {
+        // Ad not even loaded yet — just go back, no penalty
+        adStarted = false;
+        history.back();
+        return;
+      }
+      if (secsLeft > 0) {
+        // Ad was running — apply penalty
+        history.pushState(null, '', location.href); // block navigation
+        applyPenalty();
+      }
+      // secsLeft === 0 means timer done, back is fine
     }
   });
 
@@ -284,6 +353,7 @@
   // ── Claim Coins ───────────────────────────────────────────────
   function claimCoins() {
     if (creditFired || penaltyApplied) return;
+    if (!adConfirmed) { alert('Ad load nahi hua tha!'); return; }
     if (secsLeft > 0) { alert('Abhi 20 seconds poore nahi hue!'); return; }
     creditFired = true;
 
