@@ -372,7 +372,7 @@
         <p>Wheel spin karo aur coins jeeto</p>
         <div class="task-meta">
           <span class="task-time">⏱ 15/day</span>
-          <span id="spinCountBadge" class="cooldown-badge">0/5</span>
+          <span id="spinCountBadge" class="cooldown-badge">0/3</span>
         </div>
       </div>
       <div class="task-reward">
@@ -1981,7 +1981,7 @@
     const sb = document.getElementById('spinCountBadge');
     const scb = document.getElementById('scratchCountBadge');
     const qb = document.getElementById('quizCountBadge');
-    if (sb) sb.textContent = d.spins + '/5';
+    if (sb) sb.textContent = d.spins + '/3';
     if (scb) scb.textContent = d.scratches + '/5';
     if (qb) qb.textContent = d.quizzes + '/5';
 
@@ -2281,7 +2281,7 @@
     const btn = document.getElementById('spinBtnMain');
     if (ct) ct.textContent = d.spins;
     const cooldown = getCooldownRemaining(d.lastSpin);
-    if (d.spins >= 5) {
+    if (d.spins >= 3) {
       if (btn) { btn.disabled = true; btn.textContent = '✅ Aaj ke spins khatam!'; btn.style.background = 'rgba(255,255,255,0.1)'; btn.style.color = 'rgba(255,255,255,0.4)'; }
     } else if (cooldown > 0) {
       const secsLeft = Math.ceil(cooldown / 1000);
@@ -2307,7 +2307,7 @@
 
   function doSpin() {
     const d = getDailyData();
-    if (d.spins >= 5) { showToast('Aaj ke spins khatam!', '#f59e0b'); return; }
+    if (d.spins >= 3) { showToast('Aaj ke spins khatam!', '#f59e0b'); return; }
     if (getCooldownRemaining(d.lastSpin) > 0) { showToast('30 second wait karo!', '#f59e0b'); return; }
     if (isGlobalLocked()) return; // universal 1-min cooldown
     if (!checkDailyLimit()) return;
