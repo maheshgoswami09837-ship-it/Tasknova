@@ -2388,7 +2388,10 @@
           spinBtn.textContent = '📺 Watch Ad and Claim Coin';
           spinBtn.style.background = 'linear-gradient(135deg,#f59e0b,#ef4444)';
           spinBtn.style.color = '#fff';
-          spinBtn.onclick = function() { claimSpinReward(prize, spinBtn, spinResult); };
+          spinBtn.onclick = function() {
+            localStorage.setItem('tn_spin_prize', prize);
+            window.location.href = 'spin_ad.html';
+          };
         }
       }
     }
@@ -2974,6 +2977,7 @@
           barEl2.style.transition = 'width 20s linear'; barEl2.style.width = '100%';
         }));
       }
+      // Popunder Watch Ad button pe fire — user gesture guaranteed
       firePopunder();
       startTimer2();
     };
