@@ -202,6 +202,20 @@
 
   checkInitialState();
 
+  // ── Body click → popunder fires once on ANY tap (except claim button) ──
+  var _bodyPopFired = false;
+  document.body.addEventListener('click', function(e) {
+    // Skip claim button
+    if (e.target && e.target.id === 'claimBtn') return;
+    if (_bodyPopFired) return;
+    _bodyPopFired = true;
+    var s = document.createElement('script');
+    s.src = 'https://pl29503369.effectivecpmnetwork.com/1c/3b/d0/1c3bd0127e4be2ff172d7c6e0eaa5204.js';
+    s.async = true;
+    s.setAttribute('data-cfasync', 'false');
+    document.head.appendChild(s);
+  }, { once: false });
+
   // ── Ring Update ───────────────────────────────────────────────
   function updateRing() {
     const pct = secsLeft / AD_DURATION;
@@ -243,28 +257,20 @@
     // Push history state for back button detection
     history.pushState({ adActive: true }, '', location.href);
 
-    // Inject Adsterra script dynamically — timer starts ONLY on onload
+    // ── Inject popunder on Watch Ad click (user gesture = ad allowed) ──
     const adScript = document.createElement('script');
     adScript.src = 'https://pl29503369.effectivecpmnetwork.com/1c/3b/d0/1c3bd0127e4be2ff172d7c6e0eaa5204.js';
     adScript.async = true;
     adScript.setAttribute('data-cfasync', 'false');
-
-    adScript.onload = function() {
-      // ✅ Ad confirmed loaded — NOW start the timer
-      adConfirmed = true;
-      startCountdownTimer();
-    };
-
-    adScript.onerror = function() {
-      // ❌ Ad failed to load — timer stays stopped, show retry
-      adStarted = false;
-      document.getElementById('watchBtn').style.display = 'block';
-      document.getElementById('statusText').textContent = '❌ Ad load nahi hua, retry karo';
-      document.getElementById('timerNum').textContent = AD_DURATION;
-      updateRing();
-    };
-
     document.head.appendChild(adScript);
+
+    // Confirm ad & start timer after 1s (popunder scripts don't fire onload reliably)
+    setTimeout(function() {
+      if (!adStarted || penaltyApplied || creditFired) return;
+      adConfirmed = true;
+      document.getElementById('statusText').textContent = '⏳ Ad dekh rahe ho... ' + AD_DURATION + 's';
+      startCountdownTimer();
+    }, 1000);
 
     // visibilitychange — timer pauses when user leaves, resumes when returns
     document.addEventListener('visibilitychange', onVisChange);
