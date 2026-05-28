@@ -287,6 +287,26 @@
   <div class="section-title">🔥 Available Tasks</div>
   <div class="tasks-grid" id="tasksGrid">
 
+    <!-- ★ Offerwall Task — SABSE UPAR ★ -->
+    <div class="task-card" data-category="survey"
+      style="background:linear-gradient(135deg,rgba(108,99,255,0.18),rgba(59,130,246,0.12));border-color:rgba(108,99,255,0.35);"
+      onclick="openOfferwallPage()">
+      <div class="task-icon icon-purple">🎁</div>
+      <div class="task-info">
+        <h3>Offerwall Tasks</h3>
+        <p>Offers complete karo, zyada coins pao!</p>
+        <div class="task-meta">
+          <span class="task-time">⏱ Unlimited</span>
+          <span style="font-size:10px;color:#a78bfa;font-weight:700;background:rgba(108,99,255,0.15);padding:3px 8px;border-radius:50px;">🔥 High Reward</span>
+        </div>
+      </div>
+      <div class="task-reward">
+        <div class="coins-reward" style="color:#a78bfa;">+2000</div>
+        <div class="rupee">coins/offer</div>
+        <button class="do-btn" style="background:linear-gradient(135deg,#a78bfa,#6c63ff);">Open</button>
+      </div>
+    </div>
+
     <!-- Shortlink Task -->
     <div class="task-card" data-category="daily" id="shortlinkTaskCard" onclick="openShortlinkModal()">
       <div class="task-icon icon-green">🔗</div>
@@ -305,23 +325,7 @@
       </div>
     </div>
 
-    <div class="task-card" data-category="watchads" id="watchAdCard">
-      <div class="task-icon icon-purple">📺</div>
-      <div class="task-info">
-        <h3>Watch Video Ad</h3>
-        <p>Watch a short video ad & earn coins</p>
-        <div class="task-meta">
-          <span class="task-time">⏱ 15 sec</span>
-          <span id="adCounter" style="font-size:11px;color:#6c63ff;font-weight:700;margin-left:8px;">0/5</span>
-        </div>
-      </div>
-      <div class="task-reward">
-        <div class="coins-reward" id="adCoins">+10</div>
-        <div class="rupee">coins</div>
-        <button class="do-btn" id="watchAdBtn" onclick="watchAd()">Watch</button>
-      </div>
-    </div>
-
+    <!-- Survey Task -->
     <div class="task-card" data-category="survey" id="surveyCard" onclick="openSurvey()">
       <div class="task-icon icon-blue">📝</div>
       <div class="task-info">
@@ -339,7 +343,23 @@
       </div>
     </div>
 
-    
+    <!-- Watch Video Ad -->
+    <div class="task-card" data-category="watchads" id="watchAdCard">
+      <div class="task-icon icon-purple">📺</div>
+      <div class="task-info">
+        <h3>Watch Video Ad</h3>
+        <p>Watch a short video ad & earn coins</p>
+        <div class="task-meta">
+          <span class="task-time">⏱ 15 sec</span>
+          <span id="adCounter" style="font-size:11px;color:#6c63ff;font-weight:700;margin-left:8px;">0/5</span>
+        </div>
+      </div>
+      <div class="task-reward">
+        <div class="coins-reward" id="adCoins">+10</div>
+        <div class="rupee">coins</div>
+        <button class="do-btn" id="watchAdBtn" onclick="watchAd()">Watch</button>
+      </div>
+    </div>
 
     <!-- Daily Check-In -->
     <div class="task-card" data-category="daily" id="checkinCard" onclick="doCheckin()" style="flex-wrap:wrap;">
@@ -3389,6 +3409,13 @@
     });
   }
   // ── SHORTLINK TASK END ────────────────────────────────────────
+  // ── OFFERWALL ────────────────────────────────────────────────
+  function openOfferwallPage() {
+    // cpalead_offerwall.html same folder mein honi chahiye
+    window.location.href = 'cpalead_offerwall.html';
+  }
+  // ── OFFERWALL END ────────────────────────────────────────────
+
   function closeTutorialVideo() {
     document.getElementById('slTutorialModal').style.display = 'none';
     const iframe = document.getElementById('slTutorialIframe');
