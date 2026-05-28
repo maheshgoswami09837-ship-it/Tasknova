@@ -1515,71 +1515,33 @@
     // Update button UI immediately
     updateAdButtonUI();
 
-    // ── Secure reward: creditCoins only INSIDE successful ad-close callback ──
-    // Since this is web-based and claimCoins is called from the button (after 15s),
-    // we fire the popunder ad script here, and credit ONLY on onload.
-    const s = document.createElement('script');
-    s.src = 'https://pl29503369.effectivecpmnetwork.com/1c/3b/d0/1c3bd0127e4be2ff172d7c6e0eaa5204.js';
-    s.async = true;
-    s.setAttribute('data-cfasync', 'false');
-
-    s.onload = function() {
-      // ✅ Ad confirmed — NOW credit coins
-      try { window.AppInventor && window.AppInventor.setWebViewString('AD_SHOWED:watchAd'); } catch(e) {}
-      // Save to Firebase
-      const localUid = uid || localStorage.getItem('tasknova_uid');
-      if (localUid && localUid !== 'null') {
-        window._getAuthToken && window._getAuthToken().then(token => {
-          const authParam = token ? '?auth=' + token : '';
-          fetch(DB_URL + '/users/' + localUid + '.json' + authParam)
-            .then(r => r.json())
-            .then(data => {
-              const newCoins   = (data.coins    || 0) + currentCoins;
-              const newBalance = parseFloat((newCoins / 100).toFixed(2));
-              const newTasks   = (data.tasksDone || 0) + 1;
-              return fetch(DB_URL + '/users/' + localUid + '.json' + authParam, {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ coins: newCoins, balance: newBalance, tasksDone: newTasks, totalEarned: newBalance })
-              }).then(() => {
-                document.querySelector('.user-coins').textContent    = newCoins + ' Coins';
-                document.querySelector('.user-balance').textContent  = '₹' + newBalance.toFixed(2);
-
-                // ── TASK HISTORY SAVE ──────────────────────────────
-                const histEntry = {
-                  title: '📺 Video Watch Task',
-                  type: 'watchAd',
-                  coinsEarned: currentCoins,
-                  status: 'completed',
-                  completedAt: Date.now()
-                };
-                fetch(DB_URL + '/users/' + localUid + '/taskHistory.json' + authParam, {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify(histEntry)
-                }).catch(e => console.warn('[TaskHistory] watchAd save failed:', e));
-                // ─────────────────────────────────────────────────
-
-                showReward(currentCoins);
-              });
-            })
-            .catch(e => console.log(e));
-        });
-      }
-    };
-
-    s.onerror = function() {
-      // ❌ Ad failed — coins NOT credited, batch count rolled back
-      try { window.AppInventor && window.AppInventor.setWebViewString('AD_FAILED:watchAd'); } catch(e) {}
-      const rolledBack = Math.max(0, getAdBatchCount() - 1);
-      setAdBatchCount(rolledBack);
-      // Also clear the 1-min timer we just set (ad failed, don't penalise)
-      if (getAdLockState().isMega === false) set1MinUntil(0);
-      updateAdButtonUI();
-      showToast('Ad load nahi hua. Dobara try karo! 🔄', '#ef4444');
-    };
-
-    document.head.appendChild(s);
+    // ── Secure reward: creditCoins directly after 15s timer ──
+    // No popunder here — Watch Ads has its own 15s system
+    // ✅ Credit coins directly
+    try { window.AppInventor && window.AppInventor.setWebViewString('AD_SHOWED:watchAd'); } catch(e) {}
+    const localUid = uid || localStorage.getItem('tasknova_uid');
+    if (localUid && localUid !== 'null') {
+      window._getAuthToken && window._getAuthToken().then(token => {
+        const authParam = token ? '?auth=' + token : '';
+        fetch(DB_URL + '/users/' + localUid + '.json' + authParam)
+          .then(r => r.json())
+          .then(data => {
+            const newCoins   = (data.coins    || 0) + currentCoins;
+            const newBalance = parseFloat((newCoins / 100).toFixed(2));
+            const newTasks   = (data.tasksDone || 0) + 1;
+            return fetch(DB_URL + '/users/' + localUid + '.json' + authParam, {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ coins: newCoins, balance: newBalance, tasksDone: newTasks, totalEarned: newBalance })
+            }).then(() => {
+              document.querySelector('.user-coins').textContent   = newCoins + ' Coins';
+              document.querySelector('.user-balance').textContent = '₹' + newBalance.toFixed(2);
+              showReward(currentCoins);
+            });
+          })
+          .catch(e => console.log(e));
+      });
+    }
   }
 
   function skipAd() {
