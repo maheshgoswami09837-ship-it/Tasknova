@@ -2345,7 +2345,6 @@
   }
 
   function doSpin() {
-    firePopunder(); // Monetag popunder — user gesture se fire
     const d = getDailyData();
     if (d.spins >= 5) { showToast('Aaj ke spins khatam!', '#f59e0b'); return; }
     if (getCooldownRemaining(d.lastSpin) > 0) { showToast('30 second wait karo!', '#f59e0b'); return; }
@@ -2831,34 +2830,131 @@
 
   // ── SPIN CLAIM ────────────────────────────────────────────────
   function claimSpinReward(prize, spinBtn, spinResult) {
-    _playAdAndClaim({
-      coins: prize,
-      type: 'spin',
-      btn: spinBtn,
-      onSuccess: function(earned) {
-        if (spinResult) spinResult.textContent = earned > 0 ? '✅ +' + earned + ' Coins credited! 🎉' : '';
-        if (earned > 0) showToast('+' + earned + ' Coins!', 'linear-gradient(135deg,#6c63ff,#3b82f6)');
-        // Show 1-min cooldown on spin button
-        if (spinBtn) {
-          spinBtn.disabled = true;
-          spinBtn.style.background = 'rgba(255,165,0,0.2)';
-          spinBtn.style.color = '#ffa500';
-          spinBtn.onclick = null;
-        }
-        updateSpinUI(); // this will show live countdown
-        updateDailyLimitUI();
-      },
-      onFail: function() {
-        if (spinResult) spinResult.textContent = '❌ Ad load nahi hua — dobara try karo';
-        if (spinBtn) {
-          spinBtn.disabled = false;
-          spinBtn.textContent = '📺 Watch Ad and Claim Coin';
-          spinBtn.style.background = 'linear-gradient(135deg,#f59e0b,#ef4444)';
-          spinBtn.style.color = '#fff';
-        }
-        showToast('Ad load nahi hua. Dobara try karo! 🔄', '#ef4444');
+    // Spin ka apna overlay — Watch Ad button dabao → popunder fire → 20s → Claim
+    if (spinBtn) { spinBtn.disabled = true; }
+
+    let overlay = document.getElementById('taskAdOverlay');
+    if (!overlay) {
+      overlay = document.createElement('div');
+      overlay.id = 'taskAdOverlay';
+      document.body.appendChild(overlay);
+    }
+    overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:#05051a;z-index:99999;overflow:hidden;pointer-events:all;touch-action:none;display:flex;flex-direction:column;align-items:center;justify-content:space-between;';
+
+    overlay.innerHTML =
+      // Header
+      '<div style="width:100%;padding:20px 20px 0;box-sizing:border-box;text-align:center;">' +
+        '<div style="font-size:12px;color:rgba(255,255,255,0.3);letter-spacing:1.5px;text-transform:uppercase;">TASK</div>' +
+        '<div style="font-size:22px;font-weight:900;color:#fff;margin-top:4px;">🎡 Spin & Win</div>' +
+        '<div style="width:100%;height:4px;background:rgba(255,255,255,0.08);border-radius:2px;margin-top:14px;">' +
+          '<div id="spinAdBar" style="height:100%;width:0%;background:linear-gradient(90deg,#6c63ff,#f59e0b);border-radius:2px;transition:none;"></div>' +
+        '</div>' +
+      '</div>' +
+
+      // Center — countdown circle
+      '<div style="display:flex;flex-direction:column;align-items:center;gap:16px;">' +
+        '<div style="position:relative;width:160px;height:160px;">' +
+          '<svg width="160" height="160" style="transform:rotate(-90deg);">' +
+            '<circle cx="80" cy="80" r="70" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="8"/>' +
+            '<circle id="spinAdRing" cx="80" cy="80" r="70" fill="none" stroke="url(#spinGrad)" stroke-width="8" stroke-dasharray="439.8" stroke-dashoffset="439.8" stroke-linecap="round" style="transition:stroke-dashoffset 1s linear;"/>' +
+            '<defs><linearGradient id="spinGrad" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#6c63ff"/><stop offset="100%" stop-color="#f59e0b"/></linearGradient></defs>' +
+          '</svg>' +
+          '<div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;">' +
+            '<div id="spinAdCountNum" style="font-size:42px;font-weight:900;color:#fff;line-height:1;">20</div>' +
+            '<div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:2px;">seconds</div>' +
+          '</div>' +
+        '</div>' +
+        '<div id="spinAdStatus" style="color:rgba(255,255,255,0.6);font-size:14px;font-weight:600;">Pehle Watch Ad dabao</div>' +
+        '<div style="display:flex;align-items:center;gap:8px;background:rgba(108,99,255,0.15);border:1.5px solid rgba(108,99,255,0.35);border-radius:50px;padding:8px 20px;">' +
+          '<span style="font-size:18px;">🪙</span>' +
+          '<span style="color:#a78bfa;font-size:16px;font-weight:800;">+' + prize + ' Coins</span>' +
+        '</div>' +
+      '</div>' +
+
+      // Bottom buttons
+      '<div style="width:100%;padding:0 20px 36px;box-sizing:border-box;">' +
+        '<div style="color:rgba(255,165,0,0.6);font-size:11px;text-align:center;margin-bottom:12px;">⚠️ Back button dabaoge toh 0 coins milenge (penalty)</div>' +
+        '<button id="spinAdWatchBtn" style="width:100%;background:linear-gradient(135deg,#6c63ff,#3b82f6);border:none;border-radius:16px;padding:16px;color:#fff;font-size:16px;font-weight:800;cursor:pointer;margin-bottom:10px;box-shadow:0 4px 20px rgba(108,99,255,0.4);">📺 Watch Ad</button>' +
+        '<button id="spinAdClaimBtn" disabled style="display:none;width:100%;background:rgba(255,255,255,0.08);border:1.5px solid rgba(255,255,255,0.12);border-radius:16px;padding:16px;color:rgba(255,255,255,0.3);font-size:16px;font-weight:800;cursor:not-allowed;">⏳ Please wait 20s...</button>' +
+      '</div>';
+
+    overlay.style.display = 'flex';
+    history.pushState({ adLock: true }, '', location.href);
+
+    let secsLeft = 20;
+    let timerStarted = false;
+    let penaltyApplied = false;
+    adHardLockActive = true;
+
+    const watchBtn2 = document.getElementById('spinAdWatchBtn');
+    const claimBtn2 = document.getElementById('spinAdClaimBtn');
+    const statusEl2 = document.getElementById('spinAdStatus');
+
+    // Back button penalty
+    window._currentAdPenalty = function() {
+      penaltyApplied = true;
+      adHardLockActive = false;
+      overlay.style.display = 'none';
+      showToast('❌ Ad skip kiya — 0 Coins!', '#ef4444');
+      if (spinBtn) { spinBtn.disabled = false; }
+      triggerGlobalLock();
+    };
+
+    // Watch Ad button — popunder fire + timer shuru
+    if (watchBtn2) watchBtn2.onclick = function() {
+      if (timerStarted) return;
+      timerStarted = true;
+
+      watchBtn2.style.display = 'none';
+      if (claimBtn2) claimBtn2.style.display = 'block';
+      if (statusEl2) statusEl2.textContent = '⏳ Ad dekh rahe ho...';
+
+      // Progress bar
+      const bar = document.getElementById('spinAdBar');
+      if (bar) {
+        bar.style.width = '0%'; bar.style.transition = 'none';
+        requestAnimationFrame(() => requestAnimationFrame(() => {
+          bar.style.transition = 'width 20s linear'; bar.style.width = '100%';
+        }));
       }
-    });
+
+      // Popunder fire — user gesture se
+      firePopunder();
+
+      // 20s countdown
+      const timer = setInterval(() => {
+        if (penaltyApplied) { clearInterval(timer); return; }
+        secsLeft--;
+        const numEl = document.getElementById('spinAdCountNum');
+        if (numEl) numEl.textContent = Math.max(0, secsLeft);
+        const ring = document.getElementById('spinAdRing');
+        if (ring) ring.style.strokeDashoffset = (439.8 * (secsLeft / 20)).toFixed(1);
+        if (statusEl2) statusEl2.textContent = secsLeft > 0 ? '⏳ Ad dekh rahe ho...' : '🎉 Ab claim karo!';
+
+        if (secsLeft <= 0) {
+          clearInterval(timer);
+          adHardLockActive = false;
+          if (claimBtn2) {
+            claimBtn2.disabled = false;
+            claimBtn2.textContent = '✅ Claim +' + prize + ' Coins';
+            claimBtn2.style.cssText = 'display:block;width:100%;background:linear-gradient(135deg,#22c55e,#16a34a);border:none;border-radius:16px;padding:16px;color:#fff;font-size:16px;font-weight:800;cursor:pointer;box-shadow:0 4px 24px rgba(34,197,94,0.4);';
+            claimBtn2.onclick = function() {
+              claimBtn2.disabled = true;
+              claimBtn2.textContent = '⏳ Crediting...';
+              window._currentAdPenalty = null;
+              overlay.style.display = 'none';
+              creditCoins(prize, 'spin').then(earned => {
+                if (spinResult) spinResult.textContent = earned > 0 ? '✅ +' + earned + ' Coins credited! 🎉' : '';
+                if (earned > 0) showToast('+' + earned + ' Coins!', 'linear-gradient(135deg,#6c63ff,#3b82f6)');
+                if (spinBtn) { spinBtn.disabled = true; spinBtn.onclick = null; }
+                updateSpinUI();
+                updateDailyLimitUI();
+              });
+            };
+          }
+        }
+      }, 1000);
+    };
   }
 
   // ── SCRATCH CLAIM ─────────────────────────────────────────────
