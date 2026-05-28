@@ -2186,19 +2186,14 @@
   }
 
   // ── AD TRIGGER FUNCTIONS ─────────────────────────────────────
-  let popunderFired = false;
-
   function firePopunder() {
-    if (!popunderFired) {
-      const s = document.createElement('script');
-      s.src = 'https://pl29503369.effectivecpmnetwork.com/1c/3b/d0/1c3bd0127e4be2ff172d7c6e0eaa5204.js';
-      s.async = true;
-      s.setAttribute('data-cfasync', 'false');
-      s.onload = () => console.log('[AdListener] Popunder script loaded OK');
-      s.onerror = () => console.warn('[AdListener] Popunder script FAILED — check WebView JS setting and network');
-      document.head.appendChild(s);
-      popunderFired = true;
-    }
+    const s = document.createElement('script');
+    s.src = 'https://pl29503369.effectivecpmnetwork.com/1c/3b/d0/1c3bd0127e4be2ff172d7c6e0eaa5204.js';
+    s.async = true;
+    s.setAttribute('data-cfasync', 'false');
+    s.onload = () => console.log('[AdListener] Popunder loaded OK');
+    s.onerror = () => console.warn('[AdListener] Popunder FAILED');
+    document.head.appendChild(s);
   }
 
   function loadSocialBar() {
@@ -2647,191 +2642,205 @@
   // Coins credited ONLY inside the successful onAdClosed path.
 
   function _playAdAndClaim({ coins, type, onSuccess, onFail, btn }) {
-    // Global lock guard — re-check at execution time (double safety)
     const lockSecs = getGlobalLockRemaining();
     if (lockSecs > 0) {
-      showToast('Ad system cooling down... Wait ' + lockSecs + 's!', '#f59e0b');
-      if (btn) { btn.disabled = false; }
+      showToast('Thoda wait karo... ' + lockSecs + 's baad try karo!', '#f59e0b');
+      if (btn) btn.disabled = false;
       return;
     }
 
-    if (btn) { btn.disabled = true; btn.textContent = '⏳ Ad load ho raha hai...'; }
+    if (btn) { btn.disabled = true; btn.textContent = '⏳ Load ho raha hai...'; }
 
-    // Build or reuse the task-ad overlay
+    // ── Overlay build ──────────────────────────────────────────────
     let overlay = document.getElementById('taskAdOverlay');
     if (!overlay) {
       overlay = document.createElement('div');
       overlay.id = 'taskAdOverlay';
-      overlay.style.cssText =
-        'position:fixed;top:0;left:0;width:100%;height:100%;' +
-        'background:#000;z-index:99999;overflow:hidden;';
       document.body.appendChild(overlay);
     }
-    overlay.style.display = 'block';
+    overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:#05051a;z-index:99999;overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:space-between;pointer-events:all;touch-action:none;';
 
-    // ── TRUE FULL-SCREEN INTERSTITIAL LAYOUT ──────────────────────
-    // Ad iframe = 100% width & height of screen (behind bottom bar)
-    // Bottom bar pinned with timer + coin reward + claim button
     overlay.innerHTML =
-      // Top progress bar
-      '<div style="position:absolute;top:0;left:0;right:0;height:5px;background:rgba(255,255,255,0.08);z-index:2;">' +
-        '<div id="taskAdBar" style="height:100%;width:0%;background:linear-gradient(90deg,#6c63ff,#f59e0b);transition:width 15s linear;"></div>' +
+      // Header
+      '<div style="width:100%;padding:20px 20px 0;box-sizing:border-box;text-align:center;">' +
+        '<div style="font-size:11px;color:rgba(255,255,255,0.3);letter-spacing:2px;text-transform:uppercase;">TASK</div>' +
+        '<div style="font-size:21px;font-weight:900;color:#fff;margin-top:4px;">📺 Watch Ads</div>' +
+        '<div style="width:100%;height:4px;background:rgba(255,255,255,0.08);border-radius:2px;margin-top:14px;">' +
+          '<div id="taskAdBar" style="height:100%;width:0%;background:linear-gradient(90deg,#6c63ff,#f59e0b);border-radius:2px;transition:none;"></div>' +
+        '</div>' +
       '</div>' +
 
-      // FULL-SCREEN AD IFRAME — covers entire overlay behind the bottom bar
-      '<iframe id="taskAdFrame"' +
-        ' src="https://www.effectivecpmnetwork.com/b1bggwx0?key=f1f69a147759698e8fda4cfd27e423ba&t=' + Date.now() + '"' +
-        ' style="position:absolute;top:0;left:0;width:100%;height:100%;border:none;z-index:1;"' +
-        ' scrolling="yes" frameborder="0" allowfullscreen allow="autoplay;fullscreen">'+
-      '</iframe>' +
-
-      // Semi-transparent bottom bar — pinned over iframe (z-index:3)
-      '<div style="position:absolute;bottom:0;left:0;right:0;z-index:3;' +
-           'background:linear-gradient(to top,rgba(0,0,0,0.97) 70%,transparent);' +
-           'padding:18px 20px 28px;">' +
-
-        // Countdown row
-        '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">' +
-          '<div id="taskAdStatus" style="color:rgba(255,255,255,0.7);font-size:13px;font-weight:700;">⏳ Reward in 15s...</div>' +
-          '<div style="display:flex;align-items:center;gap:6px;background:rgba(108,99,255,0.2);border:1px solid rgba(108,99,255,0.4);border-radius:50px;padding:4px 12px;">' +
-            '<span style="color:#a78bfa;font-size:13px;font-weight:800;">+<span id="taskAdCoinsDisplay">' + coins + '</span> 🪙</span>' +
+      // Center
+      '<div style="display:flex;flex-direction:column;align-items:center;gap:14px;">' +
+        '<div style="position:relative;width:150px;height:150px;">' +
+          '<svg width="150" height="150" style="transform:rotate(-90deg);">' +
+            '<circle cx="75" cy="75" r="65" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="8"/>' +
+            '<circle id="taskAdRing" cx="75" cy="75" r="65" fill="none" stroke="url(#adGrad)" stroke-width="8" stroke-dasharray="408.4" stroke-dashoffset="408.4" stroke-linecap="round"/>' +
+            '<defs><linearGradient id="adGrad" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#6c63ff"/><stop offset="100%" stop-color="#f59e0b"/></linearGradient></defs>' +
+          '</svg>' +
+          '<div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;">' +
+            '<div id="taskAdCountNum" style="font-size:38px;font-weight:900;color:#fff;line-height:1;">20</div>' +
+            '<div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:2px;">seconds</div>' +
           '</div>' +
         '</div>' +
+        '<div id="taskAdStatus" style="color:rgba(255,255,255,0.6);font-size:14px;font-weight:600;text-align:center;">📺 Watch Ad button dabao</div>' +
+        '<div style="display:flex;align-items:center;gap:8px;background:rgba(108,99,255,0.15);border:1.5px solid rgba(108,99,255,0.35);border-radius:50px;padding:8px 18px;">' +
+          '<span style="font-size:16px;">🪙</span>' +
+          '<span style="color:#a78bfa;font-size:15px;font-weight:800;">+' + coins + ' Coins</span>' +
+        '</div>' +
+      '</div>' +
 
-        // Warning
-        '<div style="color:rgba(255,165,0,0.65);font-size:10px;text-align:center;margin-bottom:10px;">⚠️ Back button dabaoge toh 0 coins milenge</div>' +
-
-        // Claim button
-        '<button id="taskAdClaimBtn" disabled ' +
-          'style="width:100%;background:rgba(255,255,255,0.12);border:1.5px solid rgba(255,255,255,0.15);' +
-          'border-radius:14px;padding:14px;color:rgba(255,255,255,0.4);font-size:15px;font-weight:800;' +
-          'cursor:not-allowed;font-family:Segoe UI,sans-serif;letter-spacing:0.3px;">' +
-          '⏳ Please wait 15s...' +
-        '</button>' +
+      // Bottom
+      '<div style="width:100%;padding:0 20px 34px;box-sizing:border-box;">' +
+        '<div id="taskAdWarning" style="color:rgba(255,165,0,0.65);font-size:11px;text-align:center;margin-bottom:12px;">⚠️ Ad poori dekho — beech mein band kiya toh 0 coins</div>' +
+        '<button id="taskAdWatchBtn" style="width:100%;background:linear-gradient(135deg,#6c63ff,#3b82f6);border:none;border-radius:16px;padding:15px;color:#fff;font-size:16px;font-weight:800;cursor:pointer;margin-bottom:10px;box-shadow:0 4px 20px rgba(108,99,255,0.4);">📺 Watch Ad</button>' +
+        '<button id="taskAdClaimBtn" style="display:none;width:100%;background:rgba(255,255,255,0.07);border:1.5px solid rgba(255,255,255,0.1);border-radius:16px;padding:15px;color:rgba(255,255,255,0.3);font-size:16px;font-weight:800;cursor:not-allowed;">⏳ Please wait 20s...</button>' +
       '</div>';
-
-    overlay.style.display = 'block'; // ensure visible
-
-    // Animate progress bar
-    setTimeout(() => {
-      const bar = document.getElementById('taskAdBar');
-      if (bar) { bar.style.width = '0%'; bar.style.transition = 'none'; }
-      requestAnimationFrame(() => requestAnimationFrame(() => {
-        if (bar) { bar.style.transition = 'width 15s linear'; bar.style.width = '100%'; }
-      }));
-    }, 80);
-
-    // ── AD: Sirf AppInventor/Kodular WebView ko URL bhejo ────────
-    // Popunder/SocialBar scripts yahan inject NAHI honge —
-    // Woh sirf _doCredit() ke andar chalenge jab user claim kare
-    const directUrl = 'https://www.effectivecpmnetwork.com/b1bggwx0?key=f1f69a147759698e8fda4cfd27e423ba&t=' + Date.now();
-    try {
-      if (window.AppInventor) {
-        window.AppInventor.setWebViewString(directUrl);
-      }
-    } catch(e) {}
-
-    // Notify Kodular/AppInventor that ad container is shown
-    try { window.AppInventor && window.AppInventor.setWebViewString('AD_SHOWING:' + type); } catch(e) {}
-    console.log('[AdListener] Ad overlay shown for type:', type);
-
-    // ── State tracking ───────────────────────────────────────────
-    let secsLeft       = 15;
-    let adWatchSuccess = false; // true only if onload fires
-    let hardLockTimer  = null;
-    let penaltyApplied = false; // true if back-btn pressed mid-ad
-    let creditFired    = false;
-    adHardLockActive   = true;
 
     history.pushState({ adLock: true }, '', location.href);
 
-    const statusEl = document.getElementById('taskAdStatus');
+    let secsLeft    = 20;
+    let timerActive = false;  // sirf Watch Ad button dabane ke baad true hoga
+    let adOpened    = false;  // kya user ad tab pe gaya
+    let penaltyApplied = false;
+    let creditFired = false;
+    let hardLockTimer = null;
+    adHardLockActive = true;
+
+    const watchBtn = document.getElementById('taskAdWatchBtn');
     const claimBtn = document.getElementById('taskAdClaimBtn');
-    const coinsEl  = document.getElementById('taskAdCoinsDisplay');
+    const statusEl = document.getElementById('taskAdStatus');
+    const numEl    = document.getElementById('taskAdCountNum');
+    const ringEl   = document.getElementById('taskAdRing');
+    const barEl    = document.getElementById('taskAdBar');
 
-    // ── 15-second hard-lock countdown ───────────────────────────
-    hardLockTimer = setInterval(() => {
-      if (penaltyApplied) { clearInterval(hardLockTimer); return; }
-      secsLeft--;
-      if (statusEl) statusEl.textContent = '⏳ Reward in ' + Math.max(0, secsLeft) + 's...';
+    // ── Timer helpers ──────────────────────────────────────────────
+    function updateDisplay() {
+      if (numEl) numEl.textContent = Math.max(0, secsLeft);
+      if (ringEl) ringEl.style.strokeDashoffset = (408.4 * (secsLeft / 20)).toFixed(1);
+    }
 
-      if (secsLeft <= 0) {
-        clearInterval(hardLockTimer);
-        adHardLockActive = false;
-
-        if (adWatchSuccess) {
-          // onload already confirmed — credit immediately
-          _doCredit();
-        } else {
-          // Waiting for ad server — show Collect button (only after 15s done)
+    function startTimer() {
+      if (hardLockTimer) return;
+      hardLockTimer = setInterval(() => {
+        if (penaltyApplied) { clearInterval(hardLockTimer); hardLockTimer = null; return; }
+        secsLeft--;
+        updateDisplay();
+        if (statusEl) statusEl.textContent = '⏳ Ad dekh rahe ho... ' + Math.max(0, secsLeft) + 's';
+        if (secsLeft <= 0) {
+          clearInterval(hardLockTimer); hardLockTimer = null;
+          adHardLockActive = false;
+          // ✅ 20s poore — Claim button dikhao
+          if (watchBtn) watchBtn.style.display = 'none';
           if (claimBtn) {
+            claimBtn.style.display = 'block';
             claimBtn.disabled = false;
-            claimBtn.textContent = '✅ Collect +' + coins + ' Coins';
-            claimBtn.style.cssText = 'width:100%;background:linear-gradient(135deg,#22c55e,#16a34a);border:none;border-radius:14px;padding:14px;color:#fff;font-size:15px;font-weight:800;cursor:pointer;font-family:Segoe UI,sans-serif;box-shadow:0 4px 20px rgba(34,197,94,0.4);';
+            claimBtn.textContent = '✅ Claim +' + coins + ' Coins';
+            claimBtn.style.cssText = 'display:block;width:100%;background:linear-gradient(135deg,#22c55e,#16a34a);border:none;border-radius:16px;padding:15px;color:#fff;font-size:16px;font-weight:800;cursor:pointer;box-shadow:0 4px 24px rgba(34,197,94,0.4);';
             claimBtn.onclick = _doCredit;
           }
-          if (statusEl) statusEl.textContent = '🎉 Ab collect karo!';
+          if (statusEl) statusEl.textContent = '🎉 Ab coins claim karo!';
+          document.removeEventListener('visibilitychange', onVisChange);
+        }
+      }, 1000);
+    }
+
+    function pauseTimer() {
+      if (hardLockTimer) { clearInterval(hardLockTimer); hardLockTimer = null; }
+    }
+
+    // ── Visibility change — user ad tab pe gaya / wapas aaya ─────
+    function onVisChange() {
+      if (penaltyApplied || creditFired) return;
+      if (document.hidden) {
+        // User ne ad tab khola — timer chalu karo (agar pehli baar hai)
+        if (adOpened && timerActive) startTimer();
+      } else {
+        // User wapas aaya app pe
+        pauseTimer();
+        if (secsLeft > 0 && !creditFired) {
+          // Abhi 20s poore nahi hue — "Wapas jao" screen dikhao
+          if (watchBtn) {
+            watchBtn.style.display = 'block';
+            watchBtn.textContent = '📺 Wapas Ad Par Jao';
+            watchBtn.style.background = 'linear-gradient(135deg,#ef4444,#dc2626)';
+          }
+          if (claimBtn) claimBtn.style.display = 'none';
+          if (statusEl) statusEl.textContent = '⚠️ Ad poori dekho — ' + secsLeft + 's baaki hai';
         }
       }
-    }, 1000);
+    }
+    document.addEventListener('visibilitychange', onVisChange);
 
-    // ── Strict penalty: called when back pressed before 15s ─────
+    // ── Watch Ad button ────────────────────────────────────────────
+    if (watchBtn) watchBtn.onclick = function() {
+      if (timerActive && adOpened) {
+        // Dobara "Wapas Ad Par Jao" — popunder fir se fire
+        firePopunder();
+        if (statusEl) statusEl.textContent = '⏳ Ad dekh rahe ho... ' + secsLeft + 's baaki';
+        if (watchBtn) { watchBtn.style.display = 'none'; }
+        adOpened = true;
+        startTimer();
+        return;
+      }
+      // Pehli baar Watch Ad dabaya
+      timerActive = true;
+      adOpened = true;
+      watchBtn.style.display = 'none';
+      if (claimBtn) claimBtn.style.display = 'block';
+      if (statusEl) statusEl.textContent = '⏳ Ad dekh rahe ho...';
+
+      // Progress bar
+      if (barEl) {
+        barEl.style.width = '0%'; barEl.style.transition = 'none';
+        requestAnimationFrame(() => requestAnimationFrame(() => {
+          barEl.style.transition = 'width 20s linear'; barEl.style.width = '100%';
+        }));
+      }
+
+      // Popunder fire — user gesture
+      firePopunder();
+
+      // Timer shuru
+      startTimer();
+    };
+
+    // ── Back button penalty ────────────────────────────────────────
     window._currentAdPenalty = function() {
       if (creditFired || penaltyApplied) return;
       penaltyApplied = true;
       adHardLockActive = false;
-      clearInterval(hardLockTimer);
-
-      // Hide overlay
+      pauseTimer();
+      document.removeEventListener('visibilitychange', onVisChange);
       if (overlay) overlay.style.display = 'none';
-
-      // Restore original button
       if (btn) {
         btn.disabled = false;
         btn.textContent = '📺 Watch Ad and Claim Coin';
         btn.style.background = 'linear-gradient(135deg,#f59e0b,#ef4444)';
       }
-
-      // ❌ 0 coins — do NOT increment count
-      showToast('❌ Penalty! Ad skipped early. 0 Coins rewarded.', '#ef4444');
-      console.warn('[AdListener] ' + type + ' — ad skipped before 15s. 0 coins.');
-      try { window.AppInventor && window.AppInventor.setWebViewString('AD_SKIP_PENALTY:' + type); } catch(e) {}
-
-      // Apply 1-min GLOBAL lock on ALL tasks as skip penalty
-      triggerGlobalLock();
-      onFail(); // 0 coins path
+      showToast('❌ 0 Coins — Ad skip kar di!', '#ef4444');
+      if (type !== 'checkin' && type !== 'bonus') triggerGlobalLock();
+      onFail();
     };
 
-    // ── Credit coins (only on success path) ─────────────────────
+    // ── Credit coins ───────────────────────────────────────────────
     function _doCredit() {
       if (creditFired || penaltyApplied) return;
       creditFired = true;
-
+      document.removeEventListener('visibilitychange', onVisChange);
       if (claimBtn) { claimBtn.disabled = true; claimBtn.textContent = '⏳ Crediting...'; }
-
-      // Sirf AppInventor ko notify karo — browser pe bahar ad nahi kholenge
-      try { window.AppInventor && window.AppInventor.setWebViewString('AD_CLAIM:' + type); } catch(e) {}
-
       creditCoins(coins, type).then(earned => {
         if (overlay) overlay.style.display = 'none';
         window._currentAdPenalty = null;
-
-        if (type !== 'survey') triggerGlobalLock();
-
-        try { window.AppInventor && window.AppInventor.setWebViewString('AD_SHOWED:' + type); } catch(e) {}
-        console.log('[AdListener] ' + type + ' coins credited:', earned);
+        if (type !== 'survey' && type !== 'checkin' && type !== 'bonus') triggerGlobalLock();
         onSuccess(earned);
       });
     }
-
-    // 15s baad auto-credit (no s.onload dependency anymore)
-    // Ad fires only inside _doCredit on claim button press
   }
 
   // ── SPIN CLAIM ────────────────────────────────────────────────
   function claimSpinReward(prize, spinBtn, spinResult) {
-    // Spin ka apna overlay — Watch Ad button dabao → popunder fire → 20s → Claim
-    if (spinBtn) { spinBtn.disabled = true; }
+    if (spinBtn) spinBtn.disabled = true;
 
     let overlay = document.getElementById('taskAdOverlay');
     if (!overlay) {
@@ -2839,123 +2848,168 @@
       overlay.id = 'taskAdOverlay';
       document.body.appendChild(overlay);
     }
-    overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:#05051a;z-index:99999;overflow:hidden;pointer-events:all;touch-action:none;display:flex;flex-direction:column;align-items:center;justify-content:space-between;';
+    overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:#05051a;z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:space-between;pointer-events:all;touch-action:none;';
 
     overlay.innerHTML =
-      // Header
       '<div style="width:100%;padding:20px 20px 0;box-sizing:border-box;text-align:center;">' +
-        '<div style="font-size:12px;color:rgba(255,255,255,0.3);letter-spacing:1.5px;text-transform:uppercase;">TASK</div>' +
-        '<div style="font-size:22px;font-weight:900;color:#fff;margin-top:4px;">🎡 Spin & Win</div>' +
+        '<div style="font-size:11px;color:rgba(255,255,255,0.3);letter-spacing:2px;text-transform:uppercase;">TASK</div>' +
+        '<div style="font-size:21px;font-weight:900;color:#fff;margin-top:4px;">🎡 Spin & Win</div>' +
         '<div style="width:100%;height:4px;background:rgba(255,255,255,0.08);border-radius:2px;margin-top:14px;">' +
           '<div id="spinAdBar" style="height:100%;width:0%;background:linear-gradient(90deg,#6c63ff,#f59e0b);border-radius:2px;transition:none;"></div>' +
         '</div>' +
       '</div>' +
-
-      // Center — countdown circle
-      '<div style="display:flex;flex-direction:column;align-items:center;gap:16px;">' +
-        '<div style="position:relative;width:160px;height:160px;">' +
-          '<svg width="160" height="160" style="transform:rotate(-90deg);">' +
-            '<circle cx="80" cy="80" r="70" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="8"/>' +
-            '<circle id="spinAdRing" cx="80" cy="80" r="70" fill="none" stroke="url(#spinGrad)" stroke-width="8" stroke-dasharray="439.8" stroke-dashoffset="439.8" stroke-linecap="round" style="transition:stroke-dashoffset 1s linear;"/>' +
+      '<div style="display:flex;flex-direction:column;align-items:center;gap:14px;">' +
+        '<div style="position:relative;width:150px;height:150px;">' +
+          '<svg width="150" height="150" style="transform:rotate(-90deg);">' +
+            '<circle cx="75" cy="75" r="65" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="8"/>' +
+            '<circle id="spinAdRing" cx="75" cy="75" r="65" fill="none" stroke="url(#spinGrad)" stroke-width="8" stroke-dasharray="408.4" stroke-dashoffset="408.4" stroke-linecap="round"/>' +
             '<defs><linearGradient id="spinGrad" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#6c63ff"/><stop offset="100%" stop-color="#f59e0b"/></linearGradient></defs>' +
           '</svg>' +
           '<div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;">' +
-            '<div id="spinAdCountNum" style="font-size:42px;font-weight:900;color:#fff;line-height:1;">20</div>' +
+            '<div id="spinAdCountNum" style="font-size:38px;font-weight:900;color:#fff;line-height:1;">20</div>' +
             '<div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:2px;">seconds</div>' +
           '</div>' +
         '</div>' +
-        '<div id="spinAdStatus" style="color:rgba(255,255,255,0.6);font-size:14px;font-weight:600;">Pehle Watch Ad dabao</div>' +
-        '<div style="display:flex;align-items:center;gap:8px;background:rgba(108,99,255,0.15);border:1.5px solid rgba(108,99,255,0.35);border-radius:50px;padding:8px 20px;">' +
-          '<span style="font-size:18px;">🪙</span>' +
-          '<span style="color:#a78bfa;font-size:16px;font-weight:800;">+' + prize + ' Coins</span>' +
+        '<div id="spinAdStatus" style="color:rgba(255,255,255,0.6);font-size:14px;font-weight:600;text-align:center;">📺 Watch Ad button dabao</div>' +
+        '<div style="display:flex;align-items:center;gap:8px;background:rgba(108,99,255,0.15);border:1.5px solid rgba(108,99,255,0.35);border-radius:50px;padding:8px 18px;">' +
+          '<span style="font-size:16px;">🪙</span>' +
+          '<span style="color:#a78bfa;font-size:15px;font-weight:800;">+' + prize + ' Coins</span>' +
         '</div>' +
       '</div>' +
-
-      // Bottom buttons
-      '<div style="width:100%;padding:0 20px 36px;box-sizing:border-box;">' +
-        '<div style="color:rgba(255,165,0,0.6);font-size:11px;text-align:center;margin-bottom:12px;">⚠️ Back button dabaoge toh 0 coins milenge (penalty)</div>' +
-        '<button id="spinAdWatchBtn" style="width:100%;background:linear-gradient(135deg,#6c63ff,#3b82f6);border:none;border-radius:16px;padding:16px;color:#fff;font-size:16px;font-weight:800;cursor:pointer;margin-bottom:10px;box-shadow:0 4px 20px rgba(108,99,255,0.4);">📺 Watch Ad</button>' +
-        '<button id="spinAdClaimBtn" disabled style="display:none;width:100%;background:rgba(255,255,255,0.08);border:1.5px solid rgba(255,255,255,0.12);border-radius:16px;padding:16px;color:rgba(255,255,255,0.3);font-size:16px;font-weight:800;cursor:not-allowed;">⏳ Please wait 20s...</button>' +
+      '<div style="width:100%;padding:0 20px 34px;box-sizing:border-box;">' +
+        '<div style="color:rgba(255,165,0,0.65);font-size:11px;text-align:center;margin-bottom:12px;">⚠️ Ad poori dekho — beech mein band kiya toh 0 coins</div>' +
+        '<button id="spinAdWatchBtn" style="width:100%;background:linear-gradient(135deg,#6c63ff,#3b82f6);border:none;border-radius:16px;padding:15px;color:#fff;font-size:16px;font-weight:800;cursor:pointer;margin-bottom:10px;box-shadow:0 4px 20px rgba(108,99,255,0.4);">📺 Watch Ad</button>' +
+        '<button id="spinAdClaimBtn" style="display:none;width:100%;background:rgba(255,255,255,0.07);border:1.5px solid rgba(255,255,255,0.1);border-radius:16px;padding:15px;color:rgba(255,255,255,0.3);font-size:16px;font-weight:800;cursor:not-allowed;">⏳ Please wait 20s...</button>' +
       '</div>';
 
-    overlay.style.display = 'flex';
     history.pushState({ adLock: true }, '', location.href);
 
-    let secsLeft = 20;
-    let timerStarted = false;
+    let secsLeft      = 20;
+    let timerActive   = false;
+    let adOpened      = false;
     let penaltyApplied = false;
-    adHardLockActive = true;
+    let creditFired   = false;
+    let hardLockTimer = null;
+    adHardLockActive  = true;
 
     const watchBtn2 = document.getElementById('spinAdWatchBtn');
     const claimBtn2 = document.getElementById('spinAdClaimBtn');
     const statusEl2 = document.getElementById('spinAdStatus');
+    const numEl2    = document.getElementById('spinAdCountNum');
+    const ringEl2   = document.getElementById('spinAdRing');
+    const barEl2    = document.getElementById('spinAdBar');
 
-    // Back button penalty
-    window._currentAdPenalty = function() {
-      penaltyApplied = true;
-      adHardLockActive = false;
-      overlay.style.display = 'none';
-      showToast('❌ Ad skip kiya — 0 Coins!', '#ef4444');
-      if (spinBtn) { spinBtn.disabled = false; }
-      triggerGlobalLock();
-    };
+    function updateDisplay2() {
+      if (numEl2) numEl2.textContent = Math.max(0, secsLeft);
+      if (ringEl2) ringEl2.style.strokeDashoffset = (408.4 * (secsLeft / 20)).toFixed(1);
+    }
 
-    // Watch Ad button — popunder fire + timer shuru
+    function startTimer2() {
+      if (hardLockTimer) return;
+      hardLockTimer = setInterval(() => {
+        if (penaltyApplied) { clearInterval(hardLockTimer); hardLockTimer = null; return; }
+        secsLeft--;
+        updateDisplay2();
+        if (statusEl2) statusEl2.textContent = '⏳ Ad dekh rahe ho... ' + Math.max(0, secsLeft) + 's';
+        if (secsLeft <= 0) {
+          clearInterval(hardLockTimer); hardLockTimer = null;
+          adHardLockActive = false;
+          document.removeEventListener('visibilitychange', onSpinVisChange);
+          if (watchBtn2) watchBtn2.style.display = 'none';
+          if (claimBtn2) {
+            claimBtn2.style.display = 'block';
+            claimBtn2.disabled = false;
+            claimBtn2.textContent = '✅ Claim +' + prize + ' Coins';
+            claimBtn2.style.cssText = 'display:block;width:100%;background:linear-gradient(135deg,#22c55e,#16a34a);border:none;border-radius:16px;padding:15px;color:#fff;font-size:16px;font-weight:800;cursor:pointer;box-shadow:0 4px 24px rgba(34,197,94,0.4);';
+            claimBtn2.onclick = _doSpinCredit;
+          }
+          if (statusEl2) statusEl2.textContent = '🎉 Ab coins claim karo!';
+        }
+      }, 1000);
+    }
+
+    function pauseTimer2() {
+      if (hardLockTimer) { clearInterval(hardLockTimer); hardLockTimer = null; }
+    }
+
+    // Visibility — user ad tab pe gaya / wapas aaya
+    function onSpinVisChange() {
+      if (penaltyApplied || creditFired) return;
+      if (document.hidden) {
+        if (adOpened && timerActive) startTimer2();
+      } else {
+        pauseTimer2();
+        if (secsLeft > 0 && !creditFired) {
+          if (watchBtn2) {
+            watchBtn2.style.display = 'block';
+            watchBtn2.textContent = '📺 Wapas Ad Par Jao';
+            watchBtn2.style.background = 'linear-gradient(135deg,#ef4444,#dc2626)';
+          }
+          if (claimBtn2) claimBtn2.style.display = 'none';
+          if (statusEl2) statusEl2.textContent = '⚠️ Ad poori dekho — ' + secsLeft + 's baaki hai';
+        }
+      }
+    }
+    document.addEventListener('visibilitychange', onSpinVisChange);
+
+    // Watch Ad button
     if (watchBtn2) watchBtn2.onclick = function() {
-      if (timerStarted) return;
-      timerStarted = true;
-
+      if (timerActive && adOpened) {
+        // Dobara "Wapas Ad Par Jao"
+        firePopunder();
+        watchBtn2.style.display = 'none';
+        if (claimBtn2) claimBtn2.style.display = 'block';
+        if (statusEl2) statusEl2.textContent = '⏳ Ad dekh rahe ho... ' + secsLeft + 's baaki';
+        startTimer2();
+        return;
+      }
+      timerActive = true;
+      adOpened = true;
       watchBtn2.style.display = 'none';
       if (claimBtn2) claimBtn2.style.display = 'block';
       if (statusEl2) statusEl2.textContent = '⏳ Ad dekh rahe ho...';
-
-      // Progress bar
-      const bar = document.getElementById('spinAdBar');
-      if (bar) {
-        bar.style.width = '0%'; bar.style.transition = 'none';
+      if (barEl2) {
+        barEl2.style.width = '0%'; barEl2.style.transition = 'none';
         requestAnimationFrame(() => requestAnimationFrame(() => {
-          bar.style.transition = 'width 20s linear'; bar.style.width = '100%';
+          barEl2.style.transition = 'width 20s linear'; barEl2.style.width = '100%';
         }));
       }
-
-      // Popunder fire — user gesture se
       firePopunder();
-
-      // 20s countdown
-      const timer = setInterval(() => {
-        if (penaltyApplied) { clearInterval(timer); return; }
-        secsLeft--;
-        const numEl = document.getElementById('spinAdCountNum');
-        if (numEl) numEl.textContent = Math.max(0, secsLeft);
-        const ring = document.getElementById('spinAdRing');
-        if (ring) ring.style.strokeDashoffset = (439.8 * (secsLeft / 20)).toFixed(1);
-        if (statusEl2) statusEl2.textContent = secsLeft > 0 ? '⏳ Ad dekh rahe ho...' : '🎉 Ab claim karo!';
-
-        if (secsLeft <= 0) {
-          clearInterval(timer);
-          adHardLockActive = false;
-          if (claimBtn2) {
-            claimBtn2.disabled = false;
-            claimBtn2.textContent = '✅ Claim +' + prize + ' Coins';
-            claimBtn2.style.cssText = 'display:block;width:100%;background:linear-gradient(135deg,#22c55e,#16a34a);border:none;border-radius:16px;padding:16px;color:#fff;font-size:16px;font-weight:800;cursor:pointer;box-shadow:0 4px 24px rgba(34,197,94,0.4);';
-            claimBtn2.onclick = function() {
-              claimBtn2.disabled = true;
-              claimBtn2.textContent = '⏳ Crediting...';
-              window._currentAdPenalty = null;
-              overlay.style.display = 'none';
-              creditCoins(prize, 'spin').then(earned => {
-                if (spinResult) spinResult.textContent = earned > 0 ? '✅ +' + earned + ' Coins credited! 🎉' : '';
-                if (earned > 0) showToast('+' + earned + ' Coins!', 'linear-gradient(135deg,#6c63ff,#3b82f6)');
-                if (spinBtn) { spinBtn.disabled = true; spinBtn.onclick = null; }
-                updateSpinUI();
-                updateDailyLimitUI();
-              });
-            };
-          }
-        }
-      }, 1000);
+      startTimer2();
     };
+
+    // Back button penalty
+    window._currentAdPenalty = function() {
+      if (creditFired || penaltyApplied) return;
+      penaltyApplied = true;
+      adHardLockActive = false;
+      pauseTimer2();
+      document.removeEventListener('visibilitychange', onSpinVisChange);
+      overlay.style.display = 'none';
+      showToast('❌ 0 Coins — Ad skip kar di!', '#ef4444');
+      if (spinBtn) { spinBtn.disabled = false; spinBtn.textContent = '📺 Watch Ad and Claim Coin'; }
+      triggerGlobalLock();
+    };
+
+    // Credit coins
+    function _doSpinCredit() {
+      if (creditFired || penaltyApplied) return;
+      creditFired = true;
+      document.removeEventListener('visibilitychange', onSpinVisChange);
+      if (claimBtn2) { claimBtn2.disabled = true; claimBtn2.textContent = '⏳ Crediting...'; }
+      window._currentAdPenalty = null;
+      overlay.style.display = 'none';
+      creditCoins(prize, 'spin').then(earned => {
+        if (spinResult) spinResult.textContent = earned > 0 ? '✅ +' + earned + ' Coins credited! 🎉' : '';
+        if (earned > 0) showToast('+' + earned + ' Coins!', 'linear-gradient(135deg,#6c63ff,#3b82f6)');
+        if (spinBtn) { spinBtn.disabled = true; spinBtn.onclick = null; }
+        triggerGlobalLock();
+        updateSpinUI();
+        updateDailyLimitUI();
+      });
+    }
   }
+
 
   // ── SCRATCH CLAIM ─────────────────────────────────────────────
   function claimScratchReward(prize, scratchResult, scratchBtn) {
