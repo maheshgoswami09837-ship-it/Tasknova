@@ -1498,6 +1498,13 @@
       return;
     }
 
+    // Log Ad Pending before redirect
+    logTaskActivity({
+      uid, taskType:'Ad', taskName:'📺 Watch Video Ad',
+      coins:10, status:'Pending',
+      extraData:{ startedAt:Date.now() }
+    });
+
     // watch_ad.html pe redirect karo (Chrome popup block bypass)
     window.location.href = 'https://tasknovaofficial.vercel.app/watch_ad.html';
   }
@@ -1557,6 +1564,17 @@
               document.querySelector('.user-coins').textContent   = newCoins + ' Coins';
               document.querySelector('.user-balance').textContent = '₹' + newBalance.toFixed(2);
               showReward(currentCoins);
+
+              // ── Log Ad Success (old adPopup flow) ───────────
+              logTaskActivity({
+                uid:      localUid,
+                taskType: 'Ad',
+                taskName: '📺 Watch Video Ad',
+                coins:    currentCoins,
+                status:   'Success',
+                extraData:{ completedAt: Date.now(), flow: 'adPopup' }
+              });
+              // ─────────────────────────────────────────────────
             });
           })
           .catch(e => console.log(e));
@@ -1633,6 +1651,18 @@
 
     // Open CPX survey wall in new tab
     const surveyUrl = 'https://offers.cpx-research.com/index.php?app_id=' + CPX_APP_ID + '&ext_user_id=' + uid;
+
+    // ── Log Pending entry immediately ─────────────────────────────
+    logTaskActivity({
+      uid,
+      taskType:  'Survey',
+      taskName:  '📋 CPX Survey Task',
+      coins:     0,          // coins known only on postback
+      status:    'Pending',
+      extraData: { surveyProvider: 'CPX Research', openedAt: Date.now() }
+    });
+    // ─────────────────────────────────────────────────────────────
+
     const a = document.createElement('a');
     a.href = surveyUrl;
     a.target = '_blank';
@@ -1773,6 +1803,17 @@
 
             showReward(coinsToAdd);
 
+            // ── Log Survey Success ────────────────────────────────
+            logTaskActivity({
+              uid:       targetUid,
+              taskType:  'Survey',
+              taskName:  '📋 CPX Survey Task',
+              coins:     coinsToAdd,
+              status:    'Success',
+              extraData: { transId: transId || 'N/A', provider: 'CPX Research' }
+            });
+            // ─────────────────────────────────────────────────────
+
             // Step 4: Trigger 30-min cooldown ONLY on confirmed Firebase success
             triggerSurveyCooldown();
 
@@ -1849,7 +1890,18 @@
         }
 
         creditCoins(coins, 'watchAd').then(earned => {
-          if (earned > 0) showToast('+' + earned + ' Coins! Video task complete! 📺🎉', 'linear-gradient(135deg,#6c63ff,#3b82f6)');
+          if (earned > 0) {
+            showToast('+' + earned + ' Coins! Video task complete! 📺🎉', 'linear-gradient(135deg,#6c63ff,#3b82f6)');
+            // Log Ad Success (credited via watch_ad.html redirect)
+            const _wuid = localStorage.getItem('tasknova_uid');
+            if (_wuid && _wuid !== 'null') {
+              logTaskActivity({
+                uid:_wuid, taskType:'Ad', taskName:'📺 Watch Video Ad',
+                coins: earned, status:'Success',
+                extraData:{ completedAt:Date.now() }
+              });
+            }
+          }
           updateAdButtonUI();
           updateDailyLimitUI();
         });
@@ -2099,14 +2151,65 @@
 
   // Task type ke liye readable names
   const TASK_NAMES = {
-    'watchAd': '📺 Video Watch Task',
-    'spin':    '🎡 Spin the Wheel',
-    'scratch': '🎴 Scratch Card',
-    'quiz':    '🧠 Quiz Task',
-    'checkin': '✅ Daily Check-in',
-    'bonus':   '🎁 Daily Bonus',
-    'survey':  '📋 Survey Task',
+    'watchAd':   '📺 Video Watch Task',
+    'spin':      '🎡 Spin the Wheel',
+    'scratch':   '🎴 Scratch Card',
+    'quiz':      '🧠 Quiz Task',
+    'checkin':   '✅ Daily Check-in',
+    'bonus':     '🎁 Daily Bonus',
+    'survey':    '📋 Survey Task',
+    'offerwall': '🎁 Offerwall Task',
+    'shortlink': '🔗 Shortlink Task',
   };
+
+  // ── UNIVERSAL TASK LOGGER ────────────────────────────────────────
+  // Firebase ke /taskLog/{uid}/ node mein ek entry push karta hai.
+  // status: 'Pending' | 'Success'
+  // taskType: 'Offerwall' | 'Survey' | 'Shortlink' | 'Ad' | 'Spin' | 'Scratch' | 'Quiz' | 'Checkin' | 'Bonus'
+  async function logTaskActivity({ uid, taskType, taskName, coins, status, extraData }) {
+    if (!uid || uid === 'null') return null;
+    const entry = {
+      userId:    uid,
+      taskType:  taskType,
+      taskName:  taskName  || taskType,
+      coins:     coins     || 0,
+      status:    status    || 'Pending',
+      timestamp: Date.now(),
+      ...(extraData || {})
+    };
+    try {
+      const token = await (window._getAuthToken ? window._getAuthToken() : Promise.resolve(null));
+      const ap    = token ? '?auth=' + token : '';
+      const res   = await fetch(DB_URL + '/taskLog/' + uid + '.json' + ap, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify(entry)
+      });
+      const result = await res.json();
+      console.log('[TaskLog] Logged:', taskType, status, '| key:', result && result.name);
+      return result && result.name; // Firebase push key
+    } catch(e) {
+      console.warn('[TaskLog] Failed to log:', e);
+      return null;
+    }
+  }
+
+  // Update an existing log entry status (e.g. Pending → Success)
+  async function updateTaskLogStatus(uid, logKey, newStatus, coinsActual) {
+    if (!uid || !logKey) return;
+    try {
+      const token = await (window._getAuthToken ? window._getAuthToken() : Promise.resolve(null));
+      const ap    = token ? '?auth=' + token : '';
+      const patch = { status: newStatus };
+      if (coinsActual !== undefined) patch.coins = coinsActual;
+      await fetch(DB_URL + '/taskLog/' + uid + '/' + logKey + '.json' + ap, {
+        method:  'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify(patch)
+      });
+    } catch(e) { console.warn('[TaskLog] Update failed:', e); }
+  }
+  // ────────────────────────────────────────────────────────────────
 
   async function creditCoins(amount, type) {
     const d = getDailyData();
@@ -2131,28 +2234,30 @@
           .then(data => {
             const newCoins = (data.coins || 0) + actual;
             const newBalance = parseFloat((newCoins / 100).toFixed(2));
+            const newTasks   = (data.tasksDone || 0) + 1;
             fetch(DB_URL + '/users/' + uid + '.json' + ap, {
               method: 'PATCH',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ coins: newCoins, balance: newBalance, totalEarned: newBalance })
+              body: JSON.stringify({ coins: newCoins, balance: newBalance, totalEarned: newBalance, tasksDone: newTasks })
             }).then(() => {
-              document.querySelector('.user-coins').textContent = newCoins + ' Coins';
+              document.querySelector('.user-coins').textContent   = newCoins + ' Coins';
               document.querySelector('.user-balance').textContent = '₹' + newBalance.toFixed(2);
 
-              // ── TASK HISTORY SAVE ──────────────────────────────
-              const historyEntry = {
-                title: TASK_NAMES[type] || ('Task: ' + type),
-                type: type,
-                coinsEarned: actual,
-                status: 'completed',
-                completedAt: Date.now()
+              // ── UNIFIED TASK LOG (Success) ─────────────────────
+              const typeMap = {
+                watchAd:   'Ad',      spin:    'Spin',
+                scratch:   'Scratch', quiz:    'Quiz',
+                checkin:   'Checkin', bonus:   'Bonus',
+                survey:    'Survey',  offerwall:'Offerwall',
+                shortlink: 'Shortlink'
               };
-              fetch(DB_URL + '/users/' + uid + '/taskHistory.json' + ap, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(historyEntry)
-              }).then(() => console.log('[TaskHistory] Saved:', type, actual))
-                .catch(e => console.warn('[TaskHistory] Save failed:', e));
+              logTaskActivity({
+                uid,
+                taskType:  typeMap[type] || type,
+                taskName:  TASK_NAMES[type] || ('Task: ' + type),
+                coins:     actual,
+                status:    'Success'
+              });
               // ─────────────────────────────────────────────────
             });
           });
@@ -2779,6 +2884,23 @@
       if (claimBtn) claimBtn.style.display = 'block';
       if (statusEl) statusEl.textContent = '⏳ Ad dekh rahe ho...';
 
+      // ── Log Ad Pending for Spin/Scratch/Quiz overlay ────────
+      (function() {
+        const _puid = localStorage.getItem('tasknova_uid');
+        if (_puid && _puid !== 'null') {
+          const typeLabel = type === 'spin' ? '🎡 Spin & Win Ad'
+                         : type === 'scratch' ? '🎴 Scratch Card Ad'
+                         : type === 'quiz' ? '🧠 Quiz Ad'
+                         : '📺 Task Ad';
+          logTaskActivity({
+            uid: _puid, taskType: 'Ad', taskName: typeLabel,
+            coins: coins, status: 'Pending',
+            extraData: { taskSubType: type, startedAt: Date.now() }
+          });
+        }
+      })();
+      // ─────────────────────────────────────────────────────────
+
       // Progress bar
       if (barEl) {
         barEl.style.width = '0%'; barEl.style.transition = 'none';
@@ -2963,6 +3085,18 @@
           barEl2.style.transition = 'width 20s linear'; barEl2.style.width = '100%';
         }));
       }
+      // ── Log Spin Ad Pending ──────────────────────────────────
+      (function(){
+        const _suid = localStorage.getItem('tasknova_uid');
+        if (_suid && _suid !== 'null') {
+          logTaskActivity({
+            uid:_suid, taskType:'Ad', taskName:'🎡 Spin & Win Ad',
+            coins: prize, status:'Pending',
+            extraData:{ taskSubType:'spin', startedAt:Date.now() }
+          });
+        }
+      })();
+      // ─────────────────────────────────────────────────────────
       // Popunder Watch Ad button pe fire — user gesture guaranteed
       firePopunder();
       startTimer2();
@@ -3278,6 +3412,14 @@
         }
         slVisited = true;
 
+        // ── Log Shortlink Pending ──────────────────────────────
+        logTaskActivity({
+          uid: uid2, taskType:'Shortlink', taskName:'🔗 Shortlink Task',
+          coins: SL_COINS, status:'Pending',
+          extraData:{ shortUrl, taskIndex, visitedAt:Date.now() }
+        });
+        // ─────────────────────────────────────────────────────
+
         visitBtn.textContent = '✅ Link Visited!';
         visitBtn.style.background = 'rgba(34,197,94,0.15)';
         visitBtn.style.color = '#22c55e';
@@ -3372,6 +3514,15 @@
             slVisited = false;
 
             showToast('+20 Coins! Shortlink task complete! 🔗', 'linear-gradient(135deg,#6c63ff,#3b82f6)');
+
+            // ── Log Shortlink Success ──────────────────────────
+            logTaskActivity({
+              uid, taskType:'Shortlink', taskName:'🔗 Shortlink Task',
+              coins: SL_COINS, status:'Success',
+              extraData:{ claimedAt:Date.now() }
+            });
+            // ─────────────────────────────────────────────────
+
             updateSlUI();
 
             // Visit button reset for next task
@@ -3411,8 +3562,15 @@
   // ── SHORTLINK TASK END ────────────────────────────────────────
   // ── OFFERWALL ────────────────────────────────────────────────
   function openOfferwallPage() {
-    // cpalead_offerwall.html same folder mein honi chahiye
-    window.location.href = 'cpalead_offerwall.html';
+    const uid = localStorage.getItem('tasknova_uid');
+    if (uid && uid !== 'null') {
+      logTaskActivity({
+        uid, taskType:'Offerwall', taskName:'🎁 Offerwall Tasks',
+        coins:0, status:'Pending',
+        extraData:{ offerwallProvider:'CPALead', openedAt:Date.now() }
+      });
+    }
+    window.location.href = 'cpalead_offerwall.html?uid=' + (uid || '');
   }
   // ── OFFERWALL END ────────────────────────────────────────────
 
