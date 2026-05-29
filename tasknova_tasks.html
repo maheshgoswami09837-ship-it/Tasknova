@@ -1498,12 +1498,15 @@
       return;
     }
 
+    // ── pendingAdReward set karo (watch_ad.html return pe zaruri) ──
+    localStorage.setItem('pendingAdReward', JSON.stringify({ coins: 10, ts: Date.now() }));
+
     // ── Log Pending — AWAIT karo taaki Firebase write complete ho ──
     try {
       await logTaskActivity({
         uid, taskType:'Ad', taskName:'📺 Watch Video Ad',
-        coins:10, status:'Pending',
-        extraData:{ startedAt:Date.now() }
+        coins: 10, status:'Pending',
+        extraData:{ startedAt: Date.now() }
       });
     } catch(e) { console.warn('[watchAd] Pending log failed:', e); }
     // ────────────────────────────────────────────────────────────────
@@ -1895,15 +1898,6 @@
         creditCoins(coins, 'watchAd').then(earned => {
           if (earned > 0) {
             showToast('+' + earned + ' Coins! Video task complete! 📺🎉', 'linear-gradient(135deg,#6c63ff,#3b82f6)');
-            // Log Ad Success (credited via watch_ad.html redirect)
-            const _wuid = localStorage.getItem('tasknova_uid');
-            if (_wuid && _wuid !== 'null') {
-              logTaskActivity({
-                uid:_wuid, taskType:'Ad', taskName:'📺 Watch Video Ad',
-                coins: earned, status:'Success',
-                extraData:{ completedAt:Date.now() }
-              });
-            }
           }
           updateAdButtonUI();
           updateDailyLimitUI();
@@ -2189,7 +2183,7 @@
       }
       const token = window._getAuthToken ? await window._getAuthToken() : null;
       const ap    = token ? '?auth=' + token : '';
-      const res   = await fetch(DB_URL + '/taskLog/' + uid + '.json' + ap, {
+      const res   = await fetch(DB_URL + '/users/' + uid + '/taskHistory.json' + ap, {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
         body:    JSON.stringify(entry)
@@ -2212,7 +2206,7 @@
       const ap    = token ? '?auth=' + token : '';
       const patch = { status: newStatus };
       if (coinsActual !== undefined) patch.coins = coinsActual;
-      await fetch(DB_URL + '/taskLog/' + uid + '/' + logKey + '.json' + ap, {
+      await fetch(DB_URL + '/users/' + uid + '/taskHistory/' + logKey + '.json' + ap, {
         method:  'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body:    JSON.stringify(patch)
@@ -2253,12 +2247,12 @@
               document.querySelector('.user-coins').textContent   = newCoins + ' Coins';
               document.querySelector('.user-balance').textContent = '₹' + newBalance.toFixed(2);
 
-              // ── UNIFIED TASK LOG (Success) ─────────────────────
+              // ── UNIFIED TASK LOG (Success) — Single source of truth ──
               const typeMap = {
-                watchAd:   'Ad',      spin:    'Spin',
-                scratch:   'Scratch', quiz:    'Quiz',
-                checkin:   'Checkin', bonus:   'Bonus',
-                survey:    'Survey',  offerwall:'Offerwall',
+                watchAd:   'Ad',       spin:      'Spin',
+                scratch:   'Scratch',  quiz:      'Quiz',
+                checkin:   'Checkin',  bonus:     'Bonus',
+                survey:    'Survey',   offerwall: 'Offerwall',
                 shortlink: 'Shortlink'
               };
               logTaskActivity({
@@ -2266,9 +2260,10 @@
                 taskType:  typeMap[type] || type,
                 taskName:  TASK_NAMES[type] || ('Task: ' + type),
                 coins:     actual,
-                status:    'Success'
-              });
-              // ─────────────────────────────────────────────────
+                status:    'Success',
+                extraData: { creditedAt: Date.now() }
+              }).catch(e => console.warn('[TaskLog] creditCoins log failed:', e));
+              // ──────────────────────────────────────────────────────
             });
           });
       });
