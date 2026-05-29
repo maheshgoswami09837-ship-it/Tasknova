@@ -549,42 +549,32 @@
       const token = await window._getAuthToken();
       const ap    = token ? '?auth=' + token : '';
 
-      // Primary source: /taskLog/{uid}  (new unified log from tasks file)
-      // Fallback: /users/{uid}/taskHistory  (old completed-only log)
-      const [newLog, oldLog] = await Promise.all([
-        fetch(DB_BASE + '/taskLog/' + uid + '.json' + ap).then(r => r.json()).catch(() => null),
-        fetch(DB_BASE + '/users/' + uid + '/taskHistory.json' + ap).then(r => r.json()).catch(() => null),
-      ]);
+      // Single source: /users/{uid}/taskHistory — sab tasks yahan log hote hain
+      const rawData = await fetch(DB_BASE + '/users/' + uid + '/taskHistory.json' + ap)
+        .then(r => r.json()).catch(() => null);
 
       const combined = {};
 
-      // New log (primary) — contains Pending & Success entries for all task types
-      if (newLog && typeof newLog === 'object') {
-        Object.entries(newLog).forEach(([key, val]) => {
-          if (val && typeof val === 'object') combined['nl_' + key] = { ...val, _source: 'newLog' };
+      if (rawData && typeof rawData === 'object') {
+        Object.entries(rawData).forEach(([key, val]) => {
+          if (!val || typeof val !== 'object') return;
+          // Normalize: naye entries (taskType/status fields) aur purane entries (title/coinsEarned)
+          combined[key] = {
+            id:        key,
+            userId:    val.userId    || uid,
+            taskType:  val.taskType  || val.type  || 'Other',
+            taskName:  val.taskName  || val.title || val.name || 'Task',
+            coins:     parseFloat(val.coins || val.coinsEarned || val.reward || 0),
+            status:    val.status === 'completed' ? 'Success'
+                     : val.status === 'Success'   ? 'Success'
+                     : val.status === 'Pending'   ? 'Pending'
+                     : 'Success', // legacy entries = completed
+            timestamp: val.timestamp || val.completedAt || val.date || 0,
+          };
         });
       }
 
-      // Old log (legacy completed tasks) — only add if key not already present
-      if (oldLog && typeof oldLog === 'object') {
-        Object.entries(oldLog).forEach(([key, val]) => {
-          if (val && typeof val === 'object' && !combined['nl_' + key]) {
-            // Normalize old entries to new schema
-            combined['ol_' + key] = {
-              userId:    uid,
-              taskType:  val.type || 'Other',
-              taskName:  val.title || val.taskName || val.name || 'Task',
-              coins:     parseFloat(val.coinsEarned || val.coins || val.reward || 0),
-              status:    val.status === 'completed' ? 'Success' : (val.status || 'Success'),
-              timestamp: val.completedAt || val.timestamp || val.date || 0,
-              _source:   'oldLog'
-            };
-          }
-        });
-      }
-
-      allTaskHistory = Object.entries(combined)
-        .map(([key, val]) => ({ id: key, ...val }))
+      allTaskHistory = Object.values(combined)
         .sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
 
       renderTaskHistory();
