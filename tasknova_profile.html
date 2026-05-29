@@ -531,6 +531,20 @@
       '<div style="font-size:40px;margin-bottom:12px;">⏳</div>' +
       '<div style="font-size:14px;">History load ho rahi hai...</div></div>';
 
+    // Wait for Firebase module to be ready (module script async hota hai)
+    let waitMs = 0;
+    while (!window._getAuthToken && waitMs < 5000) {
+      await new Promise(r => setTimeout(r, 100));
+      waitMs += 100;
+    }
+    if (!window._getAuthToken) {
+      document.getElementById('taskHistoryList').innerHTML =
+        '<div style="text-align:center;padding:40px 20px;color:rgba(239,68,68,0.7);">' +
+        '<div style="font-size:32px;margin-bottom:10px;">⚠️</div>' +
+        '<div>Firebase ready nahi — refresh karo</div></div>';
+      return;
+    }
+
     try {
       const token = await window._getAuthToken();
       const ap    = token ? '?auth=' + token : '';
