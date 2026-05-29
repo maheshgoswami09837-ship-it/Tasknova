@@ -1477,7 +1477,7 @@
     }, 1000);
   }
 
-  function watchAd() {
+  async function watchAd() {
     const uid = localStorage.getItem('tasknova_uid');
     if (!uid || uid === 'null') { showToast('Pehle login karo!', '#ef4444'); return; }
     if (isGlobalLocked()) return;
@@ -1498,12 +1498,15 @@
       return;
     }
 
-    // Log Ad Pending before redirect
-    logTaskActivity({
-      uid, taskType:'Ad', taskName:'📺 Watch Video Ad',
-      coins:10, status:'Pending',
-      extraData:{ startedAt:Date.now() }
-    });
+    // ── Log Pending — AWAIT karo taaki Firebase write complete ho ──
+    try {
+      await logTaskActivity({
+        uid, taskType:'Ad', taskName:'📺 Watch Video Ad',
+        coins:10, status:'Pending',
+        extraData:{ startedAt:Date.now() }
+      });
+    } catch(e) { console.warn('[watchAd] Pending log failed:', e); }
+    // ────────────────────────────────────────────────────────────────
 
     // watch_ad.html pe redirect karo (Chrome popup block bypass)
     window.location.href = 'https://tasknovaofficial.vercel.app/watch_ad.html';
@@ -1652,15 +1655,15 @@
     // Open CPX survey wall in new tab
     const surveyUrl = 'https://offers.cpx-research.com/index.php?app_id=' + CPX_APP_ID + '&ext_user_id=' + uid;
 
-    // ── Log Pending entry immediately ─────────────────────────────
+    // ── Log Pending — fire and forget (no await — tab open nahi rukna chahiye) ──
     logTaskActivity({
       uid,
       taskType:  'Survey',
       taskName:  '📋 CPX Survey Task',
-      coins:     0,          // coins known only on postback
+      coins:     0,
       status:    'Pending',
       extraData: { surveyProvider: 'CPX Research', openedAt: Date.now() }
-    });
+    }).catch(e => console.warn('[Survey] Pending log failed:', e));
     // ─────────────────────────────────────────────────────────────
 
     const a = document.createElement('a');
@@ -2178,18 +2181,25 @@
       ...(extraData || {})
     };
     try {
-      const token = await (window._getAuthToken ? window._getAuthToken() : Promise.resolve(null));
+      // Wait for Firebase module if not ready yet
+      let waited = 0;
+      while (!window._getAuthToken && waited < 4000) {
+        await new Promise(r => setTimeout(r, 100));
+        waited += 100;
+      }
+      const token = window._getAuthToken ? await window._getAuthToken() : null;
       const ap    = token ? '?auth=' + token : '';
       const res   = await fetch(DB_URL + '/taskLog/' + uid + '.json' + ap, {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
         body:    JSON.stringify(entry)
       });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
       const result = await res.json();
-      console.log('[TaskLog] Logged:', taskType, status, '| key:', result && result.name);
-      return result && result.name; // Firebase push key
+      console.log('[TaskLog] ✅ Logged:', taskType, status, '| key:', result && result.name);
+      return result && result.name;
     } catch(e) {
-      console.warn('[TaskLog] Failed to log:', e);
+      console.warn('[TaskLog] ❌ Failed:', taskType, status, e.message);
       return null;
     }
   }
@@ -3561,14 +3571,16 @@
   }
   // ── SHORTLINK TASK END ────────────────────────────────────────
   // ── OFFERWALL ────────────────────────────────────────────────
-  function openOfferwallPage() {
+  async function openOfferwallPage() {
     const uid = localStorage.getItem('tasknova_uid');
     if (uid && uid !== 'null') {
-      logTaskActivity({
-        uid, taskType:'Offerwall', taskName:'🎁 Offerwall Tasks',
-        coins:0, status:'Pending',
-        extraData:{ offerwallProvider:'CPALead', openedAt:Date.now() }
-      });
+      try {
+        await logTaskActivity({
+          uid, taskType:'Offerwall', taskName:'🎁 Offerwall Tasks',
+          coins:0, status:'Pending',
+          extraData:{ offerwallProvider:'CPALead', openedAt:Date.now() }
+        });
+      } catch(e) { console.warn('[Offerwall] log failed:', e); }
     }
     window.location.href = 'cpalead_offerwall.html?uid=' + (uid || '');
   }
