@@ -168,10 +168,14 @@
 </div>
 
 <script>
-  const AD_URL     = 'https://omg10.com/4/11063028';
-  const RETURN_URL = 'https://tasknovaofficial.vercel.app/tasknova_tasks.html?status=success&task=video1';
-  const TOTAL_SECS = 20;
-  const CIRCUMF    = 2 * Math.PI * 55;
+  const MONETAG_URL  = 'https://omg10.com/4/11063028';
+  const ADSTERRA_URL = 'https://www.effectivecpmnetwork.com/b1bggwx0?key=f1f69a147759698e8fda4cfd27e423ba';
+  const RETURN_URL   = 'https://tasknovaofficial.vercel.app/tasknova_tasks.html?status=success&task=video1';
+  const TOTAL_SECS   = 20;
+  const CIRCUMF      = 2 * Math.PI * 55;
+
+  // Tasks page ne jo URL set kiya — wahi use karo
+  const AD_URL = localStorage.getItem('currentAdUrl') || MONETAG_URL;
 
   let secsLeft     = TOTAL_SECS;
   let adOpened     = false;
