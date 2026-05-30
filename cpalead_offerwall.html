@@ -10,22 +10,22 @@
   body {
     font-family: 'Segoe UI', sans-serif;
     background: #05051a;
-    min-height: 100vh;
+    height: 100vh;
     color: #fff;
     display: flex;
     flex-direction: column;
+    overflow: hidden;
   }
 
-  /* Background glows */
   .glow-1 { position: fixed; width: 300px; height: 300px; background: rgba(108,99,255,0.18); border-radius: 50%; filter: blur(80px); top: -100px; left: -100px; pointer-events: none; z-index: 0; }
   .glow-2 { position: fixed; width: 250px; height: 250px; background: rgba(59,130,246,0.13); border-radius: 50%; filter: blur(80px); bottom: -80px; right: -80px; pointer-events: none; z-index: 0; }
 
-  /* Header */
+  /* ── Header ── */
   .top-bar {
     position: relative; z-index: 10;
-    padding: 16px 16px 12px;
+    padding: 14px 16px 10px;
     display: flex; align-items: center; gap: 14px;
-    background: rgba(5,5,26,0.85);
+    background: rgba(5,5,26,0.95);
     backdrop-filter: blur(12px);
     border-bottom: 1px solid rgba(255,255,255,0.07);
     flex-shrink: 0;
@@ -33,39 +33,90 @@
   .back-btn {
     background: rgba(255,255,255,0.10);
     border: 1.5px solid rgba(255,255,255,0.18);
-    color: #fff; width: 42px; height: 42px;
+    color: #fff; width: 40px; height: 40px;
     border-radius: 13px; font-size: 22px; cursor: pointer;
     display: flex; align-items: center; justify-content: center;
     flex-shrink: 0; transition: background 0.18s, transform 0.12s;
-    line-height: 1;
   }
   .back-btn:active { background: rgba(108,99,255,0.3); transform: scale(0.92); }
-
-  .header-text h1 { font-size: 18px; font-weight: 800; }
+  .header-text h1 { font-size: 17px; font-weight: 800; }
   .header-text p  { font-size: 11px; color: rgba(255,255,255,0.4); margin-top: 2px; }
 
-  /* iFrame fills remaining height */
+  /* ── Instruction banner ── */
+  .instruction-bar {
+    position: relative; z-index: 10;
+    background: rgba(108,99,255,0.13);
+    border-bottom: 1px solid rgba(108,99,255,0.25);
+    padding: 0 12px;
+    flex-shrink: 0;
+    overflow: hidden;
+    max-height: 200px;
+    transition: max-height 0.35s ease, padding 0.3s;
+  }
+  .instruction-bar.collapsed {
+    max-height: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+    border-bottom-color: transparent;
+  }
+  .instruction-inner { padding: 10px 0 8px; }
+
+  .instr-row {
+    display: flex; align-items: flex-start; gap: 8px;
+    padding: 7px 10px;
+    border-radius: 10px;
+    margin-bottom: 6px;
+    font-size: 12px; line-height: 1.45;
+  }
+  .instr-row:last-of-type { margin-bottom: 0; }
+  .instr-row.signup {
+    background: rgba(239,68,68,0.1);
+    border: 1px solid rgba(239,68,68,0.25);
+    color: #fca5a5;
+  }
+  .instr-row.install {
+    background: rgba(59,130,246,0.1);
+    border: 1px solid rgba(59,130,246,0.25);
+    color: #93c5fd;
+  }
+  .instr-icon { font-size: 14px; flex-shrink: 0; margin-top: 1px; }
+  .instr-text strong { display: block; font-weight: 700; font-size: 11.5px; margin-bottom: 1px; }
+
+  .toggle-bar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 7px 10px 7px;
+    cursor: pointer; user-select: none;
+  }
+  .toggle-label { font-size: 11.5px; font-weight: 700; color: rgba(255,255,255,0.5); letter-spacing: 0.3px; }
+  .toggle-arrow  { font-size: 12px; color: rgba(255,255,255,0.35); transition: transform 0.3s; }
+  .instruction-bar:not(.collapsed) .toggle-arrow { transform: rotate(180deg); }
+
+  /* ── iFrame area ── */
   .offerwall-wrap {
     position: relative; z-index: 1;
-    flex: 1; display: flex; flex-direction: column;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
   }
   .offerwall-wrap iframe {
     flex: 1;
     width: 100%;
-    min-height: calc(100vh - 74px);
+    height: 100%;
     border: none;
     display: block;
   }
 
-  /* Loading overlay */
+  /* ── Loading overlay ── */
   .loading-overlay {
     position: absolute; inset: 0;
     display: flex; flex-direction: column;
     align-items: center; justify-content: center; gap: 14px;
     background: #05051a; z-index: 5; pointer-events: none;
+    transition: opacity 0.4s;
   }
   .spinner {
-    width: 42px; height: 42px;
+    width: 40px; height: 40px;
     border: 3px solid rgba(108,99,255,0.2);
     border-top-color: #6c63ff;
     border-radius: 50%;
@@ -73,7 +124,7 @@
   }
   @keyframes spin { to { transform: rotate(360deg); } }
   .loading-overlay p { font-size: 13px; color: rgba(255,255,255,0.4); }
-  .loading-overlay.hidden { display: none; }
+  .loading-overlay.hidden { opacity: 0; pointer-events: none; }
 </style>
 </head>
 <body>
@@ -90,13 +141,36 @@
   </div>
 </div>
 
-<!-- Offerwall -->
+<!-- Instruction Banner -->
+<div class="instruction-bar" id="instrBar">
+  <div class="toggle-bar" onclick="toggleInstr()">
+    <span class="toggle-label">📋 TASK INSTRUCTIONS — ZAROOR PADHO</span>
+    <span class="toggle-arrow">▼</span>
+  </div>
+  <div class="instruction-inner">
+    <div class="instr-row signup">
+      <span class="instr-icon">📌</span>
+      <div class="instr-text">
+        <strong>Sign-up / Register / CPA Offers</strong>
+        Naya account banao + OTP verify karo — sirf download karne pe 0 coins milenge!
+      </div>
+    </div>
+    <div class="instr-row install">
+      <span class="instr-icon">📌</span>
+      <div class="instr-text">
+        <strong>Install / CPI / Download Offers</strong>
+        App install karo aur kam se kam 2 minute open rakho tabhi reward milega.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Offerwall iframe -->
 <div class="offerwall-wrap">
   <div class="loading-overlay" id="loadingOverlay">
     <div class="spinner"></div>
-    <p>Loading offers…</p>
+    <p>Offers load ho rahe hain…</p>
   </div>
-
   <iframe
     id="offerwallFrame"
     sandbox="allow-popups allow-same-origin allow-scripts allow-top-navigation-by-user-activation allow-popups-to-escape-sandbox"
@@ -113,12 +187,18 @@
   frame.addEventListener('load', function () {
     overlay.classList.add('hidden');
   });
-
-  // Fallback: hide loader after 8s even if load event doesn't fire
   setTimeout(function () {
     overlay.classList.add('hidden');
   }, 8000);
-</script>
 
+  // Instruction bar toggle
+  function toggleInstr() {
+    document.getElementById('instrBar').classList.toggle('collapsed');
+  }
+  // Auto collapse after 6 seconds
+  setTimeout(function () {
+    document.getElementById('instrBar').classList.add('collapsed');
+  }, 6000);
+</script>
 </body>
 </html>
