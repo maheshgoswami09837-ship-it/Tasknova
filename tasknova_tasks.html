@@ -351,7 +351,7 @@
         <p>Watch a short video ad & earn coins</p>
         <div class="task-meta">
           <span class="task-time">⏱ 15 sec</span>
-          <span id="adCounter" style="font-size:11px;color:#6c63ff;font-weight:700;margin-left:8px;">0/5</span>
+          <span id="adCounter" style="font-size:11px;color:#6c63ff;font-weight:700;margin-left:8px;">0/20</span>
         </div>
       </div>
       <div class="task-reward">
@@ -392,7 +392,7 @@
         <p>Wheel spin karo aur coins jeeto</p>
         <div class="task-meta">
           <span class="task-time">⏱ 15/day</span>
-          <span id="spinCountBadge" class="cooldown-badge">0/3</span>
+          <span id="spinCountBadge" class="cooldown-badge">0/6</span>
         </div>
       </div>
       <div class="task-reward">
@@ -513,7 +513,7 @@
 
       <!-- Reset info -->
       <div style="text-align:center;margin-top:16px;color:rgba(255,255,255,0.3);font-size:11px;">
-        🕛 Raat 12 baje reset hota hai
+        🕛 Raat 12 baje (midnight) reset hota hai
       </div>
 
     </div>
@@ -582,7 +582,7 @@
   <div style="display:flex;gap:10px;width:100%;margin-bottom:20px;">
     <div style="flex:1;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:10px 14px;text-align:center;">
       <div style="font-size:10px;color:rgba(255,255,255,0.35);margin-bottom:2px;">Spins Today</div>
-      <div style="font-size:17px;font-weight:800;color:#fff;"><span id="spinCountText">0</span><span style="color:rgba(255,255,255,0.3);font-size:12px;">/3</span></div>
+      <div style="font-size:17px;font-weight:800;color:#fff;"><span id="spinCountText">0</span><span style="color:rgba(255,255,255,0.3);font-size:12px;">/6</span></div>
     </div>
     <div style="flex:1;background:rgba(108,99,255,0.1);border:1px solid rgba(108,99,255,0.25);border-radius:14px;padding:10px 14px;text-align:center;">
       <div style="font-size:10px;color:rgba(255,255,255,0.35);margin-bottom:2px;">Win Up To</div>
@@ -848,20 +848,18 @@
     }
   }
 
-  // Returns the most recent 7:30 PM IST reset timestamp (in ms, UTC-based)
+  // Returns the most recent midnight (12:00 AM) IST reset timestamp (in ms, UTC-based)
   function getLast730PMReset() {
     const now = new Date();
-    // Get IST offset: UTC+5:30 = 330 min
     const istOffset = 5.5 * 60 * 60 * 1000;
     const nowIST = new Date(now.getTime() + istOffset - (now.getTimezoneOffset() * 60 * 1000));
-    // Build today's 7:30 PM IST
+    // Build today's midnight IST (00:00)
     const reset = new Date(nowIST);
-    reset.setHours(19, 30, 0, 0);
-    // If it's before 7:30 PM IST today, use yesterday's 7:30 PM
+    reset.setHours(0, 0, 0, 0);
+    // If it's before midnight IST today (shouldn't happen, but safety)
     if (nowIST < reset) {
       reset.setDate(reset.getDate() - 1);
     }
-    // Convert back to UTC ms for comparison
     return reset.getTime() - istOffset + (now.getTimezoneOffset() * 60 * 1000);
   }
 
@@ -1982,7 +1980,7 @@
       const sb  = document.getElementById('spinCountBadge');
       const scb = document.getElementById('scratchCountBadge');
       const qb  = document.getElementById('quizCountBadge');
-      if (sb)  sb.textContent  = '0/15';
+      if (sb)  sb.textContent  = '0/6';
       if (scb) scb.textContent = '0/15';
       if (qb)  qb.textContent  = '0/15';
 
@@ -2039,18 +2037,12 @@
   const COOLDOWN_60S = 30 * 1000;
 
   function getTodayKey() {
-    // 7:30 PM IST = UTC 14:00 ko naya din maano
+    // Raat 12 baje IST (midnight) ko naya din maano
     const istOffset = 5.5 * 60 * 60 * 1000;
     const now = new Date();
     const nowIST = new Date(now.getTime() + istOffset - (now.getTimezoneOffset() * 60 * 1000));
-    // Agar 7:30 PM se pehle hai toh "yesterday's key" use karo
-    const reset = new Date(nowIST);
-    reset.setHours(19, 30, 0, 0);
-    const effectiveIST = nowIST < reset
-      ? new Date(nowIST.getTime() - 24 * 60 * 60 * 1000) // pichla din
-      : nowIST;
-    // Key = YYYY-MM-DD based on 7:30 PM IST boundary
-    return effectiveIST.toISOString().split('T')[0];
+    // Key = YYYY-MM-DD in IST (midnight boundary)
+    return nowIST.toISOString().split('T')[0];
   }
 
   function getDailyData() {
@@ -2077,7 +2069,7 @@
     const sb = document.getElementById('spinCountBadge');
     const scb = document.getElementById('scratchCountBadge');
     const qb = document.getElementById('quizCountBadge');
-    if (sb) sb.textContent = d.spins + '/3';
+    if (sb) sb.textContent = d.spins + '/6';
     if (scb) scb.textContent = d.scratches + '/5';
     if (qb) qb.textContent = d.quizzes + '/5';
 
@@ -2107,12 +2099,14 @@
 
     function tick() {
       const now = new Date();
-      // Next 7:30 PM IST = UTC 14:00
-      let next730 = new Date();
-      next730.setUTCHours(14, 0, 0, 0);
-      if (now.getTime() >= next730.getTime()) {
-        next730.setUTCDate(next730.getUTCDate() + 1);
-      }
+      // Next midnight IST = UTC 18:30 (18:30 UTC = 00:00 IST next day)
+      const istOffset = 5.5 * 60 * 60 * 1000;
+      const nowIST = new Date(now.getTime() + istOffset - (now.getTimezoneOffset() * 60 * 1000));
+      // Next midnight in IST
+      let nextMidnightIST = new Date(nowIST);
+      nextMidnightIST.setHours(24, 0, 0, 0); // always tomorrow midnight
+      // Convert back to UTC
+      let next730 = new Date(nextMidnightIST.getTime() - istOffset + (now.getTimezoneOffset() * 60 * 1000));
 
       const totalMs  = 24 * 60 * 60 * 1000; // 24h total window
       const remaining = next730.getTime() - now.getTime();
@@ -2131,7 +2125,7 @@
         clearInterval(checkinCountdownInterval);
         checkinCountdownInterval = null;
         if (wrap) wrap.style.display = 'none';
-        // 7:30 PM aa gaya — saare tasks reset karo
+        // Midnight aa gaya — saare tasks reset karo
         const cbtn2 = document.getElementById('checkinBtn');
         const cb2   = document.getElementById('checkinBadge');
         const card2 = document.getElementById('checkinCard');
@@ -2143,7 +2137,7 @@
         const sb2  = document.getElementById('spinCountBadge');
         const scb2 = document.getElementById('scratchCountBadge');
         const qb2  = document.getElementById('quizCountBadge');
-        if (sb2)  sb2.textContent  = '0/15';
+        if (sb2)  sb2.textContent  = '0/6';
         if (scb2) scb2.textContent = '0/15';
         if (qb2)  qb2.textContent  = '0/15';
 
@@ -2438,7 +2432,7 @@
     const btn = document.getElementById('spinBtnMain');
     if (ct) ct.textContent = d.spins;
     const cooldown = getCooldownRemaining(d.lastSpin);
-    if (d.spins >= 3) {
+    if (d.spins >= 6) {
       if (btn) { btn.disabled = true; btn.textContent = '✅ Aaj ke spins khatam!'; btn.style.background = 'rgba(255,255,255,0.1)'; btn.style.color = 'rgba(255,255,255,0.4)'; }
     } else if (cooldown > 0) {
       const secsLeft = Math.ceil(cooldown / 1000);
@@ -2464,7 +2458,7 @@
 
   function doSpin() {
     const d = getDailyData();
-    if (d.spins >= 3) { showToast('Aaj ke spins khatam!', '#f59e0b'); return; }
+    if (d.spins >= 6) { showToast('Aaj ke spins khatam!', '#f59e0b'); return; }
     if (getCooldownRemaining(d.lastSpin) > 0) { showToast('30 second wait karo!', '#f59e0b'); return; }
     if (isGlobalLocked()) return; // universal 1-min cooldown
     if (!checkDailyLimit()) return;
