@@ -28,26 +28,68 @@
   .balance-card .coins-info { font-size: 12px; color: rgba(255,255,255,0.6); }
   .min-note { background: rgba(255,255,255,0.15); border-radius: 8px; padding: 6px 12px; font-size: 11px; color: #fff; display: inline-block; margin-top: 12px; }
 
-  .section-title { font-size: 15px; font-weight: 700; color: #fff; margin-bottom: 12px; }
-  .method-grid { display: flex; gap: 10px; margin-bottom: 20px; }
-  .method-card { flex: 1; background: rgba(255,255,255,0.05); border: 2px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 18px 10px; text-align: center; cursor: pointer; transition: all 0.2s; }
-  .method-card.active { border-color: #6c63ff; background: rgba(108,99,255,0.15); transform: scale(1.03); }
-  .method-card .icon { font-size: 32px; margin-bottom: 8px; }
-  .method-card .name { font-size: 13px; font-weight: 700; color: #fff; }
-  .method-card .desc { font-size: 10px; color: rgba(255,255,255,0.4); margin-top: 3px; }
+  .section-title { font-size: 13px; font-weight: 700; color: rgba(255,255,255,0.4); margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
 
-  .input-section { margin-bottom: 16px; }
-  .input-label { font-size: 12px; color: rgba(255,255,255,0.5); margin-bottom: 8px; font-weight: 600; }
+  /* ── Method Selector ── */
+  .method-grid { display: flex; gap: 10px; margin-bottom: 20px; }
+  .method-card {
+    flex: 1; cursor: pointer; transition: all 0.2s;
+    border-radius: 16px; padding: 16px 12px;
+    background: rgba(255,255,255,0.04);
+    border: 1.5px solid rgba(255,255,255,0.08);
+    display: flex; align-items: center; gap: 12px;
+  }
+  .method-card:active { transform: scale(0.97); }
+  .method-card.active {
+    border-color: #6c63ff;
+    background: rgba(108,99,255,0.12);
+    box-shadow: 0 0 0 3px rgba(108,99,255,0.15);
+  }
+  .method-card .m-icon {
+    width: 44px; height: 44px; border-radius: 12px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center; font-size: 22px;
+    background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
+    transition: all 0.2s;
+  }
+  .method-card.active .m-icon { background: rgba(108,99,255,0.2); border-color: rgba(108,99,255,0.4); }
+  .method-card .m-info { flex: 1; }
+  .method-card .m-name { font-size: 15px; font-weight: 800; color: #fff; }
+  .method-card .m-desc { font-size: 11px; color: rgba(255,255,255,0.35); margin-top: 2px; }
+  .method-card .m-check {
+    width: 20px; height: 20px; border-radius: 50%;
+    border: 2px solid rgba(255,255,255,0.15);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px; transition: all 0.2s; flex-shrink: 0;
+  }
+  .method-card.active .m-check { background: #6c63ff; border-color: #6c63ff; }
+
+  /* ── Form Fields ── */
+  .form-card {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 18px; padding: 18px; margin-bottom: 16px;
+  }
+  .input-label { font-size: 11px; color: rgba(255,255,255,0.4); margin-bottom: 6px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; }
   .input-wrap { position: relative; margin-bottom: 14px; }
-  .input-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); font-size: 16px; opacity: 0.6; }
-  input { width: 100%; background: rgba(255,255,255,0.07); border: 1.5px solid rgba(255,255,255,0.1); border-radius: 14px; padding: 14px 14px 14px 44px; color: #fff; font-size: 14px; outline: none; transition: all 0.3s; font-family: 'Segoe UI', sans-serif; }
-  input::placeholder { color: rgba(255,255,255,0.3); }
-  input:focus { border-color: #6c63ff; background: rgba(108,99,255,0.1); }
-  input:disabled { opacity: 0.5; cursor: not-allowed; }
+  .input-wrap:last-of-type { margin-bottom: 0; }
+  .input-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); font-size: 15px; opacity: 0.5; }
+  input { width: 100%; background: rgba(255,255,255,0.06); border: 1.5px solid rgba(255,255,255,0.09); border-radius: 12px; padding: 13px 14px 13px 42px; color: #fff; font-size: 14px; outline: none; transition: all 0.2s; font-family: 'Segoe UI', sans-serif; }
+  input::placeholder { color: rgba(255,255,255,0.25); }
+  input:focus { border-color: #6c63ff; background: rgba(108,99,255,0.08); }
+  input:disabled { opacity: 0.4; cursor: not-allowed; }
 
   /* SAVED BADGE */
-  .saved-badge { display: inline-flex; align-items: center; gap: 6px; background: rgba(34,197,94,0.12); border: 1px solid rgba(34,197,94,0.25); border-radius: 50px; padding: 5px 12px; font-size: 11px; color: #22c55e; font-weight: 600; margin-bottom: 12px; }
-  .change-link { font-size: 11px; color: #6c63ff; text-decoration: underline; cursor: pointer; margin-left: 8px; font-weight: 600; }
+  .saved-card {
+    display: flex; align-items: center; justify-content: space-between;
+    background: rgba(34,197,94,0.08); border: 1px solid rgba(34,197,94,0.2);
+    border-radius: 14px; padding: 14px 16px; margin-bottom: 16px;
+  }
+  .saved-card-left { display: flex; align-items: center; gap: 10px; }
+  .saved-card-icon { font-size: 20px; }
+  .saved-card-label { font-size: 11px; color: rgba(255,255,255,0.4); font-weight: 600; }
+  .saved-card-value { font-size: 14px; color: #fff; font-weight: 700; margin-top: 1px; }
+  .saved-card-badge { font-size: 10px; font-weight: 700; color: #22c55e; background: rgba(34,197,94,0.12); border: 1px solid rgba(34,197,94,0.25); padding: 3px 10px; border-radius: 50px; }
+  .change-link { font-size: 12px; color: #6c63ff; font-weight: 700; cursor: pointer; margin-top: 6px; display: inline-block; }
 
   /* OTP MODAL */
   .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(5,5,26,0.85); backdrop-filter: blur(8px); z-index: 999; display: none; justify-content: center; align-items: center; }
@@ -72,10 +114,15 @@
   .bind-btn { width: 100%; padding: 13px; background: rgba(108,99,255,0.15); border: 1.5px solid rgba(108,99,255,0.4); border-radius: 12px; color: #a78bfa; font-size: 13px; font-weight: 700; cursor: pointer; font-family: 'Segoe UI', sans-serif; margin-bottom: 16px; transition: all 0.2s; }
   .bind-btn:hover { background: rgba(108,99,255,0.25); }
 
-  .amount-chips { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
-  .chip { padding: 12px 20px; background: rgba(255,255,255,0.06); border: 1.5px solid rgba(255,255,255,0.15); border-radius: 14px; font-size: 15px; font-weight: 700; color: rgba(255,255,255,0.7); cursor: pointer; transition: all 0.2s; flex: 1; text-align: center; }
-  .chip:active { transform: scale(0.96); }
-  .chip.active { background: rgba(108,99,255,0.25); border-color: #6c63ff; color: #fff; box-shadow: 0 4px 15px rgba(108,99,255,0.2); }
+  /* Amount input */
+  .amount-input-wrap { position: relative; margin-bottom: 6px; }
+  .amount-prefix { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); font-size: 20px; font-weight: 800; color: rgba(255,255,255,0.6); pointer-events: none; }
+  .amount-field { width: 100%; background: rgba(255,255,255,0.07); border: 1.5px solid rgba(255,255,255,0.12); border-radius: 14px; padding: 16px 16px 16px 40px; color: #fff; font-size: 22px; font-weight: 800; outline: none; font-family: 'Segoe UI', sans-serif; transition: all 0.2s; letter-spacing: 0.5px; }
+  .amount-field::placeholder { color: rgba(255,255,255,0.2); font-size: 16px; font-weight: 500; }
+  .amount-field:focus { border-color: #6c63ff; background: rgba(108,99,255,0.1); }
+  .amount-field.error { border-color: #ef4444; background: rgba(239,68,68,0.07); }
+  .amount-hint { font-size: 11px; color: rgba(255,255,255,0.3); margin-bottom: 14px; padding-left: 4px; }
+  .amount-hint.err { color: #ef4444; }
 
   .warning { background: rgba(234,179,8,0.1); border: 1px solid rgba(234,179,8,0.2); border-radius: 12px; padding: 12px 16px; font-size: 12px; color: rgba(234,179,8,0.8); margin-bottom: 16px; display: flex; gap: 8px; align-items: flex-start; }
 
@@ -91,17 +138,101 @@
   .withdraw-btn:active { transform: scale(0.98); }
   .withdraw-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
-  .history-scroll { display: flex; gap: 12px; overflow-x: auto; scrollbar-width: none; padding-bottom: 4px; margin-bottom: 10px; }
-  .history-scroll::-webkit-scrollbar { display: none; }
-  .history-item { min-width: 160px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.07); border-radius: 16px; padding: 14px; flex-shrink: 0; }
-  .history-icon { font-size: 24px; margin-bottom: 8px; }
-  .history-amount { font-size: 18px; font-weight: 800; color: #fff; }
-  .history-method { font-size: 11px; color: rgba(255,255,255,0.4); margin-top: 3px; }
-  .history-date { font-size: 10px; color: rgba(255,255,255,0.3); margin-top: 4px; }
-  .status-badge { display: inline-block; font-size: 10px; padding: 3px 10px; border-radius: 50px; font-weight: 700; margin-top: 6px; }
-  .status-pending { background: rgba(234,179,8,0.15); color: #eab308; }
-  .status-done { background: rgba(34,197,94,0.15); color: #22c55e; }
-  .empty-history { text-align: center; padding: 20px; color: rgba(255,255,255,0.3); font-size: 13px; }
+  /* ── Transaction History ── */
+  .history-list { display: flex; flex-direction: column; gap: 12px; margin-bottom: 8px; }
+
+  .tx-card {
+    width: 100%;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 20px;
+    overflow: hidden;
+    position: relative;
+  }
+
+  /* Left color bar */
+  .tx-card::before {
+    content: '';
+    position: absolute; top: 0; left: 0; bottom: 0; width: 4px;
+  }
+  .tx-card.done::before     { background: linear-gradient(180deg,#22c55e,#16a34a); }
+  .tx-card.pending::before  { background: linear-gradient(180deg,#f59e0b,#d97706); }
+  .tx-card.rejected::before { background: linear-gradient(180deg,#ef4444,#dc2626); }
+
+  /* Main card body */
+  .tx-body { padding: 16px 16px 16px 20px; }
+
+  /* Top row */
+  .tx-top {
+    display: flex; align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+  }
+  .tx-left { display: flex; align-items: center; gap: 12px; }
+  .tx-icon {
+    width: 46px; height: 46px; border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px; flex-shrink: 0;
+  }
+  .tx-card.done     .tx-icon { background: rgba(34,197,94,0.12);  border: 1px solid rgba(34,197,94,0.2); }
+  .tx-card.pending  .tx-icon { background: rgba(245,158,11,0.12); border: 1px solid rgba(245,158,11,0.2); }
+  .tx-card.rejected .tx-icon { background: rgba(239,68,68,0.12);  border: 1px solid rgba(239,68,68,0.2); }
+
+  .tx-title { font-size: 15px; font-weight: 800; color: #fff; line-height: 1.2; }
+  .tx-subtitle { font-size: 11px; color: rgba(255,255,255,0.35); margin-top: 2px; }
+
+  .tx-badge {
+    font-size: 11px; font-weight: 700;
+    padding: 5px 12px; border-radius: 50px;
+    white-space: nowrap; flex-shrink: 0;
+  }
+  .tx-card.done     .tx-badge { background: rgba(34,197,94,0.15);  color: #22c55e; border: 1px solid rgba(34,197,94,0.3); }
+  .tx-card.pending  .tx-badge { background: rgba(245,158,11,0.15); color: #f59e0b; border: 1px solid rgba(245,158,11,0.3); }
+  .tx-card.rejected .tx-badge { background: rgba(239,68,68,0.15);  color: #ef4444; border: 1px solid rgba(239,68,68,0.3); }
+
+  /* Amount row */
+  .tx-amount-row {
+    display: flex; align-items: flex-end;
+    justify-content: space-between;
+    margin-bottom: 14px;
+  }
+  .tx-amount { font-size: 32px; font-weight: 800; color: #fff; line-height: 1; }
+  .tx-receive-col { text-align: right; }
+  .tx-receive-label { font-size: 10px; color: rgba(255,255,255,0.3); margin-bottom: 2px; }
+  .tx-receive-val   { font-size: 15px; font-weight: 800; color: #22c55e; }
+  .tx-fee-val       { font-size: 10px; color: rgba(255,255,255,0.3); }
+
+  /* Divider */
+  .tx-divider { height: 1px; background: rgba(255,255,255,0.06); margin-bottom: 12px; }
+
+  /* Meta grid */
+  .tx-meta { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .tx-meta-item { display: flex; flex-direction: column; gap: 2px; }
+  .tx-meta-label { font-size: 10px; color: rgba(255,255,255,0.28); font-weight: 500; text-transform: uppercase; letter-spacing: 0.4px; }
+  .tx-meta-value { font-size: 12px; color: rgba(255,255,255,0.7); font-weight: 600; }
+
+  /* Reject reason box */
+  .tx-reject-reason {
+    margin: 12px 0 0;
+    padding: 12px 14px;
+    background: rgba(239,68,68,0.08);
+    border: 1px solid rgba(239,68,68,0.2);
+    border-radius: 12px;
+    display: flex; gap: 10px; align-items: flex-start;
+  }
+  .tx-reject-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+  .tx-reject-text { font-size: 12px; line-height: 1.5; }
+  .tx-reject-text strong { display: block; color: #ef4444; font-size: 11px; font-weight: 700; margin-bottom: 2px; text-transform: uppercase; letter-spacing: 0.3px; }
+  .tx-reject-text span { color: rgba(255,255,255,0.6); }
+
+  .empty-history {
+    text-align: center; padding: 40px 20px;
+    color: rgba(255,255,255,0.25); font-size: 13px;
+    background: rgba(255,255,255,0.02);
+    border: 1px dashed rgba(255,255,255,0.08);
+    border-radius: 20px; line-height: 1.6;
+  }
+  .empty-history div { font-size: 36px; margin-bottom: 10px; }
 
   .toast { position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%); background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2); color: #fff; padding: 12px 24px; border-radius: 50px; font-size: 13px; font-weight: 600; z-index: 200; display: none; white-space: nowrap; }
   .toast.success { background: rgba(34,197,94,0.2); border-color: rgba(34,197,94,0.4); color: #22c55e; }
@@ -157,32 +288,48 @@
   </div>
 
   <!-- METHOD -->
-  <div class="section-title">Select Payment Method</div>
+  <div class="section-title">Payment Method</div>
   <div class="method-grid">
-    <div class="method-card active" onclick="selectMethod('upi', this)">
-      <div class="icon">📱</div>
-      <div class="name">UPI</div>
-      <div class="desc">Instant transfer</div>
+    <div class="method-card active" id="methodUPI" onclick="selectMethod('upi', this)">
+      <div class="m-icon">📱</div>
+      <div class="m-info">
+        <div class="m-name">UPI</div>
+        <div class="m-desc">Instant • Free</div>
+      </div>
+      <div class="m-check" id="checkUPI">✓</div>
     </div>
-    <div class="method-card" onclick="selectMethod('bank', this)">
-      <div class="icon">🏦</div>
-      <div class="name">Bank</div>
-      <div class="desc">1-2 days</div>
+    <div class="method-card" id="methodBank" onclick="selectMethod('bank', this)">
+      <div class="m-icon">🏦</div>
+      <div class="m-info">
+        <div class="m-name">Bank</div>
+        <div class="m-desc">1–2 business days</div>
+      </div>
+      <div class="m-check" id="checkBank"></div>
     </div>
   </div>
 
   <!-- UPI FORM -->
   <div id="upiForm">
-    <!-- Saved UPI -->
     <div id="savedUpiSection" style="display:none;">
-      <div class="saved-badge">✅ UPI Saved: <strong id="savedUpiDisplay"></strong> <span class="change-link" onclick="changePayment('upi')">Change</span></div>
+      <div class="saved-card">
+        <div class="saved-card-left">
+          <div class="saved-card-icon">📱</div>
+          <div>
+            <div class="saved-card-label">UPI ID Saved</div>
+            <div class="saved-card-value" id="savedUpiDisplay">—</div>
+            <span class="change-link" onclick="changePayment('upi')">✏️ Change</span>
+          </div>
+        </div>
+        <div class="saved-card-badge">✅ Verified</div>
+      </div>
     </div>
-    <!-- UPI Input (shown when not saved or changing) -->
     <div id="upiInputSection">
-      <div class="input-label">Enter UPI ID</div>
-      <div class="input-wrap">
-        <span class="input-icon">📱</span>
-        <input type="text" id="upiId" placeholder="yourname@upi">
+      <div class="form-card">
+        <div class="input-label">UPI ID</div>
+        <div class="input-wrap" style="margin-bottom:0">
+          <span class="input-icon">📱</span>
+          <input type="text" id="upiId" placeholder="yourname@upi or @paytm">
+        </div>
       </div>
       <button class="bind-btn" onclick="bindPayment('upi')">🔐 Save & Verify UPI</button>
     </div>
@@ -190,39 +337,51 @@
 
   <!-- BANK FORM -->
   <div id="bankForm" style="display:none;">
-    <!-- Saved Bank -->
     <div id="savedBankSection" style="display:none;">
-      <div class="saved-badge">✅ Bank Saved: <strong id="savedBankDisplay"></strong> <span class="change-link" onclick="changePayment('bank')">Change</span></div>
+      <div class="saved-card">
+        <div class="saved-card-left">
+          <div class="saved-card-icon">🏦</div>
+          <div>
+            <div class="saved-card-label">Bank Account Saved</div>
+            <div class="saved-card-value" id="savedBankDisplay">—</div>
+            <span class="change-link" onclick="changePayment('bank')">✏️ Change</span>
+          </div>
+        </div>
+        <div class="saved-card-badge">✅ Verified</div>
+      </div>
     </div>
-    <!-- Bank Input (shown when not saved or changing) -->
     <div id="bankInputSection">
-      <div class="input-label">Account Number</div>
-      <div class="input-wrap">
-        <span class="input-icon">🏦</span>
-        <input type="number" id="accNumber" placeholder="Enter account number">
-      </div>
-      <div class="input-label">IFSC Code</div>
-      <div class="input-wrap">
-        <span class="input-icon">🔢</span>
-        <input type="text" id="ifscCode" placeholder="Enter IFSC code">
-      </div>
-      <div class="input-label">Account Holder Name</div>
-      <div class="input-wrap">
-        <span class="input-icon">👤</span>
-        <input type="text" id="accName" placeholder="Enter account holder name">
+      <div class="form-card">
+        <div class="input-label">Account Number</div>
+        <div class="input-wrap">
+          <span class="input-icon">🏦</span>
+          <input type="number" id="accNumber" placeholder="Enter account number">
+        </div>
+        <div class="input-label">IFSC Code</div>
+        <div class="input-wrap">
+          <span class="input-icon">🔤</span>
+          <input type="text" id="ifscCode" placeholder="e.g. SBIN0001234" style="text-transform:uppercase">
+        </div>
+        <div class="input-label">Account Holder Name</div>
+        <div class="input-wrap" style="margin-bottom:0">
+          <span class="input-icon">👤</span>
+          <input type="text" id="accName" placeholder="Name as per bank records">
+        </div>
       </div>
       <button class="bind-btn" onclick="bindPayment('bank')">🔐 Save & Verify Bank</button>
     </div>
   </div>
 
   <!-- AMOUNT -->
-  <div class="input-label">Select Amount</div>
-  <div class="amount-chips">
-    <div class="chip active" onclick="selectAmount(100, this)">₹100</div>
-    <div class="chip" onclick="selectAmount(200, this)">₹200</div>
-    <div class="chip" onclick="selectAmount(500, this)">₹500</div>
-    <div class="chip" onclick="selectAmount(1000, this)">₹1000</div>
+  <div class="input-label">Enter Amount</div>
+  <div class="amount-input-wrap">
+    <span class="amount-prefix">₹</span>
+    <input type="number" class="amount-field" id="amountField"
+      placeholder="Minimum ₹100"
+      min="100" inputmode="numeric"
+      oninput="onAmountInput(this.value)">
   </div>
+  <div class="amount-hint" id="amountHint">⚠️ Minimum withdrawal: ₹100 &nbsp;·&nbsp; 10% service fee kategi</div>
 
   <!-- FEE INFO -->
   <div class="fee-info">
@@ -554,14 +713,34 @@
     document.getElementById('bankForm').style.display = method === 'bank' ? 'block' : 'none';
   }
 
-  function selectAmount(amount, el) {
-    selectedAmount = amount;
-    document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
-    el.classList.add('active');
-    const fee = Math.round(amount * 0.1);
-    document.getElementById('feeAmount').textContent  = '₹' + amount;
-    document.getElementById('feeCharge').textContent  = '- ₹' + fee;
-    document.getElementById('feeReceive').textContent = '₹' + (amount - fee);
+  function onAmountInput(val) {
+    const amount = parseInt(val) || 0;
+    const field  = document.getElementById('amountField');
+    const hint   = document.getElementById('amountHint');
+
+    if (amount > 0 && amount < 100) {
+      field.classList.add('error');
+      hint.className = 'amount-hint err';
+      hint.textContent = '❌ Minimum ₹100 chahiye — ' + amount + ' se withdraw nahi ho sakta';
+      selectedAmount = 0;
+    } else if (amount >= 100) {
+      field.classList.remove('error');
+      hint.className = 'amount-hint';
+      hint.textContent = '✅ ₹' + amount + ' enter kiya';
+      selectedAmount = amount;
+    } else {
+      field.classList.remove('error');
+      hint.className = 'amount-hint';
+      hint.textContent = '⚠️ Minimum withdrawal: ₹100 · 10% service fee kategi';
+      selectedAmount = 0;
+    }
+
+    // Fee info update karo
+    const fee     = amount >= 100 ? Math.round(amount * 0.1) : 0;
+    const receive = amount >= 100 ? amount - fee : 0;
+    document.getElementById('feeAmount').textContent  = amount >= 100 ? '₹' + amount  : '—';
+    document.getElementById('feeCharge').textContent  = amount >= 100 ? '- ₹' + fee   : '—';
+    document.getElementById('feeReceive').textContent = amount >= 100 ? '₹' + receive : '—';
   }
 
   function showToast(msg, type) {
@@ -705,20 +884,70 @@
     fetch(DB + '/withdrawals/' + uid + '.json' + ap)
       .then(res  => res.json())
       .then(data => {
-        if (!data) { container.innerHTML = '<div class="empty-history">No transactions yet 📭</div>'; return; }
+        if (!data) { container.innerHTML = '<div class="empty-history"><div>📭</div>No transactions yet<br><small>Aapki pehli withdrawal yahan dikhegi</small></div>'; return; }
         const items = Object.values(data).reverse();
-        container.innerHTML = '<div class="history-scroll">' +
-          items.map(item => `
-            <div class="history-item">
-              <div class="history-icon">${item.method === 'upi' ? '📱' : '🏦'}</div>
-              <div class="history-amount">₹${item.amount}</div>
-              <div class="history-method">${item.method.toUpperCase()}</div>
-              <div class="history-date">${new Date(item.date).toLocaleDateString()}</div>
-              <div class="status-badge ${item.status === 'pending' ? 'status-pending' : 'status-done'}">
-                ${item.status === 'pending' ? '⏳ Pending' : '✅ Success'}
-              </div>
-            </div>
-          `).join('') + '</div>';
+        container.innerHTML = '<div class="history-list">' +
+          items.map(item => {
+            const st          = (item.status || 'pending').toLowerCase().trim();
+            const isSuccess   = ['success','done','completed','approved'].includes(st);
+            const isRejected  = ['rejected','reject','failed','fail','cancelled','canceled'].includes(st);
+            const sc          = isSuccess ? 'done' : isRejected ? 'rejected' : 'pending';
+            const badgeText   = isSuccess ? '✅ Success' : isRejected ? '❌ Rejected' : '⏳ Pending';
+            const isUPI       = (item.method || '').toLowerCase() === 'upi';
+            const receive     = item.receive || (item.amount - Math.round(item.amount * 0.1));
+            const fee         = item.fee || Math.round(item.amount * 0.1);
+            const dateObj     = new Date(item.date);
+            const dateStr     = dateObj.toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' });
+            const timeStr     = dateObj.toLocaleTimeString('en-IN', { hour:'2-digit', minute:'2-digit', hour12:true });
+            const methodIcon  = isUPI ? '📱' : '🏦';
+            const methodName  = isUPI ? 'UPI Transfer' : 'Bank Transfer';
+            const payDetail   = isUPI
+              ? (item.paymentDetails && item.paymentDetails.upiId ? item.paymentDetails.upiId : '—')
+              : (item.paymentDetails && item.paymentDetails.accNumber ? '••••' + item.paymentDetails.accNumber.slice(-4) : '—');
+
+            // Reject reason — Firebase mein rejectReason field se
+            const reason = item.rejectReason || item.reason || item.note || '';
+            const rejectBox = isRejected
+              ? '<div class="tx-reject-reason">' +
+                  '<div class="tx-reject-icon">⚠️</div>' +
+                  '<div class="tx-reject-text">' +
+                    '<strong>Rejection Reason</strong>' +
+                    '<span>' + (reason || 'Galat details ya suspicious activity — Support se contact karo.') + '</span>' +
+                  '</div>' +
+                '</div>'
+              : '';
+
+            const receiveSection = isRejected
+              ? '<div class="tx-receive-col"><div class="tx-receive-label">REFUND</div><div class="tx-receive-val" style="color:#ef4444">₹' + item.amount + '</div><div class="tx-fee-val">24-48 hrs mein</div></div>'
+              : '<div class="tx-receive-col"><div class="tx-receive-label">YOU RECEIVE</div><div class="tx-receive-val">₹' + receive + '</div><div class="tx-fee-val">Fee: ₹' + fee + '</div></div>';
+
+            return '<div class="tx-card ' + sc + '">' +
+              '<div class="tx-body">' +
+                '<div class="tx-top">' +
+                  '<div class="tx-left">' +
+                    '<div class="tx-icon">' + methodIcon + '</div>' +
+                    '<div>' +
+                      '<div class="tx-title">' + methodName + '</div>' +
+                      '<div class="tx-subtitle">' + payDetail + '</div>' +
+                    '</div>' +
+                  '</div>' +
+                  '<div class="tx-badge">' + badgeText + '</div>' +
+                '</div>' +
+                '<div class="tx-amount-row">' +
+                  '<div class="tx-amount">₹' + item.amount + '</div>' +
+                  receiveSection +
+                '</div>' +
+                '<div class="tx-divider"></div>' +
+                '<div class="tx-meta">' +
+                  '<div class="tx-meta-item"><span class="tx-meta-label">Date</span><span class="tx-meta-value">' + dateStr + '</span></div>' +
+                  '<div class="tx-meta-item"><span class="tx-meta-label">Time</span><span class="tx-meta-value">' + timeStr + '</span></div>' +
+                  '<div class="tx-meta-item"><span class="tx-meta-label">Method</span><span class="tx-meta-value">' + (isUPI ? 'UPI' : 'Bank') + '</span></div>' +
+                  '<div class="tx-meta-item"><span class="tx-meta-label">Status</span><span class="tx-meta-value">' + st.charAt(0).toUpperCase() + st.slice(1) + '</span></div>' +
+                '</div>' +
+                rejectBox +
+              '</div>' +
+            '</div>';
+          }).join('') + '</div>';
       }).catch(e => console.error(e));
     }); // end _getAuthToken
   }
