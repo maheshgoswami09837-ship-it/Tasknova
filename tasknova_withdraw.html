@@ -138,92 +138,90 @@
   .withdraw-btn:active { transform: scale(0.98); }
   .withdraw-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
-  /* ── Transaction History ── */
-  .history-list { display: flex; flex-direction: column; gap: 12px; margin-bottom: 8px; }
+  /* ══ Transaction Receipt Card ══════════════════════════════ */
+  .history-list { display: flex; flex-direction: column; gap: 16px; margin-bottom: 8px; }
 
   .tx-card {
-    width: 100%;
-    background: rgba(255,255,255,0.04);
-    border: 1px solid rgba(255,255,255,0.08);
-    border-radius: 20px;
-    overflow: hidden;
+    width: 100%; border-radius: 20px; overflow: hidden;
+    position: relative;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.3);
+  }
+
+  /* Top gradient header */
+  .tx-header {
+    padding: 16px 18px 14px;
+    display: flex; align-items: center; justify-content: space-between;
     position: relative;
   }
+  .tx-card.done     .tx-header { background: linear-gradient(135deg,#064e3b,#065f46); border-bottom: 1px solid rgba(34,197,94,0.2); }
+  .tx-card.pending  .tx-header { background: linear-gradient(135deg,#451a03,#78350f); border-bottom: 1px solid rgba(245,158,11,0.2); }
+  .tx-card.rejected .tx-header { background: linear-gradient(135deg,#450a0a,#7f1d1d); border-bottom: 1px solid rgba(239,68,68,0.2); }
 
-  /* Left color bar */
-  .tx-card::before {
-    content: '';
-    position: absolute; top: 0; left: 0; bottom: 0; width: 4px;
-  }
-  .tx-card.done::before     { background: linear-gradient(180deg,#22c55e,#16a34a); }
-  .tx-card.pending::before  { background: linear-gradient(180deg,#f59e0b,#d97706); }
-  .tx-card.rejected::before { background: linear-gradient(180deg,#ef4444,#dc2626); }
-
-  /* Main card body */
-  .tx-body { padding: 16px 16px 16px 20px; }
-
-  /* Top row */
-  .tx-top {
-    display: flex; align-items: center;
-    justify-content: space-between;
-    margin-bottom: 14px;
-  }
-  .tx-left { display: flex; align-items: center; gap: 12px; }
-  .tx-icon {
-    width: 46px; height: 46px; border-radius: 14px;
+  .tx-h-left { display: flex; align-items: center; gap: 12px; }
+  .tx-h-icon {
+    width: 42px; height: 42px; border-radius: 12px;
+    background: rgba(255,255,255,0.15);
     display: flex; align-items: center; justify-content: center;
-    font-size: 22px; flex-shrink: 0;
+    font-size: 20px; flex-shrink: 0;
   }
-  .tx-card.done     .tx-icon { background: rgba(34,197,94,0.12);  border: 1px solid rgba(34,197,94,0.2); }
-  .tx-card.pending  .tx-icon { background: rgba(245,158,11,0.12); border: 1px solid rgba(245,158,11,0.2); }
-  .tx-card.rejected .tx-icon { background: rgba(239,68,68,0.12);  border: 1px solid rgba(239,68,68,0.2); }
-
-  .tx-title { font-size: 15px; font-weight: 800; color: #fff; line-height: 1.2; }
-  .tx-subtitle { font-size: 11px; color: rgba(255,255,255,0.35); margin-top: 2px; }
-
+  .tx-h-title { font-size: 15px; font-weight: 800; color: #fff; }
+  .tx-h-sub   { font-size: 11px; color: rgba(255,255,255,0.5); margin-top: 2px; }
   .tx-badge {
-    font-size: 11px; font-weight: 700;
-    padding: 5px 12px; border-radius: 50px;
-    white-space: nowrap; flex-shrink: 0;
+    font-size: 11px; font-weight: 700; padding: 5px 12px;
+    border-radius: 50px; white-space: nowrap; flex-shrink: 0;
+    backdrop-filter: blur(4px);
   }
-  .tx-card.done     .tx-badge { background: rgba(34,197,94,0.15);  color: #22c55e; border: 1px solid rgba(34,197,94,0.3); }
-  .tx-card.pending  .tx-badge { background: rgba(245,158,11,0.15); color: #f59e0b; border: 1px solid rgba(245,158,11,0.3); }
-  .tx-card.rejected .tx-badge { background: rgba(239,68,68,0.15);  color: #ef4444; border: 1px solid rgba(239,68,68,0.3); }
+  .tx-card.done     .tx-badge { background: rgba(34,197,94,0.25);  color: #6ee7b7; border: 1px solid rgba(34,197,94,0.4); }
+  .tx-card.pending  .tx-badge { background: rgba(245,158,11,0.25); color: #fcd34d; border: 1px solid rgba(245,158,11,0.4); }
+  .tx-card.rejected .tx-badge { background: rgba(239,68,68,0.25);  color: #fca5a5; border: 1px solid rgba(239,68,68,0.4); }
+
+  /* Body */
+  .tx-body { background: rgba(10,10,30,0.95); padding: 16px 18px 18px; }
 
   /* Amount row */
-  .tx-amount-row {
-    display: flex; align-items: flex-end;
-    justify-content: space-between;
-    margin-bottom: 14px;
+  .tx-amount-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+  .tx-amount-left {}
+  .tx-amount-label { font-size: 10px; color: rgba(255,255,255,0.35); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 3px; }
+  .tx-amount { font-size: 34px; font-weight: 900; color: #fff; line-height: 1; letter-spacing: -0.5px; }
+  .tx-amount-right { text-align: right; }
+  .tx-receive-label { font-size: 10px; color: rgba(255,255,255,0.35); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 3px; }
+  .tx-card.done     .tx-receive-val { font-size: 18px; font-weight: 800; color: #34d399; }
+  .tx-card.pending  .tx-receive-val { font-size: 18px; font-weight: 800; color: #fcd34d; }
+  .tx-card.rejected .tx-receive-val { font-size: 18px; font-weight: 800; color: #f87171; }
+  .tx-fee-note { font-size: 10px; color: rgba(255,255,255,0.25); margin-top: 2px; }
+
+  /* Dashed divider — receipt style */
+  .tx-dash { border: none; border-top: 1.5px dashed rgba(255,255,255,0.08); margin: 0 0 14px; }
+
+  /* Info rows */
+  .tx-info-grid { display: flex; flex-direction: column; gap: 9px; margin-bottom: 14px; }
+  .tx-info-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+  .tx-info-label { font-size: 10.5px; color: rgba(255,255,255,0.3); font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px; white-space: nowrap; flex-shrink: 0; padding-top: 1px; }
+  .tx-info-val { font-size: 12px; color: rgba(255,255,255,0.75); font-weight: 600; text-align: right; word-break: break-all; }
+  .tx-info-val.highlight { color: #c4b5fd; }
+
+  /* TxnID strip */
+  .tx-txnid-strip {
+    background: rgba(108,99,255,0.1); border: 1px solid rgba(108,99,255,0.2);
+    border-radius: 12px; padding: 11px 14px;
+    display: flex; align-items: center; justify-content: space-between; gap: 8px;
+    cursor: pointer; transition: background 0.15s;
   }
-  .tx-amount { font-size: 32px; font-weight: 800; color: #fff; line-height: 1; }
-  .tx-receive-col { text-align: right; }
-  .tx-receive-label { font-size: 10px; color: rgba(255,255,255,0.3); margin-bottom: 2px; }
-  .tx-receive-val   { font-size: 15px; font-weight: 800; color: #22c55e; }
-  .tx-fee-val       { font-size: 10px; color: rgba(255,255,255,0.3); }
+  .tx-txnid-strip:active { background: rgba(108,99,255,0.2); }
+  .tx-txnid-left { display: flex; flex-direction: column; gap: 2px; }
+  .tx-txnid-tag  { font-size: 9px; font-weight: 700; color: rgba(255,255,255,0.3); text-transform: uppercase; letter-spacing: 0.5px; }
+  .tx-txnid-code { font-size: 14px; font-weight: 800; color: #a78bfa; font-family: 'Courier New', monospace; letter-spacing: 1px; }
+  .tx-copy-btn   { font-size: 18px; flex-shrink: 0; opacity: 0.6; }
 
-  /* Divider */
-  .tx-divider { height: 1px; background: rgba(255,255,255,0.06); margin-bottom: 12px; }
-
-  /* Meta grid */
-  .tx-meta { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-  .tx-meta-item { display: flex; flex-direction: column; gap: 2px; }
-  .tx-meta-label { font-size: 10px; color: rgba(255,255,255,0.28); font-weight: 500; text-transform: uppercase; letter-spacing: 0.4px; }
-  .tx-meta-value { font-size: 12px; color: rgba(255,255,255,0.7); font-weight: 600; }
-
-  /* Reject reason box */
+  /* Reject reason */
   .tx-reject-reason {
-    margin: 12px 0 0;
-    padding: 12px 14px;
-    background: rgba(239,68,68,0.08);
-    border: 1px solid rgba(239,68,68,0.2);
-    border-radius: 12px;
-    display: flex; gap: 10px; align-items: flex-start;
+    margin-top: 12px; padding: 12px 14px;
+    background: rgba(239,68,68,0.07); border: 1px solid rgba(239,68,68,0.2);
+    border-radius: 12px; display: flex; gap: 10px; align-items: flex-start;
   }
-  .tx-reject-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
-  .tx-reject-text { font-size: 12px; line-height: 1.5; }
-  .tx-reject-text strong { display: block; color: #ef4444; font-size: 11px; font-weight: 700; margin-bottom: 2px; text-transform: uppercase; letter-spacing: 0.3px; }
-  .tx-reject-text span { color: rgba(255,255,255,0.6); }
+  .tx-reject-icon { font-size: 15px; flex-shrink: 0; }
+  .tx-reject-text strong { display: block; color: #f87171; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px; margin-bottom: 3px; }
+  .tx-reject-text span { font-size: 12px; color: rgba(255,255,255,0.55); line-height: 1.5; }
 
   .empty-history {
     text-align: center; padding: 40px 20px;
@@ -325,10 +323,15 @@
     </div>
     <div id="upiInputSection">
       <div class="form-card">
+        <div class="input-label">Account Holder Name</div>
+        <div class="input-wrap">
+          <span class="input-icon">👤</span>
+          <input type="text" id="upiName" placeholder="Apna poora naam likhein">
+        </div>
         <div class="input-label">UPI ID</div>
         <div class="input-wrap" style="margin-bottom:0">
           <span class="input-icon">📱</span>
-          <input type="text" id="upiId" placeholder="yourname@upi or @paytm">
+          <input type="text" id="upiId" placeholder="yourname@upi / @paytm / @gpay">
         </div>
       </div>
       <button class="bind-btn" onclick="bindPayment('upi')">🔐 Save & Verify UPI</button>
@@ -352,20 +355,25 @@
     </div>
     <div id="bankInputSection">
       <div class="form-card">
+        <div class="input-label">Account Holder Name</div>
+        <div class="input-wrap">
+          <span class="input-icon">👤</span>
+          <input type="text" id="accName" placeholder="Name as per bank records">
+        </div>
+        <div class="input-label">Bank Name</div>
+        <div class="input-wrap">
+          <span class="input-icon">🏛️</span>
+          <input type="text" id="bankName" placeholder="e.g. SBI, HDFC, ICICI, PNB">
+        </div>
         <div class="input-label">Account Number</div>
         <div class="input-wrap">
-          <span class="input-icon">🏦</span>
+          <span class="input-icon">🔢</span>
           <input type="number" id="accNumber" placeholder="Enter account number">
         </div>
         <div class="input-label">IFSC Code</div>
-        <div class="input-wrap">
+        <div class="input-wrap" style="margin-bottom:0">
           <span class="input-icon">🔤</span>
           <input type="text" id="ifscCode" placeholder="e.g. SBIN0001234" style="text-transform:uppercase">
-        </div>
-        <div class="input-label">Account Holder Name</div>
-        <div class="input-wrap" style="margin-bottom:0">
-          <span class="input-icon">👤</span>
-          <input type="text" id="accName" placeholder="Name as per bank records">
         </div>
       </div>
       <button class="bind-btn" onclick="bindPayment('bank')">🔐 Save & Verify Bank</button>
@@ -519,7 +527,10 @@
   function renderSavedDetails() {
     // UPI
     if (savedPayments.upi) {
-      document.getElementById('savedUpiDisplay').textContent = savedPayments.upi.upiId;
+      const u = savedPayments.upi;
+      document.getElementById('savedUpiDisplay').innerHTML =
+        (u.upiName ? '<span style="display:block;font-size:13px;color:rgba(255,255,255,0.5);margin-bottom:2px;">' + u.upiName + '</span>' : '') +
+        u.upiId;
       document.getElementById('savedUpiSection').style.display  = 'block';
       document.getElementById('upiInputSection').style.display  = 'none';
     } else {
@@ -529,7 +540,10 @@
     // Bank
     if (savedPayments.bank) {
       const b = savedPayments.bank;
-      document.getElementById('savedBankDisplay').textContent = '****' + String(b.accNumber).slice(-4) + ' | ' + b.ifscCode;
+      document.getElementById('savedBankDisplay').innerHTML =
+        (b.bankName ? '<span style="display:block;font-size:11px;color:rgba(255,255,255,0.4);margin-bottom:2px;">' + b.bankName + '</span>' : '') +
+        (b.accName  ? '<span style="display:block;font-size:13px;font-weight:700;margin-bottom:2px;">' + b.accName + '</span>' : '') +
+        '••••' + String(b.accNumber).slice(-4) + ' &nbsp;·&nbsp; ' + b.ifscCode;
       document.getElementById('savedBankSection').style.display  = 'block';
       document.getElementById('bankInputSection').style.display  = 'none';
     } else {
@@ -543,14 +557,17 @@
     if (method === 'upi') {
       document.getElementById('savedUpiSection').style.display  = 'none';
       document.getElementById('upiInputSection').style.display  = 'block';
-      document.getElementById('upiId').value = savedPayments.upi ? savedPayments.upi.upiId : '';
+      document.getElementById('upiName').value = savedPayments.upi ? (savedPayments.upi.upiName || '') : '';
+      document.getElementById('upiId').value   = savedPayments.upi ? (savedPayments.upi.upiId   || '') : '';
     } else {
       document.getElementById('savedBankSection').style.display  = 'none';
       document.getElementById('bankInputSection').style.display  = 'block';
       if (savedPayments.bank) {
-        document.getElementById('accNumber').value = savedPayments.bank.accNumber;
-        document.getElementById('ifscCode').value  = savedPayments.bank.ifscCode;
-        document.getElementById('accName').value   = savedPayments.bank.accName;
+        const b = savedPayments.bank;
+        document.getElementById('accName').value   = b.accName   || '';
+        document.getElementById('bankName').value  = b.bankName  || '';
+        document.getElementById('accNumber').value = b.accNumber || '';
+        document.getElementById('ifscCode').value  = b.ifscCode  || '';
       }
     }
   }
@@ -564,17 +581,21 @@
 
     let data = {};
     if (method === 'upi') {
-      const upiId = document.getElementById('upiId').value.trim();
-      if (!upiId || !upiId.includes('@')) { showToast('Valid UPI ID enter karein', 'error'); return; }
-      data = { upiId };
+      const upiName = document.getElementById('upiName').value.trim();
+      const upiId   = document.getElementById('upiId').value.trim();
+      if (!upiName) { showToast('Account holder name enter karein', 'error'); return; }
+      if (!upiId || !upiId.includes('@')) { showToast('Valid UPI ID enter karein (@paytm/@gpay/@upi)', 'error'); return; }
+      data = { upiName, upiId };
     } else {
+      const accName   = document.getElementById('accName').value.trim();
+      const bankName  = document.getElementById('bankName').value.trim();
       const accNumber = document.getElementById('accNumber').value.trim();
       const ifscCode  = document.getElementById('ifscCode').value.trim().toUpperCase();
-      const accName   = document.getElementById('accName').value.trim();
-      if (!accNumber || accNumber.length < 9) { showToast('Valid account number enter karein', 'error'); return; }
-      if (!ifscCode  || ifscCode.length !== 11) { showToast('Valid IFSC code enter karein (11 chars)', 'error'); return; }
-      if (!accName) { showToast('Account holder name enter karein', 'error'); return; }
-      data = { accNumber, ifscCode, accName };
+      if (!accName)                            { showToast('Account holder name enter karein', 'error'); return; }
+      if (!bankName)                           { showToast('Bank name enter karein (e.g. SBI, HDFC)', 'error'); return; }
+      if (!accNumber || accNumber.length < 9)  { showToast('Valid account number enter karein', 'error'); return; }
+      if (!ifscCode  || ifscCode.length !== 11){ showToast('Valid IFSC code enter karein (11 chars)', 'error'); return; }
+      data = { accName, bankName, accNumber, ifscCode };
     }
 
     pendingPayData = { method, data };
@@ -751,6 +772,18 @@
   }
 
   // ── Submit Withdraw ───────────────────────────────────────────
+  // ── Transaction ID Generator ────────────────────────────────
+  function generateTxnId() {
+    const now    = new Date();
+    const yy     = String(now.getFullYear()).slice(2);          // 26
+    const mm     = String(now.getMonth() + 1).padStart(2,'0'); // 05
+    const dd     = String(now.getDate()).padStart(2,'0');       // 30
+    const chars  = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    let rand = '';
+    for (let i = 0; i < 6; i++) rand += chars[Math.floor(Math.random() * chars.length)];
+    return 'TN-W-' + yy + mm + dd + '-' + rand;  // e.g. TN-W-260530-A7X9K2
+  }
+
   function submitWithdraw() {
     if (userBalance < selectedAmount) { showToast('Insufficient balance!', 'error'); return; }
     if (selectedAmount < 100)         { showToast('Minimum withdrawal is ₹100!', 'error'); return; }
@@ -764,19 +797,21 @@
       if (savedPayments.upi) {
         paymentDetails = savedPayments.upi;
       } else {
-        const upiId = document.getElementById('upiId').value.trim();
+        const upiName = document.getElementById('upiName').value.trim();
+        const upiId   = document.getElementById('upiId').value.trim();
         if (!upiId) { showToast('UPI ID enter karein ya save karein', 'error'); return; }
-        paymentDetails = { upiId };
+        paymentDetails = { upiName, upiId };
       }
     } else {
       if (savedPayments.bank) {
         paymentDetails = savedPayments.bank;
       } else {
+        const accName   = document.getElementById('accName').value.trim();
+        const bankName  = document.getElementById('bankName').value.trim();
         const accNumber = document.getElementById('accNumber').value.trim();
         const ifscCode  = document.getElementById('ifscCode').value.trim();
-        const accName   = document.getElementById('accName').value.trim();
-        if (!accNumber || !ifscCode || !accName) { showToast('Bank details enter karein ya save karein', 'error'); return; }
-        paymentDetails = { accNumber, ifscCode, accName };
+        if (!accName || !accNumber || !ifscCode) { showToast('Bank details enter karein ya save karein', 'error'); return; }
+        paymentDetails = { accName, bankName, accNumber, ifscCode };
       }
     }
 
@@ -791,9 +826,11 @@
 
     try {
       // Step 1: Withdrawal request save karo
+      const txnId = generateTxnId();
       await fetch(DB + '/withdrawals/' + uid + '.json' + ap, {
         method: 'POST',
         body  : JSON.stringify({
+          txnId,
           amount        : selectedAmount,
           fee           : Math.round(selectedAmount * 0.1),
           receive       : selectedAmount - Math.round(selectedAmount * 0.1),
@@ -888,65 +925,111 @@
         const items = Object.values(data).reverse();
         container.innerHTML = '<div class="history-list">' +
           items.map(item => {
-            const st          = (item.status || 'pending').toLowerCase().trim();
-            const isSuccess   = ['success','done','completed','approved'].includes(st);
-            const isRejected  = ['rejected','reject','failed','fail','cancelled','canceled'].includes(st);
-            const sc          = isSuccess ? 'done' : isRejected ? 'rejected' : 'pending';
-            const badgeText   = isSuccess ? '✅ Success' : isRejected ? '❌ Rejected' : '⏳ Pending';
-            const isUPI       = (item.method || '').toLowerCase() === 'upi';
-            const receive     = item.receive || (item.amount - Math.round(item.amount * 0.1));
-            const fee         = item.fee || Math.round(item.amount * 0.1);
-            const dateObj     = new Date(item.date);
-            const dateStr     = dateObj.toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' });
-            const timeStr     = dateObj.toLocaleTimeString('en-IN', { hour:'2-digit', minute:'2-digit', hour12:true });
-            const methodIcon  = isUPI ? '📱' : '🏦';
-            const methodName  = isUPI ? 'UPI Transfer' : 'Bank Transfer';
-            const payDetail   = isUPI
-              ? (item.paymentDetails && item.paymentDetails.upiId ? item.paymentDetails.upiId : '—')
-              : (item.paymentDetails && item.paymentDetails.accNumber ? '••••' + item.paymentDetails.accNumber.slice(-4) : '—');
+            const st         = (item.status || 'pending').toLowerCase().trim();
+            const isSuccess  = ['success','done','completed','approved'].includes(st);
+            const isRejected = ['rejected','reject','failed','fail','cancelled','canceled'].includes(st);
+            const sc         = isSuccess ? 'done' : isRejected ? 'rejected' : 'pending';
+            const badgeText  = isSuccess ? '✅ Success' : isRejected ? '❌ Rejected' : '⏳ Pending';
+            const isUPI      = (item.method || '').toLowerCase() === 'upi';
+            const pd         = item.paymentDetails || {};
+            const receive    = item.receive || (item.amount - Math.round(item.amount * 0.1));
+            const fee        = item.fee || Math.round(item.amount * 0.1);
+            const dateObj    = new Date(item.date);
+            const dateStr    = dateObj.toLocaleDateString('en-IN', { day:'2-digit', month:'long', year:'numeric' });
+            const timeStr    = dateObj.toLocaleTimeString('en-IN', { hour:'2-digit', minute:'2-digit', hour12:true });
+            const methodIcon = isUPI ? '📱' : '🏦';
+            const methodName = isUPI ? 'UPI Transfer' : 'Bank Transfer';
 
-            // Reject reason — Firebase mein rejectReason field se
-            const reason = item.rejectReason || item.reason || item.note || '';
-            const rejectBox = isRejected
+            // ── User details (kisne kiya withdraw) ──
+            const holderName = isUPI
+              ? (pd.upiName || '—')
+              : (pd.accName || '—');
+            const bankLabel  = isUPI ? 'UPI ID' : 'Bank';
+            const bankVal    = isUPI
+              ? (pd.upiId || '—')
+              : (pd.bankName || '—');
+            const accLabel   = isUPI ? '' : 'Account No';
+            const accVal     = isUPI ? '' : (pd.accNumber ? '••••' + String(pd.accNumber).slice(-4) : '—');
+            const ifscVal    = isUPI ? '' : (pd.ifscCode || '');
+
+            // ── Receive / refund ──
+            const receiveLabel = isRejected ? 'REFUND' : 'YOU GET';
+            const receiveVal   = isRejected ? '₹' + item.amount : '₹' + receive;
+            const receiveNote  = isRejected ? '24-48 hrs mein' : 'Fee deducted: ₹' + fee;
+
+            // ── Reject reason ──
+            const reason     = item.rejectReason || item.reason || item.note || '';
+            const rejectBox  = isRejected
               ? '<div class="tx-reject-reason">' +
                   '<div class="tx-reject-icon">⚠️</div>' +
                   '<div class="tx-reject-text">' +
                     '<strong>Rejection Reason</strong>' +
-                    '<span>' + (reason || 'Galat details ya suspicious activity — Support se contact karo.') + '</span>' +
+                    '<span>' + (reason || 'Galat details ya suspicious activity. Support se contact karo.') + '</span>' +
                   '</div>' +
                 '</div>'
               : '';
 
-            const receiveSection = isRejected
-              ? '<div class="tx-receive-col"><div class="tx-receive-label">REFUND</div><div class="tx-receive-val" style="color:#ef4444">₹' + item.amount + '</div><div class="tx-fee-val">24-48 hrs mein</div></div>'
-              : '<div class="tx-receive-col"><div class="tx-receive-label">YOU RECEIVE</div><div class="tx-receive-val">₹' + receive + '</div><div class="tx-fee-val">Fee: ₹' + fee + '</div></div>';
+            // ── TxnID strip ──
+            const txnStrip = item.txnId
+              ? '<div class="tx-txnid-strip" onclick="copyTxnId(this)">' +
+                  '<div class="tx-txnid-left">' +
+                    '<span class="tx-txnid-tag">Transaction ID</span>' +
+                    '<span class="tx-txnid-code">' + item.txnId + '</span>' +
+                  '</div>' +
+                  '<span class="tx-copy-btn">📋</span>' +
+                '</div>'
+              : '';
 
             return '<div class="tx-card ' + sc + '">' +
-              '<div class="tx-body">' +
-                '<div class="tx-top">' +
-                  '<div class="tx-left">' +
-                    '<div class="tx-icon">' + methodIcon + '</div>' +
-                    '<div>' +
-                      '<div class="tx-title">' + methodName + '</div>' +
-                      '<div class="tx-subtitle">' + payDetail + '</div>' +
-                    '</div>' +
+
+              // ── Header ──
+              '<div class="tx-header">' +
+                '<div class="tx-h-left">' +
+                  '<div class="tx-h-icon">' + methodIcon + '</div>' +
+                  '<div>' +
+                    '<div class="tx-h-title">' + methodName + '</div>' +
+                    '<div class="tx-h-sub">' + dateStr + ' &nbsp;·&nbsp; ' + timeStr + '</div>' +
                   '</div>' +
-                  '<div class="tx-badge">' + badgeText + '</div>' +
                 '</div>' +
-                '<div class="tx-amount-row">' +
-                  '<div class="tx-amount">₹' + item.amount + '</div>' +
-                  receiveSection +
-                '</div>' +
-                '<div class="tx-divider"></div>' +
-                '<div class="tx-meta">' +
-                  '<div class="tx-meta-item"><span class="tx-meta-label">Date</span><span class="tx-meta-value">' + dateStr + '</span></div>' +
-                  '<div class="tx-meta-item"><span class="tx-meta-label">Time</span><span class="tx-meta-value">' + timeStr + '</span></div>' +
-                  '<div class="tx-meta-item"><span class="tx-meta-label">Method</span><span class="tx-meta-value">' + (isUPI ? 'UPI' : 'Bank') + '</span></div>' +
-                  '<div class="tx-meta-item"><span class="tx-meta-label">Status</span><span class="tx-meta-value">' + st.charAt(0).toUpperCase() + st.slice(1) + '</span></div>' +
-                '</div>' +
-                rejectBox +
+                '<div class="tx-badge">' + badgeText + '</div>' +
               '</div>' +
-            '</div>';
+
+              // ── Body ──
+              '<div class="tx-body">' +
+
+                // Amount row
+                '<div class="tx-amount-row">' +
+                  '<div class="tx-amount-left">' +
+                    '<div class="tx-amount-label">AMOUNT</div>' +
+                    '<div class="tx-amount">₹' + item.amount + '</div>' +
+                  '</div>' +
+                  '<div class="tx-amount-right">' +
+                    '<div class="tx-receive-label">' + receiveLabel + '</div>' +
+                    '<div class="tx-receive-val">' + receiveVal + '</div>' +
+                    '<div class="tx-fee-note">' + receiveNote + '</div>' +
+                  '</div>' +
+                '</div>' +
+
+                '<hr class="tx-dash">' +
+
+                // Info grid — user details
+                '<div class="tx-info-grid">' +
+                  '<div class="tx-info-row"><span class="tx-info-label">Name</span><span class="tx-info-val">' + holderName + '</span></div>' +
+                  '<div class="tx-info-row"><span class="tx-info-label">' + bankLabel + '</span><span class="tx-info-val">' + bankVal + '</span></div>' +
+                  (accVal ? '<div class="tx-info-row"><span class="tx-info-label">' + accLabel + '</span><span class="tx-info-val">' + accVal + (ifscVal ? ' &nbsp;·&nbsp; ' + ifscVal : '') + '</span></div>' : '') +
+                  '<div class="tx-info-row"><span class="tx-info-label">Status</span><span class="tx-info-val">' + st.charAt(0).toUpperCase() + st.slice(1) + '</span></div>' +
+                '</div>' +
+
+                '<hr class="tx-dash">' +
+
+                // TxnID
+                txnStrip +
+
+                // Reject reason
+                rejectBox +
+
+              '</div>' + // tx-body
+            '</div>'; // tx-card
           }).join('') + '</div>';
       }).catch(e => console.error(e));
     }); // end _getAuthToken
