@@ -690,99 +690,106 @@
     else { input.type = 'password'; el.textContent = '👁️'; }
   }
 
+  // ── EmailJS Config (same as withdraw file) ───────────────────
+  const EMAILJS_SERVICE_ID  = 'service_4v9rxbp';
+  const EMAILJS_TEMPLATE_ID = 'template_vn14vex';
+  const EMAILJS_PUBLIC_KEY  = 'TDOOVu5VGqilIHFNe';
+  let _otpCode = '';
+  let _otpEmail = '';
+
+  // Load EmailJS
+  window.addEventListener('load', function() {
+    const s = document.createElement('script');
+    s.src = 'https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js';
+    s.onload = () => emailjs.init(EMAILJS_PUBLIC_KEY);
+    document.head.appendChild(s);
+  });
+
   function forgotPassword() {
-    // Modal kholo — email field mein jo pehle se type hai woh prefill karo
     const emailVal = document.getElementById('loginEmail').value.trim();
     const modal = document.getElementById('forgotModal');
     const inp = document.getElementById('forgotEmailInput');
     const status = document.getElementById('forgotStatus');
+    const otpSection = document.getElementById('forgotOtpSection');
+    const resetSection = document.getElementById('forgotResetSection');
+    const emailSection = document.getElementById('forgotEmailSection');
     if (inp && emailVal) inp.value = emailVal;
     if (status) status.textContent = '';
+    if (otpSection) otpSection.style.display = 'none';
+    if (resetSection) resetSection.style.display = 'none';
+    if (emailSection) emailSection.style.display = 'block';
     modal.style.display = 'flex';
   }
 
   function closeForgotModal() {
     document.getElementById('forgotModal').style.display = 'none';
+    _otpCode = ''; _otpEmail = '';
   }
 
-  async function sendResetEmail() {
+  async function sendForgotOTP() {
     const email = document.getElementById('forgotEmailInput').value.trim();
     const status = document.getElementById('forgotStatus');
-    const btn = document.querySelector('#forgotModal button');
-
-    if (!email) {
-      status.style.color = '#ef4444';
-      status.textContent = '⚠️ Email daalna zaroori hai!';
-      return;
+    const btn = document.getElementById('forgotSendOtpBtn');
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      status.style.color = '#ef4444'; status.textContent = '⚠️ Valid email dalein!'; return;
     }
-
-    // Email format check
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      status.style.color = '#ef4444';
-      status.textContent = '⚠️ Valid email dalein!';
-      return;
-    }
-
-    status.style.color = 'rgba(255,255,255,0.5)';
-    status.textContent = '⏳ Sending...';
-    btn.disabled = true;
-    btn.textContent = '⏳ Bhej rahe hain...';
-
+    btn.disabled = true; btn.textContent = '⏳ Bhej raha hoon...'; status.textContent = '';
     try {
-      // Firebase module ka wait karo agar abhi load ho raha hai
-      let attempts = 0;
-      while (!window._forgotPasswordAsync && attempts < 20) {
-        await new Promise(r => setTimeout(r, 200));
-        attempts++;
-      }
-
-      if (!window._forgotPasswordAsync) {
-        throw new Error('Firebase load nahi hua. Internet check karo.');
-      }
-
-      // Direct sendPasswordResetEmail call
-      const { getAuth } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js');
-      const { sendPasswordResetEmail } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js');
-      const auth = getAuth();
-      await sendPasswordResetEmail(auth, email);
-
-      status.style.color = '#22c55e';
-      status.textContent = '✅ Reset link bhej diya! Gmail check karo.';
-      btn.textContent = '✅ Email Sent!';
-      btn.style.background = 'linear-gradient(135deg,#22c55e,#16a34a)';
-
-      // 3 sec baad modal band
-      setTimeout(() => {
-        closeForgotModal();
-        btn.disabled = false;
-        btn.textContent = '📧 Reset Link Bhejo';
-        btn.style.background = '';
-      }, 3000);
-
+      _otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+      _otpEmail = email;
+      if (typeof emailjs === 'undefined') throw new Error('Email service load nahi hua, refresh karein!');
+      await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
+        to_email: email, email: email, otp_code: _otpCode, otp: _otpCode, name: 'TaskNova User', app_name: 'TaskNova'
+      });
+      status.style.color = '#22c55e'; status.textContent = '✅ OTP bhej diya! Email check karo.';
+      document.getElementById('forgotEmailSection').style.display = 'none';
+      document.getElementById('forgotOtpSection').style.display = 'block';
+      document.getElementById('forgotOtpInput').focus();
     } catch(e) {
-      btn.disabled = false;
-      btn.textContent = '📧 Reset Link Bhejo';
-      status.style.color = '#ef4444';
-      if (e.code === 'auth/user-not-found') {
-        status.textContent = '❌ Yeh email registered nahi hai!';
-      } else if (e.code === 'auth/invalid-email') {
-        status.textContent = '❌ Invalid email format!';
-      } else if (e.code === 'auth/too-many-requests') {
-        status.textContent = '❌ Bahut zyada requests! Thodi der baad try karo.';
-      } else {
-        status.textContent = '❌ Error: ' + (e.message || 'Dobara try karo');
-      }
+      status.style.color = '#ef4444'; status.textContent = '❌ ' + (e.message || 'OTP send nahi hua.');
+    } finally { btn.disabled = false; btn.textContent = '📧 OTP Bhejo'; }
+  }
+
+  function verifyForgotOTP() {
+    const entered = document.getElementById('forgotOtpInput').value.trim();
+    const status = document.getElementById('forgotStatus');
+    if (!entered || entered.length !== 6) {
+      status.style.color = '#ef4444'; status.textContent = '⚠️ 6 digit OTP dalein!'; return;
+    }
+    if (entered !== _otpCode) {
+      status.style.color = '#ef4444'; status.textContent = '❌ OTP galat hai!'; return;
+    }
+    status.style.color = '#22c55e'; status.textContent = '✅ OTP verified!';
+    document.getElementById('forgotOtpSection').style.display = 'none';
+    document.getElementById('forgotResetSection').style.display = 'block';
+  }
+
+  async function resetForgotPassword() {
+    const newPass  = document.getElementById('forgotNewPass').value.trim();
+    const confPass = document.getElementById('forgotConfPass').value.trim();
+    const status   = document.getElementById('forgotStatus');
+    const btn      = document.getElementById('forgotResetBtn');
+    if (!newPass || newPass.length < 6) {
+      status.style.color = '#ef4444'; status.textContent = '⚠️ Password 6+ characters ka hona chahiye!'; return;
+    }
+    if (newPass !== confPass) {
+      status.style.color = '#ef4444'; status.textContent = '⚠️ Passwords match nahi kar rahe!'; return;
+    }
+    btn.disabled = true; btn.textContent = '⏳ Saving...'; status.textContent = '';
+    try {
+      await sendPasswordResetEmail(auth, _otpEmail);
+      status.style.color = '#22c55e'; status.textContent = '✅ Password reset link Gmail mein bheja!';
+      setTimeout(() => { closeForgotModal(); showToast('Reset link Gmail mein bheja gaya! ✅', 'success'); }, 2000);
+    } catch(e) {
+      status.style.color = '#ef4444'; status.textContent = '❌ ' + (e.message || 'Error. Dobara try karo.');
+      btn.disabled = false; btn.textContent = '🔐 Password Reset Karo';
     }
   }
 
-  // Close modal on background click — wait for DOM
+  // Close modal on background click
   document.addEventListener('DOMContentLoaded', function() {
     const modal = document.getElementById('forgotModal');
-    if (modal) {
-      modal.addEventListener('click', function(e) {
-        if (e.target === this) closeForgotModal();
-      });
-    }
+    if (modal) modal.addEventListener('click', function(e) { if (e.target === this) closeForgotModal(); });
   });
 
   function loginUser() {
@@ -833,12 +840,33 @@
     <div style="text-align:center;margin-bottom:20px;">
       <div style="font-size:40px;margin-bottom:8px;">🔐</div>
       <div style="color:#fff;font-size:18px;font-weight:800;">Password Reset</div>
-      <div style="color:rgba(255,255,255,0.5);font-size:13px;margin-top:4px;">Apni email dalein — reset link bhejenge</div>
     </div>
-    <input id="forgotEmailInput" type="email" placeholder="Apni email likho..." style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.07);border:1px solid rgba(108,99,255,0.3);border-radius:14px;padding:14px 16px;color:#fff;font-size:15px;margin-bottom:16px;outline:none;">
-    <button onclick="sendResetEmail()" style="width:100%;background:linear-gradient(135deg,#6c63ff,#3b82f6);border:none;border-radius:14px;padding:14px;color:#fff;font-size:15px;font-weight:800;cursor:pointer;margin-bottom:10px;">📧 Reset Link Bhejo</button>
-    <button onclick="closeForgotModal()" style="width:100%;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);border-radius:14px;padding:12px;color:rgba(255,255,255,0.6);font-size:14px;cursor:pointer;">Cancel</button>
-    <div id="forgotStatus" style="text-align:center;margin-top:14px;font-size:13px;min-height:20px;"></div>
+
+    <!-- Step 1: Email -->
+    <div id="forgotEmailSection">
+      <p style="color:rgba(255,255,255,0.5);font-size:13px;text-align:center;margin-bottom:14px;">Apni registered email dalein — OTP bhejenge</p>
+      <input id="forgotEmailInput" type="email" placeholder="Apni email likho..." style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.07);border:1px solid rgba(108,99,255,0.3);border-radius:14px;padding:14px 16px;color:#fff;font-size:15px;margin-bottom:12px;outline:none;">
+      <button id="forgotSendOtpBtn" onclick="sendForgotOTP()" style="width:100%;background:linear-gradient(135deg,#6c63ff,#3b82f6);border:none;border-radius:14px;padding:14px;color:#fff;font-size:15px;font-weight:800;cursor:pointer;margin-bottom:10px;">📧 OTP Bhejo</button>
+    </div>
+
+    <!-- Step 2: OTP verify -->
+    <div id="forgotOtpSection" style="display:none;">
+      <p style="color:rgba(255,255,255,0.5);font-size:13px;text-align:center;margin-bottom:14px;">Email pe aaya 6-digit OTP dalein</p>
+      <input id="forgotOtpInput" type="tel" maxlength="6" placeholder="6-digit OTP" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.07);border:1px solid rgba(108,99,255,0.3);border-radius:14px;padding:14px 16px;color:#fff;font-size:20px;font-weight:800;text-align:center;margin-bottom:12px;outline:none;letter-spacing:6px;">
+      <button onclick="verifyForgotOTP()" style="width:100%;background:linear-gradient(135deg,#6c63ff,#3b82f6);border:none;border-radius:14px;padding:14px;color:#fff;font-size:15px;font-weight:800;cursor:pointer;margin-bottom:10px;">✅ OTP Verify Karo</button>
+      <button onclick="sendForgotOTP()" style="width:100%;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:14px;padding:11px;color:rgba(255,255,255,0.5);font-size:13px;cursor:pointer;margin-bottom:10px;">🔄 OTP Dobara Bhejo</button>
+    </div>
+
+    <!-- Step 3: New password -->
+    <div id="forgotResetSection" style="display:none;">
+      <p style="color:rgba(255,255,255,0.5);font-size:13px;text-align:center;margin-bottom:14px;">Naya password set karo</p>
+      <input id="forgotNewPass" type="password" placeholder="Naya password (min 6 chars)" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.07);border:1px solid rgba(108,99,255,0.3);border-radius:14px;padding:14px 16px;color:#fff;font-size:15px;margin-bottom:10px;outline:none;">
+      <input id="forgotConfPass" type="password" placeholder="Password confirm karo" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.07);border:1px solid rgba(108,99,255,0.3);border-radius:14px;padding:14px 16px;color:#fff;font-size:15px;margin-bottom:12px;outline:none;">
+      <button id="forgotResetBtn" onclick="resetForgotPassword()" style="width:100%;background:linear-gradient(135deg,#22c55e,#16a34a);border:none;border-radius:14px;padding:14px;color:#fff;font-size:15px;font-weight:800;cursor:pointer;margin-bottom:10px;">🔐 Password Reset Karo</button>
+    </div>
+
+    <button onclick="closeForgotModal()" style="width:100%;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:14px;padding:12px;color:rgba(255,255,255,0.5);font-size:14px;cursor:pointer;">Cancel</button>
+    <div id="forgotStatus" style="text-align:center;margin-top:12px;font-size:13px;min-height:18px;"></div>
   </div>
 </div>
 
