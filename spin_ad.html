@@ -572,10 +572,16 @@
     });
   }
 
-  // ── Visibility change ─────────────────────────────────────────
+  // ── Visibility change — sirf timer chal raha ho tab ad trigger karo ──
   function onVisChange() {
-    if (timerStarted && !creditFired && !penaltyApplied)
+    if (document.visibilityState === 'visible'
+        && timerStarted
+        && !creditFired
+        && !penaltyApplied
+        && elapsed < AD_DURATION) {   // timer abhi khatam nahi hua
       document.getElementById('statusText').textContent = '⏳ Ad chal raha hai... ' + elapsed + 's';
+      triggerAd();
+    }
   }
   document.addEventListener('visibilitychange', onVisChange);
 
