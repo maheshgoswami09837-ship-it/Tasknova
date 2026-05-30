@@ -777,7 +777,12 @@
     }
     btn.disabled = true; btn.textContent = '⏳ Saving...'; status.textContent = '';
     try {
-      await sendPasswordResetEmail(auth, _otpEmail);
+      // Use window._forgotPasswordAsync which has access to Firebase auth
+      if (window._forgotPasswordAsync) {
+        await window._forgotPasswordAsync(_otpEmail);
+      } else {
+        throw new Error('Firebase load nahi hua. Refresh karein.');
+      }
       status.style.color = '#22c55e'; status.textContent = '✅ Password reset link Gmail mein bheja!';
       setTimeout(() => { closeForgotModal(); showToast('Reset link Gmail mein bheja gaya! ✅', 'success'); }, 2000);
     } catch(e) {
