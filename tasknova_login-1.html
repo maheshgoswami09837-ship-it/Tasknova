@@ -32,7 +32,25 @@
   input { width: 100%; background: rgba(255,255,255,0.07); border: 1.5px solid rgba(255,255,255,0.1); border-radius: 14px; padding: 14px 44px; color: #fff; font-size: 14px; outline: none; transition: all 0.3s; font-family: 'Segoe UI', sans-serif; }
   input::placeholder { color: rgba(255,255,255,0.3); }
   input:focus { border-color: #6c63ff; background: rgba(108,99,255,0.1); }
-  .forgot { text-align: right; font-size: 13px; color: #6c63ff; cursor: pointer; margin-top: 6px; margin-bottom: 4px; display: inline-block; width: 100%; text-decoration: none; background: none; border: none; outline: none; user-select: none; -webkit-tap-highlight-color: rgba(108,99,255,0.25); border-radius: 6px; transition: opacity 0.2s; }
+  .forgot {
+    display: block;
+    width: 100%;
+    margin-top: 10px;
+    padding: 13px 16px;
+    background: rgba(108,99,255,0.12);
+    border: 1.5px solid rgba(108,99,255,0.35);
+    border-radius: 14px;
+    color: #a78bfa;
+    font-size: 14px;
+    font-weight: 700;
+    text-align: center;
+    cursor: pointer;
+    user-select: none;
+    -webkit-tap-highlight-color: rgba(108,99,255,0.25);
+    transition: background 0.2s, transform 0.15s;
+    letter-spacing: 0.3px;
+  }
+  .forgot:active { background: rgba(108,99,255,0.25); transform: scale(0.97); }
   .btn-main { width: 100%; padding: 15px; background: linear-gradient(135deg, #6c63ff, #3b82f6); border: none; border-radius: 14px; color: #fff; font-size: 15px; font-weight: 700; cursor: pointer; box-shadow: 0 6px 25px rgba(108,99,255,0.35); font-family: 'Segoe UI', sans-serif; margin-top: 4px; }
   .btn-main:disabled { opacity: 0.6; }
   .register-form { display: none; flex-direction: column; gap: 14px; }
@@ -227,7 +245,7 @@
         <input type="password" id="loginPassword" placeholder="Enter your password">
         <span class="eye-icon" onclick="togglePass('loginPassword', this)">👁️</span>
       </div>
-      <span class="forgot" onclick="forgotPassword()">Forgot Password?</span>
+      <span class="forgot" onclick="forgotPassword()">🔐 Forgot Password?</span>
       <button class="btn-main" id="loginBtn" onclick="loginUser()">LOGIN</button>
     </div>
     <!-- REGISTER FORM — Refer field nahi hai -->
@@ -673,15 +691,99 @@
   }
 
   function forgotPassword() {
-    const email = document.getElementById('loginEmail').value.trim();
+    // Modal kholo — email field mein jo pehle se type hai woh prefill karo
+    const emailVal = document.getElementById('loginEmail').value.trim();
+    const modal = document.getElementById('forgotModal');
+    const inp = document.getElementById('forgotEmailInput');
+    const status = document.getElementById('forgotStatus');
+    if (inp && emailVal) inp.value = emailVal;
+    if (status) status.textContent = '';
+    modal.style.display = 'flex';
+  }
+
+  function closeForgotModal() {
+    document.getElementById('forgotModal').style.display = 'none';
+  }
+
+  async function sendResetEmail() {
+    const email = document.getElementById('forgotEmailInput').value.trim();
+    const status = document.getElementById('forgotStatus');
+    const btn = document.querySelector('#forgotModal button');
+
     if (!email) {
-      alert('Pehle email field mein apni email likho!');
+      status.style.color = '#ef4444';
+      status.textContent = '⚠️ Email daalna zaroori hai!';
       return;
     }
-    if (window._forgotPasswordAsync) {
-      window._forgotPasswordAsync(email);
+
+    // Email format check
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      status.style.color = '#ef4444';
+      status.textContent = '⚠️ Valid email dalein!';
+      return;
+    }
+
+    status.style.color = 'rgba(255,255,255,0.5)';
+    status.textContent = '⏳ Sending...';
+    btn.disabled = true;
+    btn.textContent = '⏳ Bhej rahe hain...';
+
+    try {
+      // Firebase module ka wait karo agar abhi load ho raha hai
+      let attempts = 0;
+      while (!window._forgotPasswordAsync && attempts < 20) {
+        await new Promise(r => setTimeout(r, 200));
+        attempts++;
+      }
+
+      if (!window._forgotPasswordAsync) {
+        throw new Error('Firebase load nahi hua. Internet check karo.');
+      }
+
+      // Direct sendPasswordResetEmail call
+      const { getAuth } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js');
+      const { sendPasswordResetEmail } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js');
+      const auth = getAuth();
+      await sendPasswordResetEmail(auth, email);
+
+      status.style.color = '#22c55e';
+      status.textContent = '✅ Reset link bhej diya! Gmail check karo.';
+      btn.textContent = '✅ Email Sent!';
+      btn.style.background = 'linear-gradient(135deg,#22c55e,#16a34a)';
+
+      // 3 sec baad modal band
+      setTimeout(() => {
+        closeForgotModal();
+        btn.disabled = false;
+        btn.textContent = '📧 Reset Link Bhejo';
+        btn.style.background = '';
+      }, 3000);
+
+    } catch(e) {
+      btn.disabled = false;
+      btn.textContent = '📧 Reset Link Bhejo';
+      status.style.color = '#ef4444';
+      if (e.code === 'auth/user-not-found') {
+        status.textContent = '❌ Yeh email registered nahi hai!';
+      } else if (e.code === 'auth/invalid-email') {
+        status.textContent = '❌ Invalid email format!';
+      } else if (e.code === 'auth/too-many-requests') {
+        status.textContent = '❌ Bahut zyada requests! Thodi der baad try karo.';
+      } else {
+        status.textContent = '❌ Error: ' + (e.message || 'Dobara try karo');
+      }
     }
   }
+
+  // Close modal on background click — wait for DOM
+  document.addEventListener('DOMContentLoaded', function() {
+    const modal = document.getElementById('forgotModal');
+    if (modal) {
+      modal.addEventListener('click', function(e) {
+        if (e.target === this) closeForgotModal();
+      });
+    }
+  });
 
   function loginUser() {
     if (window.loginUser) window.loginUser();
@@ -725,5 +827,20 @@
     document.getElementById('rulesModal').classList.remove('show');
   }
 </script>
+<!-- ── Forgot Password Modal ─────────────────────────────── -->
+<div id="forgotModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.75);z-index:9999;align-items:center;justify-content:center;padding:24px;box-sizing:border-box;">
+  <div style="background:linear-gradient(135deg,#0d0d2b,#1a1a4e);border:1px solid rgba(108,99,255,0.3);border-radius:24px;padding:28px 24px;width:100%;max-width:380px;box-shadow:0 8px 40px rgba(0,0,0,0.6);">
+    <div style="text-align:center;margin-bottom:20px;">
+      <div style="font-size:40px;margin-bottom:8px;">🔐</div>
+      <div style="color:#fff;font-size:18px;font-weight:800;">Password Reset</div>
+      <div style="color:rgba(255,255,255,0.5);font-size:13px;margin-top:4px;">Apni email dalein — reset link bhejenge</div>
+    </div>
+    <input id="forgotEmailInput" type="email" placeholder="Apni email likho..." style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.07);border:1px solid rgba(108,99,255,0.3);border-radius:14px;padding:14px 16px;color:#fff;font-size:15px;margin-bottom:16px;outline:none;">
+    <button onclick="sendResetEmail()" style="width:100%;background:linear-gradient(135deg,#6c63ff,#3b82f6);border:none;border-radius:14px;padding:14px;color:#fff;font-size:15px;font-weight:800;cursor:pointer;margin-bottom:10px;">📧 Reset Link Bhejo</button>
+    <button onclick="closeForgotModal()" style="width:100%;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);border-radius:14px;padding:12px;color:rgba(255,255,255,0.6);font-size:14px;cursor:pointer;">Cancel</button>
+    <div id="forgotStatus" style="text-align:center;margin-top:14px;font-size:13px;min-height:20px;"></div>
+  </div>
+</div>
+
 </body>
 </html>
