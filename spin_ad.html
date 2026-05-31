@@ -54,16 +54,16 @@
 
   .ad-box {
     width: 100%;
-    background: #f9fafb;
-    border: 1px dashed #d1d5db;
+    background: transparent;
+    border: none;
     border-radius: 8px;
-    overflow: visible;
-    margin: 12px 0;
-    min-height: 90px;
+    overflow: hidden;
+    margin: 8px 0;
+    min-height: 0;
     display: block;
     text-align: center;
   }
-  .ad-box iframe { display:block; margin:0 auto; }
+  .ad-box iframe { display:block; margin:0 auto; max-width:100% !important; }
   .ad-box-label { font-size:10px; color:#d1d5db; text-align:center; padding:8px; }
 
   /* Fake blog article content */
@@ -201,7 +201,12 @@
         </div>
 
         <!-- Fake Article -->
-        <div class="article-img">📱</div>
+        <div style="width:100%;height:200px;border-radius:12px;margin-bottom:14px;overflow:hidden;background:#e0e7ff;">
+          <img src="https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?w=700&q=80"
+            style="width:100%;height:100%;object-fit:cover;display:block;"
+            onerror="this.parentElement.innerHTML='📱';this.parentElement.style.display='flex';this.parentElement.style.alignItems='center';this.parentElement.style.justifyContent='center';this.parentElement.style.fontSize='48px';"
+            alt="Smartphone apps">
+        </div>
         <div class="article-title">Top 10 Apps to Earn Real Money Online in India 2025</div>
         <div class="article-meta">
           <span>✍️ By Rahul Sharma</span>
@@ -259,12 +264,22 @@
       <!-- Fake Blog Header -->
       <div class="blog-header">
         <span class="blog-logo">📰 TechBlog India</span>
-        <span class="blog-tag">Step 2 of 2</span>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <button id="scrollToClaimBtn" onclick="document.getElementById('claimBtn').scrollIntoView({behavior:'smooth',block:'center'})" style="display:none;background:linear-gradient(135deg,#16a34a,#22c55e);border:none;border-radius:20px;padding:6px 14px;color:#fff;font-size:12px;font-weight:800;cursor:pointer;font-family:'Segoe UI',sans-serif;">
+            Claim 👇
+          </button>
+          <span class="blog-tag">Step 2 of 2</span>
+        </div>
       </div>
 
       <div class="article-wrap">
 
-        <div class="article-img">💰</div>
+        <div style="width:100%;height:200px;border-radius:12px;margin-bottom:14px;overflow:hidden;background:#dcfce7;">
+          <img src="https://images.unsplash.com/photo-1607863680198-23d4b2565df0?w=700&q=80"
+            style="width:100%;height:100%;object-fit:cover;display:block;"
+            onerror="this.parentElement.innerHTML='💰';this.parentElement.style.display='flex';this.parentElement.style.alignItems='center';this.parentElement.style.justifyContent='center';this.parentElement.style.fontSize='48px';"
+            alt="Earning money">
+        </div>
         <div class="article-title">How TaskNova Pays You Instantly – Full Review</div>
         <div class="article-meta">
           <span>✍️ By Priya Verma</span>
@@ -284,8 +299,8 @@
       <!-- Monetag Ads Section -->
       <div class="native-section">
         <div class="native-title">Recommended For You</div>
-        <div id="monetag-native-container" style="min-height:100px;">
-          <script>(function(s){s.dataset.zone='11081419',s.src='https://nap5k.com/tag.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))</script>
+        <div id="monetag-native-container" style="min-height:80px;text-align:center;">
+          <!-- Monetag In-Page Push — injected when Step 2 loads -->
         </div>
       </div>
 
@@ -298,9 +313,7 @@
       </div>
 
       <!-- Monetag ad — timer ke upar -->
-      <div style="text-align:center;padding:0 16px;margin-bottom:8px;">
-        <script>(function(s){s.dataset.zone='11081419',s.src='https://nap5k.com/tag.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))</script>
-      </div>
+      <div id="monetag-above-timer" style="text-align:center;padding:0 16px;margin-bottom:8px;"></div>
 
       <!-- Scroll hint — timer ke upar -->
       <div style="margin:0 16px 8px;background:linear-gradient(135deg,#f0fdf4,#dcfce7);border:1.5px solid #86efac;border-radius:12px;padding:12px 16px;text-align:center;">
@@ -317,10 +330,8 @@
         <div class="tb-hint" id="s2Hint">Hang tight, your reward is being prepared...</div>
       </div>
 
-      <!-- Monetag ad — timer ke neeche / claim ke upar -->
-      <div style="text-align:center;padding:0 16px;margin-bottom:12px;">
-        <script>(function(s){s.dataset.zone='11081419',s.src='https://nap5k.com/tag.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))</script>
-      </div>
+      <!-- Monetag ad — timer ke neeche -->
+      <div id="monetag-below-timer" style="text-align:center;padding:0 16px;margin-bottom:12px;"></div>
 
       <!-- CLAIM BUTTON -->
       <button class="wp-btn-claim" id="claimBtn" onclick="claimCoins()">
@@ -386,9 +397,22 @@
     document.body.appendChild(s);
   }
 
-  // Monetag native ab Step 2 HTML mein directly load ho raha hai
-  // Dynamic injection ki zaroorat nahi
-  function injectMonetagNative() { /* no-op */ }
+  // Monetag In-Page Push — sirf Step 2 dikhne pe inject hoga
+  // Har container mein alag script tag — independently fire karta hai
+  function injectMonetagNative() {
+    ['monetag-native-container','monetag-above-timer','monetag-below-timer'].forEach(function(id) {
+      const el = document.getElementById(id);
+      if (!el || el.dataset.injected) return;
+      el.dataset.injected = '1';
+      const s = document.createElement('script');
+      s.text = "(function(s){s.dataset.zone='11081419',s.src='https://nap5k.com/tag.min.js'})([document.documentElement,document.body].filter(Boolean).pop().appendChild(document.createElement('script')))";
+      el.appendChild(s);
+    });
+  }
+
+  // Popunder — DISABLED (causing ads on button press on other devices)
+  function triggerMonetagPopunder() { /* disabled */ }
+  function triggerAdsterraPopunder() { /* disabled */ }
 
   /* ── State — safe localStorage reads ────────────────────── */
   let uid, prize;
@@ -414,6 +438,7 @@
     if (pb) pb.style.display = 'none';
 
     const overlay = document.getElementById('errorOverlay');
+    if (!overlay) return;
     overlay.style.display = 'flex';
 
     if (type === 'penalty') {
@@ -444,10 +469,10 @@
     const iv = setInterval(() => {
       const rem = Math.max(0, Math.ceil((until - Date.now()) / 1000));
       const m = Math.floor(rem/60), s = rem%60;
-      el.textContent = m + ':' + String(s).padStart(2,'0');
+      if (el) el.textContent = m + ':' + String(s).padStart(2,'0');
       if (rem <= 0) {
         clearInterval(iv);
-        localStorage.removeItem(storageKey);
+        try { localStorage.removeItem(storageKey); } catch(e) {}
         if (redirectOnDone) goBack(); else location.reload();
       }
     }, 1000);
@@ -465,40 +490,35 @@
 
   /* ── Step 1 start ────────────────────────────────────── */
   function startAdTask() {
-    // Popunder sirf page load pe ek baar — claim/continue pe nahi
-    try {
-      if (isMonetegSpin()) triggerMonetagPopunder();
-      else                 triggerAdsterraPopunder();
-    } catch(e) { console.warn('Popunder error:', e); }
-
-    document.getElementById('whitePage').style.display = 'block';
-    document.getElementById('step1').style.display     = 'block';
-    document.getElementById('step2').style.display     = 'none';
-
+    const wp = document.getElementById('whitePage');
+    const s1 = document.getElementById('step1');
+    const s2 = document.getElementById('step2');
     const pb = document.getElementById('progressBar');
-    pb.style.background  = '#2563eb';
-    pb.style.width       = '0%';
-    pb.style.transition  = 'none';
-    currentStep = 1;
 
+    if (wp) wp.style.display = 'block';
+    if (s1) s1.style.display = 'block';
+    if (s2) s2.style.display = 'none';
+    if (pb) { pb.style.background = '#2563eb'; pb.style.width = '0%'; pb.style.transition = 'none'; }
+
+    currentStep = 1;
     history.pushState({ step:1 }, '', location.href);
     startStepTimer(1);
   }
 
   /* ── Step 2 load ─────────────────────────────────────── */
   function goToStep2() {
-    document.getElementById('s1ContinueBtn').style.display = 'none';
-    document.getElementById('step1').style.display         = 'none';
-    document.getElementById('step2').style.display         = 'block';
+    const s1btn = document.getElementById('s1ContinueBtn');
+    const s1    = document.getElementById('step1');
+    const s2    = document.getElementById('step2');
+    const pb    = document.getElementById('progressBar');
 
-    const pb = document.getElementById('progressBar');
-    pb.style.background = '#16a34a';
-    pb.style.width      = '0%';
-    pb.style.transition = 'none';
+    if (s1btn) s1btn.style.display = 'none';
+    if (s1)    s1.style.display    = 'none';
+    if (s2)    s2.style.display    = 'block';
+    if (pb)    { pb.style.background = '#16a34a'; pb.style.width = '0%'; pb.style.transition = 'none'; }
+
     currentStep = 2;
-
     injectMonetagNative();
-    // Top pe scroll — user article aur ads dekhega
     window.scrollTo({ top: 0, behavior: 'instant' });
     startStepTimer(2);
   }
@@ -513,8 +533,7 @@
     const hintEl = document.getElementById(step === 1 ? 's1Hint'     : 's2Hint');
 
     setTimeout(() => {
-      pb.style.transition = 'width ' + STEP_DURATION + 's linear';
-      pb.style.width = '100%';
+      if (pb) { pb.style.transition = 'width ' + STEP_DURATION + 's linear'; pb.style.width = '100%'; }
     }, 50);
 
     stepTimer = setInterval(function() {
@@ -526,7 +545,7 @@
 
       if (stepSecsLeft <= 0) {
         clearInterval(stepTimer);
-        pb.style.width = '100%';
+        if (pb) pb.style.width = '100%';
         onStepComplete(step);
       }
     }, 1000);
@@ -536,10 +555,13 @@
   function onStepComplete(step) {
     if (step === 1) {
       const btn = document.getElementById('s1ContinueBtn');
-      btn.style.display = 'block';
+      if (btn) btn.style.display = 'block';
     } else {
       const btn = document.getElementById('claimBtn');
-      btn.style.display = 'block';
+      if (btn) btn.style.display = 'block';
+      // Scroll button bhi dikhao
+      const sb = document.getElementById('scrollToClaimBtn');
+      if (sb) sb.style.display = 'block';
     }
   }
 
