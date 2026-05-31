@@ -2912,18 +2912,7 @@
 
       // ── Log Ad Pending for Spin/Scratch/Quiz overlay ────────
       (function() {
-        const _puid = localStorage.getItem('tasknova_uid');
-        if (_puid && _puid !== 'null') {
-          const typeLabel = type === 'spin' ? '🎡 Spin & Win Ad'
-                         : type === 'scratch' ? '🎴 Scratch Card Ad'
-                         : type === 'quiz' ? '🧠 Quiz Ad'
-                         : '📺 Task Ad';
-          logTaskActivity({
-            uid: _puid, taskType: 'Ad', taskName: typeLabel,
-            coins: coins, status: 'Pending',
-            extraData: { taskSubType: type, startedAt: Date.now() }
-          });
-        }
+        // Pending log hata diya — sirf Success pe log hoga (creditCoins mein)
       })();
       // ─────────────────────────────────────────────────────────
 
@@ -3115,9 +3104,10 @@
       (function(){
         const _suid = localStorage.getItem('tasknova_uid');
         if (_suid && _suid !== 'null') {
+          // Pending log hata diya — sirf Success pe log hoga
           logTaskActivity({
-            uid:_suid, taskType:'Ad', taskName:'🎡 Spin & Win Ad',
-            coins: prize, status:'Pending',
+            uid:_suid, taskType:'Spin', taskName:'🎡 Spin & Win',
+            coins: prize, status:'Success',
             extraData:{ taskSubType:'spin', startedAt:Date.now() }
           });
         }
@@ -3438,13 +3428,7 @@
         }
         slVisited = true;
 
-        // ── Log Shortlink Pending ──────────────────────────────
-        logTaskActivity({
-          uid: uid2, taskType:'Shortlink', taskName:'🔗 Shortlink Task',
-          coins: SL_COINS, status:'Pending',
-          extraData:{ shortUrl, taskIndex, visitedAt:Date.now() }
-        });
-        // ─────────────────────────────────────────────────────
+        // Shortlink Pending log hata diya — sirf claim pe Success log hoga
 
         visitBtn.textContent = '✅ Link Visited!';
         visitBtn.style.background = 'rgba(34,197,94,0.15)';
@@ -3590,13 +3574,7 @@
   async function openOfferwallPage() {
     const uid = localStorage.getItem('tasknova_uid');
     if (uid && uid !== 'null') {
-      try {
-        await logTaskActivity({
-          uid, taskType:'Offerwall', taskName:'🎁 Offerwall Tasks',
-          coins:0, status:'Pending',
-          extraData:{ offerwallProvider:'CPALead', openedAt:Date.now() }
-        });
-      } catch(e) { console.warn('[Offerwall] log failed:', e); }
+      // Offerwall log postback se aayega (cpalead-postback.js)
     }
     window.location.href = 'cpalead_offerwall.html?uid=' + (uid || '');
   }
@@ -3611,6 +3589,52 @@
     document.getElementById(id).classList.remove('show');
     updateDailyLimitUI();
   }
+</script>
+  <script src="offerwall_conditions.js"></script>
+
+<script>
+// ── intent:// & market:// URL Fix for Kodular WebView ──────────
+// Chrome handles these automatically, WebView does not.
+// This intercepts all link clicks and converts to https://
+// then sends to Kodular via AppInventor.setWebViewString()
+// so ActivityStarter can open them in the device browser/Play Store.
+
+document.addEventListener('click', function(e) {
+  var el = e.target.closest('a');
+  if (!el) return;
+  var url = el.href || el.getAttribute('href') || '';
+  if (!url) return;
+
+  // ── intent:// → https:// ──
+  if (url.indexOf('intent://') === 0) {
+    e.preventDefault();
+    e.stopPropagation();
+    // Strip #Intent;...;end suffix
+    url = 'https://' + url.replace('intent://', '').split('#Intent')[0];
+    try { window.AppInventor.setWebViewString(url); } catch(err) { window.open(url, '_blank'); }
+    return;
+  }
+
+  // ── market:// → Play Store https:// ──
+  if (url.indexOf('market://') === 0) {
+    e.preventDefault();
+    e.stopPropagation();
+    url = url.replace('market://details?id=', 'https://play.google.com/store/apps/details?id=')
+             .replace('market://', 'https://play.google.com/store/');
+    try { window.AppInventor.setWebViewString(url); } catch(err) { window.open(url, '_blank'); }
+    return;
+  }
+
+  // ── tg:// → Telegram https:// ──
+  if (url.indexOf('tg://') === 0) {
+    e.preventDefault();
+    e.stopPropagation();
+    url = url.replace('tg://resolve?domain=', 'https://t.me/');
+    try { window.AppInventor.setWebViewString(url); } catch(err) { window.open(url, '_blank'); }
+    return;
+  }
+
+}, true);
 </script>
 </body>
 </html>
