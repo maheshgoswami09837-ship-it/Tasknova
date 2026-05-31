@@ -99,8 +99,8 @@
 
   <iframe
     id="offerwallFrame"
-    sandbox="allow-popups allow-same-origin allow-scripts allow-top-navigation-by-user-activation allow-popups-to-escape-sandbox"
-    referrerpolicy="no-referrer"
+    sandbox="allow-popups allow-same-origin allow-scripts allow-top-navigation allow-top-navigation-by-user-activation allow-popups-to-escape-sandbox allow-downloads"
+    referrerpolicy="no-referrer-when-downgrade"
     src="https://lnksforyou.com/wall/te2DA"
     title="CPALead Offerwall">
   </iframe>
@@ -114,11 +114,49 @@
     overlay.classList.add('hidden');
   });
 
-  // Fallback: hide loader after 8s even if load event doesn't fire
+  // Fallback: hide loader after 8s
   setTimeout(function () {
     overlay.classList.add('hidden');
   }, 8000);
+
+  // ── Intent / Play Store link handler ─────────────────────────
+  // Jab iframe ke andar Play Store ya intent:// link click ho
+  // toh top-level window mein open karo
+  window.addEventListener('message', function(e) {
+    if (!e.data) return;
+    const url = e.data.url || e.data;
+    if (typeof url === 'string' && (
+      url.startsWith('intent://') ||
+      url.startsWith('market://') ||
+      url.includes('play.google.com/store')
+    )) {
+      window.location.href = url;
+    }
+  });
+
+  // iframe navigation intercept — Play Store links top window mein kholo
+  frame.addEventListener('load', function() {
+    try {
+      const iDoc = frame.contentDocument || frame.contentWindow.document;
+      iDoc.addEventListener('click', function(e) {
+        const a = e.target.closest('a');
+        if (!a) return;
+        const href = a.href || '';
+        if (
+          href.startsWith('intent://') ||
+          href.startsWith('market://') ||
+          href.includes('play.google.com')
+        ) {
+          e.preventDefault();
+          window.location.href = href;
+        }
+      });
+    } catch(err) {
+      // Cross-origin — sandbox allow-top-navigation handle karega
+    }
+  });
 </script>
+
 
 </body>
 </html>
