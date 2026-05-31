@@ -1533,110 +1533,13 @@
       return;
     }
 
-    // Alternating network — odd=Monetag, even=Adsterra
-    const nextCount   = batchCount + 1;
-    const adUrl       = (nextCount % 2 !== 0) ? MONETAG_URL : ADSTERRA_URL;
-    const networkName = (nextCount % 2 !== 0) ? 'Monetag' : 'Adsterra';
-    console.log('[Ad] #' + nextCount + ' → ' + networkName);
-
-    // ── Open ad in popup window ──────────────────────────────
-    const adWindow = window.open(adUrl, '_blank',
-      'width=' + screen.width + ',height=' + screen.height +
-      ',scrollbars=yes,resizable=yes,toolbar=no,menubar=no,location=no,status=no'
-    );
-
-    if (!adWindow || adWindow.closed || typeof adWindow.closed === 'undefined') {
-      // Popup blocked — fallback to redirect
-      showToast('Popup block ho gayi! Browser settings mein allow karo.', '#f59e0b');
-      localStorage.setItem('currentAdUrl', adUrl);
-      window.location.href = 'https://tasknovaofficial.vercel.app/watch_ad.html';
-      return;
-    }
-
-    // ── Show in-page timer overlay ───────────────────────────
-    const popup = document.getElementById('adPopup');
-    popup.classList.add('show');
-
-    const timerBar   = document.getElementById('adTimerBar');
-    const countdown  = document.getElementById('adCountdown');
-    const claimBtn   = document.getElementById('adClaimBtn');
-    const statusText = document.getElementById('adStatusText');
-    const startBtn   = document.getElementById('adStartBtn');
-
-    if (timerBar)  { timerBar.style.width = '0%'; timerBar.style.transition = 'none'; }
-    if (claimBtn)  claimBtn.style.display = 'none';
-    if (startBtn)  startBtn.style.display = 'none';
-    if (statusText) statusText.textContent = '👀 Ad dekh rahe ho... band mat karna!';
-    if (countdown) countdown.textContent = 'Please wait 30s';
-
-    // Animate progress bar
-    requestAnimationFrame(() => requestAnimationFrame(() => {
-      if (timerBar) { timerBar.style.transition = 'width 30s linear'; timerBar.style.width = '100%'; }
-    }));
-
-    let timeLeft = 30;
-    let adCompleted = false;
-    let windowClosedEarly = false;
-
-    // ── adWindow.closed polling — detects if user closes ad tab ──
-    const windowCheckInterval = setInterval(() => {
-      if (adWindow.closed) {
-        clearInterval(windowCheckInterval);
-        if (!adCompleted) {
-          // User closed ad before 30s — RESET timer
-          windowClosedEarly = true;
-          clearInterval(timerInterval);
-          if (timerBar)  { timerBar.style.transition = 'none'; timerBar.style.width = '0%'; }
-          if (claimBtn)  claimBtn.style.display = 'none';
-          if (countdown) countdown.textContent = '';
-          if (statusText) statusText.textContent = '⚠️ Ad band kar di! Dobara Watch karo.';
-
-          // Show warning alert box
-          const alertBox = document.getElementById('adAlert');
-          const alertText = document.getElementById('adAlertText');
-          if (alertBox) alertBox.style.display = 'block';
-          if (alertText) alertText.innerHTML = '❌ Ad 30s se pehle band kari — reward nahi milega!';
-
-          showToast('❌ Ad skip ki! 30 seconds poori dekhni hogi.', '#ef4444');
-
-          // Auto-close popup after 3s
-          setTimeout(() => {
-            popup.classList.remove('show');
-            if (alertBox) alertBox.style.display = 'none';
-          }, 3000);
-        }
-      }
-    }, 500);
-
-    // ── 30s countdown timer ──────────────────────────────────
-    adHardLockActive = true;
-    const timerInterval = setInterval(() => {
-      if (windowClosedEarly) { clearInterval(timerInterval); adHardLockActive = false; return; }
-      timeLeft--;
-      if (countdown) countdown.textContent = 'Please wait ' + Math.max(0, timeLeft) + 's';
-
-      if (timeLeft <= 0) {
-        clearInterval(timerInterval);
-        clearInterval(windowCheckInterval);
-        adCompleted = true;
-        adHardLockActive = false;
-
-        // Close ad window automatically
-        try { if (!adWindow.closed) adWindow.close(); } catch(e) {}
-
-        if (statusText) statusText.textContent = '✅ Ad dekh li! Ab reward claim karo.';
-        if (countdown)  countdown.textContent = 'Task Completed! 🎉';
-        if (claimBtn) {
-          claimBtn.style.display = 'block';
-          claimBtn.onclick = () => claimCoins(uid);
-        }
-      }
-    }, 1000);
-
-    // Store pending reward
+    // ── Redirect to watch_ad.html ────────────────────────────────
+    // Saari processing (timer, popup, coins) wahan hogi.
+    // Wapas aane pe URL params se reward credit hoga.
     localStorage.setItem('pendingAdReward', JSON.stringify({
-      coins: 10, ts: Date.now(), adNum: nextCount
+      coins: 10, ts: Date.now(), adNum: batchCount + 1
     }));
+    window.location.href = 'watch_ad.html';
   }
 
   function claimCoins(uid) {
