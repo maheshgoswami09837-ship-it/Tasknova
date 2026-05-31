@@ -52,38 +52,27 @@
   .blog-logo { font-size:16px; font-weight:800; color:#1a1a2e; }
   .blog-tag  { font-size:10px; background:#f3f4f6; color:#6b7280; padding:3px 8px; border-radius:50px; }
 
-  /* Ad placeholder boxes */
   .ad-box {
     width: 100%;
     background: #f9fafb;
     border: 1px dashed #d1d5db;
     border-radius: 8px;
-    overflow: hidden;
+    overflow: visible;
     margin: 12px 0;
-    min-height: 100px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 11px;
-    color: #9ca3af;
+    min-height: 90px;
+    display: block;
+    text-align: center;
   }
+  .ad-box iframe { display:block; margin:0 auto; }
   .ad-box-label { font-size:10px; color:#d1d5db; text-align:center; padding:8px; }
 
   /* Fake blog article content */
   .article-wrap { padding: 16px; }
   .article-title { font-size:20px; font-weight:800; color:#111827; line-height:1.3; margin-bottom:10px; }
   .article-meta  { font-size:11px; color:#9ca3af; margin-bottom:14px; display:flex; gap:12px; flex-wrap:wrap; }
-  .article-img   { width:100%; height:200px;
-    border-radius:12px; margin-bottom:14px;
-    background-size:cover; background-position:center; background-repeat:no-repeat;
-    position:relative; overflow:hidden; }
-  .article-img::after {
-    content:''; position:absolute; inset:0;
-    background:linear-gradient(to bottom, transparent 40%, rgba(0,0,0,0.35));
-    border-radius:12px; }
-  .article-img-fallback {
-    position:absolute; inset:0; display:flex; align-items:center;
-    justify-content:center; font-size:48px; background:linear-gradient(135deg,#e0e7ff,#dbeafe); }
+  .article-img   { width:100%; height:160px; background:linear-gradient(135deg,#e0e7ff,#dbeafe);
+    border-radius:10px; margin-bottom:14px; display:flex; align-items:center;
+    justify-content:center; font-size:36px; }
   .article-body  { font-size:14px; color:#374151; line-height:1.7; }
   .article-body p { margin-bottom:14px; }
   .article-body h3 { font-size:15px; font-weight:700; color:#111827; margin:16px 0 8px; }
@@ -156,10 +145,6 @@
     animation: pulseBtn 1.2s infinite;
     letter-spacing: 0.3px;
   }
-  @keyframes shimmer {
-    0%   { background-position: 200% 0; }
-    100% { background-position: -200% 0; }
-  }
   @keyframes pulseBtn {
     0%,100% { transform:scale(1); box-shadow:0 6px 24px rgba(22,163,74,0.4); }
     50%      { transform:scale(1.03); box-shadow:0 8px 28px rgba(22,163,74,0.6); }
@@ -209,25 +194,14 @@
 
       <div class="article-wrap">
 
-        <!-- TOP BANNER AD — Adsterra -->
-        <div class="ad-box" id="s1-ad-top" style="min-height:90px;background:linear-gradient(90deg,#f3f4f6 25%,#e5e7eb 50%,#f3f4f6 75%);background-size:200% 100%;animation:shimmer 1.5s infinite;border:none;border-radius:10px;position:relative;">
-          <div style="position:absolute;top:6px;right:10px;font-size:9px;color:#d1d5db;letter-spacing:0.5px;">ADVERTISEMENT</div>
-          <script type="text/javascript">
-            atOptions = {
-              'key'   : 'f1f69a147759698e8fda4cfd27e423ba',
-              'format': 'iframe',
-              'height': 90,
-              'width' : 728,
-              'params': {}
-            };
-          </script>
-          <script type="text/javascript" src="https://www.effectivecpmnetwork.com/b1bggwx0/invoke.js"></script>
+        <!-- TOP BANNER AD — Adsterra #1 -->
+        <div class="ad-box" id="s1-ad-top" style="min-height:55px;overflow:visible;">
+          <script>atOptions={'key':'68bf9531f68f81be99e32a8350f48396','format':'iframe','height':50,'width':320,'params':{}};</script>
+          <script src="https://www.highperformanceformat.com/68bf9531f68f81be99e32a8350f48396/invoke.js"></script>
         </div>
 
-        <!-- Article Hero Image — Step 1 -->
-        <div class="article-img" style="background-image:url('https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?w=700&q=80');">
-          <div class="article-img-fallback" style="display:none;">📱</div>
-        </div>
+        <!-- Fake Article -->
+        <div class="article-img">📱</div>
         <div class="article-title">Top 10 Apps to Earn Real Money Online in India 2025</div>
         <div class="article-meta">
           <span>✍️ By Rahul Sharma</span>
@@ -242,10 +216,10 @@
           <p>Almost every major earning app now has a refer-and-earn program. You can invite friends and earn a percentage of their earnings, creating a passive income stream.</p>
         </div>
 
-        <!-- MIDDLE BANNER AD — Adsterra -->
-        <div class="ad-box" id="s1-ad-mid">
-          <!-- ADSTERRA BANNER MIDDLE — paste your code inside this div -->
-          <div class="ad-box-label">Advertisement</div>
+        <!-- MIDDLE BANNER AD — Adsterra #2 -->
+        <div class="ad-box" id="s1-ad-mid" style="min-height:65px;overflow:visible;">
+          <script>atOptions={'key':'a043efa8fb4540fb08dd2a533a283593','format':'iframe','height':60,'width':468,'params':{}};</script>
+          <script src="https://www.highperformanceformat.com/a043efa8fb4540fb08dd2a533a283593/invoke.js"></script>
         </div>
 
         <div class="article-body">
@@ -267,10 +241,10 @@
           Continue to Step 2 ➡️
         </button>
 
-        <!-- BOTTOM BANNER AD — Adsterra -->
-        <div class="ad-box" id="s1-ad-bottom" style="margin-top:20px;">
-          <!-- ADSTERRA BANNER BOTTOM — paste your code inside this div -->
-          <div class="ad-box-label">Advertisement</div>
+        <!-- BOTTOM BANNER AD — Adsterra #3 -->
+        <div class="ad-box" id="s1-ad-bottom" style="min-height:65px;overflow:visible;margin-top:20px;">
+          <script>atOptions={'key':'a043efa8fb4540fb08dd2a533a283593','format':'iframe','height':60,'width':468,'params':{}};</script>
+          <script src="https://www.highperformanceformat.com/a043efa8fb4540fb08dd2a533a283593/invoke.js"></script>
         </div>
 
       </div><!-- /article-wrap -->
@@ -290,10 +264,7 @@
 
       <div class="article-wrap">
 
-        <!-- Article Hero Image — Step 2 -->
-        <div class="article-img" style="background-image:url('https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=700&q=80');">
-          <div class="article-img-fallback" style="display:none;">💰</div>
-        </div>
+        <div class="article-img">💰</div>
         <div class="article-title">How TaskNova Pays You Instantly – Full Review</div>
         <div class="article-meta">
           <span>✍️ By Priya Verma</span>
@@ -310,50 +281,13 @@
 
       </div><!-- /article-wrap -->
 
-      <!-- Monetag Native Ads Section -->
+      <!-- Monetag Ads Section -->
       <div class="native-section">
         <div class="native-title">Recommended For You</div>
-
-        <!-- MONETAG NATIVE AD CONTAINER — script injects here -->
-        <div id="monetag-native-container">
-          <!-- Placeholder native cards shown while Monetag loads -->
-          <div class="native-card">
-            <div class="native-card-img">🏆</div>
-            <div class="native-card-info">
-              <div class="nc-title">Top 5 UPI Earning Apps Reviewed by Experts</div>
-              <div class="nc-src">earnwithapps.in</div>
-              <div class="nc-sp">Sponsored</div>
-            </div>
-          </div>
-          <div class="native-card">
-            <div class="native-card-img">📊</div>
-            <div class="native-card-info">
-              <div class="nc-title">How Students Earn ₹500/Day from Their Phone</div>
-              <div class="nc-src">studentearning.co.in</div>
-              <div class="nc-sp">Sponsored</div>
-            </div>
-          </div>
-          <div class="native-card">
-            <div class="native-card-img">💎</div>
-            <div class="native-card-info">
-              <div class="nc-title">Best Refer & Earn Apps with Highest Commissions</div>
-              <div class="nc-src">referearn.india</div>
-              <div class="nc-sp">Sponsored</div>
-            </div>
-          </div>
-          <div class="native-card">
-            <div class="native-card-img">🎯</div>
-            <div class="native-card-info">
-              <div class="nc-title">Survey Sites That Pay Real Cash in India 2025</div>
-              <div class="nc-src">surveypay.in</div>
-              <div class="nc-sp">Sponsored</div>
-            </div>
-          </div>
+        <div id="monetag-native-container" style="min-height:100px;">
+          <script>(function(s){s.dataset.zone='11081419',s.src='https://nap5k.com/tag.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))</script>
         </div>
-
-        <!-- MONETAG NATIVE SCRIPT — injected dynamically via JS -->
-
-      </div><!-- /native-section -->
+      </div>
 
       <div class="article-wrap">
         <div class="article-body">
@@ -363,15 +297,32 @@
         </div>
       </div>
 
+      <!-- Monetag ad — timer ke upar -->
+      <div style="text-align:center;padding:0 16px;margin-bottom:8px;">
+        <script>(function(s){s.dataset.zone='11081419',s.src='https://nap5k.com/tag.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))</script>
+      </div>
+
+      <!-- Scroll hint — timer ke upar -->
+      <div style="margin:0 16px 8px;background:linear-gradient(135deg,#f0fdf4,#dcfce7);border:1.5px solid #86efac;border-radius:12px;padding:12px 16px;text-align:center;">
+        <div style="font-size:18px;margin-bottom:4px;">👇</div>
+        <div style="font-size:13px;font-weight:700;color:#16a34a;">Niche scroll karo</div>
+        <div style="font-size:11px;color:#6b7280;margin-top:2px;">Timer khatam hone ke baad Claim button aayega</div>
+      </div>
+
       <!-- ── COUNTDOWN TIMER BOX ── -->
-      <div class="timer-box" style="margin:20px 16px;">
+      <div class="timer-box" style="margin:8px 16px;">
         <div class="tb-label">✅ Almost Done!</div>
         <div class="tb-num" id="s2TimerNum">15</div>
         <div class="tb-sub">seconds remaining</div>
         <div class="tb-hint" id="s2Hint">Hang tight, your reward is being prepared...</div>
       </div>
 
-      <!-- CLAIM BUTTON — hidden until step 2 timer done -->
+      <!-- Monetag ad — timer ke neeche / claim ke upar -->
+      <div style="text-align:center;padding:0 16px;margin-bottom:12px;">
+        <script>(function(s){s.dataset.zone='11081419',s.src='https://nap5k.com/tag.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))</script>
+      </div>
+
+      <!-- CLAIM BUTTON -->
       <button class="wp-btn-claim" id="claimBtn" onclick="claimCoins()">
         💰 Claim Coins
       </button>
@@ -431,32 +382,13 @@
     window.atOptions = {'key':'f1f69a147759698e8fda4cfd27e423ba','format':'iframe','height':50,'width':320,'params':{}};
     const s = document.createElement('script');
     s.id = 'adsterra-popunder'; s.type = 'text/javascript';
-    s.src = '//www.effectivecpmnetwork.com/b1bggwx0/invoke.js';
+    s.src = 'https://www.effectivecpmnetwork.com/b1bggwx0/invoke.js';
     document.body.appendChild(s);
   }
 
-  function injectMonetagNative() {
-    const old = document.getElementById('monetag-native');
-    if (old) old.remove();
-
-    // Proper Monetag initialisation with window fallback
-    (window.__monetag = window.__monetag || []).push({
-      type: 'native',
-      zone: 11081419
-    });
-
-    const s = document.createElement('script');
-    s.id = 'monetag-native';
-    s.async = true;
-    s.src = 'https://al5sm.com/tag.min.js';
-    s.dataset.zone = '11081419';
-    s.onerror = function() {
-      console.warn('[Monetag] Native script failed to load');
-    };
-    const container = document.getElementById('monetag-native-container');
-    if (container) container.appendChild(s);
-    else document.body.appendChild(s);
-  }
+  // Monetag native ab Step 2 HTML mein directly load ho raha hai
+  // Dynamic injection ki zaroorat nahi
+  function injectMonetagNative() { /* no-op */ }
 
   /* ── State — safe localStorage reads ────────────────────── */
   let uid, prize;
@@ -533,16 +465,16 @@
 
   /* ── Step 1 start ────────────────────────────────────── */
   function startAdTask() {
-    // Fire popunder (user gesture guaranteed by DOMContentLoaded tap from tasks page)
-    if (isMonetegSpin()) triggerMonetagPopunder();
-    else                 triggerAdsterraPopunder();
+    // Popunder sirf page load pe ek baar — claim/continue pe nahi
+    try {
+      if (isMonetegSpin()) triggerMonetagPopunder();
+      else                 triggerAdsterraPopunder();
+    } catch(e) { console.warn('Popunder error:', e); }
 
-    // Show white page Step 1
     document.getElementById('whitePage').style.display = 'block';
     document.getElementById('step1').style.display     = 'block';
     document.getElementById('step2').style.display     = 'none';
 
-    // Blue progress bar
     const pb = document.getElementById('progressBar');
     pb.style.background  = '#2563eb';
     pb.style.width       = '0%';
@@ -566,7 +498,8 @@
     currentStep = 2;
 
     injectMonetagNative();
-    document.getElementById('whitePage').scrollTop = 0;
+    // Top pe scroll — user article aur ads dekhega
+    window.scrollTo({ top: 0, behavior: 'instant' });
     startStepTimer(2);
   }
 
@@ -604,15 +537,13 @@
     if (step === 1) {
       const btn = document.getElementById('s1ContinueBtn');
       btn.style.display = 'block';
-      setTimeout(() => btn.scrollIntoView({ behavior:'smooth', block:'center' }), 200);
     } else {
       const btn = document.getElementById('claimBtn');
       btn.style.display = 'block';
-      setTimeout(() => btn.scrollIntoView({ behavior:'smooth', block:'center' }), 200);
     }
   }
 
-  /* ── Claim coins ─────────────────────────────────────── */
+  /* ── Claim coins — NO ad fire here ──────────────────── */
   function claimCoins() {
     if (creditFired || penaltyApplied) return;
     if (stepSecsLeft > 0) { alert('Abhi ' + stepSecsLeft + 's baaki hain!'); return; }
