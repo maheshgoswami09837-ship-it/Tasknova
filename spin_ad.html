@@ -6,375 +6,376 @@
 <title>Watch Ad - TaskNova</title>
 <style>
   * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Segoe UI',sans-serif; background:#ffffff; margin:0; padding:0; }
 
-  body {
-    font-family: 'Segoe UI', sans-serif;
-    background: #030712;
+  /* White Page Structure */
+  #whitePage {
+    display: block;
+    background: #ffffff;
     min-height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 28px 20px;
-    color: #fff;
-    overflow: hidden;
   }
 
-  /* Background glow blobs */
-  .blob {
+  /* Top progress bar */
+  #progressBar {
     position: fixed;
-    border-radius: 50%;
-    filter: blur(80px);
-    opacity: 0.18;
-    pointer-events: none;
-    z-index: 0;
-  }
-  .blob-1 { width: 320px; height: 320px; background: #2563eb; top: -80px; left: -60px; }
-  .blob-2 { width: 260px; height: 260px; background: #1d4ed8; bottom: -60px; right: -40px; }
-  .blob-3 { width: 180px; height: 180px; background: #60a5fa; top: 45%; left: 55%; opacity: 0.1; }
-
-  .container {
-    position: relative;
-    z-index: 1;
-    width: 100%;
-    max-width: 360px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0;
-  }
-
-  /* Card wrapper */
-  .card {
-    width: 100%;
-    background: rgba(255,255,255,0.04);
-    border: 1px solid rgba(255,255,255,0.08);
-    border-radius: 24px;
-    padding: 32px 24px 28px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 20px;
-    backdrop-filter: blur(12px);
-  }
-
-  /* Coin badge */
-  .coin-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    background: rgba(37,99,235,0.18);
-    border: 1px solid rgba(96,165,250,0.3);
-    border-radius: 50px;
-    padding: 9px 22px;
-    font-size: 16px;
-    font-weight: 800;
-    color: #93c5fd;
-    letter-spacing: 0.3px;
-  }
-
-  /* Timer circle */
-  .timer-circle-wrap {
-    position: relative;
-    width: 140px;
-    height: 140px;
-  }
-  .timer-circle-wrap svg {
-    position: absolute;
     top: 0; left: 0;
-    transform: rotate(-90deg);
+    height: 4px;
+    width: 0%;
+    z-index: 10001;
+    transition: width 1s linear;
+    border-radius: 0 4px 4px 0;
   }
-  .circle-track { fill: none; stroke: rgba(255,255,255,0.06); stroke-width: 6; }
-  .circle-prog  {
-    fill: none;
-    stroke: url(#blueGrad);
-    stroke-width: 6;
-    stroke-linecap: round;
-    stroke-dasharray: 376;
-    stroke-dashoffset: 376;
-    transition: stroke-dashoffset 1s linear;
+
+  /* Fixed Scroll Length for high ad impressions */
+  .wp-inner {
+    min-height: 175vh;
+    padding: 0 0 80px 0;
+    background: #ffffff;
+    position: relative;
   }
-  .timer-inner {
-    position: absolute;
-    inset: 0;
+
+  /* Fake blog header */
+  .blog-header {
+    background: #fff;
+    border-bottom: 1px solid #e5e7eb;
+    padding: 12px 16px;
     display: flex;
-    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+  }
+  .blog-logo { font-size:16px; font-weight:800; color:#1a1a2e; }
+  .blog-tag  { font-size:10px; background:#f3f4f6; color:#6b7280; padding:3px 8px; border-radius:50px; }
+
+  /* Fixed height ad boxes so banners load perfectly */
+  .ad-box {
+    width: 100%;
+    background: #f9fafb;
+    border: 1px dashed #d1d5db;
+    border-radius: 8px;
+    overflow: hidden;
+    margin: 16px 0;
+    min-height: 280px;
+    display: flex;
     align-items: center;
     justify-content: center;
-  }
-  .timer-num {
-    font-size: 46px;
-    font-weight: 800;
-    color: #fff;
-    line-height: 1;
-  }
-  .timer-label {
     font-size: 11px;
-    color: rgba(255,255,255,0.3);
-    margin-top: 2px;
-    letter-spacing: 0.5px;
-    text-transform: uppercase;
+    color: #9ca3af;
   }
+  .ad-box-label { font-size:11px; color:#9ca3af; text-align:center; padding:8px; font-weight: 500; }
 
-  /* Status */
-  .status-row {
-    font-size: 13px;
-    color: rgba(255,255,255,0.4);
-    min-height: 18px;
+  /* Fake blog article content */
+  .article-wrap { padding: 16px; }
+  .article-title { font-size:22px; font-weight:800; color:#111827; line-height:1.3; margin-bottom:10px; }
+  .article-meta  { font-size:11px; color:#9ca3af; margin-bottom:14px; display:flex; gap:12px; flex-wrap:wrap; }
+  .article-img   { width:100%; height:160px; background:linear-gradient(135deg,#e0e7ff,#dbeafe);
+    border-radius:10px; margin-bottom:14px; display:flex; align-items:center;
+    justify-content:center; font-size:36px; }
+  .article-body  { font-size:14.5px; color:#374151; line-height:1.7; }
+  .article-body p { margin-bottom:14px; }
+  .article-body h3 { font-size:16px; font-weight:700; color:#111827; margin:20px 0 8px; }
+
+  /* Native ad cards (Step 2 Monetag style) */
+  .native-section { padding: 16px; margin-top: 8px; }
+  .native-title   { font-size:13px; font-weight:700; color:#6b7280; margin-bottom:10px;
+    text-transform:uppercase; letter-spacing:0.5px; border-top:1px solid #e5e7eb; padding-top:12px; }
+  .native-card    { display:flex; gap:10px; padding:10px 0; border-bottom:1px solid #f3f4f6;
+    cursor:pointer; }
+  .native-card-img { width:80px; height:60px; border-radius:8px; object-fit:cover;
+    background:linear-gradient(135deg,#fef3c7,#fde68a); flex-shrink:0;
+    display:flex; align-items:center; justify-content:center; font-size:22px; }
+  .native-card-info .nc-title { font-size:13px; font-weight:600; color:#111827; line-height:1.4; margin-bottom:4px; }
+  .native-card-info .nc-src   { font-size:11px; color:#9ca3af; }
+  .native-card-info .nc-sp    { font-size:10px; color:#6b7280; background:#f3f4f6;
+    padding:2px 6px; border-radius:4px; display:inline-block; margin-top:4px; }
+
+  /* Timer dashed box */
+  .timer-box {
+    margin: 24px 16px;
+    border: 2px dashed #d1d5db;
+    border-radius: 14px;
+    padding: 22px 16px;
+    background: #f9fafb;
     text-align: center;
   }
+  .timer-box .tb-label { font-size:12px; color:#6b7280; margin-bottom:6px; font-weight:600; }
+  .timer-box .tb-num   { font-size:42px; font-weight:900; line-height:1; margin-bottom:4px; }
+  .timer-box .tb-sub   { font-size:11px; color:#9ca3af; margin-bottom:14px; }
+  .timer-box .tb-hint  { font-size:12px; color:#6b7280; }
 
-  /* Buttons */
-  .btn-start {
-    width: 100%;
-    padding: 15px;
+  /* Step Colors */
+  #step1 .tb-num { color:#2563eb; }
+  #step2 .tb-num { color:#16a34a; }
+
+  /* Dynamic Action Buttons */
+  .wp-btn-continue {
+    display: none;
+    width: calc(100% - 32px);
+    margin: 10px 16px;
+    padding: 16px;
+    background: linear-gradient(135deg,#2563eb,#3b82f6);
+    color: #fff;
     border: none;
     border-radius: 14px;
-    background: linear-gradient(135deg, #1d4ed8, #2563eb, #3b82f6);
-    color: #fff;
-    font-size: 16px;
-    font-weight: 800;
-    letter-spacing: 0.4px;
+    font-size:16px;
+    font-weight:800;
     cursor: pointer;
-    font-family: 'Segoe UI', sans-serif;
-    box-shadow: 0 4px 24px rgba(37,99,235,0.45);
-    transition: opacity 0.2s, transform 0.15s;
+    font-family:'Segoe UI',sans-serif;
+    box-shadow: 0 4px 16px rgba(37,99,235,0.35);
+    animation: pulseBtn 1.5s infinite;
   }
-  .btn-start:active { opacity: 0.85; transform: scale(0.98); }
-
-  .btn-claim {
-    width: 100%;
-    padding: 15px;
+  .wp-btn-claim {
+    display: none;
+    width: calc(100% - 32px);
+    margin: 10px 16px;
+    padding: 18px;
+    background: linear-gradient(135deg,#16a34a,#22c55e);
+    color: #fff;
     border: none;
-    border-radius: 14px;
-    background: linear-gradient(135deg, #059669, #10b981);
-    color: #fff;
-    font-size: 16px;
-    font-weight: 800;
-    cursor: pointer;
-    font-family: 'Segoe UI', sans-serif;
-    box-shadow: 0 4px 20px rgba(16,185,129,0.4);
-    display: none;
-    transition: opacity 0.2s;
-  }
-  .btn-claim:active { opacity: 0.85; }
-
-  /* Ad hint chip */
-  .hint-chip {
-    display: none;
-    align-items: center;
-    gap: 7px;
-    padding: 9px 16px;
-    border-radius: 10px;
-    border: 1px dashed rgba(96,165,250,0.4);
-    background: rgba(37,99,235,0.08);
-    color: #60a5fa;
-    font-size: 12.5px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background 0.18s;
-    text-align: center;
-    letter-spacing: 0.2px;
-  }
-  .hint-chip:active { background: rgba(37,99,235,0.18); }
-  .hint-chip svg { flex-shrink: 0; opacity: 0.7; }
-
-  /* Warning */
-  .warning-row {
-    font-size: 11.5px;
-    color: rgba(255,255,255,0.3);
-    text-align: center;
-    line-height: 1.5;
-  }
-
-  /* Spins info */
-  .spins-row {
-    font-size: 11px;
-    color: rgba(255,255,255,0.2);
-    text-align: center;
-  }
-
-  /* Back button */
-  .btn-back {
-    width: 100%;
-    margin-top: 14px;
-    padding: 14px;
-    border: 1px solid rgba(255,255,255,0.1);
-    border-radius: 14px;
-    background: transparent;
-    color: rgba(255,255,255,0.45);
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-    font-family: 'Segoe UI', sans-serif;
-    letter-spacing: 0.3px;
-    transition: background 0.2s, color 0.2s;
-  }
-  .btn-back:active { background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.7); }
-
-  /* Cooldown / Penalty boxes */
-  .info-box {
-    width: 100%;
     border-radius: 16px;
-    padding: 20px;
-    text-align: center;
-    display: none;
-    margin-bottom: 8px;
+    font-size:18px;
+    font-weight:900;
+    cursor: pointer;
+    font-family:'Segoe UI',sans-serif;
+    box-shadow: 0 6px 24px rgba(22,163,74,0.45);
+    animation: pulseBtn 1.2s infinite;
+    letter-spacing: 0.3px;
   }
-  .info-box.cooldown {
-    background: rgba(37,99,235,0.1);
-    border: 1px solid rgba(96,165,250,0.2);
+  @keyframes pulseBtn {
+    0%,100% { transform:scale(1); }
+    50%      { transform:scale(1.03); }
   }
-  .info-box.penalty {
-    background: rgba(239,68,68,0.08);
-    border: 1px solid rgba(239,68,68,0.2);
-  }
-  .info-box .box-title {
-    font-size: 13px;
-    font-weight: 600;
-    margin-bottom: 8px;
-  }
-  .info-box.cooldown .box-title { color: #93c5fd; }
-  .info-box.penalty  .box-title { color: #fca5a5; }
-  .info-box .box-time {
-    font-size: 34px;
-    font-weight: 800;
-  }
-  .info-box.cooldown .box-time { color: #60a5fa; }
-  .info-box.penalty  .box-time { color: #ef4444; }
+
+  #step1, #step2 { display:none; }
 </style>
 </head>
 <body>
 
-<div class="blob blob-1"></div>
-<div class="blob blob-2"></div>
-<div class="blob blob-3"></div>
-
-<div class="container">
-
-  <!-- Cooldown box -->
-  <div class="info-box cooldown" id="cooldownBox">
-    <div class="box-title">⏳ Next ad ke liye wait karo</div>
-    <div class="box-time" id="cooldownTime">1:00</div>
-  </div>
-
-  <!-- Penalty box -->
-  <div class="info-box penalty" id="penaltyBox">
-    <div class="box-title">❌ Ad skip ki — penalty chal rahi hai</div>
-    <div class="box-time" id="penaltyTime">10:00</div>
-  </div>
-
-  <!-- Main card -->
-  <div class="card">
-
-    <!-- Coin badge -->
-    <div class="coin-badge" id="prizeBadge">🪙 <span id="prizeAmount">10</span> Coins</div>
-
-    <!-- Timer circle -->
-    <div class="timer-circle-wrap" id="timerWrap">
-      <svg width="140" height="140" viewBox="0 0 140 140">
-        <defs>
-          <linearGradient id="blueGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%"   stop-color="#1d4ed8"/>
-            <stop offset="100%" stop-color="#60a5fa"/>
-          </linearGradient>
-        </defs>
-        <circle class="circle-track" cx="70" cy="70" r="60"/>
-        <circle class="circle-prog"  cx="70" cy="70" r="60" id="circleProgress"/>
-      </svg>
-      <div class="timer-inner">
-        <div class="timer-num"  id="timerNum">0</div>
-        <div class="timer-label">/ 25 sec</div>
-      </div>
-    </div>
-
-    <!-- Status -->
-    <div class="status-row" id="statusText">Start dabao aur ad dekho</div>
-
-    <!-- Start button -->
-    <button class="btn-start" id="watchBtn" onclick="startAd()">▶ &nbsp;Start</button>
-
-    <!-- Hint chip — shown after start -->
-    <div class="hint-chip" id="adHintBtn" onclick="retriggerAd()">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-      Ad nahi chala — screen pe click karo
-    </div>
-
-    <!-- Claim button -->
-    <button class="btn-claim" id="claimBtn" onclick="claimCoins()">✅ &nbsp;Claim Coins</button>
-
-    <!-- Warning -->
-    <div class="warning-row" id="warningText">⚠️ Ad skip karne par 10 min ki penalty lagegi</div>
-
-    <!-- Spins info -->
-    <div class="spins-row" id="spinsInfo"></div>
-
-  </div>
-
-  <!-- Back button outside card -->
-  <button class="btn-back" onclick="goBack()">← Wapas Jao</button>
-
+<!-- ══════════════════════════════════════════════════════
+     ERROR OVERLAY (penalty / cooldown / limit)
+══════════════════════════════════════════════════════ -->
+<div id="errorOverlay" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;
+  background:#05051a;z-index:99999;flex-direction:column;align-items:center;
+  justify-content:center;padding:32px;text-align:center;font-family:'Segoe UI',sans-serif;">
+  <div id="errIcon" style="font-size:56px;margin-bottom:16px;">⏳</div>
+  <div id="errTitle" style="font-size:20px;font-weight:800;color:#fff;margin-bottom:8px;"></div>
+  <div id="errMsg" style="font-size:13px;color:rgba(255,255,255,0.45);margin-bottom:20px;"></div>
+  <div id="errTimer" style="font-size:42px;font-weight:900;color:#f59e0b;margin-bottom:28px;"></div>
+  <button onclick="goBack()" style="background:rgba(255,255,255,0.1);border:1.5px solid rgba(255,255,255,0.2);
+    border-radius:14px;padding:14px 32px;color:#fff;font-size:15px;font-weight:700;
+    cursor:pointer;font-family:'Segoe UI',sans-serif;">← Wapas Jao</button>
 </div>
 
+<!-- ══════════════════════════════════════════════════════
+     WHITE PAGE LAYOUT
+══════════════════════════════════════════════════════ -->
+<div id="progressBar"></div>
+
+<div id="whitePage">
+
+  <!-- ── STEP 1 — Adsterra Banners ────────────────────── -->
+  <div id="step1">
+    <div class="wp-inner">
+      <div class="blog-header">
+        <span class="blog-logo">📰 TechBlog India</span>
+        <span class="blog-tag">Sponsored</span>
+      </div>
+
+      <div class="article-wrap">
+        <!-- TOP BANNER AD — Adsterra f1f69a147759698e8fda4cfd27e423ba -->
+        <div class="ad-box" id="s1-ad-top">
+          <script type="text/javascript">
+            atOptions = {
+              'key'   : 'f1f69a147759698e8fda4cfd27e423ba',
+              'format': 'iframe',
+              'height': 90,
+              'width' : 728,
+              'params': {}
+            };
+          </script>
+          <script type="text/javascript" src="//www.effectivecpmnetwork.com/b1bggwx0/invoke.js"></script>
+        </div>
+
+        <!-- Fake Article -->
+        <div class="article-img">📱</div>
+        <div class="article-title">Top 10 Apps to Earn Real Money Online in India 2026</div>
+        <div class="article-meta">
+          <span>✍️ By Rahul Sharma</span>
+          <span>📅 May 2026</span>
+          <span>👁 12.4K views</span>
+        </div>
+        
+        <div class="article-body">
+          <p>Looking for legitimate ways to earn money from your smartphone? We've tested dozens of apps and shortlisted the best ones that actually pay Indian users on time.</p>
+          <h3>1. Survey & Task Apps</h3>
+          <p>Survey-based apps have seen a massive surge in India. Platforms like TaskNova let you complete micro-tasks, watch videos, and spin wheels to earn real cash rewards directly to your UPI wallet.</p>
+          <h3>2. Refer & Earn Programs</h3>
+          <p>Almost every major earning app now has a refer-and-earn program. You can invite friends and earn a percentage of their earnings, creating a passive income stream.</p>
+        </div>
+
+        <!-- MIDDLE BANNER AD — Adsterra f1f69a147759698e8fda4cfd27e423ba -->
+        <div class="ad-box" id="s1-ad-mid">
+          <script type="text/javascript">
+            atOptions = {
+              'key'   : 'f1f69a147759698e8fda4cfd27e423ba',
+              'format': 'iframe',
+              'height': 90,
+              'width' : 728,
+              'params': {}
+            };
+          </script>
+          <script type="text/javascript" src="//www.effectivecpmnetwork.com/b1bggwx0/invoke.js"></script>
+        </div>
+
+        <div class="article-body">
+          <h3>3. Watch & Earn Platforms</h3>
+          <p>Video-based earning platforms have become extremely popular. You simply watch short ads or promotional videos and get credited instantly. TaskNova's Watch & Earn feature is one of the top rated in this category.</p>
+          <p>The key is consistency — logging in daily and completing all available tasks maximizes your earnings significantly over time.</p>
+        </div>
+
+        <!-- ── COUNTDOWN TIMER BOX ── -->
+        <div class="timer-box">
+          <div class="tb-label">⏳ Please Wait</div>
+          <div class="tb-num" id="s1TimerNum">15</div>
+          <div class="tb-sub">seconds remaining</div>
+          <div class="tb-hint" id="s1Hint">Scroll down and read the article...</div>
+        </div>
+
+        <!-- Continue Button -->
+        <button class="wp-btn-continue" id="s1ContinueBtn" onclick="goToStep2()">
+          Continue to Step 2 ➡️
+        </button>
+
+        <!-- EXTRA EXPANDED PARAGRAPHS FOR EXTENDED SCROLLING -->
+        <div class="article-body" style="margin-top: 25px; padding-top: 15px; border-top: 1px dashed #eee;">
+          <h3>Maximizing Your Efficiency</h3>
+          <p>To fully benefit from these platforms, users should set aside a specific time daily. Testing shows that early morning cycles often provide refreshed high-paying campaign sets across regions.</p>
+          <p>Security is another critical pillar. Always make sure you use platforms with encrypted gateway checkouts to prevent data leaks or unauthorized transaction loops on your phone setup.</p>
+        </div>
+
+        <!-- BOTTOM BANNER AD — Adsterra f1f69a147759698e8fda4cfd27e423ba -->
+        <div class="ad-box" id="s1-ad-bottom">
+          <script type="text/javascript">
+            atOptions = {
+              'key'   : 'f1f69a147759698e8fda4cfd27e423ba',
+              'format': 'iframe',
+              'height': 90,
+              'width' : 728,
+              'params': {}
+            };
+          </script>
+          <script type="text/javascript" src="//www.effectivecpmnetwork.com/b1bggwx0/invoke.js"></script>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ── STEP 2 — Monetag In-Page Push Ads ──────────────── -->
+  <div id="step2">
+    <div class="wp-inner">
+      <div class="blog-header">
+        <span class="blog-logo">📰 TechBlog India</span>
+        <span class="blog-tag">Step 2 of 2</span>
+      </div>
+
+      <div class="article-wrap">
+        <div class="article-img">💰</div>
+        <div class="article-title">How TaskNova Pays You Instantly – Full Review</div>
+        <div class="article-meta">
+          <span>✍️ By Priya Verma</span>
+          <span>📅 June 2026</span>
+          <span>👁 8.9K views</span>
+        </div>
+        <div class="article-body">
+          <p>TaskNova has emerged as one of India's most trusted micro-earning platforms. With over 1 lakh active users, it offers a transparent, UPI-based payout system that has won widespread praise.</p>
+          <h3>How Payouts Work</h3>
+          <p>Once you accumulate enough coins through watching ads, completing surveys, spinning the wheel, and referring friends — you can instantly redeem them as real cash to your UPI ID or Paytm wallet.</p>
+          <h3>Daily Earning Potential</h3>
+          <p>Active users report earning ₹30–₹80 per day just from daily tasks alone. The spin wheel, shortlinks, and watch-ad features reset every 24 hours giving you consistent earning opportunities.</p>
+        </div>
+      </div>
+
+      <!-- Monetag Native Container (New Code Injected Here Dynamically) -->
+      <div class="native-section">
+        <div class="native-title">Recommended For You</div>
+        <div id="monetag-native-container">
+          <!-- Your New Monetag Ads Will Render Inside Here Safely -->
+        </div>
+      </div>
+
+      <div class="article-wrap">
+        <div class="article-body">
+          <h3>Tips to Maximize Earnings</h3>
+          <p>Always complete the daily check-in first — it gives you a free bonus. Then work through the spin wheel, shortlinks, and finally the survey tasks for the day.</p>
+          <p>Refer friends using your unique code for the biggest earnings boost. Each referred friend who completes tasks earns you a commission automatically.</p>
+        </div>
+      </div>
+
+      <!-- ── COUNTDOWN TIMER BOX ── -->
+      <div class="timer-box">
+        <div class="tb-label">✅ Almost Done!</div>
+        <div class="tb-num" id="s2TimerNum">15</div>
+        <div class="tb-sub">seconds remaining</div>
+        <div class="tb-hint" id="s2Hint">Hang tight, your reward is being prepared...</div>
+      </div>
+
+      <!-- CLAIM BUTTON -->
+      <button class="wp-btn-claim" id="claimBtn" onclick="claimCoins()">
+        💰 Claim Coins
+      </button>
+
+      <!-- EXTRA ORGANIC FOOTER CONTENT FOR EXTRA STEP 2 HEIGHT -->
+      <div class="article-wrap" style="margin-top: 20px;">
+        <div class="article-body" style="color: #6b7280; font-size: 13px;">
+          <p><strong>Disclaimer:</strong> Financial analytics generated here are based strictly on general community tracking portfolios. Individual earnings depend entirely on localized criteria allocations and merchant network values active within the digital zones.</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     JAVA SCRIPT LOGIC
+══════════════════════════════════════════════════════ -->
 <script>
-  // ── Config ────────────────────────────────────────────────────
+  /* ── Config ─────────────────────────────────────────── */
   const DB_URL            = 'https://tasknova-66d0f-default-rtdb.firebaseio.com';
-  const AD_DURATION       = 25;
+  const STEP_DURATION     = 15;
   const MAX_SPINS_PER_DAY = 6;
   const PENALTY_DURATION  = 600;
   const COOLDOWN_DURATION = 60;
-  const CIRCUMFERENCE     = 2 * Math.PI * 60; // 376.99
-
   const KEY_PENALTY_UNTIL  = 'tn_watch_penalty_until';
   const KEY_COOLDOWN_UNTIL = 'tn_watch_cooldown_until';
   const KEY_PRIZE          = 'tn_spin_prize';
-  // ── Daily helpers — tasks file ke saath SYNC (same key use hoti hai) ──
-  function getTodayKey() {
-    // Raat 12 baje IST (midnight) = naya din — tasks file se bilkul match
-    const istOffset = 5.5 * 60 * 60 * 1000;
-    const now = new Date();
-    const nowIST = new Date(now.getTime() + istOffset - (now.getTimezoneOffset() * 60 * 1000));
-    return nowIST.toISOString().split('T')[0]; // YYYY-MM-DD in IST
-  }
+  const DAILY_DATA_KEY     = 'tasknova_daily';
+
+  /* ── Daily data helpers ──────────────────────────────── */
+  function getTodayStr() { return new Date().toISOString().slice(0,10); }
   function getDailyData() {
     try {
-      const key = 'tasknova_daily_' + getTodayKey();
-      const raw = localStorage.getItem(key);
-      if (raw) return JSON.parse(raw);
-      return { earned:0, checkin:false, spins:0, scratches:0, quizzes:0, lastSpin:0, lastScratch:0, lastQuiz:0 };
+      const d = JSON.parse(localStorage.getItem(DAILY_DATA_KEY) || '{}');
+      if (d.date !== getTodayStr())
+        return {date:getTodayStr(),spins:0,scratches:0,quizzes:0,checkin:false,lastSpin:0};
+      return d;
     } catch(e) {
-      return { earned:0, checkin:false, spins:0, scratches:0, quizzes:0, lastSpin:0, lastScratch:0, lastQuiz:0 };
+      return {date:getTodayStr(),spins:0,scratches:0,quizzes:0,checkin:false,lastSpin:0};
     }
   }
-  function saveDailyData(d) {
-    const key = 'tasknova_daily_' + getTodayKey();
-    localStorage.setItem(key, JSON.stringify(d));
-  }
-  function getWatchCount() { return getDailyData().spins || 0; }
+  function saveDailyData(d) { localStorage.setItem(DAILY_DATA_KEY, JSON.stringify(d)); }
+  function getWatchCount()  { return getDailyData().spins || 0; }
   function incrementWatchCount() {
     const d = getDailyData(); d.spins = (d.spins||0)+1; d.lastSpin = Date.now(); saveDailyData(d);
   }
 
-  // ── State ─────────────────────────────────────────────────────
-  let elapsed        = 0;
-  let timerInterval  = null;
-  let timerStarted   = false;
-  let creditFired    = false;
-  let penaltyApplied = false;
-  let adOpened       = false;
+  /* ── Ad network helpers ──────────────────────────────── */
+  function isMonetegSpin() { return (getWatchCount()+1) <= 3; }
 
-  const uid   = localStorage.getItem('tasknova_uid');
-  const prize = parseInt(localStorage.getItem(KEY_PRIZE) || '10');
-  document.getElementById('prizeAmount').textContent = prize;
-
-  // ── Timer UI update ───────────────────────────────────────────
-  function updateTimer() {
-    const pct    = elapsed / AD_DURATION;
-    const offset = CIRCUMFERENCE * (1 - pct);
-    document.getElementById('circleProgress').style.strokeDashoffset = offset;
-    document.getElementById('timerNum').textContent = elapsed;
-  }
-
-  // ── Ad networks ───────────────────────────────────────────────
   function triggerMonetagPopunder() {
     const old = document.getElementById('monetag-popunder');
     if (old) old.remove();
@@ -384,240 +385,92 @@
     s.dataset.zone = '11074231';
     document.body.appendChild(s);
   }
+
   function triggerAdsterraPopunder() {
     const old = document.getElementById('adsterra-popunder');
     if (old) old.remove();
-    window.atOptions = { key:'f1f69a147759698e8fda4cfd27e423ba', format:'iframe', height:50, width:320, params:{} };
+    window.atOptions = {'key':'f1f69a147759698e8fda4cfd27e423ba','format':'iframe','height':50,'width':320,'params':{}};
     const s = document.createElement('script');
-    s.id   = 'adsterra-popunder';
-    s.type = 'text/javascript';
-    s.src  = '//www.effectivecpmnetwork.com/b1bggwx0/invoke.js';
+    s.id = 'adsterra-popunder'; s.type = 'text/javascript';
+    s.src = '//www.effectivecpmnetwork.com/b1bggwx0/invoke.js';
     document.body.appendChild(s);
   }
-  // Har spin pe dono ads chalenge — Monetag + Adsterra ek saath
-  function triggerAd() {
-    triggerMonetagPopunder();
-    // Adsterra thodi der baad inject karo taaki dono alag window mein khulein
-    setTimeout(function() { triggerAdsterraPopunder(); }, 800);
+
+  /* NEW MONETAG DYNAMIC INJECTION FUNCTION (Zone: 11081419 फिक्स्ड) */
+  function injectMonetagNative() {
+    const old = document.getElementById('monetag-new-script');
+    if (old) old.remove();
+    const container = document.getElementById('monetag-native-container');
+    if (container) {
+      container.innerHTML = ''; 
+      
+      // Executing your exact function format dynamically on Step 2
+      (function(s){
+        s.id = 'monetag-new-script';
+        s.dataset.zone = '11081419';
+        s.src = 'https://nap5k.com/tag.min.js';
+      })([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')));
+    }
   }
-  function retriggerAd() { triggerAd(); }
 
-  // ── Start timer ───────────────────────────────────────────────
-  function startTimer() {
-    if (timerStarted || creditFired || penaltyApplied) return;
-    timerStarted = true;
-    elapsed = 0;
-    updateTimer();
-    document.getElementById('statusText').textContent = '⏳ Ad dekh rahe ho...';
-    history.pushState({ adActive:true }, '', location.href);
+  /* ── State ───────────────────────────────────────────── */
+  const uid   = localStorage.getItem('tasknova_uid');
+  const prize = parseInt(localStorage.getItem(KEY_PRIZE) || '10');
+  let currentStep   = 0;
+  let stepTimer     = null;
+  let stepSecsLeft  = STEP_DURATION;
+  let creditFired   = false;
+  let penaltyApplied = false;
 
-    timerInterval = setInterval(function() {
-      if (penaltyApplied || creditFired) { clearInterval(timerInterval); return; }
-      elapsed++;
-      updateTimer();
-      document.getElementById('statusText').textContent = '⏳ Ad chal raha hai... ' + elapsed + 's';
-      if (elapsed >= AD_DURATION) {
-        clearInterval(timerInterval);
-        timerInterval = null;
-        onTimerComplete();
+  /* ── Error overlay ───────────────────────────────────── */
+  function showErrorPage(type, until) {
+    const wp = document.getElementById('whitePage');
+    const pb = document.getElementById('progressBar');
+    if (wp) wp.style.display = 'none';
+    if (pb) pb.style.display = 'none';
+
+    const overlay = document.getElementById('errorOverlay');
+    overlay.style.display = 'flex';
+
+    if (type === 'penalty') {
+      document.getElementById('errIcon').textContent  = '❌';
+      document.getElementById('errTitle').textContent = 'Ad Skip Penalty';
+      document.getElementById('errMsg').textContent   = 'Ad skip ki thi — 10 min baad wapas aao';
+      startErrCountdown(until, KEY_PENALTY_UNTIL);
+    } else if (type === 'cooldown') {
+      document.getElementById('errIcon').textContent  = '⏳';
+      document.getElementById('errTitle').textContent = 'Next Ad ka Wait Karo';
+      document.getElementById('errMsg').textContent   = 'Thoda sa aur wait karo';
+      startErrCountdown(until, KEY_COOLDOWN_UNTIL);
+    } else if (type === 'success') {
+      document.getElementById('errIcon').textContent  = '✅';
+      document.getElementById('errTitle').textContent = 'Coins Credited!';
+      document.getElementById('errMsg').textContent   = 'Next spin ke liye wait karo';
+      startErrCountdown(until, KEY_COOLDOWN_UNTIL, true);
+    } else {
+      document.getElementById('errIcon').textContent  = '🚫';
+      document.getElementById('errTitle').textContent = 'Aaj ki Limit Khatam!';
+      document.getElementById('errMsg').textContent   = 'Kal wapas aao aur aur coins kamao';
+      document.getElementById('errTimer').textContent = '';
+    }
+  }
+
+  function startErrCountdown(until, storageKey, redirectOnDone) {
+    const el = document.getElementById('errTimer');
+    const iv = setInterval(() => {
+      const rem = Math.max(0, Math.ceil((until - Date.now()) / 1000));
+      const m = Math.floor(rem/60), s = rem%60;
+      el.textContent = m + ':' + String(s).padStart(2,'0');
+      if (rem <= 0) {
+        clearInterval(iv);
+        localStorage.removeItem(storageKey);
+        if (redirectOnDone) goBack(); else location.reload();
       }
     }, 1000);
   }
 
-  // ── startAd ───────────────────────────────────────────────────
-  function startAd() {
+  /* ── Page load ───────────────────────────────────────── */
+  window.addEventListener('DOMContentLoaded', function() {
     const penaltyUntil  = parseInt(localStorage.getItem(KEY_PENALTY_UNTIL)  || '0');
     const cooldownUntil = parseInt(localStorage.getItem(KEY_COOLDOWN_UNTIL) || '0');
-    if (penaltyUntil  > Date.now()) { showPenaltyCountdown(penaltyUntil);  return; }
-    if (cooldownUntil > Date.now()) { showCooldownCountdown(cooldownUntil); return; }
-    if (getWatchCount() >= MAX_SPINS_PER_DAY) {
-      document.getElementById('statusText').textContent = '🚫 Aaj ki limit khatam!';
-      return;
-    }
-
-    document.getElementById('watchBtn').style.display = 'none';
-
-    if (!adOpened) { adOpened = true; triggerAd(); }
-    startTimer();
-
-    setTimeout(function() {
-      if (timerStarted && !creditFired && !penaltyApplied)
-        document.getElementById('adHintBtn').style.display = 'flex';
-    }, 2000);
-  }
-
-  // ── Timer complete ─────────────────────────────────────────────
-  function onTimerComplete() {
-    document.removeEventListener('visibilitychange', onVisChange);
-    document.getElementById('adHintBtn').style.display  = 'none';
-    document.getElementById('statusText').textContent   = '🎉 Timer khatam! Ab claim karo.';
-    document.getElementById('warningText').textContent  = '';
-    document.getElementById('claimBtn').style.display   = 'block';
-    document.getElementById('timerWrap').style.opacity  = '0.45';
-  }
-
-  // ── Claim ─────────────────────────────────────────────────────
-  function claimCoins() {
-    if (creditFired || penaltyApplied) return;
-    if (elapsed < AD_DURATION) { alert('Abhi ' + (AD_DURATION-elapsed) + 's baaki hain!'); return; }
-    creditFired = true;
-
-    const btn = document.getElementById('claimBtn');
-    btn.disabled = true;
-    btn.textContent = '⏳ Crediting...';
-    document.getElementById('statusText').textContent = '✅ Coins aa rahe hain...';
-
-    incrementWatchCount();
-    const cooldownUntil = Date.now() + COOLDOWN_DURATION * 1000;
-    localStorage.setItem(KEY_COOLDOWN_UNTIL, cooldownUntil.toString());
-
-    if (uid && uid !== 'null') {
-      fetch(DB_URL + '/users/' + uid + '.json')
-        .then(r => r.json())
-        .then(data => {
-          if (!data) return;
-          const newCoins   = (data.coins   || 0) + prize;
-          const newBalance = parseFloat((newCoins/100).toFixed(2));
-          return fetch(DB_URL + '/users/' + uid + '.json', {
-            method: 'PATCH',
-            headers: { 'Content-Type':'application/json' },
-            body: JSON.stringify({ coins:newCoins, balance:newBalance, tasksDone:(data.tasksDone||0)+1 })
-          });
-        })
-        .then(() => {
-          document.getElementById('statusText').textContent = '🎉 +' + prize + ' Coins credited!';
-          btn.textContent = '✅ +' + prize + ' Coins Claimed!';
-          const done = getWatchCount();
-          const nxt  = done + 1;
-          document.getElementById('spinsInfo').textContent = 'Aaj ke spins: ' + done + '/' + MAX_SPINS_PER_DAY +
-            (done < MAX_SPINS_PER_DAY ? ' · Monetag + Adsterra' : ' · Limit khatam!');
-
-          fetch(DB_URL + '/users/' + uid + '/taskHistory.json', {
-            method: 'POST',
-            headers: { 'Content-Type':'application/json' },
-            body: JSON.stringify({ userId:uid, taskType:'Ad', taskName:'📺 Watch Video Ad', coins:prize, status:'Success', timestamp:Date.now() })
-          }).catch(e => console.warn(e));
-
-          setTimeout(() => showCooldownAndRedirect(cooldownUntil), 1500);
-        })
-        .catch(() => {
-          document.getElementById('statusText').textContent = '❌ Error! Dobara try karo.';
-          btn.disabled = false; btn.textContent = '✅ Claim Coins'; creditFired = false;
-        });
-    } else {
-      document.getElementById('statusText').textContent = '❌ Pehle login karo!';
-    }
-  }
-
-  // ── Penalty ───────────────────────────────────────────────────
-  function applyPenalty() {
-    if (penaltyApplied || creditFired) return;
-    penaltyApplied = true;
-    clearInterval(timerInterval);
-    document.removeEventListener('visibilitychange', onVisChange);
-    const penaltyUntil = Date.now() + PENALTY_DURATION * 1000;
-    localStorage.setItem(KEY_PENALTY_UNTIL, penaltyUntil.toString());
-    document.getElementById('watchBtn').style.display   = 'none';
-    document.getElementById('claimBtn').style.display   = 'none';
-    document.getElementById('adHintBtn').style.display  = 'none';
-    document.getElementById('timerWrap').style.display  = 'none';
-    document.getElementById('warningText').textContent  = '';
-    document.getElementById('statusText').textContent   = '❌ Ad skip ki!';
-    showPenaltyCountdown(penaltyUntil);
-  }
-
-  // ── Countdown helpers ─────────────────────────────────────────
-  function startCountdown(until, timeEl, onDone) {
-    const iv = setInterval(() => {
-      const rem = Math.max(0, Math.ceil((until - Date.now()) / 1000));
-      const m = Math.floor(rem/60), s = rem%60;
-      timeEl.textContent = m + ':' + String(s).padStart(2,'0');
-      if (rem <= 0) { clearInterval(iv); onDone(); }
-    }, 1000);
-  }
-
-  function hideMain() {
-    document.getElementById('watchBtn').style.display  = 'none';
-    document.getElementById('timerWrap').style.display = 'none';
-    document.getElementById('prizeBadge').style.display= 'none';
-    document.getElementById('claimBtn').style.display  = 'none';
-    document.getElementById('adHintBtn').style.display = 'none';
-    document.getElementById('warningText').textContent = '';
-    document.getElementById('statusText').textContent  = '';
-  }
-
-  function showPenaltyCountdown(until) {
-    hideMain();
-    document.getElementById('penaltyBox').style.display = 'block';
-    startCountdown(until, document.getElementById('penaltyTime'), () => {
-      localStorage.removeItem(KEY_PENALTY_UNTIL); location.reload();
-    });
-  }
-
-  function showCooldownCountdown(until) {
-    hideMain();
-    document.getElementById('cooldownBox').style.display = 'block';
-    startCountdown(until, document.getElementById('cooldownTime'), () => {
-      localStorage.removeItem(KEY_COOLDOWN_UNTIL); location.reload();
-    });
-  }
-
-  function showCooldownAndRedirect(until) {
-    document.getElementById('claimBtn').style.display  = 'none';
-    document.getElementById('timerWrap').style.display = 'none';
-    document.getElementById('prizeBadge').style.display= 'none';
-    document.getElementById('cooldownBox').style.display = 'block';
-    startCountdown(until, document.getElementById('cooldownTime'), () => {
-      localStorage.removeItem(KEY_COOLDOWN_UNTIL); goBack();
-    });
-  }
-
-  // ── Visibility change — sirf timer chal raha ho tab ad trigger karo ──
-  function onVisChange() {
-    if (document.visibilityState === 'visible'
-        && timerStarted
-        && !creditFired
-        && !penaltyApplied
-        && elapsed < AD_DURATION) {   // timer abhi khatam nahi hua
-      document.getElementById('statusText').textContent = '⏳ Ad chal raha hai... ' + elapsed + 's';
-      triggerAd();
-    }
-  }
-  document.addEventListener('visibilitychange', onVisChange);
-
-  // ── Back = penalty ────────────────────────────────────────────
-  window.addEventListener('popstate', function() {
-    if (timerStarted && !creditFired && elapsed < AD_DURATION) {
-      history.pushState(null, '', location.href);
-      applyPenalty();
-    }
-  });
-
-  // ── Init ──────────────────────────────────────────────────────
-  function goBack() { window.location.href = 'tasknova_tasks.html'; }
-
-  (function init() {
-    const count = getWatchCount();
-    document.getElementById('spinsInfo').textContent = 'Aaj ke spins: ' + count + '/' + MAX_SPINS_PER_DAY;
-
-    const penaltyUntil  = parseInt(localStorage.getItem(KEY_PENALTY_UNTIL)  || '0');
-    const cooldownUntil = parseInt(localStorage.getItem(KEY_COOLDOWN_UNTIL) || '0');
-    if (penaltyUntil  > Date.now()) { showPenaltyCountdown(penaltyUntil);  return; }
-    if (cooldownUntil > Date.now()) { showCooldownCountdown(cooldownUntil); return; }
-
-    if (count >= MAX_SPINS_PER_DAY) {
-      const btn = document.getElementById('watchBtn');
-      btn.textContent = '🚫 Aaj ki limit khatam!';
-      btn.style.background = 'rgba(255,255,255,0.07)';
-      btn.style.boxShadow  = 'none';
-      btn.style.color      = 'rgba(255,255,255,0.3)';
-      btn.onclick = null;
-      document.getElementById('statusText').textContent  = 'Kal wapas aao!';
-      document.getElementById('warningText').textContent = '';
-    }
-
-    updateTimer();
-  })();
-</script>
-</body>
-</html>
+    if (penaltyUntil  > Date.now()) { showEr
