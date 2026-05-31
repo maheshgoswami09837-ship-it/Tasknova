@@ -8,9 +8,11 @@
   * { margin:0; padding:0; box-sizing:border-box; }
   body { font-family:'Segoe UI',sans-serif; background:#ffffff; margin:0; padding:0; }
 
-  /* White Page Structure */
+  /* Dark UI removed — direct white page flow */
+
+  /* White Page — direct, no overlay needed */
   #whitePage {
-    display: none; /* Controlled by JS on load */
+    display: block;
     background: #ffffff;
     min-height: 100vh;
   }
@@ -26,10 +28,10 @@
     border-radius: 0 4px 4px 0;
   }
 
-  /* Fixed Scroll Length for high ad impressions */
+  /* White page inner wrapper */
   .wp-inner {
-    min-height: 175vh;
-    padding: 0 0 80px 0;
+    min-height: 145vh;
+    padding: 0 0 60px 0;
     background: #ffffff;
     position: relative;
   }
@@ -50,44 +52,54 @@
   .blog-logo { font-size:16px; font-weight:800; color:#1a1a2e; }
   .blog-tag  { font-size:10px; background:#f3f4f6; color:#6b7280; padding:3px 8px; border-radius:50px; }
 
-  /* Fixed height ad boxes so banners load perfectly */
+  /* Ad placeholder boxes */
   .ad-box {
     width: 100%;
     background: #f9fafb;
     border: 1px dashed #d1d5db;
     border-radius: 8px;
     overflow: hidden;
-    margin: 16px 0;
-    min-height: 280px;
+    margin: 12px 0;
+    min-height: 100px;
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 11px;
     color: #9ca3af;
   }
+  .ad-box-label { font-size:10px; color:#d1d5db; text-align:center; padding:8px; }
 
   /* Fake blog article content */
   .article-wrap { padding: 16px; }
-  .article-title { font-size:22px; font-weight:800; color:#111827; line-height:1.3; margin-bottom:10px; }
+  .article-title { font-size:20px; font-weight:800; color:#111827; line-height:1.3; margin-bottom:10px; }
   .article-meta  { font-size:11px; color:#9ca3af; margin-bottom:14px; display:flex; gap:12px; flex-wrap:wrap; }
   .article-img   { width:100%; height:160px; background:linear-gradient(135deg,#e0e7ff,#dbeafe);
     border-radius:10px; margin-bottom:14px; display:flex; align-items:center;
     justify-content:center; font-size:36px; }
-  .article-body  { font-size:14.5px; color:#374151; line-height:1.7; }
+  .article-body  { font-size:14px; color:#374151; line-height:1.7; }
   .article-body p { margin-bottom:14px; }
-  .article-body h3 { font-size:16px; font-weight:700; color:#111827; margin:20px 0 8px; }
+  .article-body h3 { font-size:15px; font-weight:700; color:#111827; margin:16px 0 8px; }
 
   /* Native ad cards (Step 2 Monetag style) */
   .native-section { padding: 16px; margin-top: 8px; }
   .native-title   { font-size:13px; font-weight:700; color:#6b7280; margin-bottom:10px;
     text-transform:uppercase; letter-spacing:0.5px; border-top:1px solid #e5e7eb; padding-top:12px; }
+  .native-card    { display:flex; gap:10px; padding:10px 0; border-bottom:1px solid #f3f4f6;
+    cursor:pointer; }
+  .native-card-img { width:80px; height:60px; border-radius:8px; object-fit:cover;
+    background:linear-gradient(135deg,#fef3c7,#fde68a); flex-shrink:0;
+    display:flex; align-items:center; justify-content:center; font-size:22px; }
+  .native-card-info .nc-title { font-size:13px; font-weight:600; color:#111827; line-height:1.4; margin-bottom:4px; }
+  .native-card-info .nc-src   { font-size:11px; color:#9ca3af; }
+  .native-card-info .nc-sp    { font-size:10px; color:#6b7280; background:#f3f4f6;
+    padding:2px 6px; border-radius:4px; display:inline-block; margin-top:4px; }
 
   /* Timer dashed box */
   .timer-box {
-    margin: 24px 16px;
+    margin: 20px 16px;
     border: 2px dashed #d1d5db;
     border-radius: 14px;
-    padding: 22px 16px;
+    padding: 20px 16px;
     background: #f9fafb;
     text-align: center;
   }
@@ -96,15 +108,17 @@
   .timer-box .tb-sub   { font-size:11px; color:#9ca3af; margin-bottom:14px; }
   .timer-box .tb-hint  { font-size:12px; color:#6b7280; }
 
-  /* Step Colors */
+  /* Step 1 timer — blue */
   #step1 .tb-num { color:#2563eb; }
+
+  /* Step 2 timer — green */
   #step2 .tb-num { color:#16a34a; }
 
-  /* Dynamic Action Buttons */
+  /* Continue / Claim buttons on white page */
   .wp-btn-continue {
     display: none;
     width: calc(100% - 32px);
-    margin: 10px 16px;
+    margin: 0 16px;
     padding: 16px;
     background: linear-gradient(135deg,#2563eb,#3b82f6);
     color: #fff;
@@ -120,7 +134,7 @@
   .wp-btn-claim {
     display: none;
     width: calc(100% - 32px);
-    margin: 10px 16px;
+    margin: 0 16px;
     padding: 18px;
     background: linear-gradient(135deg,#16a34a,#22c55e);
     color: #fff;
@@ -135,14 +149,17 @@
     letter-spacing: 0.3px;
   }
   @keyframes pulseBtn {
-    0%,100% { transform:scale(1); }
-    50%      { transform:scale(1.03); }
+    0%,100% { transform:scale(1); box-shadow:0 6px 24px rgba(22,163,74,0.4); }
+    50%      { transform:scale(1.03); box-shadow:0 8px 28px rgba(22,163,74,0.6); }
   }
 
+  /* Step visibility */
   #step1, #step2 { display:none; }
 </style>
 </head>
 <body>
+
+<!-- Dark App UI removed — tasks file button directly opens this page -->
 
 <!-- ══════════════════════════════════════════════════════
      ERROR OVERLAY (penalty / cooldown / limit)
@@ -160,8 +177,10 @@
 </div>
 
 <!-- ══════════════════════════════════════════════════════
-     WHITE PAGE LAYOUT
+     WHITE PAGE
 ══════════════════════════════════════════════════════ -->
+
+<!-- Progress bar (color set via JS) -->
 <div id="progressBar"></div>
 
 <div id="whitePage">
@@ -169,14 +188,18 @@
   <!-- ── STEP 1 — Adsterra Banners ────────────────────── -->
   <div id="step1">
     <div class="wp-inner">
+
+      <!-- Fake Blog Header -->
       <div class="blog-header">
         <span class="blog-logo">📰 TechBlog India</span>
         <span class="blog-tag">Sponsored</span>
       </div>
 
       <div class="article-wrap">
+
         <!-- TOP BANNER AD — Adsterra -->
         <div class="ad-box" id="s1-ad-top">
+          <!-- ADSTERRA BANNER TOP — paste your code inside this div -->
           <script type="text/javascript">
             atOptions = {
               'key'   : 'f1f69a147759698e8fda4cfd27e423ba',
@@ -191,13 +214,12 @@
 
         <!-- Fake Article -->
         <div class="article-img">📱</div>
-        <div class="article-title">Top 10 Apps to Earn Real Money Online in India 2026</div>
+        <div class="article-title">Top 10 Apps to Earn Real Money Online in India 2025</div>
         <div class="article-meta">
           <span>✍️ By Rahul Sharma</span>
-          <span>📅 May 2026</span>
+          <span>📅 May 2025</span>
           <span>👁 12.4K views</span>
         </div>
-        
         <div class="article-body">
           <p>Looking for legitimate ways to earn money from your smartphone? We've tested dozens of apps and shortlisted the best ones that actually pay Indian users on time.</p>
           <h3>1. Survey & Task Apps</h3>
@@ -208,16 +230,8 @@
 
         <!-- MIDDLE BANNER AD — Adsterra -->
         <div class="ad-box" id="s1-ad-mid">
-          <script type="text/javascript">
-            atOptions = {
-              'key'   : 'f1f69a147759698e8fda4cfd27e423ba',
-              'format': 'iframe',
-              'height': 90,
-              'width' : 728,
-              'params': {}
-            };
-          </script>
-          <script type="text/javascript" src="//www.effectivecpmnetwork.com/b1bggwx0/invoke.js"></script>
+          <!-- ADSTERRA BANNER MIDDLE — paste your code inside this div -->
+          <div class="ad-box-label">Advertisement</div>
         </div>
 
         <div class="article-body">
@@ -234,51 +248,39 @@
           <div class="tb-hint" id="s1Hint">Scroll down and read the article...</div>
         </div>
 
-        <!-- Continue Button -->
+        <!-- Continue Button — hidden until 15s done -->
         <button class="wp-btn-continue" id="s1ContinueBtn" onclick="goToStep2()">
           Continue to Step 2 ➡️
         </button>
 
-        <!-- EXTRA EXPANDED PARAGRAPHS FOR EXTENDED SCROLLING -->
-        <div class="article-body" style="margin-top: 25px; padding-top: 15px; border-top: 1px dashed #eee;">
-          <h3>Maximizing Your Efficiency</h3>
-          <p>To fully benefit from these platforms, users should set aside a specific time daily. Testing shows that early morning cycles often provide refreshed high-paying campaign sets across regions.</p>
-          <p>Security is another critical pillar. Always make sure you use platforms with encrypted gateway checkouts to prevent data leaks or unauthorized transaction loops on your phone setup.</p>
-        </div>
-
         <!-- BOTTOM BANNER AD — Adsterra -->
-        <div class="ad-box" id="s1-ad-bottom">
-          <script type="text/javascript">
-            atOptions = {
-              'key'   : 'f1f69a147759698e8fda4cfd27e423ba',
-              'format': 'iframe',
-              'height': 90,
-              'width' : 728,
-              'params': {}
-            };
-          </script>
-          <script type="text/javascript" src="//www.effectivecpmnetwork.com/b1bggwx0/invoke.js"></script>
+        <div class="ad-box" id="s1-ad-bottom" style="margin-top:20px;">
+          <!-- ADSTERRA BANNER BOTTOM — paste your code inside this div -->
+          <div class="ad-box-label">Advertisement</div>
         </div>
 
-      </div>
-    </div>
-  </div>
+      </div><!-- /article-wrap -->
+    </div><!-- /wp-inner -->
+  </div><!-- /step1 -->
 
 
-  <!-- ── STEP 2 — Monetag In-Page Push Ads ──────────────── -->
+  <!-- ── STEP 2 — Monetag Native Ads ──────────────────── -->
   <div id="step2">
     <div class="wp-inner">
+
+      <!-- Fake Blog Header -->
       <div class="blog-header">
         <span class="blog-logo">📰 TechBlog India</span>
         <span class="blog-tag">Step 2 of 2</span>
       </div>
 
       <div class="article-wrap">
+
         <div class="article-img">💰</div>
         <div class="article-title">How TaskNova Pays You Instantly – Full Review</div>
         <div class="article-meta">
           <span>✍️ By Priya Verma</span>
-          <span>📅 June 2026</span>
+          <span>📅 June 2025</span>
           <span>👁 8.9K views</span>
         </div>
         <div class="article-body">
@@ -288,15 +290,53 @@
           <h3>Daily Earning Potential</h3>
           <p>Active users report earning ₹30–₹80 per day just from daily tasks alone. The spin wheel, shortlinks, and watch-ad features reset every 24 hours giving you consistent earning opportunities.</p>
         </div>
-      </div>
 
-      <!-- Monetag Native Container -->
+      </div><!-- /article-wrap -->
+
+      <!-- Monetag Native Ads Section -->
       <div class="native-section">
         <div class="native-title">Recommended For You</div>
+
+        <!-- MONETAG NATIVE AD CONTAINER — script injects here -->
         <div id="monetag-native-container">
-          <!-- Monetag ads will be injected here safely -->
+          <!-- Placeholder native cards shown while Monetag loads -->
+          <div class="native-card">
+            <div class="native-card-img">🏆</div>
+            <div class="native-card-info">
+              <div class="nc-title">Top 5 UPI Earning Apps Reviewed by Experts</div>
+              <div class="nc-src">earnwithapps.in</div>
+              <div class="nc-sp">Sponsored</div>
+            </div>
+          </div>
+          <div class="native-card">
+            <div class="native-card-img">📊</div>
+            <div class="native-card-info">
+              <div class="nc-title">How Students Earn ₹500/Day from Their Phone</div>
+              <div class="nc-src">studentearning.co.in</div>
+              <div class="nc-sp">Sponsored</div>
+            </div>
+          </div>
+          <div class="native-card">
+            <div class="native-card-img">💎</div>
+            <div class="native-card-info">
+              <div class="nc-title">Best Refer & Earn Apps with Highest Commissions</div>
+              <div class="nc-src">referearn.india</div>
+              <div class="nc-sp">Sponsored</div>
+            </div>
+          </div>
+          <div class="native-card">
+            <div class="native-card-img">🎯</div>
+            <div class="native-card-info">
+              <div class="nc-title">Survey Sites That Pay Real Cash in India 2025</div>
+              <div class="nc-src">surveypay.in</div>
+              <div class="nc-sp">Sponsored</div>
+            </div>
+          </div>
         </div>
-      </div>
+
+        <!-- MONETAG NATIVE SCRIPT — injected dynamically via JS -->
+
+      </div><!-- /native-section -->
 
       <div class="article-wrap">
         <div class="article-body">
@@ -307,32 +347,24 @@
       </div>
 
       <!-- ── COUNTDOWN TIMER BOX ── -->
-      <div class="timer-box">
+      <div class="timer-box" style="margin:20px 16px;">
         <div class="tb-label">✅ Almost Done!</div>
         <div class="tb-num" id="s2TimerNum">15</div>
         <div class="tb-sub">seconds remaining</div>
         <div class="tb-hint" id="s2Hint">Hang tight, your reward is being prepared...</div>
       </div>
 
-      <!-- CLAIM BUTTON -->
+      <!-- CLAIM BUTTON — hidden until step 2 timer done -->
       <button class="wp-btn-claim" id="claimBtn" onclick="claimCoins()">
         💰 Claim Coins
       </button>
 
-      <!-- EXTRA ORGANIC FOOTER CONTENT -->
-      <div class="article-wrap" style="margin-top: 20px;">
-        <div class="article-body" style="color: #6b7280; font-size: 13px;">
-          <p><strong>Disclaimer:</strong> Financial analytics generated here are based strictly on general community tracking portfolios. Individual earnings depend entirely on localized criteria allocations and merchant network values active within the digital zones.</p>
-        </div>
-      </div>
+    </div><!-- /wp-inner -->
+  </div><!-- /step2 -->
 
-    </div>
-  </div>
-</div>
+</div><!-- /whitePage -->
 
-<!-- ══════════════════════════════════════════════════════
-     JAVA SCRIPT LOGIC
-══════════════════════════════════════════════════════ -->
+
 <script>
   /* ── Config ─────────────────────────────────────────── */
   const DB_URL            = 'https://tasknova-66d0f-default-rtdb.firebaseio.com';
@@ -367,52 +399,58 @@
   function isMonetegSpin() { return (getWatchCount()+1) <= 3; }
 
   function triggerMonetagPopunder() {
-    try {
-      const old = document.getElementById('monetag-popunder');
-      if (old) old.remove();
-      const s = document.createElement('script');
-      s.id = 'monetag-popunder';
-      s.src = 'https://al5sm.com/tag.min.js';
-      s.dataset.zone = '11074231';
-      document.body.appendChild(s);
-    } catch(e) { console.log(e); }
+    const old = document.getElementById('monetag-popunder');
+    if (old) old.remove();
+    const s = document.createElement('script');
+    s.id = 'monetag-popunder';
+    s.src = 'https://al5sm.com/tag.min.js';
+    s.dataset.zone = '11074231';
+    document.body.appendChild(s);
   }
 
   function triggerAdsterraPopunder() {
-    try {
-      const old = document.getElementById('adsterra-popunder');
-      if (old) old.remove();
-      window.atOptions = {'key':'f1f69a147759698e8fda4cfd27e423ba','format':'iframe','height':50,'width':320,'params':{}};
-      const s = document.createElement('script');
-      s.id = 'adsterra-popunder'; s.type = 'text/javascript';
-      s.src = '//www.effectivecpmnetwork.com/b1bggwx0/invoke.js';
-      document.body.appendChild(s);
-    } catch(e) { console.log(e); }
+    const old = document.getElementById('adsterra-popunder');
+    if (old) old.remove();
+    window.atOptions = {'key':'f1f69a147759698e8fda4cfd27e423ba','format':'iframe','height':50,'width':320,'params':{}};
+    const s = document.createElement('script');
+    s.id = 'adsterra-popunder'; s.type = 'text/javascript';
+    s.src = '//www.effectivecpmnetwork.com/b1bggwx0/invoke.js';
+    document.body.appendChild(s);
   }
 
-  /* MONETAG IN-PAGE PUSH INJECTION (Safe Implementation) */
   function injectMonetagNative() {
-    try {
-      const old = document.getElementById('monetag-new-script');
-      if (old) old.remove();
-      
-      const container = document.getElementById('monetag-native-container');
-      if (container) {
-        container.innerHTML = ''; 
-        
-        const s = document.createElement('script');
-        s.id = 'monetag-new-script';
-        s.dataset.zone = '11081419';
-        s.src = 'https://nap5k.com/tag.min.js';
-        
-        container.appendChild(s);
-      }
-    } catch(e) { console.log(e); }
+    const old = document.getElementById('monetag-native');
+    if (old) old.remove();
+
+    // Proper Monetag initialisation with window fallback
+    (window.__monetag = window.__monetag || []).push({
+      type: 'native',
+      zone: 11081419
+    });
+
+    const s = document.createElement('script');
+    s.id = 'monetag-native';
+    s.async = true;
+    s.src = 'https://al5sm.com/tag.min.js';
+    s.dataset.zone = '11081419';
+    s.onerror = function() {
+      console.warn('[Monetag] Native script failed to load');
+    };
+    const container = document.getElementById('monetag-native-container');
+    if (container) container.appendChild(s);
+    else document.body.appendChild(s);
   }
 
-  /* ── State ───────────────────────────────────────────── */
-  const uid   = localStorage.getItem('tasknova_uid');
-  const prize = parseInt(localStorage.getItem(KEY_PRIZE) || '10');
+  /* ── State — safe localStorage reads ────────────────────── */
+  let uid, prize;
+  try {
+    uid   = localStorage.getItem('tasknova_uid') || null;
+    prize = parseInt(localStorage.getItem(KEY_PRIZE) || '10') || 10;
+  } catch(e) {
+    // localStorage unavailable (private mode / WebView restriction)
+    uid   = null;
+    prize = 10;
+  }
   let currentStep   = 0;
   let stepTimer     = null;
   let stepSecsLeft  = STEP_DURATION;
@@ -427,33 +465,28 @@
     if (pb) pb.style.display = 'none';
 
     const overlay = document.getElementById('errorOverlay');
-    if (overlay) overlay.style.display = 'flex';
-
-    const iconEl = document.getElementById('errIcon');
-    const titleEl = document.getElementById('errTitle');
-    const msgEl = document.getElementById('errMsg');
+    overlay.style.display = 'flex';
 
     if (type === 'penalty') {
-      if(iconEl) iconEl.textContent  = '❌';
-      if(titleEl) titleEl.textContent = 'Ad Skip Penalty';
-      if(msgEl) msgEl.textContent   = 'Ad skip ki thi — 10 min baad wapas aao';
+      document.getElementById('errIcon').textContent  = '❌';
+      document.getElementById('errTitle').textContent = 'Ad Skip Penalty';
+      document.getElementById('errMsg').textContent   = 'Ad skip ki thi — 10 min baad wapas aao';
       startErrCountdown(until, KEY_PENALTY_UNTIL);
     } else if (type === 'cooldown') {
-      if(iconEl) iconEl.textContent  = '⏳';
-      if(titleEl) titleEl.textContent = 'Next Ad ka Wait Karo';
-      if(msgEl) msgEl.textContent   = 'Thoda sa aur wait karo';
+      document.getElementById('errIcon').textContent  = '⏳';
+      document.getElementById('errTitle').textContent = 'Next Ad ka Wait Karo';
+      document.getElementById('errMsg').textContent   = 'Thoda sa aur wait karo';
       startErrCountdown(until, KEY_COOLDOWN_UNTIL);
     } else if (type === 'success') {
-      if(iconEl) iconEl.textContent  = '✅';
-      if(titleEl) titleEl.textContent = 'Coins Credited!';
-      if(msgEl) msgEl.textContent   = 'Next spin ke liye wait karo';
+      document.getElementById('errIcon').textContent  = '✅';
+      document.getElementById('errTitle').textContent = 'Coins Credited!';
+      document.getElementById('errMsg').textContent   = 'Next spin ke liye wait karo';
       startErrCountdown(until, KEY_COOLDOWN_UNTIL, true);
     } else {
-      if(iconEl) iconEl.textContent  = '🚫';
-      if(titleEl) titleEl.textContent = 'Aaj ki Limit Khatam!';
-      if(msgEl) msgEl.textContent   = 'Kal wapas aao aur aur coins kamao';
-      const timerEl = document.getElementById('errTimer');
-      if(timerEl) timerEl.textContent = '';
+      document.getElementById('errIcon').textContent  = '🚫';
+      document.getElementById('errTitle').textContent = 'Aaj ki Limit Khatam!';
+      document.getElementById('errMsg').textContent   = 'Kal wapas aao aur aur coins kamao';
+      document.getElementById('errTimer').textContent = '';
     }
   }
 
@@ -462,7 +495,7 @@
     const iv = setInterval(() => {
       const rem = Math.max(0, Math.ceil((until - Date.now()) / 1000));
       const m = Math.floor(rem/60), s = rem%60;
-      if(el) el.textContent = m + ':' + String(s).padStart(2,'0');
+      el.textContent = m + ':' + String(s).padStart(2,'0');
       if (rem <= 0) {
         clearInterval(iv);
         localStorage.removeItem(storageKey);
@@ -471,31 +504,165 @@
     }, 1000);
   }
 
-  /* ── Page load (CRASH BYPASS FIXED) ──────────────────── */
+  /* ── Page load — auto start ──────────────────────────── */
   window.addEventListener('DOMContentLoaded', function() {
-    try {
-      const penaltyUntil  = parseInt(localStorage.getItem(KEY_PENALTY_UNTIL)  || '0');
-      const cooldownUntil = parseInt(localStorage.getItem(KEY_COOLDOWN_UNTIL) || '0');
-      
-      if (penaltyUntil  > Date.now()) { showErrorPage('penalty',  penaltyUntil);  return; }
-      if (cooldownUntil > Date.now()) { showErrorPage('cooldown', cooldownUntil); return; }
-      if (getWatchCount() >= MAX_SPINS_PER_DAY) { showErrorPage('limit', 0); return; }
-    } catch(err) {
-      console.log("Storage check bypassed:", err);
-    }
-    
-    // Safety Net: Always forces the page to load even if Firebase data is missing
+    const penaltyUntil  = parseInt(localStorage.getItem(KEY_PENALTY_UNTIL)  || '0');
+    const cooldownUntil = parseInt(localStorage.getItem(KEY_COOLDOWN_UNTIL) || '0');
+    if (penaltyUntil  > Date.now()) { showErrorPage('penalty',  penaltyUntil);  return; }
+    if (cooldownUntil > Date.now()) { showErrorPage('cooldown', cooldownUntil); return; }
+    if (getWatchCount() >= MAX_SPINS_PER_DAY) { showErrorPage('limit', 0); return; }
     startAdTask();
   });
 
   /* ── Step 1 start ────────────────────────────────────── */
   function startAdTask() {
+    // Fire popunder (user gesture guaranteed by DOMContentLoaded tap from tasks page)
     if (isMonetegSpin()) triggerMonetagPopunder();
     else                 triggerAdsterraPopunder();
 
-    const wp = document.getElementById('whitePage');
-    const s1 = document.getElementById('step1');
-    const s2 = document.getElementById('step2');
-    
-    if(wp) wp.style.display = 'block';
-    if(s1) s1.style.displa
+    // Show white page Step 1
+    document.getElementById('whitePage').style.display = 'block';
+    document.getElementById('step1').style.display     = 'block';
+    document.getElementById('step2').style.display     = 'none';
+
+    // Blue progress bar
+    const pb = document.getElementById('progressBar');
+    pb.style.background  = '#2563eb';
+    pb.style.width       = '0%';
+    pb.style.transition  = 'none';
+    currentStep = 1;
+
+    history.pushState({ step:1 }, '', location.href);
+    startStepTimer(1);
+  }
+
+  /* ── Step 2 load ─────────────────────────────────────── */
+  function goToStep2() {
+    document.getElementById('s1ContinueBtn').style.display = 'none';
+    document.getElementById('step1').style.display         = 'none';
+    document.getElementById('step2').style.display         = 'block';
+
+    const pb = document.getElementById('progressBar');
+    pb.style.background = '#16a34a';
+    pb.style.width      = '0%';
+    pb.style.transition = 'none';
+    currentStep = 2;
+
+    injectMonetagNative();
+    document.getElementById('whitePage').scrollTop = 0;
+    startStepTimer(2);
+  }
+
+  /* ── Step timer ──────────────────────────────────────── */
+  function startStepTimer(step) {
+    clearInterval(stepTimer);
+    stepSecsLeft = STEP_DURATION;
+
+    const pb     = document.getElementById('progressBar');
+    const numEl  = document.getElementById(step === 1 ? 's1TimerNum' : 's2TimerNum');
+    const hintEl = document.getElementById(step === 1 ? 's1Hint'     : 's2Hint');
+
+    setTimeout(() => {
+      pb.style.transition = 'width ' + STEP_DURATION + 's linear';
+      pb.style.width = '100%';
+    }, 50);
+
+    stepTimer = setInterval(function() {
+      stepSecsLeft--;
+      if (numEl)  numEl.textContent  = Math.max(0, stepSecsLeft);
+      if (hintEl) hintEl.textContent = step === 1
+        ? (stepSecsLeft > 0 ? 'Scroll down and read the article... (' + stepSecsLeft + 's)' : '✅ You can continue now!')
+        : (stepSecsLeft > 0 ? 'Hang tight, reward being prepared... (' + stepSecsLeft + 's)' : '✅ Tap below to claim!');
+
+      if (stepSecsLeft <= 0) {
+        clearInterval(stepTimer);
+        pb.style.width = '100%';
+        onStepComplete(step);
+      }
+    }, 1000);
+  }
+
+  /* ── Step complete ───────────────────────────────────── */
+  function onStepComplete(step) {
+    if (step === 1) {
+      const btn = document.getElementById('s1ContinueBtn');
+      btn.style.display = 'block';
+      setTimeout(() => btn.scrollIntoView({ behavior:'smooth', block:'center' }), 200);
+    } else {
+      const btn = document.getElementById('claimBtn');
+      btn.style.display = 'block';
+      setTimeout(() => btn.scrollIntoView({ behavior:'smooth', block:'center' }), 200);
+    }
+  }
+
+  /* ── Claim coins ─────────────────────────────────────── */
+  function claimCoins() {
+    if (creditFired || penaltyApplied) return;
+    if (stepSecsLeft > 0) { alert('Abhi ' + stepSecsLeft + 's baaki hain!'); return; }
+    creditFired = true;
+
+    const btn = document.getElementById('claimBtn');
+    btn.disabled    = true;
+    btn.textContent = '⏳ Crediting...';
+
+    incrementWatchCount();
+    const cooldownUntil = Date.now() + COOLDOWN_DURATION * 1000;
+    localStorage.setItem(KEY_COOLDOWN_UNTIL, String(cooldownUntil));
+
+    if (uid && uid !== 'null') {
+      fetch(DB_URL + '/users/' + uid + '.json')
+        .then(r => r.json())
+        .then(data => {
+          if (!data) throw new Error('No user');
+          const newCoins   = (data.coins   || 0) + prize;
+          const newBalance = parseFloat((newCoins / 100).toFixed(2));
+          return fetch(DB_URL + '/users/' + uid + '.json', {
+            method: 'PATCH',
+            headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({ coins:newCoins, balance:newBalance, tasksDone:(data.tasksDone||0)+1 })
+          });
+        })
+        .then(() => fetch(DB_URL + '/users/' + uid + '/taskHistory.json', {
+          method: 'POST',
+          headers: {'Content-Type':'application/json'},
+          body: JSON.stringify({ userId:uid, taskType:'Ad', taskName:'📺 Watch Video Ad', coins:prize, status:'Success', timestamp:Date.now() })
+        }))
+        .then(() => {
+          btn.textContent = '✅ +' + prize + ' Coins Claimed!';
+          setTimeout(() => showErrorPage('success', cooldownUntil), 1200);
+        })
+        .catch(e => {
+          console.error(e);
+          btn.disabled    = false;
+          btn.textContent = '💰 Claim Coins';
+          creditFired     = false;
+        });
+    } else {
+      btn.textContent = '❌ Login karo pehle!';
+    }
+  }
+
+  /* ── Penalty ─────────────────────────────────────────── */
+  function applyPenalty() {
+    if (penaltyApplied || creditFired) return;
+    penaltyApplied = true;
+    clearInterval(stepTimer);
+    const penaltyUntil = Date.now() + PENALTY_DURATION * 1000;
+    localStorage.setItem(KEY_PENALTY_UNTIL, String(penaltyUntil));
+    showErrorPage('penalty', penaltyUntil);
+  }
+
+  /* ── Back button trap ────────────────────────────────── */
+  window.addEventListener('popstate', function() {
+    if (currentStep > 0 && !creditFired) {
+      history.pushState(null, '', location.href);
+      applyPenalty();
+    }
+  });
+
+  /* ── Go back ─────────────────────────────────────────── */
+  function goBack() { window.location.href = 'tasknova_tasks.html'; }
+</script>
+
+</body>
+</html>
