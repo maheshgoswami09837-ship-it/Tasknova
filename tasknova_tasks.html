@@ -70,12 +70,15 @@
   .task-card.disabled { opacity: 0.55; pointer-events: none; }
   .task-card.hidden { display: none; }
 
-  .task-icon { width: 52px; height: 52px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 24px; flex-shrink: 0; }
-  .icon-purple { background: rgba(108,99,255,0.2); }
-  .icon-green { background: rgba(34,197,94,0.2); }
-  .icon-orange { background: rgba(249,115,22,0.2); }
-  .icon-blue { background: rgba(59,130,246,0.2); }
-  .icon-pink { background: rgba(236,72,153,0.2); }
+  .task-icon { width:52px; height:52px; border-radius:16px; display:flex; align-items:center; justify-content:center; flex-shrink:0; box-shadow:0 4px 14px rgba(0,0,0,0.25); }
+  .task-icon svg { width:26px; height:26px; }
+  .icon-purple { background:linear-gradient(135deg,#4f3ff0,#7c6fff); }
+  .icon-green  { background:linear-gradient(135deg,#059669,#22c55e); }
+  .icon-orange { background:linear-gradient(135deg,#ea6c00,#f97316); }
+  .icon-blue   { background:linear-gradient(135deg,#1d61d6,#3b82f6); }
+  .icon-pink   { background:linear-gradient(135deg,#be185d,#ec4899); }
+  .icon-gold   { background:linear-gradient(135deg,#b45309,#f59e0b); }
+  .icon-teal   { background:linear-gradient(135deg,#0f766e,#14b8a6); }
 
   .task-info { flex: 1; }
   .task-info h3 { font-size: 14px; font-weight: 700; color: #fff; margin-bottom: 4px; }
@@ -291,7 +294,9 @@
     <div class="task-card" data-category="survey"
       style="background:linear-gradient(135deg,rgba(108,99,255,0.18),rgba(59,130,246,0.12));border-color:rgba(108,99,255,0.35);"
       onclick="openOfferwallPage()">
-      <div class="task-icon icon-purple">🎁</div>
+      <div class="task-icon icon-purple">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg>
+      </div>
       <div class="task-info">
         <h3>Offerwall Tasks</h3>
         <p>Offers complete karo, zyada coins pao!</p>
@@ -309,7 +314,9 @@
 
     <!-- Shortlink Task -->
     <div class="task-card" data-category="daily" id="shortlinkTaskCard" onclick="openShortlinkModal()">
-      <div class="task-icon icon-green">🔗</div>
+      <div class="task-icon icon-teal">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+      </div>
       <div class="task-info">
         <h3>Shortlink Task</h3>
         <p>Link visit karo aur coins pao</p>
@@ -327,7 +334,9 @@
 
     <!-- Survey Task -->
     <div class="task-card" data-category="survey" id="surveyCard" onclick="openSurvey()">
-      <div class="task-icon icon-blue">📝</div>
+      <div class="task-icon icon-blue">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/></svg>
+      </div>
       <div class="task-info">
         <h3>Complete Survey</h3>
         <p>Answer questions from brands & earn coins</p>
@@ -345,7 +354,9 @@
 
     <!-- Watch Video Ad -->
     <div class="task-card" data-category="watchads" id="watchAdCard">
-      <div class="task-icon icon-purple">📺</div>
+      <div class="task-icon icon-purple">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="15" rx="2" ry="2"/><polyline points="17 2 12 7 7 2"/><polygon points="10 11 10 18 17 14.5" fill="#fff" stroke="none"/></svg>
+      </div>
       <div class="task-info">
         <h3>Watch Video Ad</h3>
         <p>Watch a short video ad & earn coins</p>
@@ -364,7 +375,9 @@
     <!-- Daily Check-In -->
     <div class="task-card" data-category="daily" id="checkinCard" onclick="doCheckin()" style="flex-wrap:wrap;">
       <div style="display:flex;align-items:center;gap:14px;width:100%;">
-        <div class="task-icon icon-green">📅</div>
+        <div class="task-icon icon-green">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01" stroke-width="2.5" stroke-linecap="round"/></svg>
+        </div>
         <div class="task-info">
           <h3>Daily Check-In</h3>
           <p>Har roz ek baar claim karo</p>
@@ -386,7 +399,9 @@
 
     <!-- Spin Wheel -->
     <div class="task-card" data-category="daily" id="spinTaskCard" onclick="openSpinModal()">
-      <div class="task-icon icon-purple">🎡</div>
+      <div class="task-icon icon-orange">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M3 22v-6h6"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/></svg>
+      </div>
       <div class="task-info">
         <h3>Spin & Win</h3>
         <p>Wheel spin karo aur coins jeeto</p>
@@ -410,7 +425,9 @@
 
 
     <div class="task-card disabled" data-category="instagram">
-      <div class="task-icon icon-pink">📸</div>
+      <div class="task-icon icon-pink">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5" stroke-width="3"/></svg>
+      </div>
       <div class="task-info">
         <h3>Instagram Post</h3>
         <p>Share TaskNova on your Instagram</p>
@@ -1517,19 +1534,109 @@
     }
 
     // Alternating network — odd=Monetag, even=Adsterra
-    const nextCount  = batchCount + 1;
-    const adUrl      = (nextCount % 2 !== 0) ? MONETAG_URL : ADSTERRA_URL;
+    const nextCount   = batchCount + 1;
+    const adUrl       = (nextCount % 2 !== 0) ? MONETAG_URL : ADSTERRA_URL;
     const networkName = (nextCount % 2 !== 0) ? 'Monetag' : 'Adsterra';
     console.log('[Ad] #' + nextCount + ' → ' + networkName);
 
-    // pendingAdReward set karo
+    // ── Open ad in popup window ──────────────────────────────
+    const adWindow = window.open(adUrl, '_blank',
+      'width=' + screen.width + ',height=' + screen.height +
+      ',scrollbars=yes,resizable=yes,toolbar=no,menubar=no,location=no,status=no'
+    );
+
+    if (!adWindow || adWindow.closed || typeof adWindow.closed === 'undefined') {
+      // Popup blocked — fallback to redirect
+      showToast('Popup block ho gayi! Browser settings mein allow karo.', '#f59e0b');
+      localStorage.setItem('currentAdUrl', adUrl);
+      window.location.href = 'https://tasknovaofficial.vercel.app/watch_ad.html';
+      return;
+    }
+
+    // ── Show in-page timer overlay ───────────────────────────
+    const popup = document.getElementById('adPopup');
+    popup.classList.add('show');
+
+    const timerBar   = document.getElementById('adTimerBar');
+    const countdown  = document.getElementById('adCountdown');
+    const claimBtn   = document.getElementById('adClaimBtn');
+    const statusText = document.getElementById('adStatusText');
+    const startBtn   = document.getElementById('adStartBtn');
+
+    if (timerBar)  { timerBar.style.width = '0%'; timerBar.style.transition = 'none'; }
+    if (claimBtn)  claimBtn.style.display = 'none';
+    if (startBtn)  startBtn.style.display = 'none';
+    if (statusText) statusText.textContent = '👀 Ad dekh rahe ho... band mat karna!';
+    if (countdown) countdown.textContent = 'Please wait 30s';
+
+    // Animate progress bar
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      if (timerBar) { timerBar.style.transition = 'width 30s linear'; timerBar.style.width = '100%'; }
+    }));
+
+    let timeLeft = 30;
+    let adCompleted = false;
+    let windowClosedEarly = false;
+
+    // ── adWindow.closed polling — detects if user closes ad tab ──
+    const windowCheckInterval = setInterval(() => {
+      if (adWindow.closed) {
+        clearInterval(windowCheckInterval);
+        if (!adCompleted) {
+          // User closed ad before 30s — RESET timer
+          windowClosedEarly = true;
+          clearInterval(timerInterval);
+          if (timerBar)  { timerBar.style.transition = 'none'; timerBar.style.width = '0%'; }
+          if (claimBtn)  claimBtn.style.display = 'none';
+          if (countdown) countdown.textContent = '';
+          if (statusText) statusText.textContent = '⚠️ Ad band kar di! Dobara Watch karo.';
+
+          // Show warning alert box
+          const alertBox = document.getElementById('adAlert');
+          const alertText = document.getElementById('adAlertText');
+          if (alertBox) alertBox.style.display = 'block';
+          if (alertText) alertText.innerHTML = '❌ Ad 30s se pehle band kari — reward nahi milega!';
+
+          showToast('❌ Ad skip ki! 30 seconds poori dekhni hogi.', '#ef4444');
+
+          // Auto-close popup after 3s
+          setTimeout(() => {
+            popup.classList.remove('show');
+            if (alertBox) alertBox.style.display = 'none';
+          }, 3000);
+        }
+      }
+    }, 500);
+
+    // ── 30s countdown timer ──────────────────────────────────
+    adHardLockActive = true;
+    const timerInterval = setInterval(() => {
+      if (windowClosedEarly) { clearInterval(timerInterval); adHardLockActive = false; return; }
+      timeLeft--;
+      if (countdown) countdown.textContent = 'Please wait ' + Math.max(0, timeLeft) + 's';
+
+      if (timeLeft <= 0) {
+        clearInterval(timerInterval);
+        clearInterval(windowCheckInterval);
+        adCompleted = true;
+        adHardLockActive = false;
+
+        // Close ad window automatically
+        try { if (!adWindow.closed) adWindow.close(); } catch(e) {}
+
+        if (statusText) statusText.textContent = '✅ Ad dekh li! Ab reward claim karo.';
+        if (countdown)  countdown.textContent = 'Task Completed! 🎉';
+        if (claimBtn) {
+          claimBtn.style.display = 'block';
+          claimBtn.onclick = () => claimCoins(uid);
+        }
+      }
+    }, 1000);
+
+    // Store pending reward
     localStorage.setItem('pendingAdReward', JSON.stringify({
       coins: 10, ts: Date.now(), adNum: nextCount
     }));
-
-    // watch_ad.html pe redirect — adUrl pass karo via localStorage
-    localStorage.setItem('currentAdUrl', adUrl);
-    window.location.href = 'https://tasknovaofficial.vercel.app/watch_ad.html';
   }
 
   function claimCoins(uid) {
