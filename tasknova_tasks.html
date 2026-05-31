@@ -1533,9 +1533,7 @@
       return;
     }
 
-    // ── Redirect to watch_ad.html ────────────────────────────────
-    // Saari processing (timer, popup, coins) wahan hogi.
-    // Wapas aane pe URL params se reward credit hoga.
+    // Sirf watch_ad.html pe bhejo — wahan sab handle hoga
     localStorage.setItem('pendingAdReward', JSON.stringify({
       coins: 10, ts: Date.now(), adNum: batchCount + 1
     }));
