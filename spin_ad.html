@@ -161,16 +161,49 @@
 <!-- ══════════════════════════════════════════════════════
      ERROR OVERLAY (penalty / cooldown / limit)
 ══════════════════════════════════════════════════════ -->
+<!-- ══════════════════════════════════════════════════════
+     ERROR OVERLAY (penalty / cooldown / limit / success)
+══════════════════════════════════════════════════════ -->
 <div id="errorOverlay" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;
-  background:#05051a;z-index:99999;flex-direction:column;align-items:center;
-  justify-content:center;padding:32px;text-align:center;font-family:'Segoe UI',sans-serif;">
-  <div id="errIcon" style="font-size:56px;margin-bottom:16px;">⏳</div>
-  <div id="errTitle" style="font-size:20px;font-weight:800;color:#fff;margin-bottom:8px;"></div>
-  <div id="errMsg" style="font-size:13px;color:rgba(255,255,255,0.45);margin-bottom:20px;"></div>
-  <div id="errTimer" style="font-size:42px;font-weight:900;color:#f59e0b;margin-bottom:28px;"></div>
-  <button onclick="goBack()" style="background:rgba(255,255,255,0.1);border:1.5px solid rgba(255,255,255,0.2);
-    border-radius:14px;padding:14px 32px;color:#fff;font-size:15px;font-weight:700;
-    cursor:pointer;font-family:'Segoe UI',sans-serif;">← Wapas Jao</button>
+  background:linear-gradient(160deg,#0a0a1a 0%,#0d1f0d 50%,#0a0a1a 100%);
+  z-index:99999;flex-direction:column;align-items:center;
+  justify-content:center;padding:32px;text-align:center;font-family:'Segoe UI',sans-serif;
+  overflow:hidden;">
+
+  <!-- Background glow circles -->
+  <div style="position:absolute;top:-80px;left:-80px;width:300px;height:300px;
+    background:radial-gradient(circle,rgba(34,197,94,0.12) 0%,transparent 70%);pointer-events:none;"></div>
+  <div style="position:absolute;bottom:-80px;right:-80px;width:300px;height:300px;
+    background:radial-gradient(circle,rgba(108,99,255,0.1) 0%,transparent 70%);pointer-events:none;"></div>
+
+  <!-- Icon -->
+  <div id="errIcon" style="font-size:72px;margin-bottom:20px;filter:drop-shadow(0 0 24px rgba(34,197,94,0.4));"></div>
+
+  <!-- Coin amount (shown on success) -->
+  <div id="errCoinBadge" style="display:none;background:linear-gradient(135deg,rgba(34,197,94,0.15),rgba(22,163,74,0.1));
+    border:1.5px solid rgba(34,197,94,0.35);border-radius:50px;padding:8px 24px;
+    margin-bottom:16px;">
+    <span style="color:#22c55e;font-size:22px;font-weight:900;" id="errCoinText">+10 🪙</span>
+  </div>
+
+  <div id="errTitle" style="font-size:26px;font-weight:900;color:#fff;margin-bottom:8px;letter-spacing:0.3px;"></div>
+  <div id="errMsg" style="font-size:13px;color:rgba(255,255,255,0.4);margin-bottom:24px;line-height:1.6;"></div>
+
+  <!-- Timer box -->
+  <div id="errTimerBox" style="background:rgba(255,255,255,0.05);border:1.5px solid rgba(255,255,255,0.1);
+    border-radius:20px;padding:16px 40px;margin-bottom:32px;">
+    <div style="font-size:11px;color:rgba(255,255,255,0.35);margin-bottom:6px;letter-spacing:1px;text-transform:uppercase;">Next spin in</div>
+    <div id="errTimer" style="font-size:40px;font-weight:900;color:#f59e0b;letter-spacing:2px;"></div>
+  </div>
+
+  <button onclick="goBack()" style="background:linear-gradient(135deg,#22c55e,#16a34a);
+    border:none;border-radius:16px;padding:16px 40px;color:#fff;font-size:16px;font-weight:800;
+    cursor:pointer;font-family:'Segoe UI',sans-serif;
+    box-shadow:0 8px 24px rgba(34,197,94,0.35);letter-spacing:0.3px;">
+    ← Wapas Jao
+  </button>
+
+  <div style="margin-top:20px;font-size:11px;color:rgba(255,255,255,0.2);">TaskNova • Spin & Earn</div>
 </div>
 
 <!-- ══════════════════════════════════════════════════════
@@ -454,7 +487,11 @@
     } else if (type === 'success') {
       document.getElementById('errIcon').textContent  = '✅';
       document.getElementById('errTitle').textContent = 'Coins Credited!';
-      document.getElementById('errMsg').textContent   = 'Next spin ke liye wait karo';
+      document.getElementById('errMsg').textContent   = 'Aapke wallet mein add ho gaye\nNext spin ke liye wait karo';
+      const badge = document.getElementById('errCoinBadge');
+      const coinText = document.getElementById('errCoinText');
+      if (badge) badge.style.display = 'block';
+      if (coinText) coinText.textContent = '+' + prize + ' 🪙';
       startErrCountdown(until, KEY_COOLDOWN_UNTIL, true);
     } else {
       document.getElementById('errIcon').textContent  = '🚫';
