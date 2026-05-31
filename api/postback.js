@@ -12,7 +12,12 @@
 const FIREBASE_URL      = 'https://tasknova-66d0f-default-rtdb.firebaseio.com';
 const FIREBASE_SECRET   = process.env.FIREBASE_SECRET;
 const POSTBACK_PASSWORD = process.env.POSTBACK_PASSWORD;
-const COINS_PER_DOLLAR  = 2000; // CPALead: $1 = 2000 coins
+
+// ── Coins formula ──────────────────────────────────────────────
+// CPALead: payout USD mein aata hai  → $0.10 = 200 coins  ($1 = 2000)
+// CPX:     amount_local INR mein     → ₹5   = 500 coins   (₹1 = 100)
+const CPALEAD_COINS_PER_DOLLAR = 2000;
+const CPX_COINS_PER_RUPEE      = 100;
 
 export default async function handler(req, res) {
 
@@ -20,7 +25,7 @@ export default async function handler(req, res) {
     return res.status(405).send('Method Not Allowed');
   }
 
-  const source = req.query.source;
+  const source    = req.query.source;
   const authParam = FIREBASE_SECRET ? ('?auth=' + FIREBASE_SECRET) : '';
 
   // ════════════════════════════════════════════════════════════
@@ -29,60 +34,87 @@ export default async function handler(req, res) {
   if (source === 'cpx') {
     const { status, trans_id, amount_local, user_id } = req.query;
 
-    console.log('CPX Postback:', status, trans_id, amount_local, user_id);
+    console.log('[CPX] Postback received:', { status, trans_id, amount_local, user_id });
 
-    if (!status || !user_id) {
-      return res.status(200).json({ success: false, reason: 'Missing params' });
+    if (!user_id) {
+      return res.status(200).json({ success: false, reason: 'Missing user_id' });
     }
 
-    const statusNum = parseInt(status);
+    // Sirf status=1 pe coins do
+    if (parseInt(status) !== 1) {
+      console.log('[CPX] Non-success status:', status, '— skip');
+      return res.status(200).send('1');
+    }
 
-    if (statusNum === 1) {
-      try {
-        const userRes  = await fetch(FIREBASE_URL + '/users/' + user_id + '.json' + authParam);
-        const userData = await userRes.json();
-
-        if (!userData) {
-          return res.status(200).json({ success: false, reason: 'User not found' });
-        }
-
-        // Duplicate check
-        const doneKey = 'cpx_done_' + trans_id;
-        if (userData[doneKey]) {
-          return res.status(200).json({ success: false, reason: 'Already processed' });
-        }
-
-        const coinsToAdd  = amount_local ? Math.max(1, Math.round(parseFloat(amount_local))) : 500;
-        const newCoins    = (userData.coins     || 0) + coinsToAdd;
-        const newBalance  = parseFloat((newCoins / 100).toFixed(2));
-        const newTasksDone = (userData.tasksDone || 0) + 1;
-
-        const updateData = {
-          coins:                newCoins,
-          balance:              newBalance,
-          tasksDone:            newTasksDone,
-          totalEarned:          newBalance,
-          lastSurveyCompleted:  Date.now(),
-          lastSurveyTransId:    trans_id || 'N/A'
-        };
-        updateData[doneKey] = true;
-
-        await fetch(FIREBASE_URL + '/users/' + user_id + '.json' + authParam, {
-          method:  'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body:    JSON.stringify(updateData)
-        });
-
-        console.log('[CPX] Coins credited:', coinsToAdd, '→ user:', user_id);
-        return res.status(200).json({ success: true, coins: coinsToAdd });
-
-      } catch (e) {
-        console.error('[CPX] Error:', e.message);
-        return res.status(200).json({ success: false, error: e.message });
+    try {
+      // ── Duplicate check ──────────────────────────────────────
+      const safeTransId = (trans_id || ('cpx_' + Date.now())).replace(/[^a-zA-Z0-9_-]/g, '_');
+      const dupUrl  = `${FIREBASE_URL}/postback_log/cpx/${user_id}/${safeTransId}.json${authParam}`;
+      const dupData = await (await fetch(dupUrl)).json();
+      if (dupData && dupData.credited) {
+        console.log('[CPX] Duplicate — skip:', safeTransId);
+        return res.status(200).send('1');
       }
 
-    } else {
-      return res.status(200).json({ success: true, status: 'no_action' });
+      // ── User fetch ───────────────────────────────────────────
+      const userUrl  = `${FIREBASE_URL}/users/${user_id}.json${authParam}`;
+      const userData = await (await fetch(userUrl)).json();
+      if (!userData || userData.error) {
+        console.error('[CPX] User not found:', user_id);
+        return res.status(200).json({ success: false, reason: 'User not found' });
+      }
+
+      // ── Coins calculate ──────────────────────────────────────
+      // amount_local = INR mein, ×100 = coins
+      const rupees    = parseFloat(amount_local || '5');
+      const coinsToAdd = Math.max(50, Math.round(rupees * CPX_COINS_PER_RUPEE));
+
+      const newCoins    = (userData.coins    || 0) + coinsToAdd;
+      const newBalance  = parseFloat((newCoins / 100).toFixed(2));
+      const newTasksDone= (userData.tasksDone || 0) + 1;
+
+      // ── Update user ──────────────────────────────────────────
+      await fetch(userUrl, {
+        method : 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body   : JSON.stringify({
+          coins    : newCoins,
+          balance  : newBalance,
+          tasksDone: newTasksDone,
+        })
+      });
+
+      // ── Task History log ─────────────────────────────────────
+      await fetch(`${FIREBASE_URL}/users/${user_id}/taskHistory.json${authParam}`, {
+        method : 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body   : JSON.stringify({
+          userId   : user_id,
+          taskType : 'Survey',
+          taskName : '📋 CPX Survey Completed',
+          coins    : coinsToAdd,
+          status   : 'Success',
+          source   : 'CPX Research',
+          transId  : safeTransId,
+          amountInr: rupees,
+          timestamp: Date.now(),
+        })
+      });
+
+      // ── Mark credited ────────────────────────────────────────
+      const dupUrl = `${FIREBASE_URL}/postback_log/cpalead/${subid}/${finalTxKey}.json${authParam}`;
+      await fetch(dupUrl, {
+        method : 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body   : JSON.stringify({ credited: true, coins: coinsToAdd, ts: Date.now() })
+      });
+
+      console.log(`[CPX] ✅ +${coinsToAdd} coins → user: ${user_id} | ₹${rupees}`);
+      return res.status(200).send('1'); // CPX expects "1"
+
+    } catch (e) {
+      console.error('[CPX] Error:', e.message);
+      return res.status(200).send('1'); // Always 200 to CPX
     }
   }
 
@@ -90,58 +122,121 @@ export default async function handler(req, res) {
   //  SOURCE 2 — CPALead Offerwall
   // ════════════════════════════════════════════════════════════
   if (source === 'cpalead') {
-    const { subid, payout, password } = req.query;
+    const { subid, payout, password, offer_name, offer_id, lead_id } = req.query;
 
-    // Parameter check
-    if (!subid || !payout || !password) {
+    console.log('[CPALead] Postback received:', { subid, payout, offer_name });
+
+    // ── Params check ─────────────────────────────────────────
+    if (!subid || !payout) {
       console.error('[CPALead] Missing params:', req.query);
-      return res.status(400).send('Missing parameters');
+      return res.status(200).send('1'); // Always 200 to CPALead
     }
 
-    // Password verify
-    if (password !== POSTBACK_PASSWORD) {
-      console.error('[CPALead] Wrong password');
-      return res.status(403).send('Forbidden');
+    // ── Password verify ───────────────────────────────────────
+    if (POSTBACK_PASSWORD && password !== POSTBACK_PASSWORD) {
+      console.error('[CPALead] Wrong password — got:', password);
+      return res.status(200).send('1');
     }
 
-    const payoutAmount = parseFloat(payout);
-    if (isNaN(payoutAmount) || payoutAmount <= 0) {
-      return res.status(400).send('Invalid payout');
+    const payoutUsd = parseFloat(payout);
+    if (isNaN(payoutUsd) || payoutUsd <= 0) {
+      console.error('[CPALead] Invalid payout:', payout);
+      return res.status(200).send('1');
     }
 
-    const coinsToAdd = Math.round(payoutAmount * COINS_PER_DOLLAR);
+    const coinsToAdd = Math.round(payoutUsd * CPALEAD_COINS_PER_DOLLAR);
 
     try {
-      const userRes  = await fetch(FIREBASE_URL + '/users/' + subid + '.json' + authParam);
-      const userData = await userRes.json();
+      // ── Duplicate check — lead_id OR 2-min window ────────────
+      const txKey  = (lead_id || offer_id || '').replace(/[^a-zA-Z0-9_-]/g, '_');
+
+      // Agar lead_id hai to exact duplicate check
+      if (txKey) {
+        const dupUrl  = `${FIREBASE_URL}/postback_log/cpalead/${subid}/${txKey}.json${authParam}`;
+        const dupData = await (await fetch(dupUrl)).json();
+        if (dupData && dupData.credited) {
+          console.log('[CPALead] Duplicate lead_id — skip:', txKey);
+          return res.status(200).send('1');
+        }
+      }
+
+      // Rate limit — same user ka last postback 2 min ke andar hai?
+      const rateLimitUrl  = `${FIREBASE_URL}/postback_log/cpalead_rate/${subid}.json${authParam}`;
+      const rateLimitData = await (await fetch(rateLimitUrl)).json();
+      const lastPostback  = rateLimitData ? rateLimitData.lastTs : 0;
+      const TWO_MINUTES   = 2 * 60 * 1000;
+
+      if (lastPostback && (Date.now() - lastPostback) < TWO_MINUTES) {
+        console.log('[CPALead] Rate limited — too fast:', subid);
+        return res.status(200).send('1');
+      }
+
+      // Rate limit timestamp update karo
+      await fetch(rateLimitUrl, {
+        method : 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body   : JSON.stringify({ lastTs: Date.now(), subid })
+      });
+
+      const finalTxKey = txKey || ('cl_' + Date.now());
+
+      // ── User fetch ────────────────────────────────────────────
+      const userUrl  = `${FIREBASE_URL}/users/${subid}.json${authParam}`;
+      const userData = await (await fetch(userUrl)).json();
 
       if (!userData || userData.error) {
         console.error('[CPALead] User not found:', subid);
-        return res.status(200).send('1'); // CPALead ko 200 chahiye
+        return res.status(200).send('1');
       }
 
-      const newCoins   = (userData.coins     || 0) + coinsToAdd;
+      // ── Update coins ──────────────────────────────────────────
+      const newCoins   = (userData.coins    || 0) + coinsToAdd;
       const newBalance = parseFloat((newCoins / 100).toFixed(2));
-      const newTasks   = (userData.tasksDone  || 0) + 1;
+      const newTasks   = (userData.tasksDone || 0) + 1;
 
-      await fetch(FIREBASE_URL + '/users/' + subid + '.json' + authParam, {
-        method:  'PATCH',
+      await fetch(userUrl, {
+        method : 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          coins:         newCoins,
-          balance:       newBalance,
-          totalEarned:   newBalance,
-          tasksDone:     newTasks,
-          lastOfferwall: Date.now()
+        body   : JSON.stringify({
+          coins    : newCoins,
+          balance  : newBalance,
+          tasksDone: newTasks,
         })
       });
 
-      console.log('[CPALead] ✅', subid, '| +' + coinsToAdd + ' coins | $' + payoutAmount);
+      // ── Task History log ──────────────────────────────────────
+      const offerLabel = offer_name ? decodeURIComponent(offer_name) : 'CPALead Offer';
+      await fetch(`${FIREBASE_URL}/users/${subid}/taskHistory.json${authParam}`, {
+        method : 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body   : JSON.stringify({
+          userId   : subid,
+          taskType : 'Offerwall',
+          taskName : '🎁 ' + offerLabel,
+          coins    : coinsToAdd,
+          status   : 'Success',
+          source   : 'CPALead',
+          offerId  : offer_id  || '',
+          leadId   : lead_id   || '',
+          payout   : payoutUsd,
+          timestamp: Date.now(),
+        })
+      });
+
+      // ── Mark credited ─────────────────────────────────────────
+      const dupUrl = `${FIREBASE_URL}/postback_log/cpalead/${subid}/${finalTxKey}.json${authParam}`;
+      await fetch(dupUrl, {
+        method : 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body   : JSON.stringify({ credited: true, coins: coinsToAdd, ts: Date.now() })
+      });
+
+      console.log(`[CPALead] ✅ +${coinsToAdd} coins → user: ${subid} | $${payoutUsd} | ${offerLabel}`);
       return res.status(200).send('1'); // CPALead success signal
 
     } catch (err) {
       console.error('[CPALead] Error:', err.message);
-      return res.status(500).send('Server error');
+      return res.status(200).send('1'); // Always 200 to CPALead
     }
   }
 
@@ -149,5 +244,5 @@ export default async function handler(req, res) {
   //  Unknown source
   // ════════════════════════════════════════════════════════════
   console.error('[Postback] Unknown source:', source);
-  return res.status(400).send('Unknown source');
+  return res.status(200).send('Unknown source');
 }
