@@ -2,311 +2,235 @@
 <html lang="hi">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Watch Ad – TaskNova</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;800;900&display=swap" rel="stylesheet">
 <style>
-  * { margin:0; padding:0; box-sizing:border-box; }
-  body {
-    font-family: 'Segoe UI', sans-serif;
-    background: #05051a;
-    color: #e2e2f0;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 20px;
-  }
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body { height:100%; overflow:hidden; font-family:'Nunito',sans-serif; background:#07071f; color:#fff; }
+
+  /* BG glow */
   body::before {
-    content:'';
-    position:fixed;inset:0;
-    background: radial-gradient(ellipse 60% 50% at 30% 40%, rgba(108,99,255,0.12) 0%, transparent 70%);
-    pointer-events:none;
+    content:''; position:fixed; inset:0; pointer-events:none;
+    background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(108,99,255,0.18) 0%, transparent 70%);
   }
-  .card {
-    background: #0e0e2c;
-    border: 1px solid rgba(108,99,255,0.2);
-    border-radius: 28px;
-    padding: 32px 24px;
-    width: 100%;
-    max-width: 400px;
-    text-align: center;
-    position: relative;
-    z-index:1;
+
+  .screen {
+    height:100%; display:flex; flex-direction:column;
+    align-items:center; justify-content:center;
+    padding:24px 20px; position:relative; z-index:1;
+    gap:0;
   }
+
+  /* ── Logo ── */
   .logo {
-    font-size: 20px;
-    font-weight: 800;
-    color: #6c63ff;
-    letter-spacing: 2px;
-    margin-bottom: 24px;
+    font-size:13px; font-weight:900; letter-spacing:3px;
+    color:rgba(255,255,255,0.25); text-transform:uppercase;
+    margin-bottom:28px;
   }
 
-  /* Timer Ring */
-  .timer-wrap { position:relative; width:130px; height:130px; margin:0 auto 20px; }
-  .timer-svg { width:130px; height:130px; transform:rotate(-90deg); }
-  .timer-bg { fill:none; stroke:rgba(108,99,255,0.12); stroke-width:8; }
-  .timer-bar { fill:none; stroke:url(#grad); stroke-width:8; stroke-linecap:round;
-    stroke-dasharray:345; stroke-dashoffset:0; transition:stroke-dashoffset 1s linear; }
-  .timer-num { position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center; }
-  .timer-sec { font-size:44px;font-weight:900;line-height:1;color:#fff; }
-  .timer-label { font-size:10px;color:rgba(255,255,255,0.4);margin-top:2px;letter-spacing:1px; }
-
-  .status-text { font-size:14px;color:rgba(255,255,255,0.5);margin-bottom:16px;min-height:20px; }
-
-  /* Progress */
-  .progress-wrap { background:rgba(255,255,255,0.06);border-radius:99px;height:6px;margin-bottom:20px;overflow:hidden; }
-  .progress-fill { height:100%;border-radius:99px;background:linear-gradient(90deg,#6c63ff,#3b82f6);transition:transform 1s linear; }
-
-  /* Info box */
-  .ad-info {
-    background:rgba(108,99,255,0.08);border:1px solid rgba(108,99,255,0.18);
-    border-radius:16px;padding:14px 16px;margin-bottom:20px;
-    display:flex;align-items:center;gap:12px;text-align:left;
+  /* ── Big Timer Circle ── */
+  .timer-circle {
+    position:relative; width:180px; height:180px;
+    margin-bottom:28px; display:none;
   }
-  .ad-info h4 { font-size:14px;font-weight:700;color:#fff;margin-bottom:3px; }
-  .ad-info p  { font-size:12px;color:rgba(255,255,255,0.4);line-height:1.4; }
+  .timer-circle.show { display:block; animation:pop 0.35s cubic-bezier(0.34,1.56,0.64,1) both; }
+  @keyframes pop { from{transform:scale(0.6);opacity:0} to{transform:scale(1);opacity:1} }
 
-  /* Buttons */
-  .btn {
-    width:100%;padding:16px;border:none;border-radius:16px;
-    color:#fff;font-size:18px;font-weight:800;cursor:pointer;
-    font-family:inherit;margin-bottom:10px;transition:transform 0.15s;
+  .timer-svg { width:180px; height:180px; transform:rotate(-90deg); }
+  .t-bg   { fill:none; stroke:rgba(108,99,255,0.12); stroke-width:10; }
+  .t-fill { fill:none; stroke-width:10; stroke-linecap:round;
+            stroke-dasharray:502; stroke-dashoffset:0;
+            stroke:url(#g); transition:stroke-dashoffset 1s linear; }
+  .t-inner {
+    position:absolute; inset:0; display:flex;
+    flex-direction:column; align-items:center; justify-content:center;
   }
-  .btn:active { transform:scale(0.97); }
-  .btn-watch  { background:linear-gradient(135deg,#6c63ff,#3b82f6);box-shadow:0 6px 24px rgba(108,99,255,0.35); }
-  .btn-back   { background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);font-size:15px;color:rgba(255,255,255,0.7); }
-  .btn-claim  { background:linear-gradient(135deg,#22c55e,#16a34a);box-shadow:0 6px 24px rgba(34,197,94,0.35);
-    animation:pulse 1.5s ease-in-out infinite; }
-  @keyframes pulse { 0%,100%{box-shadow:0 6px 24px rgba(34,197,94,0.35)} 50%{box-shadow:0 6px 36px rgba(34,197,94,0.6)} }
+  .t-num  { font-size:58px; font-weight:900; line-height:1; }
+  .t-lbl  { font-size:11px; color:rgba(255,255,255,0.35); letter-spacing:2px; margin-top:2px; }
 
-  .hidden { display:none !important; }
+  /* ── Reward badge ── */
+  .reward {
+    display:flex; align-items:center; gap:8px;
+    background:rgba(249,200,70,0.1); border:1.5px solid rgba(249,200,70,0.3);
+    border-radius:50px; padding:10px 22px;
+    font-size:20px; font-weight:900; color:#f9c846;
+    margin-bottom:28px;
+  }
 
-  /* Dots */
-  .dots { display:flex;align-items:center;justify-content:center;gap:5px;font-size:13px;color:rgba(255,255,255,0.35);margin-bottom:12px; }
-  .dot { width:6px;height:6px;border-radius:50%;background:#6c63ff;animation:blink 1.2s infinite; }
-  .dot:nth-child(2){animation-delay:0.2s} .dot:nth-child(3){animation-delay:0.4s}
-  @keyframes blink{0%,100%{opacity:0.2}50%{opacity:1}}
+  /* ── Status ── */
+  .status {
+    font-size:15px; font-weight:700; color:rgba(255,255,255,0.4);
+    text-align:center; margin-bottom:28px; min-height:22px;
+    transition:color 0.3s;
+  }
+  .status.green { color:#22d67a; }
+  .status.red   { color:#ff5e5e; }
 
-  .warn { background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:14px;
-    padding:12px;font-size:13px;color:#ef4444;margin-bottom:12px; }
+  /* ── Main CTA Button ── */
+  .cta {
+    width:100%; max-width:320px;
+    padding:20px; border:none; border-radius:20px;
+    font-family:'Nunito',sans-serif; font-size:18px; font-weight:900;
+    cursor:pointer; transition:transform 0.15s, box-shadow 0.15s;
+    letter-spacing:0.3px;
+  }
+  .cta:active { transform:scale(0.96); }
+
+  .cta-watch {
+    background:linear-gradient(135deg, #6c63ff 0%, #3b82f6 100%);
+    color:#fff;
+    box-shadow:0 12px 40px rgba(108,99,255,0.45), 0 0 0 1px rgba(108,99,255,0.2);
+  }
+  .cta-back {
+    background:rgba(108,99,255,0.12);
+    border:2px solid rgba(108,99,255,0.35) !important;
+    color:#a89fff;
+    box-shadow:none;
+    display:none;
+  }
+  .cta-back.show { display:block; }
+  .cta-claim {
+    background:linear-gradient(135deg, #1db954, #22d67a);
+    color:#fff;
+    box-shadow:0 12px 40px rgba(34,214,122,0.45);
+    animation:glow 1.8s ease-in-out infinite;
+    display:none;
+  }
+  .cta-claim.show { display:block; }
+  @keyframes glow {
+    0%,100%{box-shadow:0 12px 40px rgba(34,214,122,0.4)}
+    50%{box-shadow:0 12px 60px rgba(34,214,122,0.7)}
+  }
+
+  /* ── Progress thin bar ── */
+  .bar-wrap { width:100%; max-width:320px; height:4px; background:rgba(255,255,255,0.06); border-radius:99px; margin-bottom:28px; overflow:hidden; display:none; }
+  .bar-wrap.show { display:block; }
+  .bar-fill { height:100%; border-radius:99px; background:linear-gradient(90deg,#6c63ff,#3b82f6); transform-origin:left; transform:scaleX(1); transition:transform 1s linear; }
+
+  /* ── Warn ── */
+  .warn { width:100%; max-width:320px; background:rgba(255,94,94,0.08); border:1px solid rgba(255,94,94,0.2); border-radius:14px; padding:12px 16px; font-size:13px; color:#ff7a7a; text-align:center; margin-bottom:16px; display:none; animation:shake 0.3s ease; }
+  .warn.show { display:block; }
+  @keyframes shake{0%,100%{transform:translateX(0)}30%{transform:translateX(-5px)}70%{transform:translateX(5px)}}
+
+  /* gap between buttons */
+  .gap { height:12px; }
 </style>
 </head>
 <body>
-<div class="card" id="card">
+<div class="screen">
 
-  <div class="logo">⚡ TASKNOVA</div>
+  <div class="logo">⚡ TaskNova</div>
 
-  <!-- Timer (pehle hidden) -->
-  <div class="timer-wrap hidden" id="timerWrap">
-    <svg class="timer-svg" viewBox="0 0 130 130">
+  <!-- Timer ring -->
+  <div class="timer-circle" id="timerCircle">
+    <svg class="timer-svg" viewBox="0 0 180 180">
       <defs>
-        <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="0%">
+        <linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="0%">
           <stop offset="0%" stop-color="#6c63ff"/>
           <stop offset="100%" stop-color="#3b82f6"/>
         </linearGradient>
       </defs>
-      <circle class="timer-bg" cx="65" cy="65" r="55"/>
-      <circle class="timer-bar" id="timerBar" cx="65" cy="65" r="55"/>
+      <circle class="t-bg" cx="90" cy="90" r="80"/>
+      <circle class="t-fill" id="tFill" cx="90" cy="90" r="80"/>
     </svg>
-    <div class="timer-num">
-      <span class="timer-sec" id="timerSec">20</span>
-      <span class="timer-label">SECONDS</span>
+    <div class="t-inner">
+      <span class="t-num" id="tNum">20</span>
+      <span class="t-lbl">SECONDS</span>
     </div>
   </div>
 
-  <p class="status-text" id="statusText">Ad dekho aur 10 coins kamao!</p>
+  <!-- Reward -->
+  <div class="reward">🪙 +10 Coins</div>
 
-  <!-- Progress (pehle hidden) -->
-  <div class="progress-wrap hidden" id="progressWrap">
-    <div class="progress-fill" id="progressFill"></div>
+  <!-- Status -->
+  <p class="status" id="status">Ad dekho aur coins kamao!</p>
+
+  <!-- Progress bar -->
+  <div class="bar-wrap" id="barWrap">
+    <div class="bar-fill" id="barFill"></div>
   </div>
 
-  <!-- Ad Info -->
-  <div class="ad-info">
-    <div style="font-size:28px">📺</div>
-    <div>
-      <h4>Video Watch Task</h4>
-      <p>Ad dekho, wapas aao → <strong style="color:#f59e0b;">+10 Coins</strong></p>
-    </div>
-  </div>
+  <!-- Warning -->
+  <div class="warn" id="warn"></div>
 
-  <!-- Tutorial Toggle Button -->
-  <button class="btn" id="tutorialToggle" onclick="toggleTutorial()"
-    style="background:rgba(255,0,0,0.15);border:1px solid rgba(255,0,0,0.3);color:#ff4444;font-size:14px;font-weight:600;padding:12px;margin-bottom:10px;">
-    ▶️ Tutorial — Wapas Kaise Aayein?
-  </button>
-
-  <!-- Tutorial Video (pehle hidden) -->
-  <div id="tutorialBox" class="hidden" style="margin-bottom:12px;border-radius:16px;overflow:hidden;border:1px solid rgba(255,0,0,0.2);">
-    <iframe
-      src="https://www.youtube.com/embed/8iuEBvn8Gi4"
-      style="width:100%;height:480px;border:none;display:block;"
-      allow="autoplay; encrypted-media"
-      allowfullscreen>
-    </iframe>
-  </div>
-
-  <!-- Warning (hidden) -->
-  <div class="warn hidden" id="warnBox">⚠️ Ad nahi dekhi! Pehle ad tab pe jao.</div>
-
-  <!-- Dots (hidden) -->
-  <div class="dots hidden" id="dotsWrap">
-    <div class="dot"></div><div class="dot"></div><div class="dot"></div>
-    <span>Timer chal raha hai...</span>
-  </div>
-
-  <!-- STEP 1: Watch button -->
-  <button class="btn btn-watch" id="watchBtn" onclick="startWatch()">📺 Watch Ad &amp; Earn</button>
-
-  <!-- STEP 2: Wapas Aao button (ad ke baad) -->
-  <button class="btn btn-back hidden" id="backBtn" onclick="userReturned()">✅ Ad Dekh Li – Wapas Aao</button>
-
-  <!-- STEP 3: Claim button -->
-  <button class="btn btn-claim hidden" id="claimBtn" onclick="claimCoins()">🎉 Claim 10 Coins</button>
+  <!-- Buttons -->
+  <button class="cta cta-watch" id="watchBtn" onclick="startWatch()">📺 Watch Ad &amp; Earn</button>
+  <div class="gap"></div>
+  <button class="cta cta-back" id="backBtn" onclick="userReturned()">✅ Ad Dekh Li — Wapas Aao</button>
+  <button class="cta cta-claim" id="claimBtn" onclick="claimCoins()">🎉 Claim 10 Coins</button>
 
 </div>
-
 <script>
-  const MONETAG_URL  = 'https://omg10.com/4/11063028';
-  const ADSTERRA_URL = 'https://www.effectivecpmnetwork.com/b1bggwx0?key=f1f69a147759698e8fda4cfd27e423ba';
-  const RETURN_URL   = 'https://tasknovaofficial.vercel.app/tasknova_tasks.html?status=success&task=video1';
-  const TOTAL_SECS   = 20;
-  const CIRCUMF      = 2 * Math.PI * 55;
+  const AD_URL     = 'https://omg10.com/4/11063028';
+  const RETURN_URL = 'https://tasknovaofficial.vercel.app/tasknova_tasks.html?status=success&task=video1';
+  const TOTAL      = 20;
+  const CIRC       = 2 * Math.PI * 80;
 
-  // Tasks page ne jo URL set kiya — wahi use karo
-  const AD_URL = localStorage.getItem('currentAdUrl') || MONETAG_URL;
+  let secsLeft = TOTAL, adOpened = false, adViewed = false, timerDone = false, iv = null;
 
-  let secsLeft     = TOTAL_SECS;
-  let adOpened     = false;
-  let adViewed     = false;
-  let timerDone    = false;
-  let interval     = null;
+  const tFill  = document.getElementById('tFill');
+  const tNum   = document.getElementById('tNum');
+  const barFill= document.getElementById('barFill');
+  const statusEl = document.getElementById('status');
 
-  const timerBar    = document.getElementById('timerBar');
-  const timerSec    = document.getElementById('timerSec');
-  const progressFill= document.getElementById('progressFill');
-  const statusText  = document.getElementById('statusText');
+  tFill.style.strokeDasharray  = CIRC;
+  tFill.style.strokeDashoffset = 0;
 
-  timerBar.style.strokeDasharray  = CIRCUMF;
-  timerBar.style.strokeDashoffset = 0;
+  function setStatus(msg, cls) { statusEl.textContent = msg; statusEl.className = 'status ' + (cls||''); }
+  function showWarn(msg) { const w=document.getElementById('warn'); w.textContent=msg; w.className='warn show'; }
+  function hideWarn()    { document.getElementById('warn').className='warn'; }
 
-  // ── Tutorial toggle ───────────────────────────────────────────
-  function toggleTutorial() {
-    const box = document.getElementById('tutorialBox');
-    const btn = document.getElementById('tutorialToggle');
-    if (box.classList.contains('hidden')) {
-      box.classList.remove('hidden');
-      btn.textContent = '✖️ Tutorial Band Karo';
-    } else {
-      box.classList.add('hidden');
-      btn.textContent = '▶️ Tutorial — Wapas Kaise Aayein?';
-    }
-  }
-
-  // ── STEP 1: Watch button dabaya ──────────────────────────────
   function startWatch() {
-    document.getElementById('watchBtn').classList.add('hidden');
-    document.getElementById('timerWrap').classList.remove('hidden');
-    document.getElementById('progressWrap').classList.remove('hidden');
-    document.getElementById('dotsWrap').classList.remove('hidden');
-    document.getElementById('backBtn').classList.remove('hidden');
-
-    statusText.textContent = '📺 Ad new tab mein khuli! Dekho...';
-
-    // Ad open karo
-    if (!adOpened) {
-      adOpened = true;
-      try { window.open(AD_URL, '_blank'); } catch(e) {}
-    }
-
-    // Timer shuru
+    document.getElementById('watchBtn').style.display = 'none';
+    document.getElementById('timerCircle').classList.add('show');
+    document.getElementById('barWrap').classList.add('show');
+    document.getElementById('backBtn').classList.add('show');
+    setStatus('👀 Ad dekh rahe ho...', '');
+    if (!adOpened) { adOpened=true; try { window.open(AD_URL,'_blank'); } catch(e){} }
     startTimer();
   }
 
-  // ── STEP 2: User "Wapas Aao" dabaya ──────────────────────────
   function userReturned() {
-    const secsWatched = TOTAL_SECS - secsLeft;
-
-    // Minimum 15 second ad dekhna zaroori
-    if (secsWatched < 15) {
-      const remaining = 15 - secsWatched;
-      document.getElementById('warnBox').classList.remove('hidden');
-      document.getElementById('warnBox').textContent = '⏳ Ad aur ' + remaining + ' second dekho, tab wapas aao!';
-      return;
-    }
-
+    const watched = TOTAL - secsLeft;
+    if (watched < 15) { showWarn('⏳ Aur ' + (15-watched) + 's ad dekho!'); return; }
     adViewed = true;
-    document.getElementById('backBtn').classList.add('hidden');
-    document.getElementById('warnBox').classList.add('hidden');
-
-    if (timerDone) {
-      showClaim();
-    } else {
-      statusText.textContent = '✅ Ad dekh li! Timer khatam hone do...';
-      statusText.style.color = '#22c55e';
-    }
+    document.getElementById('backBtn').classList.remove('show');
+    hideWarn();
+    if (timerDone) showClaim();
+    else setStatus('✅ Ad dekh li! Ruko...', 'green');
   }
 
-  // ── Timer ────────────────────────────────────────────────────
   function startTimer() {
-    if (interval) return;
-    interval = setInterval(() => {
+    if (iv) return;
+    iv = setInterval(() => {
       secsLeft--;
-      timerBar.style.strokeDashoffset = CIRCUMF * (secsLeft / TOTAL_SECS);
-      timerSec.textContent = secsLeft;
-      progressFill.style.transform = `scaleX(${secsLeft / TOTAL_SECS})`;
-
-      if (secsLeft <= 5) {
-        timerBar.style.stroke = '#f59e0b';
-        timerSec.style.color  = '#f59e0b';
-      }
-
+      const pct = secsLeft / TOTAL;
+      tFill.style.strokeDashoffset = CIRC * (1 - pct);
+      tNum.textContent = secsLeft;
+      barFill.style.transform = 'scaleX(' + pct + ')';
+      if (secsLeft <= 5) { tFill.style.stroke='#f9c846'; tNum.style.color='#f9c846'; }
       if (secsLeft <= 0) {
-        clearInterval(interval);
-        timerDone = true;
-        timerSec.textContent = '0';
-        progressFill.style.transform = 'scaleX(0)';
-        document.getElementById('dotsWrap').classList.add('hidden');
-
-        if (adViewed) {
-          showClaim();
-        } else {
-          // User ne abhi tak "Wapas Aao" nahi dabaya
-          document.getElementById('warnBox').classList.remove('hidden');
-          statusText.textContent = '⚠️ Pehle ad dekho, fir wapas aao!';
-          statusText.style.color = '#ef4444';
-        }
+        clearInterval(iv); timerDone = true; tNum.textContent='0';
+        if (adViewed) showClaim();
+        else { showWarn('⚠️ Pehle ad dekho, fir Wapas Aao dabao!'); setStatus('Ad puri dekho!','red'); }
       }
     }, 1000);
   }
 
-  // ── Claim dikhao ─────────────────────────────────────────────
   function showClaim() {
-    document.getElementById('backBtn').classList.add('hidden');
-    document.getElementById('dotsWrap').classList.add('hidden');
-    document.getElementById('claimBtn').classList.remove('hidden');
-    statusText.textContent  = '🎉 Timer khatam! Claim karo!';
-    statusText.style.color  = '#22c55e';
-    statusText.style.fontWeight = '700';
+    document.getElementById('backBtn').classList.remove('show');
+    document.getElementById('claimBtn').classList.add('show');
+    setStatus('🎉 Ab claim karo!', 'green');
   }
 
-  // ── Claim button ─────────────────────────────────────────────
   function claimCoins() {
     const btn = document.getElementById('claimBtn');
-    btn.disabled = true;
-    btn.textContent = '⏳ Crediting...';
-    btn.style.background = 'linear-gradient(135deg,#6c63ff,#3b82f6)';
-
-    localStorage.setItem('pendingAdReward', JSON.stringify({
-      coins: 10,
-      type:  'watchAd',
-      ts:    Date.now()
-    }));
-
-    setTimeout(() => {
-      window.location.href = RETURN_URL;
-    }, 400);
+    btn.disabled=true; btn.textContent='⏳ Crediting...';
+    btn.style.background='linear-gradient(135deg,#6c63ff,#3b82f6)';
+    btn.style.animation='none';
+    localStorage.setItem('pendingAdReward', JSON.stringify({coins:10,type:'watchAd',ts:Date.now()}));
+    setTimeout(() => { window.location.href = RETURN_URL; }, 400);
   }
 </script>
 </body>
