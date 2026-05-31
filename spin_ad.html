@@ -10,7 +10,7 @@
 
   /* White Page Structure */
   #whitePage {
-    display: block;
+    display: none; /* Controlled by JS on load */
     background: #ffffff;
     min-height: 100vh;
   }
@@ -65,7 +65,6 @@
     font-size: 11px;
     color: #9ca3af;
   }
-  .ad-box-label { font-size:11px; color:#9ca3af; text-align:center; padding:8px; font-weight: 500; }
 
   /* Fake blog article content */
   .article-wrap { padding: 16px; }
@@ -82,15 +81,6 @@
   .native-section { padding: 16px; margin-top: 8px; }
   .native-title   { font-size:13px; font-weight:700; color:#6b7280; margin-bottom:10px;
     text-transform:uppercase; letter-spacing:0.5px; border-top:1px solid #e5e7eb; padding-top:12px; }
-  .native-card    { display:flex; gap:10px; padding:10px 0; border-bottom:1px solid #f3f4f6;
-    cursor:pointer; }
-  .native-card-img { width:80px; height:60px; border-radius:8px; object-fit:cover;
-    background:linear-gradient(135deg,#fef3c7,#fde68a); flex-shrink:0;
-    display:flex; align-items:center; justify-content:center; font-size:22px; }
-  .native-card-info .nc-title { font-size:13px; font-weight:600; color:#111827; line-height:1.4; margin-bottom:4px; }
-  .native-card-info .nc-src   { font-size:11px; color:#9ca3af; }
-  .native-card-info .nc-sp    { font-size:10px; color:#6b7280; background:#f3f4f6;
-    padding:2px 6px; border-radius:4px; display:inline-block; margin-top:4px; }
 
   /* Timer dashed box */
   .timer-box {
@@ -124,7 +114,7 @@
     font-weight:800;
     cursor: pointer;
     font-family:'Segoe UI',sans-serif;
-    box-shadow: 0 4px 16px rgba(37,99,235,0.35);
+    box-shadow: 0 4px 166px rgba(37,99,235,0.35);
     animation: pulseBtn 1.5s infinite;
   }
   .wp-btn-claim {
@@ -185,7 +175,7 @@
       </div>
 
       <div class="article-wrap">
-        <!-- TOP BANNER AD — Adsterra f1f69a147759698e8fda4cfd27e423ba -->
+        <!-- TOP BANNER AD — Adsterra -->
         <div class="ad-box" id="s1-ad-top">
           <script type="text/javascript">
             atOptions = {
@@ -216,7 +206,7 @@
           <p>Almost every major earning app now has a refer-and-earn program. You can invite friends and earn a percentage of their earnings, creating a passive income stream.</p>
         </div>
 
-        <!-- MIDDLE BANNER AD — Adsterra f1f69a147759698e8fda4cfd27e423ba -->
+        <!-- MIDDLE BANNER AD — Adsterra -->
         <div class="ad-box" id="s1-ad-mid">
           <script type="text/javascript">
             atOptions = {
@@ -256,7 +246,7 @@
           <p>Security is another critical pillar. Always make sure you use platforms with encrypted gateway checkouts to prevent data leaks or unauthorized transaction loops on your phone setup.</p>
         </div>
 
-        <!-- BOTTOM BANNER AD — Adsterra f1f69a147759698e8fda4cfd27e423ba -->
+        <!-- BOTTOM BANNER AD — Adsterra -->
         <div class="ad-box" id="s1-ad-bottom">
           <script type="text/javascript">
             atOptions = {
@@ -300,11 +290,11 @@
         </div>
       </div>
 
-      <!-- Monetag Native Container (New Code Injected Here Dynamically) -->
+      <!-- Monetag Native Container -->
       <div class="native-section">
         <div class="native-title">Recommended For You</div>
         <div id="monetag-native-container">
-          <!-- Your New Monetag Ads Will Render Inside Here Safely -->
+          <!-- Monetag ads will be injected here safely -->
         </div>
       </div>
 
@@ -329,7 +319,7 @@
         💰 Claim Coins
       </button>
 
-      <!-- EXTRA ORGANIC FOOTER CONTENT FOR EXTRA STEP 2 HEIGHT -->
+      <!-- EXTRA ORGANIC FOOTER CONTENT -->
       <div class="article-wrap" style="margin-top: 20px;">
         <div class="article-body" style="color: #6b7280; font-size: 13px;">
           <p><strong>Disclaimer:</strong> Financial analytics generated here are based strictly on general community tracking portfolios. Individual earnings depend entirely on localized criteria allocations and merchant network values active within the digital zones.</p>
@@ -396,20 +386,21 @@
     document.body.appendChild(s);
   }
 
-  /* NEW MONETAG DYNAMIC INJECTION FUNCTION (Zone: 11081419 फिक्स्ड) */
+  /* MONETAG IN-PAGE PUSH INJECTION (Syntax Error Removed) */
   function injectMonetagNative() {
     const old = document.getElementById('monetag-new-script');
     if (old) old.remove();
+    
     const container = document.getElementById('monetag-native-container');
     if (container) {
       container.innerHTML = ''; 
       
-      // Executing your exact function format dynamically on Step 2
-      (function(s){
-        s.id = 'monetag-new-script';
-        s.dataset.zone = '11081419';
-        s.src = 'https://nap5k.com/tag.min.js';
-      })([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')));
+      const s = document.createElement('script');
+      s.id = 'monetag-new-script';
+      s.dataset.zone = '11081419';
+      s.src = 'https://nap5k.com/tag.min.js';
+      
+      container.appendChild(s);
     }
   }
 
@@ -473,4 +464,32 @@
   window.addEventListener('DOMContentLoaded', function() {
     const penaltyUntil  = parseInt(localStorage.getItem(KEY_PENALTY_UNTIL)  || '0');
     const cooldownUntil = parseInt(localStorage.getItem(KEY_COOLDOWN_UNTIL) || '0');
-    if (penaltyUntil  > Date.now()) { showEr
+    if (penaltyUntil  > Date.now()) { showErrorPage('penalty',  penaltyUntil);  return; }
+    if (cooldownUntil > Date.now()) { showErrorPage('cooldown', cooldownUntil); return; }
+    if (getWatchCount() >= MAX_SPINS_PER_DAY) { showErrorPage('limit', 0); return; }
+    startAdTask();
+  });
+
+  /* ── Step 1 start ────────────────────────────────────── */
+  function startAdTask() {
+    if (isMonetegSpin()) triggerMonetagPopunder();
+    else                 triggerAdsterraPopunder();
+
+    document.getElementById('whitePage').style.display = 'block';
+    document.getElementById('step1').style.display     = 'block';
+    document.getElementById('step2').style.display     = 'none';
+
+    const pb = document.getElementById('progressBar');
+    pb.style.background  = '#2563eb';
+    pb.style.width       = '0%';
+    pb.style.transition  = 'none';
+    currentStep = 1;
+
+    history.pushState({ step:1 }, '', location.href);
+    startStepTimer(1);
+  }
+
+  /* ── Step 2 load ─────────────────────────────────────── */
+  function goToStep2() {
+    document.getElementById('s1ContinueBtn').style.display = 'none';
+    do
