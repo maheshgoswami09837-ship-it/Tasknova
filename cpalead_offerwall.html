@@ -97,62 +97,60 @@
     <p>Loading offers…</p>
   </div>
 
-  <iframe
-    id="offerwallFrame"
-    sandbox="allow-popups allow-same-origin allow-scripts allow-top-navigation allow-top-navigation-by-user-activation allow-popups-to-escape-sandbox allow-downloads"
-    referrerpolicy="no-referrer-when-downgrade"
-    src="https://lnksforyou.com/wall/te2DA"
-    title="CPALead Offerwall">
-  </iframe>
+  <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center;">
+    <div style="font-size:48px;margin-bottom:16px;">🎯</div>
+    <h2 style="font-size:20px;font-weight:800;margin-bottom:8px;">Offers Available!</h2>
+    <p style="color:rgba(255,255,255,0.5);font-size:14px;margin-bottom:24px;">App download karke coins kamao.<br>Neeche button dabao — Play Store khulega.</p>
+    <button onclick="openOfferwall()" style="background:linear-gradient(135deg,#6c63ff,#3b82f6);border:none;border-radius:16px;padding:16px 32px;color:#fff;font-size:17px;font-weight:800;cursor:pointer;font-family:inherit;box-shadow:0 6px 24px rgba(108,99,255,0.4);">
+      🚀 Offers Dekho & Kamao
+    </button>
+    <p style="color:rgba(255,255,255,0.3);font-size:11px;margin-top:16px;">Browser mein khulega — wapas aane ke liye back button dabao</p>
+  </div>
 </div>
 
 <script>
-  const frame   = document.getElementById('offerwallFrame');
-  const overlay = document.getElementById('loadingOverlay');
+  const params = new URLSearchParams(window.location.search);
+  const uid = params.get('uid') || localStorage.getItem('tasknova_uid') || '';
 
-  frame.addEventListener('load', function () {
-    overlay.classList.add('hidden');
-  });
+  // ── Repeat click prevention ───────────────────────────────────
+  // Ek baar click karne ke baad 24 ghante tak same offerwall nahi
+  const OFFERWALL_KEY = 'tn_offerwall_last_click';
+  const COOLDOWN_24HR = 24 * 60 * 60 * 1000;
 
-  // Fallback: hide loader after 8s
-  setTimeout(function () {
-    overlay.classList.add('hidden');
-  }, 8000);
+  function canOpenOfferwall() {
+    const last = parseInt(localStorage.getItem(OFFERWALL_KEY) || '0');
+    return (Date.now() - last) > COOLDOWN_24HR;
+  }
 
-  // ── Intent / Play Store link handler ─────────────────────────
-  // Jab iframe ke andar Play Store ya intent:// link click ho
-  // toh top-level window mein open karo
-  window.addEventListener('message', function(e) {
-    if (!e.data) return;
-    const url = e.data.url || e.data;
-    if (typeof url === 'string' && (
-      url.startsWith('intent://') ||
-      url.startsWith('market://') ||
-      url.includes('play.google.com/store')
-    )) {
-      window.location.href = url;
+  function openOfferwall() {
+    if (!canOpenOfferwall()) {
+      const last = parseInt(localStorage.getItem(OFFERWALL_KEY));
+      const remaining = COOLDOWN_24HR - (Date.now() - last);
+      const hrs  = Math.floor(remaining / 3600000);
+      const mins = Math.floor((remaining % 3600000) / 60000);
+      alert('⏳ ' + hrs + ' ghante ' + mins + ' minute baad dobara try karo!');
+      return;
     }
-  });
 
-  // iframe navigation intercept — Play Store links top window mein kholo
-  frame.addEventListener('load', function() {
-    try {
-      const iDoc = frame.contentDocument || frame.contentWindow.document;
-      iDoc.addEventListener('click', function(e) {
-        const a = e.target.closest('a');
-        if (!a) return;
-        const href = a.href || '';
-        if (
-          href.startsWith('intent://') ||
-          href.startsWith('market://') ||
-          href.includes('play.google.com')
-        ) {
-          e.preventDefault();
-          window.location.href = href;
-        }
-      });
-    } catch(err) {
-      // Cross-origin — sandbox allow-top-navigation handle karega
+    // Click record karo
+    localStorage.setItem(OFFERWALL_KEY, Date.now().toString());
+
+    const url = 'https://lnksforyou.com/wall/te2DA' + (uid ? '?uid=' + uid : '');
+    window.location.href = url;
+  }
+
+  // Button UI update
+  window.addEventListener('DOMContentLoaded', function() {
+    const btn = document.querySelector('button[onclick="openOfferwall()"]');
+    if (btn && !canOpenOfferwall()) {
+      const last = parseInt(localStorage.getItem(OFFERWALL_KEY));
+      const remaining = COOLDOWN_24HR - (Date.now() - last);
+      const hrs  = Math.floor(remaining / 3600000);
+      const mins = Math.floor((remaining % 3600000) / 60000);
+      btn.textContent = '⏳ ' + hrs + 'h ' + mins + 'm baad aao';
+      btn.style.background = 'rgba(255,255,255,0.1)';
+      btn.style.cursor = 'not-allowed';
+      btn.disabled = true;
     }
   });
 </script>
