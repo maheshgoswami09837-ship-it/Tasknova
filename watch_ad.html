@@ -1,630 +1,237 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="hi">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Watch Ad - TaskNova</title>
+<title>Watch Ad – TaskNova</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;800;900&display=swap" rel="stylesheet">
 <style>
-  * { margin:0; padding:0; box-sizing:border-box; }
-  body { font-family:'Segoe UI',sans-serif; background:#ffffff; margin:0; padding:0; }
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body { height:100%; overflow:hidden; font-family:'Nunito',sans-serif; background:#07071f; color:#fff; }
 
-  /* Dark UI removed — direct white page flow */
-
-  /* White Page — direct, no overlay needed */
-  #whitePage {
-    display: block;
-    background: #ffffff;
-    min-height: 100vh;
+  /* BG glow */
+  body::before {
+    content:''; position:fixed; inset:0; pointer-events:none;
+    background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(108,99,255,0.18) 0%, transparent 70%);
   }
 
-  /* Top progress bar */
-  #progressBar {
-    position: fixed;
-    top: 0; left: 0;
-    height: 4px;
-    width: 0%;
-    z-index: 10001;
-    transition: width 1s linear;
-    border-radius: 0 4px 4px 0;
+  .screen {
+    height:100%; display:flex; flex-direction:column;
+    align-items:center; justify-content:center;
+    padding:24px 20px; position:relative; z-index:1;
+    gap:0;
   }
 
-  /* White page inner wrapper */
-  .wp-inner {
-    min-height: 145vh;
-    padding: 0 0 60px 0;
-    background: #ffffff;
-    position: relative;
+  /* ── Logo ── */
+  .logo {
+    font-size:13px; font-weight:900; letter-spacing:3px;
+    color:rgba(255,255,255,0.25); text-transform:uppercase;
+    margin-bottom:28px;
   }
 
-  /* Fake blog header */
-  .blog-header {
-    background: #fff;
-    border-bottom: 1px solid #e5e7eb;
-    padding: 12px 16px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    position: sticky;
-    top: 0;
-    z-index: 100;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+  /* ── Big Timer Circle ── */
+  .timer-circle {
+    position:relative; width:180px; height:180px;
+    margin-bottom:28px; display:none;
   }
-  .blog-logo { font-size:16px; font-weight:800; color:#1a1a2e; }
-  .blog-tag  { font-size:10px; background:#f3f4f6; color:#6b7280; padding:3px 8px; border-radius:50px; }
+  .timer-circle.show { display:block; animation:pop 0.35s cubic-bezier(0.34,1.56,0.64,1) both; }
+  @keyframes pop { from{transform:scale(0.6);opacity:0} to{transform:scale(1);opacity:1} }
 
-  .ad-box {
-    width: 100%;
-    background: #f9fafb;
-    border: 1px dashed #d1d5db;
-    border-radius: 8px;
-    overflow: visible;
-    margin: 12px 0;
-    min-height: 90px;
-    display: block;
-    text-align: center;
+  .timer-svg { width:180px; height:180px; transform:rotate(-90deg); }
+  .t-bg   { fill:none; stroke:rgba(108,99,255,0.12); stroke-width:10; }
+  .t-fill { fill:none; stroke-width:10; stroke-linecap:round;
+            stroke-dasharray:502; stroke-dashoffset:0;
+            stroke:url(#g); transition:stroke-dashoffset 1s linear; }
+  .t-inner {
+    position:absolute; inset:0; display:flex;
+    flex-direction:column; align-items:center; justify-content:center;
   }
-  .ad-box iframe { display:block; margin:0 auto; }
-  .ad-box-label { font-size:10px; color:#d1d5db; text-align:center; padding:8px; }
+  .t-num  { font-size:58px; font-weight:900; line-height:1; }
+  .t-lbl  { font-size:11px; color:rgba(255,255,255,0.35); letter-spacing:2px; margin-top:2px; }
 
-  /* Fake blog article content */
-  .article-wrap { padding: 16px; }
-  .article-title { font-size:20px; font-weight:800; color:#111827; line-height:1.3; margin-bottom:10px; }
-  .article-meta  { font-size:11px; color:#9ca3af; margin-bottom:14px; display:flex; gap:12px; flex-wrap:wrap; }
-  .article-img   { width:100%; height:160px; background:linear-gradient(135deg,#e0e7ff,#dbeafe);
-    border-radius:10px; margin-bottom:14px; display:flex; align-items:center;
-    justify-content:center; font-size:36px; }
-  .article-body  { font-size:14px; color:#374151; line-height:1.7; }
-  .article-body p { margin-bottom:14px; }
-  .article-body h3 { font-size:15px; font-weight:700; color:#111827; margin:16px 0 8px; }
-
-  /* Native ad cards (Step 2 Monetag style) */
-  .native-section { padding: 16px; margin-top: 8px; }
-  .native-title   { font-size:13px; font-weight:700; color:#6b7280; margin-bottom:10px;
-    text-transform:uppercase; letter-spacing:0.5px; border-top:1px solid #e5e7eb; padding-top:12px; }
-  .native-card    { display:flex; gap:10px; padding:10px 0; border-bottom:1px solid #f3f4f6;
-    cursor:pointer; }
-  .native-card-img { width:80px; height:60px; border-radius:8px; object-fit:cover;
-    background:linear-gradient(135deg,#fef3c7,#fde68a); flex-shrink:0;
-    display:flex; align-items:center; justify-content:center; font-size:22px; }
-  .native-card-info .nc-title { font-size:13px; font-weight:600; color:#111827; line-height:1.4; margin-bottom:4px; }
-  .native-card-info .nc-src   { font-size:11px; color:#9ca3af; }
-  .native-card-info .nc-sp    { font-size:10px; color:#6b7280; background:#f3f4f6;
-    padding:2px 6px; border-radius:4px; display:inline-block; margin-top:4px; }
-
-  /* Timer dashed box */
-  .timer-box {
-    margin: 20px 16px;
-    border: 2px dashed #d1d5db;
-    border-radius: 14px;
-    padding: 20px 16px;
-    background: #f9fafb;
-    text-align: center;
-  }
-  .timer-box .tb-label { font-size:12px; color:#6b7280; margin-bottom:6px; font-weight:600; }
-  .timer-box .tb-num   { font-size:42px; font-weight:900; line-height:1; margin-bottom:4px; }
-  .timer-box .tb-sub   { font-size:11px; color:#9ca3af; margin-bottom:14px; }
-  .timer-box .tb-hint  { font-size:12px; color:#6b7280; }
-
-  /* Step 1 timer — blue */
-  #step1 .tb-num { color:#2563eb; }
-
-  /* Step 2 timer — green */
-  #step2 .tb-num { color:#16a34a; }
-
-  /* Continue / Claim buttons on white page */
-  .wp-btn-continue {
-    display: none;
-    width: calc(100% - 32px);
-    margin: 0 16px;
-    padding: 16px;
-    background: linear-gradient(135deg,#2563eb,#3b82f6);
-    color: #fff;
-    border: none;
-    border-radius: 14px;
-    font-size:16px;
-    font-weight:800;
-    cursor: pointer;
-    font-family:'Segoe UI',sans-serif;
-    box-shadow: 0 4px 16px rgba(37,99,235,0.35);
-    animation: pulseBtn 1.5s infinite;
-  }
-  .wp-btn-claim {
-    display: none;
-    width: calc(100% - 32px);
-    margin: 0 16px;
-    padding: 18px;
-    background: linear-gradient(135deg,#16a34a,#22c55e);
-    color: #fff;
-    border: none;
-    border-radius: 16px;
-    font-size:18px;
-    font-weight:900;
-    cursor: pointer;
-    font-family:'Segoe UI',sans-serif;
-    box-shadow: 0 6px 24px rgba(22,163,74,0.45);
-    animation: pulseBtn 1.2s infinite;
-    letter-spacing: 0.3px;
-  }
-  @keyframes pulseBtn {
-    0%,100% { transform:scale(1); box-shadow:0 6px 24px rgba(22,163,74,0.4); }
-    50%      { transform:scale(1.03); box-shadow:0 8px 28px rgba(22,163,74,0.6); }
+  /* ── Reward badge ── */
+  .reward {
+    display:flex; align-items:center; gap:8px;
+    background:rgba(249,200,70,0.1); border:1.5px solid rgba(249,200,70,0.3);
+    border-radius:50px; padding:10px 22px;
+    font-size:20px; font-weight:900; color:#f9c846;
+    margin-bottom:28px;
   }
 
-  /* Step visibility */
-  #step1, #step2 { display:none; }
+  /* ── Status ── */
+  .status {
+    font-size:15px; font-weight:700; color:rgba(255,255,255,0.4);
+    text-align:center; margin-bottom:28px; min-height:22px;
+    transition:color 0.3s;
+  }
+  .status.green { color:#22d67a; }
+  .status.red   { color:#ff5e5e; }
+
+  /* ── Main CTA Button ── */
+  .cta {
+    width:100%; max-width:320px;
+    padding:20px; border:none; border-radius:20px;
+    font-family:'Nunito',sans-serif; font-size:18px; font-weight:900;
+    cursor:pointer; transition:transform 0.15s, box-shadow 0.15s;
+    letter-spacing:0.3px;
+  }
+  .cta:active { transform:scale(0.96); }
+
+  .cta-watch {
+    background:linear-gradient(135deg, #6c63ff 0%, #3b82f6 100%);
+    color:#fff;
+    box-shadow:0 12px 40px rgba(108,99,255,0.45), 0 0 0 1px rgba(108,99,255,0.2);
+  }
+  .cta-back {
+    background:rgba(108,99,255,0.12);
+    border:2px solid rgba(108,99,255,0.35) !important;
+    color:#a89fff;
+    box-shadow:none;
+    display:none;
+  }
+  .cta-back.show { display:block; }
+  .cta-claim {
+    background:linear-gradient(135deg, #1db954, #22d67a);
+    color:#fff;
+    box-shadow:0 12px 40px rgba(34,214,122,0.45);
+    animation:glow 1.8s ease-in-out infinite;
+    display:none;
+  }
+  .cta-claim.show { display:block; }
+  @keyframes glow {
+    0%,100%{box-shadow:0 12px 40px rgba(34,214,122,0.4)}
+    50%{box-shadow:0 12px 60px rgba(34,214,122,0.7)}
+  }
+
+  /* ── Progress thin bar ── */
+  .bar-wrap { width:100%; max-width:320px; height:4px; background:rgba(255,255,255,0.06); border-radius:99px; margin-bottom:28px; overflow:hidden; display:none; }
+  .bar-wrap.show { display:block; }
+  .bar-fill { height:100%; border-radius:99px; background:linear-gradient(90deg,#6c63ff,#3b82f6); transform-origin:left; transform:scaleX(1); transition:transform 1s linear; }
+
+  /* ── Warn ── */
+  .warn { width:100%; max-width:320px; background:rgba(255,94,94,0.08); border:1px solid rgba(255,94,94,0.2); border-radius:14px; padding:12px 16px; font-size:13px; color:#ff7a7a; text-align:center; margin-bottom:16px; display:none; animation:shake 0.3s ease; }
+  .warn.show { display:block; }
+  @keyframes shake{0%,100%{transform:translateX(0)}30%{transform:translateX(-5px)}70%{transform:translateX(5px)}}
+
+  /* gap between buttons */
+  .gap { height:12px; }
 </style>
 </head>
 <body>
+<div class="screen">
 
-<!-- Dark App UI removed — tasks file button directly opens this page -->
+  <div class="logo">⚡ TaskNova</div>
 
-<!-- ══════════════════════════════════════════════════════
-     ERROR OVERLAY (penalty / cooldown / limit)
-══════════════════════════════════════════════════════ -->
-<div id="errorOverlay" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;
-  background:#05051a;z-index:99999;flex-direction:column;align-items:center;
-  justify-content:center;padding:32px;text-align:center;font-family:'Segoe UI',sans-serif;">
-  <div id="errIcon" style="font-size:56px;margin-bottom:16px;">⏳</div>
-  <div id="errTitle" style="font-size:20px;font-weight:800;color:#fff;margin-bottom:8px;"></div>
-  <div id="errMsg" style="font-size:13px;color:rgba(255,255,255,0.45);margin-bottom:20px;"></div>
-  <div id="errTimer" style="font-size:42px;font-weight:900;color:#f59e0b;margin-bottom:28px;"></div>
-  <button onclick="goBack()" style="background:rgba(255,255,255,0.1);border:1.5px solid rgba(255,255,255,0.2);
-    border-radius:14px;padding:14px 32px;color:#fff;font-size:15px;font-weight:700;
-    cursor:pointer;font-family:'Segoe UI',sans-serif;">← Wapas Jao</button>
+  <!-- Timer ring -->
+  <div class="timer-circle" id="timerCircle">
+    <svg class="timer-svg" viewBox="0 0 180 180">
+      <defs>
+        <linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stop-color="#6c63ff"/>
+          <stop offset="100%" stop-color="#3b82f6"/>
+        </linearGradient>
+      </defs>
+      <circle class="t-bg" cx="90" cy="90" r="80"/>
+      <circle class="t-fill" id="tFill" cx="90" cy="90" r="80"/>
+    </svg>
+    <div class="t-inner">
+      <span class="t-num" id="tNum">20</span>
+      <span class="t-lbl">SECONDS</span>
+    </div>
+  </div>
+
+  <!-- Reward -->
+  <div class="reward">🪙 +10 Coins</div>
+
+  <!-- Status -->
+  <p class="status" id="status">Ad dekho aur coins kamao!</p>
+
+  <!-- Progress bar -->
+  <div class="bar-wrap" id="barWrap">
+    <div class="bar-fill" id="barFill"></div>
+  </div>
+
+  <!-- Warning -->
+  <div class="warn" id="warn"></div>
+
+  <!-- Buttons -->
+  <button class="cta cta-watch" id="watchBtn" onclick="startWatch()">📺 Watch Ad &amp; Earn</button>
+  <div class="gap"></div>
+  <button class="cta cta-back" id="backBtn" onclick="userReturned()">✅ Ad Dekh Li — Wapas Aao</button>
+  <button class="cta cta-claim" id="claimBtn" onclick="claimCoins()">🎉 Claim 10 Coins</button>
+
 </div>
-
-<!-- ══════════════════════════════════════════════════════
-     WHITE PAGE
-══════════════════════════════════════════════════════ -->
-
-<!-- Progress bar (color set via JS) -->
-<div id="progressBar"></div>
-
-<div id="whitePage">
-
-  <!-- ── STEP 1 — Adsterra Banners ────────────────────── -->
-  <div id="step1">
-    <div class="wp-inner">
-
-      <!-- Fake Blog Header -->
-      <div class="blog-header">
-        <span class="blog-logo">📰 TechBlog India</span>
-        <span class="blog-tag">Sponsored</span>
-      </div>
-
-      <div class="article-wrap">
-
-        <!-- TOP BANNER AD — Adsterra #1 -->
-        <div class="ad-box" id="s1-ad-top" style="min-height:90px;overflow:visible;">
-          <script type="text/javascript">
-            var atOptions = {
-              'key'   : 'f1f69a147759698e8fda4cfd27e423ba',
-              'format': 'iframe',
-              'height': 90,
-              'width' : 320,
-              'params': {}
-            };
-          </script>
-          <script type="text/javascript" src="https://www.effectivecpmnetwork.com/b1bggwx0/invoke.js"></script>
-        </div>
-
-        <!-- Fake Article -->
-        <div class="article-img">📱</div>
-        <div class="article-title">Top 10 Apps to Earn Real Money Online in India 2025</div>
-        <div class="article-meta">
-          <span>✍️ By Rahul Sharma</span>
-          <span>📅 May 2025</span>
-          <span>👁 12.4K views</span>
-        </div>
-        <div class="article-body">
-          <p>Looking for legitimate ways to earn money from your smartphone? We've tested dozens of apps and shortlisted the best ones that actually pay Indian users on time.</p>
-          <h3>1. Survey & Task Apps</h3>
-          <p>Survey-based apps have seen a massive surge in India. Platforms like TaskNova let you complete micro-tasks, watch videos, and spin wheels to earn real cash rewards directly to your UPI wallet.</p>
-          <h3>2. Refer & Earn Programs</h3>
-          <p>Almost every major earning app now has a refer-and-earn program. You can invite friends and earn a percentage of their earnings, creating a passive income stream.</p>
-        </div>
-
-        <!-- MIDDLE BANNER AD — Adsterra #2 -->
-        <div class="ad-box" id="s1-ad-mid" style="min-height:90px;overflow:visible;">
-          <script type="text/javascript">
-            var atOptions = {
-              'key'   : 'f1f69a147759698e8fda4cfd27e423ba',
-              'format': 'iframe',
-              'height': 90,
-              'width' : 320,
-              'params': {}
-            };
-          </script>
-          <script type="text/javascript" src="https://www.effectivecpmnetwork.com/b1bggwx0/invoke.js"></script>
-        </div>
-
-        <div class="article-body">
-          <h3>3. Watch & Earn Platforms</h3>
-          <p>Video-based earning platforms have become extremely popular. You simply watch short ads or promotional videos and get credited instantly. TaskNova's Watch & Earn feature is one of the top rated in this category.</p>
-          <p>The key is consistency — logging in daily and completing all available tasks maximizes your earnings significantly over time.</p>
-        </div>
-
-        <!-- ── COUNTDOWN TIMER BOX ── -->
-        <div class="timer-box">
-          <div class="tb-label">⏳ Please Wait</div>
-          <div class="tb-num" id="s1TimerNum">15</div>
-          <div class="tb-sub">seconds remaining</div>
-          <div class="tb-hint" id="s1Hint">Scroll down and read the article...</div>
-        </div>
-
-        <!-- Continue Button — hidden until 15s done -->
-        <button class="wp-btn-continue" id="s1ContinueBtn" onclick="goToStep2()">
-          Continue to Step 2 ➡️
-        </button>
-
-        <!-- BOTTOM BANNER AD — Adsterra #3 -->
-        <div class="ad-box" id="s1-ad-bottom" style="min-height:90px;overflow:visible;margin-top:20px;">
-          <script type="text/javascript">
-            var atOptions = {
-              'key'   : 'f1f69a147759698e8fda4cfd27e423ba',
-              'format': 'iframe',
-              'height': 90,
-              'width' : 320,
-              'params': {}
-            };
-          </script>
-          <script type="text/javascript" src="https://www.effectivecpmnetwork.com/b1bggwx0/invoke.js"></script>
-        </div>
-
-      </div><!-- /article-wrap -->
-    </div><!-- /wp-inner -->
-  </div><!-- /step1 -->
-
-
-  <!-- ── STEP 2 — Monetag Native Ads ──────────────────── -->
-  <div id="step2">
-    <div class="wp-inner">
-
-      <!-- Fake Blog Header -->
-      <div class="blog-header">
-        <span class="blog-logo">📰 TechBlog India</span>
-        <span class="blog-tag">Step 2 of 2</span>
-      </div>
-
-      <div class="article-wrap">
-
-        <div class="article-img">💰</div>
-        <div class="article-title">How TaskNova Pays You Instantly – Full Review</div>
-        <div class="article-meta">
-          <span>✍️ By Priya Verma</span>
-          <span>📅 June 2025</span>
-          <span>👁 8.9K views</span>
-        </div>
-        <div class="article-body">
-          <p>TaskNova has emerged as one of India's most trusted micro-earning platforms. With over 1 lakh active users, it offers a transparent, UPI-based payout system that has won widespread praise.</p>
-          <h3>How Payouts Work</h3>
-          <p>Once you accumulate enough coins through watching ads, completing surveys, spinning the wheel, and referring friends — you can instantly redeem them as real cash to your UPI ID or Paytm wallet.</p>
-          <h3>Daily Earning Potential</h3>
-          <p>Active users report earning ₹30–₹80 per day just from daily tasks alone. The spin wheel, shortlinks, and watch-ad features reset every 24 hours giving you consistent earning opportunities.</p>
-        </div>
-
-      </div><!-- /article-wrap -->
-
-      <!-- Monetag Native Ads Section -->
-      <div class="native-section">
-        <div class="native-title">Recommended For You</div>
-
-        <!-- MONETAG NATIVE — Direct render method -->
-        <div id="monetag-native-container">
-          <!-- Monetag replaces this div when script loads -->
-          <div id="monetag-ad-zone" style="min-height:200px;width:100%;"></div>
-        </div>
-        <script async="async" data-cfasync="false"
-          src="https://pl29503369.effectivecpmnetwork.com/1c/3b/d0/1c3bd0127e4be2ff172d7c6e0eaa5204.js">
-        </script>
-      </div>
-
-      <div class="article-wrap">
-        <div class="article-body">
-          <h3>Tips to Maximize Earnings</h3>
-          <p>Always complete the daily check-in first — it gives you a free bonus. Then work through the spin wheel, shortlinks, and finally the survey tasks for the day.</p>
-          <p>Refer friends using your unique code for the biggest earnings boost. Each referred friend who completes tasks earns you a commission automatically.</p>
-        </div>
-      </div>
-
-      <!-- ── COUNTDOWN TIMER BOX ── -->
-      <div class="timer-box" style="margin:20px 16px;">
-        <div class="tb-label">✅ Almost Done!</div>
-        <div class="tb-num" id="s2TimerNum">15</div>
-        <div class="tb-sub">seconds remaining</div>
-        <div class="tb-hint" id="s2Hint">Hang tight, your reward is being prepared...</div>
-      </div>
-
-      <!-- CLAIM BUTTON — hidden until step 2 timer done -->
-      <button class="wp-btn-claim" id="claimBtn" onclick="claimCoins()">
-        💰 Claim Coins
-      </button>
-
-    </div><!-- /wp-inner -->
-  </div><!-- /step2 -->
-
-</div><!-- /whitePage -->
-
-
 <script>
-  /* ── Config ─────────────────────────────────────────── */
-  const DB_URL            = 'https://tasknova-66d0f-default-rtdb.firebaseio.com';
-  const STEP_DURATION     = 15;
-  const MAX_SPINS_PER_DAY = 6;
-  const PENALTY_DURATION  = 600;
-  const COOLDOWN_DURATION = 60;
-  const KEY_PENALTY_UNTIL  = 'tn_watch_penalty_until';
-  const KEY_COOLDOWN_UNTIL = 'tn_watch_cooldown_until';
-  const KEY_PRIZE          = 'tn_spin_prize';
-  const DAILY_DATA_KEY     = 'tasknova_daily';
+  const AD_URL     = 'https://omg10.com/4/11063028';
+  const RETURN_URL = 'https://tasknovaofficial.vercel.app/tasknova_tasks.html?status=success&task=video1';
+  const TOTAL      = 20;
+  const CIRC       = 2 * Math.PI * 80;
 
-  /* ── Daily data helpers ──────────────────────────────── */
-  function getTodayStr() { return new Date().toISOString().slice(0,10); }
-  function getDailyData() {
-    try {
-      const d = JSON.parse(localStorage.getItem(DAILY_DATA_KEY) || '{}');
-      if (d.date !== getTodayStr())
-        return {date:getTodayStr(),spins:0,scratches:0,quizzes:0,checkin:false,lastSpin:0};
-      return d;
-    } catch(e) {
-      return {date:getTodayStr(),spins:0,scratches:0,quizzes:0,checkin:false,lastSpin:0};
-    }
-  }
-  function saveDailyData(d) { localStorage.setItem(DAILY_DATA_KEY, JSON.stringify(d)); }
-  function getWatchCount()  { return getDailyData().spins || 0; }
-  function incrementWatchCount() {
-    const d = getDailyData(); d.spins = (d.spins||0)+1; d.lastSpin = Date.now(); saveDailyData(d);
-  }
+  let secsLeft = TOTAL, adOpened = false, adViewed = false, timerDone = false, iv = null;
 
-  /* ── Ad network helpers ──────────────────────────────── */
-  function isMonetegSpin() { return (getWatchCount()+1) <= 3; }
+  const tFill  = document.getElementById('tFill');
+  const tNum   = document.getElementById('tNum');
+  const barFill= document.getElementById('barFill');
+  const statusEl = document.getElementById('status');
 
-  function triggerMonetagPopunder() {
-    const old = document.getElementById('monetag-popunder');
-    if (old) old.remove();
-    const s = document.createElement('script');
-    s.id = 'monetag-popunder';
-    s.src = 'https://al5sm.com/tag.min.js';
-    s.dataset.zone = '11074231';
-    document.body.appendChild(s);
+  tFill.style.strokeDasharray  = CIRC;
+  tFill.style.strokeDashoffset = 0;
+
+  function setStatus(msg, cls) { statusEl.textContent = msg; statusEl.className = 'status ' + (cls||''); }
+  function showWarn(msg) { const w=document.getElementById('warn'); w.textContent=msg; w.className='warn show'; }
+  function hideWarn()    { document.getElementById('warn').className='warn'; }
+
+  function startWatch() {
+    document.getElementById('watchBtn').style.display = 'none';
+    document.getElementById('timerCircle').classList.add('show');
+    document.getElementById('barWrap').classList.add('show');
+    document.getElementById('backBtn').classList.add('show');
+    setStatus('👀 Ad dekh rahe ho...', '');
+    if (!adOpened) { adOpened=true; try { window.open(AD_URL,'_blank'); } catch(e){} }
+    startTimer();
   }
 
-  function triggerAdsterraPopunder() {
-    const old = document.getElementById('adsterra-popunder');
-    if (old) old.remove();
-    window.atOptions = {'key':'f1f69a147759698e8fda4cfd27e423ba','format':'iframe','height':50,'width':320,'params':{}};
-    const s = document.createElement('script');
-    s.id = 'adsterra-popunder'; s.type = 'text/javascript';
-    s.src = 'https://www.effectivecpmnetwork.com/b1bggwx0/invoke.js';
-    document.body.appendChild(s);
+  function userReturned() {
+    const watched = TOTAL - secsLeft;
+    if (watched < 15) { showWarn('⏳ Aur ' + (15-watched) + 's ad dekho!'); return; }
+    adViewed = true;
+    document.getElementById('backBtn').classList.remove('show');
+    hideWarn();
+    if (timerDone) showClaim();
+    else setStatus('✅ Ad dekh li! Ruko...', 'green');
   }
 
-  // Monetag native ab Step 2 HTML mein directly load ho raha hai
-  // Dynamic injection ki zaroorat nahi
-  function injectMonetagNative() { /* no-op */ }
-
-  /* ── State — safe localStorage reads ────────────────────── */
-  let uid, prize;
-  try {
-    uid   = localStorage.getItem('tasknova_uid') || null;
-    prize = parseInt(localStorage.getItem(KEY_PRIZE) || '10') || 10;
-  } catch(e) {
-    // localStorage unavailable (private mode / WebView restriction)
-    uid   = null;
-    prize = 10;
-  }
-  let currentStep   = 0;
-  let stepTimer     = null;
-  let stepSecsLeft  = STEP_DURATION;
-  let creditFired   = false;
-  let penaltyApplied = false;
-
-  /* ── Error overlay ───────────────────────────────────── */
-  function showErrorPage(type, until) {
-    const wp = document.getElementById('whitePage');
-    const pb = document.getElementById('progressBar');
-    if (wp) wp.style.display = 'none';
-    if (pb) pb.style.display = 'none';
-
-    const overlay = document.getElementById('errorOverlay');
-    overlay.style.display = 'flex';
-
-    if (type === 'penalty') {
-      document.getElementById('errIcon').textContent  = '❌';
-      document.getElementById('errTitle').textContent = 'Ad Skip Penalty';
-      document.getElementById('errMsg').textContent   = 'Ad skip ki thi — 10 min baad wapas aao';
-      startErrCountdown(until, KEY_PENALTY_UNTIL);
-    } else if (type === 'cooldown') {
-      document.getElementById('errIcon').textContent  = '⏳';
-      document.getElementById('errTitle').textContent = 'Next Ad ka Wait Karo';
-      document.getElementById('errMsg').textContent   = 'Thoda sa aur wait karo';
-      startErrCountdown(until, KEY_COOLDOWN_UNTIL);
-    } else if (type === 'success') {
-      document.getElementById('errIcon').textContent  = '✅';
-      document.getElementById('errTitle').textContent = 'Coins Credited!';
-      document.getElementById('errMsg').textContent   = 'Next spin ke liye wait karo';
-      startErrCountdown(until, KEY_COOLDOWN_UNTIL, true);
-    } else {
-      document.getElementById('errIcon').textContent  = '🚫';
-      document.getElementById('errTitle').textContent = 'Aaj ki Limit Khatam!';
-      document.getElementById('errMsg').textContent   = 'Kal wapas aao aur aur coins kamao';
-      document.getElementById('errTimer').textContent = '';
-    }
-  }
-
-  function startErrCountdown(until, storageKey, redirectOnDone) {
-    const el = document.getElementById('errTimer');
-    const iv = setInterval(() => {
-      const rem = Math.max(0, Math.ceil((until - Date.now()) / 1000));
-      const m = Math.floor(rem/60), s = rem%60;
-      el.textContent = m + ':' + String(s).padStart(2,'0');
-      if (rem <= 0) {
-        clearInterval(iv);
-        localStorage.removeItem(storageKey);
-        if (redirectOnDone) goBack(); else location.reload();
+  function startTimer() {
+    if (iv) return;
+    iv = setInterval(() => {
+      secsLeft--;
+      const pct = secsLeft / TOTAL;
+      tFill.style.strokeDashoffset = CIRC * (1 - pct);
+      tNum.textContent = secsLeft;
+      barFill.style.transform = 'scaleX(' + pct + ')';
+      if (secsLeft <= 5) { tFill.style.stroke='#f9c846'; tNum.style.color='#f9c846'; }
+      if (secsLeft <= 0) {
+        clearInterval(iv); timerDone = true; tNum.textContent='0';
+        if (adViewed) showClaim();
+        else { showWarn('⚠️ Pehle ad dekho, fir Wapas Aao dabao!'); setStatus('Ad puri dekho!','red'); }
       }
     }, 1000);
   }
 
-  /* ── Page load — auto start ──────────────────────────── */
-  window.addEventListener('DOMContentLoaded', function() {
-    const penaltyUntil  = parseInt(localStorage.getItem(KEY_PENALTY_UNTIL)  || '0');
-    const cooldownUntil = parseInt(localStorage.getItem(KEY_COOLDOWN_UNTIL) || '0');
-    if (penaltyUntil  > Date.now()) { showErrorPage('penalty',  penaltyUntil);  return; }
-    if (cooldownUntil > Date.now()) { showErrorPage('cooldown', cooldownUntil); return; }
-    if (getWatchCount() >= MAX_SPINS_PER_DAY) { showErrorPage('limit', 0); return; }
-    startAdTask();
-  });
-
-  /* ── Step 1 start ────────────────────────────────────── */
-  function startAdTask() {
-    // Fire popunder (user gesture guaranteed by DOMContentLoaded tap from tasks page)
-    if (isMonetegSpin()) triggerMonetagPopunder();
-    else                 triggerAdsterraPopunder();
-
-    // Show white page Step 1
-    document.getElementById('whitePage').style.display = 'block';
-    document.getElementById('step1').style.display     = 'block';
-    document.getElementById('step2').style.display     = 'none';
-
-    // Blue progress bar
-    const pb = document.getElementById('progressBar');
-    pb.style.background  = '#2563eb';
-    pb.style.width       = '0%';
-    pb.style.transition  = 'none';
-    currentStep = 1;
-
-    history.pushState({ step:1 }, '', location.href);
-    startStepTimer(1);
+  function showClaim() {
+    document.getElementById('backBtn').classList.remove('show');
+    document.getElementById('claimBtn').classList.add('show');
+    setStatus('🎉 Ab claim karo!', 'green');
   }
 
-  /* ── Step 2 load ─────────────────────────────────────── */
-  function goToStep2() {
-    document.getElementById('s1ContinueBtn').style.display = 'none';
-    document.getElementById('step1').style.display         = 'none';
-    document.getElementById('step2').style.display         = 'block';
-
-    const pb = document.getElementById('progressBar');
-    pb.style.background = '#16a34a';
-    pb.style.width      = '0%';
-    pb.style.transition = 'none';
-    currentStep = 2;
-
-    injectMonetagNative();
-    document.getElementById('whitePage').scrollTop = 0;
-    startStepTimer(2);
-  }
-
-  /* ── Step timer ──────────────────────────────────────── */
-  function startStepTimer(step) {
-    clearInterval(stepTimer);
-    stepSecsLeft = STEP_DURATION;
-
-    const pb     = document.getElementById('progressBar');
-    const numEl  = document.getElementById(step === 1 ? 's1TimerNum' : 's2TimerNum');
-    const hintEl = document.getElementById(step === 1 ? 's1Hint'     : 's2Hint');
-
-    setTimeout(() => {
-      pb.style.transition = 'width ' + STEP_DURATION + 's linear';
-      pb.style.width = '100%';
-    }, 50);
-
-    stepTimer = setInterval(function() {
-      stepSecsLeft--;
-      if (numEl)  numEl.textContent  = Math.max(0, stepSecsLeft);
-      if (hintEl) hintEl.textContent = step === 1
-        ? (stepSecsLeft > 0 ? 'Scroll down and read the article... (' + stepSecsLeft + 's)' : '✅ You can continue now!')
-        : (stepSecsLeft > 0 ? 'Hang tight, reward being prepared... (' + stepSecsLeft + 's)' : '✅ Tap below to claim!');
-
-      if (stepSecsLeft <= 0) {
-        clearInterval(stepTimer);
-        pb.style.width = '100%';
-        onStepComplete(step);
-      }
-    }, 1000);
-  }
-
-  /* ── Step complete ───────────────────────────────────── */
-  function onStepComplete(step) {
-    if (step === 1) {
-      const btn = document.getElementById('s1ContinueBtn');
-      btn.style.display = 'block';
-      setTimeout(() => btn.scrollIntoView({ behavior:'smooth', block:'center' }), 200);
-    } else {
-      const btn = document.getElementById('claimBtn');
-      btn.style.display = 'block';
-      setTimeout(() => btn.scrollIntoView({ behavior:'smooth', block:'center' }), 200);
-    }
-  }
-
-  /* ── Claim coins ─────────────────────────────────────── */
   function claimCoins() {
-    if (creditFired || penaltyApplied) return;
-    if (stepSecsLeft > 0) { alert('Abhi ' + stepSecsLeft + 's baaki hain!'); return; }
-    creditFired = true;
-
     const btn = document.getElementById('claimBtn');
-    btn.disabled    = true;
-    btn.textContent = '⏳ Crediting...';
-
-    incrementWatchCount();
-    const cooldownUntil = Date.now() + COOLDOWN_DURATION * 1000;
-    localStorage.setItem(KEY_COOLDOWN_UNTIL, String(cooldownUntil));
-
-    if (uid && uid !== 'null') {
-      fetch(DB_URL + '/users/' + uid + '.json')
-        .then(r => r.json())
-        .then(data => {
-          if (!data) throw new Error('No user');
-          const newCoins   = (data.coins   || 0) + prize;
-          const newBalance = parseFloat((newCoins / 100).toFixed(2));
-          return fetch(DB_URL + '/users/' + uid + '.json', {
-            method: 'PATCH',
-            headers: {'Content-Type':'application/json'},
-            body: JSON.stringify({ coins:newCoins, balance:newBalance, tasksDone:(data.tasksDone||0)+1 })
-          });
-        })
-        .then(() => fetch(DB_URL + '/users/' + uid + '/taskHistory.json', {
-          method: 'POST',
-          headers: {'Content-Type':'application/json'},
-          body: JSON.stringify({ userId:uid, taskType:'Ad', taskName:'📺 Watch Video Ad', coins:prize, status:'Success', timestamp:Date.now() })
-        }))
-        .then(() => {
-          btn.textContent = '✅ +' + prize + ' Coins Claimed!';
-          setTimeout(() => showErrorPage('success', cooldownUntil), 1200);
-        })
-        .catch(e => {
-          console.error(e);
-          btn.disabled    = false;
-          btn.textContent = '💰 Claim Coins';
-          creditFired     = false;
-        });
-    } else {
-      btn.textContent = '❌ Login karo pehle!';
-    }
+    btn.disabled=true; btn.textContent='⏳ Crediting...';
+    btn.style.background='linear-gradient(135deg,#6c63ff,#3b82f6)';
+    btn.style.animation='none';
+    localStorage.setItem('pendingAdReward', JSON.stringify({coins:10,type:'watchAd',ts:Date.now()}));
+    setTimeout(() => { window.location.href = RETURN_URL; }, 400);
   }
-
-  /* ── Penalty ─────────────────────────────────────────── */
-  function applyPenalty() {
-    if (penaltyApplied || creditFired) return;
-    penaltyApplied = true;
-    clearInterval(stepTimer);
-    const penaltyUntil = Date.now() + PENALTY_DURATION * 1000;
-    localStorage.setItem(KEY_PENALTY_UNTIL, String(penaltyUntil));
-    showErrorPage('penalty', penaltyUntil);
-  }
-
-  /* ── Back button trap ────────────────────────────────── */
-  window.addEventListener('popstate', function() {
-    if (currentStep > 0 && !creditFired) {
-      history.pushState(null, '', location.href);
-      applyPenalty();
-    }
-  });
-
-  /* ── Go back ─────────────────────────────────────────── */
-  function goBack() { window.location.href = 'tasknova_tasks.html'; }
 </script>
-
 </body>
 </html>
