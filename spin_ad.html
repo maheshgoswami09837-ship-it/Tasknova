@@ -114,7 +114,7 @@
     font-weight:800;
     cursor: pointer;
     font-family:'Segoe UI',sans-serif;
-    box-shadow: 0 4px 166px rgba(37,99,235,0.35);
+    box-shadow: 0 4px 16px rgba(37,99,235,0.35);
     animation: pulseBtn 1.5s infinite;
   }
   .wp-btn-claim {
@@ -367,41 +367,47 @@
   function isMonetegSpin() { return (getWatchCount()+1) <= 3; }
 
   function triggerMonetagPopunder() {
-    const old = document.getElementById('monetag-popunder');
-    if (old) old.remove();
-    const s = document.createElement('script');
-    s.id = 'monetag-popunder';
-    s.src = 'https://al5sm.com/tag.min.js';
-    s.dataset.zone = '11074231';
-    document.body.appendChild(s);
+    try {
+      const old = document.getElementById('monetag-popunder');
+      if (old) old.remove();
+      const s = document.createElement('script');
+      s.id = 'monetag-popunder';
+      s.src = 'https://al5sm.com/tag.min.js';
+      s.dataset.zone = '11074231';
+      document.body.appendChild(s);
+    } catch(e) { console.log(e); }
   }
 
   function triggerAdsterraPopunder() {
-    const old = document.getElementById('adsterra-popunder');
-    if (old) old.remove();
-    window.atOptions = {'key':'f1f69a147759698e8fda4cfd27e423ba','format':'iframe','height':50,'width':320,'params':{}};
-    const s = document.createElement('script');
-    s.id = 'adsterra-popunder'; s.type = 'text/javascript';
-    s.src = '//www.effectivecpmnetwork.com/b1bggwx0/invoke.js';
-    document.body.appendChild(s);
+    try {
+      const old = document.getElementById('adsterra-popunder');
+      if (old) old.remove();
+      window.atOptions = {'key':'f1f69a147759698e8fda4cfd27e423ba','format':'iframe','height':50,'width':320,'params':{}};
+      const s = document.createElement('script');
+      s.id = 'adsterra-popunder'; s.type = 'text/javascript';
+      s.src = '//www.effectivecpmnetwork.com/b1bggwx0/invoke.js';
+      document.body.appendChild(s);
+    } catch(e) { console.log(e); }
   }
 
-  /* MONETAG IN-PAGE PUSH INJECTION (Syntax Error Removed) */
+  /* MONETAG IN-PAGE PUSH INJECTION (Safe Implementation) */
   function injectMonetagNative() {
-    const old = document.getElementById('monetag-new-script');
-    if (old) old.remove();
-    
-    const container = document.getElementById('monetag-native-container');
-    if (container) {
-      container.innerHTML = ''; 
+    try {
+      const old = document.getElementById('monetag-new-script');
+      if (old) old.remove();
       
-      const s = document.createElement('script');
-      s.id = 'monetag-new-script';
-      s.dataset.zone = '11081419';
-      s.src = 'https://nap5k.com/tag.min.js';
-      
-      container.appendChild(s);
-    }
+      const container = document.getElementById('monetag-native-container');
+      if (container) {
+        container.innerHTML = ''; 
+        
+        const s = document.createElement('script');
+        s.id = 'monetag-new-script';
+        s.dataset.zone = '11081419';
+        s.src = 'https://nap5k.com/tag.min.js';
+        
+        container.appendChild(s);
+      }
+    } catch(e) { console.log(e); }
   }
 
   /* ── State ───────────────────────────────────────────── */
@@ -421,28 +427,33 @@
     if (pb) pb.style.display = 'none';
 
     const overlay = document.getElementById('errorOverlay');
-    overlay.style.display = 'flex';
+    if (overlay) overlay.style.display = 'flex';
+
+    const iconEl = document.getElementById('errIcon');
+    const titleEl = document.getElementById('errTitle');
+    const msgEl = document.getElementById('errMsg');
 
     if (type === 'penalty') {
-      document.getElementById('errIcon').textContent  = '❌';
-      document.getElementById('errTitle').textContent = 'Ad Skip Penalty';
-      document.getElementById('errMsg').textContent   = 'Ad skip ki thi — 10 min baad wapas aao';
+      if(iconEl) iconEl.textContent  = '❌';
+      if(titleEl) titleEl.textContent = 'Ad Skip Penalty';
+      if(msgEl) msgEl.textContent   = 'Ad skip ki thi — 10 min baad wapas aao';
       startErrCountdown(until, KEY_PENALTY_UNTIL);
     } else if (type === 'cooldown') {
-      document.getElementById('errIcon').textContent  = '⏳';
-      document.getElementById('errTitle').textContent = 'Next Ad ka Wait Karo';
-      document.getElementById('errMsg').textContent   = 'Thoda sa aur wait karo';
+      if(iconEl) iconEl.textContent  = '⏳';
+      if(titleEl) titleEl.textContent = 'Next Ad ka Wait Karo';
+      if(msgEl) msgEl.textContent   = 'Thoda sa aur wait karo';
       startErrCountdown(until, KEY_COOLDOWN_UNTIL);
     } else if (type === 'success') {
-      document.getElementById('errIcon').textContent  = '✅';
-      document.getElementById('errTitle').textContent = 'Coins Credited!';
-      document.getElementById('errMsg').textContent   = 'Next spin ke liye wait karo';
+      if(iconEl) iconEl.textContent  = '✅';
+      if(titleEl) titleEl.textContent = 'Coins Credited!';
+      if(msgEl) msgEl.textContent   = 'Next spin ke liye wait karo';
       startErrCountdown(until, KEY_COOLDOWN_UNTIL, true);
     } else {
-      document.getElementById('errIcon').textContent  = '🚫';
-      document.getElementById('errTitle').textContent = 'Aaj ki Limit Khatam!';
-      document.getElementById('errMsg').textContent   = 'Kal wapas aao aur aur coins kamao';
-      document.getElementById('errTimer').textContent = '';
+      if(iconEl) iconEl.textContent  = '🚫';
+      if(titleEl) titleEl.textContent = 'Aaj ki Limit Khatam!';
+      if(msgEl) msgEl.textContent   = 'Kal wapas aao aur aur coins kamao';
+      const timerEl = document.getElementById('errTimer');
+      if(timerEl) timerEl.textContent = '';
     }
   }
 
@@ -451,7 +462,7 @@
     const iv = setInterval(() => {
       const rem = Math.max(0, Math.ceil((until - Date.now()) / 1000));
       const m = Math.floor(rem/60), s = rem%60;
-      el.textContent = m + ':' + String(s).padStart(2,'0');
+      if(el) el.textContent = m + ':' + String(s).padStart(2,'0');
       if (rem <= 0) {
         clearInterval(iv);
         localStorage.removeItem(storageKey);
@@ -460,13 +471,20 @@
     }, 1000);
   }
 
-  /* ── Page load ───────────────────────────────────────── */
+  /* ── Page load (CRASH BYPASS FIXED) ──────────────────── */
   window.addEventListener('DOMContentLoaded', function() {
-    const penaltyUntil  = parseInt(localStorage.getItem(KEY_PENALTY_UNTIL)  || '0');
-    const cooldownUntil = parseInt(localStorage.getItem(KEY_COOLDOWN_UNTIL) || '0');
-    if (penaltyUntil  > Date.now()) { showErrorPage('penalty',  penaltyUntil);  return; }
-    if (cooldownUntil > Date.now()) { showErrorPage('cooldown', cooldownUntil); return; }
-    if (getWatchCount() >= MAX_SPINS_PER_DAY) { showErrorPage('limit', 0); return; }
+    try {
+      const penaltyUntil  = parseInt(localStorage.getItem(KEY_PENALTY_UNTIL)  || '0');
+      const cooldownUntil = parseInt(localStorage.getItem(KEY_COOLDOWN_UNTIL) || '0');
+      
+      if (penaltyUntil  > Date.now()) { showErrorPage('penalty',  penaltyUntil);  return; }
+      if (cooldownUntil > Date.now()) { showErrorPage('cooldown', cooldownUntil); return; }
+      if (getWatchCount() >= MAX_SPINS_PER_DAY) { showErrorPage('limit', 0); return; }
+    } catch(err) {
+      console.log("Storage check bypassed:", err);
+    }
+    
+    // Safety Net: Always forces the page to load even if Firebase data is missing
     startAdTask();
   });
 
@@ -475,21 +493,9 @@
     if (isMonetegSpin()) triggerMonetagPopunder();
     else                 triggerAdsterraPopunder();
 
-    document.getElementById('whitePage').style.display = 'block';
-    document.getElementById('step1').style.display     = 'block';
-    document.getElementById('step2').style.display     = 'none';
-
-    const pb = document.getElementById('progressBar');
-    pb.style.background  = '#2563eb';
-    pb.style.width       = '0%';
-    pb.style.transition  = 'none';
-    currentStep = 1;
-
-    history.pushState({ step:1 }, '', location.href);
-    startStepTimer(1);
-  }
-
-  /* ── Step 2 load ─────────────────────────────────────── */
-  function goToStep2() {
-    document.getElementById('s1ContinueBtn').style.display = 'none';
-    do
+    const wp = document.getElementById('whitePage');
+    const s1 = document.getElementById('step1');
+    const s2 = document.getElementById('step2');
+    
+    if(wp) wp.style.display = 'block';
+    if(s1) s1.style.displa
