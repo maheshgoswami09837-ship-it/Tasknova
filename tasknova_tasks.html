@@ -673,39 +673,43 @@
 
   <!-- Stats row -->
   <div style="display:flex;gap:10px;width:100%;margin-bottom:20px;">
-    <div style="flex:1;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:10px 14px;text-align:center;">
-      <div style="font-size:10px;color:rgba(255,255,255,0.35);margin-bottom:2px;">Spins Today</div>
-      <div style="font-size:17px;font-weight:800;color:#fff;"><span id="spinCountText">0</span><span style="color:rgba(255,255,255,0.3);font-size:12px;">/6</span></div>
+    <div style="flex:1;background:linear-gradient(135deg,rgba(124,58,237,0.15),rgba(124,58,237,0.05));border:1px solid rgba(124,58,237,0.3);border-radius:14px;padding:10px 14px;text-align:center;">
+      <div style="font-size:10px;color:rgba(255,255,255,0.45);margin-bottom:4px;letter-spacing:0.5px;">SPINS TODAY</div>
+      <div style="font-size:20px;font-weight:900;color:#fff;line-height:1;"><span id="spinCountText">0</span><span style="color:rgba(255,255,255,0.25);font-size:12px;font-weight:600;">/6</span></div>
     </div>
-    <div style="flex:1;background:rgba(108,99,255,0.1);border:1px solid rgba(108,99,255,0.25);border-radius:14px;padding:10px 14px;text-align:center;">
-      <div style="font-size:10px;color:rgba(255,255,255,0.35);margin-bottom:2px;">Win Up To</div>
-      <div style="font-size:17px;font-weight:800;color:#a78bfa;">+20 🪙</div>
+    <div style="flex:1;background:linear-gradient(135deg,rgba(217,119,6,0.2),rgba(217,119,6,0.05));border:1px solid rgba(217,119,6,0.35);border-radius:14px;padding:10px 14px;text-align:center;">
+      <div style="font-size:10px;color:rgba(255,255,255,0.45);margin-bottom:4px;letter-spacing:0.5px;">MAX WIN</div>
+      <div style="font-size:20px;font-weight:900;color:#fbbf24;line-height:1;">+20 <span style="font-size:13px;">Coins</span></div>
     </div>
-    <div style="flex:1;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:10px 14px;text-align:center;">
-      <div style="font-size:10px;color:rgba(255,255,255,0.35);margin-bottom:2px;">Cooldown</div>
-      <div id="spinCooldownText" style="font-size:13px;font-weight:700;color:#f59e0b;">Ready!</div>
+    <div style="flex:1;background:linear-gradient(135deg,rgba(34,197,94,0.15),rgba(34,197,94,0.05));border:1px solid rgba(34,197,94,0.25);border-radius:14px;padding:10px 14px;text-align:center;">
+      <div style="font-size:10px;color:rgba(255,255,255,0.45);margin-bottom:4px;letter-spacing:0.5px;">STATUS</div>
+      <div id="spinCooldownText" style="font-size:13px;font-weight:800;color:#22c55e;">Ready!</div>
     </div>
   </div>
 
-  <div class="wheel-wrap">
-    <div class="wheel-pointer">▼</div>
-    <canvas class="wheel-canvas" id="wheelCanvas" width="260" height="260"></canvas>
+  <!-- Wheel + pointer -->
+  <div class="wheel-wrap" style="position:relative;width:270px;height:270px;margin:0 auto 8px;">
+    <!-- Pointer triangle -->
+    <div style="position:absolute;top:-4px;left:50%;transform:translateX(-50%);z-index:10;width:0;height:0;
+      border-left:12px solid transparent;border-right:12px solid transparent;
+      border-top:22px solid #fbbf24;filter:drop-shadow(0 2px 6px rgba(251,191,36,0.8));"></div>
+    <canvas id="wheelCanvas" width="270" height="270"
+      style="width:270px;height:270px;border-radius:50%;
+      border:4px solid rgba(124,58,237,0.6);
+      box-shadow:0 0 40px rgba(124,58,237,0.4),0 0 80px rgba(124,58,237,0.15);"></canvas>
   </div>
 
-  <!-- Glow ring under wheel -->
-  <div style="width:180px;height:10px;background:radial-gradient(ellipse,rgba(108,99,255,0.5),transparent);border-radius:50%;margin:-16px auto 16px;filter:blur(5px);"></div>
+  <!-- Glow under wheel -->
+  <div style="width:200px;height:12px;background:radial-gradient(ellipse,rgba(124,58,237,0.5),transparent);border-radius:50%;margin:-4px auto 20px;filter:blur(6px);"></div>
 
   <!-- Result box -->
-  <div id="spinResultBox" style="width:100%;background:rgba(108,99,255,0.08);border:1px solid rgba(108,99,255,0.2);border-radius:16px;padding:14px;text-align:center;margin-bottom:16px;min-height:54px;display:flex;align-items:center;justify-content:center;">
-    <div id="spinResult" style="font-size:20px;font-weight:800;color:#a78bfa;">Spin the wheel to win coins!</div>
+  <div id="spinResultBox" style="width:100%;background:linear-gradient(135deg,rgba(124,58,237,0.1),rgba(37,99,235,0.08));border:1px solid rgba(124,58,237,0.25);border-radius:16px;padding:14px;text-align:center;margin-bottom:16px;min-height:54px;display:flex;align-items:center;justify-content:center;">
+    <div id="spinResult" style="font-size:18px;font-weight:800;color:#a78bfa;">Spin karo aur coins jeeto!</div>
   </div>
 
   <button class="spin-btn-main" id="spinBtnMain" onclick="doSpin()">🎡 Spin Now!</button>
 
-  <!-- Fixed bottom native/banner ad -->
-  <div class="modal-bottom-banner" id="spinBottomBanner">
-    <!-- spinBannerSlot removed — Monetag popunder used instead -->
-  </div>
+  <div class="modal-bottom-banner" id="spinBottomBanner"></div>
 </div>
 
 <!-- Scratch Modal -->
@@ -2154,6 +2158,16 @@
           const spinBadge = document.getElementById('spinCountBadge');
           const spinsDB = data.spinsToday || 0;
           if (spinBadge) spinBadge.textContent = spinsDB + '/6';
+
+          // ── Scratch — DB se today count ───────────────────────
+          const scratchBadge = document.getElementById('scratchCountBadge');
+          const scratchesDB = data.scratchesToday || 0;
+          if (scratchBadge) scratchBadge.textContent = scratchesDB + '/15';
+
+          // ── Quiz — DB se today count ──────────────────────────
+          const quizBadge = document.getElementById('quizCountBadge');
+          const quizzesDB = data.quizzesToday || 0;
+          if (quizBadge) quizBadge.textContent = quizzesDB + '/15';
         })
         .catch(e => console.log(e));
     });
@@ -2372,10 +2386,10 @@
 
     d.earned += actual;
     if (type === 'checkin') d.checkin = true;
-    else if (type === 'spin') { d.spins++; d.lastSpin = Date.now(); }
+    else if (type === 'spin')    { d.spins++;    d.lastSpin    = Date.now(); }
     else if (type === 'scratch') { d.scratches++; d.lastScratch = Date.now(); }
-    else if (type === 'quiz') { d.quizzes++; d.lastQuiz = Date.now(); }
-    else if (type === 'bonus') { /* daily bonus — tracked separately */ }
+    else if (type === 'quiz')    { d.quizzes++;  d.lastQuiz    = Date.now(); }
+    else if (type === 'bonus')   { /* daily bonus — tracked separately */ }
     saveDailyData(d);
 
     const uid = localStorage.getItem('tasknova_uid');
@@ -2385,24 +2399,53 @@
         fetch(DB_URL + '/users/' + uid + '.json' + ap)
           .then(r => r.json())
           .then(data => {
-            const newCoins = (data.coins || 0) + actual;
+            const newCoins   = (data.coins || 0) + actual;
             const newBalance = parseFloat((newCoins / 100).toFixed(2));
             const newTasks   = (data.tasksDone || 0) + 1;
+
+            // ── Build patch — coins + type-specific counter ──────
+            const patch = {
+              coins:       newCoins,
+              balance:     newBalance,
+              totalEarned: newBalance,
+              tasksDone:   newTasks
+            };
+            if (type === 'spin')    patch.spinsToday    = d.spins;
+            if (type === 'scratch') patch.scratchesToday = d.scratches;
+            if (type === 'quiz')    patch.quizzesToday   = d.quizzes;
+            if (type === 'checkin') patch.checkinDoneToday = true;
+            if (type === 'watchAd') patch.adsWatchedToday = getAdBatchCount();
+
             fetch(DB_URL + '/users/' + uid + '.json' + ap, {
               method: 'PATCH',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ coins: newCoins, balance: newBalance, totalEarned: newBalance, tasksDone: newTasks })
+              body: JSON.stringify(patch)
             }).then(() => {
-              document.querySelector('.user-coins').textContent   = newCoins + ' Coins';
-              document.querySelector('.user-balance').textContent = '₹' + newBalance.toFixed(2);
+              // ── Update UI immediately ────────────────────────
+              const coinEl = document.getElementById('coinsDisplay');
+              const balEl  = document.getElementById('balanceDisplay');
+              const legacyCoin = document.querySelector('.user-coins');
+              const legacyBal  = document.querySelector('.user-balance');
+              if (coinEl)    coinEl.textContent    = newCoins.toLocaleString('en-IN') + ' Coins';
+              if (balEl)     balEl.innerHTML       = '₹' + newBalance.toFixed(2);
+              if (legacyCoin) legacyCoin.textContent = newCoins + ' Coins';
+              if (legacyBal)  legacyBal.textContent  = '₹' + newBalance.toFixed(2);
 
-              // ── UNIFIED TASK LOG (Success) — Single source of truth ──
+              // ── Update badges immediately ────────────────────
+              const spinBadge    = document.getElementById('spinCountBadge');
+              const scratchBadge = document.getElementById('scratchCountBadge');
+              const quizBadge    = document.getElementById('quizCountBadge');
+              const adBadge      = document.getElementById('adCounter');
+              if (spinBadge)    spinBadge.textContent    = d.spins    + '/6';
+              if (scratchBadge) scratchBadge.textContent = d.scratches + '/15';
+              if (quizBadge)    quizBadge.textContent    = d.quizzes  + '/15';
+              if (adBadge)      adBadge.textContent      = getAdBatchCount() + '/20';
+
+              // ── Task log ─────────────────────────────────────
               const typeMap = {
-                watchAd:   'Ad',       spin:      'Spin',
-                scratch:   'Scratch',  quiz:      'Quiz',
-                checkin:   'Checkin',  bonus:     'Bonus',
-                survey:    'Survey',   offerwall: 'Offerwall',
-                shortlink: 'Shortlink'
+                watchAd:'Ad', spin:'Spin', scratch:'Scratch', quiz:'Quiz',
+                checkin:'Checkin', bonus:'Bonus', survey:'Survey',
+                offerwall:'Offerwall', shortlink:'Shortlink'
               };
               logTaskActivity({
                 uid,
@@ -2412,7 +2455,6 @@
                 status:    'Success',
                 extraData: { creditedAt: Date.now() }
               }).catch(e => console.warn('[TaskLog] creditCoins log failed:', e));
-              // ──────────────────────────────────────────────────────
             });
           });
       });
@@ -2484,8 +2526,12 @@
   // ── SPIN WHEEL ────────────────────────────────────────────────
   // Wheel display segments (visual) — 8 slots, all real prizes
   const SPIN_PRIZES = [5, 10, 5, 15, 5, 10, 5, 20];
+  const SPIN_COLORS = [
+    '#7c3aed','#2563eb','#7c3aed','#0891b2',
+    '#7c3aed','#2563eb','#7c3aed','#d97706'
+  ];
 
-  // Weighted prize table: only real coin prizes — no 0/Try Again
+  // Weighted prize table
   const PRIZE_WEIGHTS = [
     { prize: 5,  weight: 50 },
     { prize: 10, weight: 30 },
@@ -2502,7 +2548,16 @@
     }
     return 5;
   }
-  const SPIN_COLORS = ['#6c63ff','#3b82f6','#8b5cf6','#06b6d4','#6c63ff','#3b82f6','#8b5cf6','#06b6d4'];
+
+  // ✅ Fix: map prize to a SPECIFIC index that matches the prize value
+  // Wheel has multiple 5s and 10s — pick one index randomly among matches
+  function getPrizeIndex(prize) {
+    const indices = [];
+    SPIN_PRIZES.forEach((p, i) => { if (p === prize) indices.push(i); });
+    if (indices.length === 0) return 0;
+    return indices[Math.floor(Math.random() * indices.length)];
+  }
+
   let isSpinning = false;
   let currentSpinAngle = 0;
 
@@ -2510,34 +2565,77 @@
     const canvas = document.getElementById('wheelCanvas');
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
-    const cx = 130, cy = 130, r = 126;
+    ctx.clearRect(0, 0, 270, 270);
+    drawWheelAt(ctx);
+  }
+
+  function drawWheelAt(ctx) {
+    const SIZE = 270;
+    const cx = SIZE / 2, cy = SIZE / 2, r = 128;
     const slices = SPIN_PRIZES.length;
-    const angle = (2 * Math.PI) / slices;
+    const angle  = (2 * Math.PI) / slices;
+
     for (let i = 0; i < slices; i++) {
+      const startA = i * angle;
+      const endA   = (i + 1) * angle;
+
+      // Segment
       ctx.beginPath();
       ctx.moveTo(cx, cy);
-      ctx.arc(cx, cy, r, i * angle, (i + 1) * angle);
+      ctx.arc(cx, cy, r, startA, endA);
       ctx.fillStyle = SPIN_COLORS[i];
       ctx.fill();
-      ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+      ctx.strokeStyle = 'rgba(255,255,255,0.25)';
       ctx.lineWidth = 2;
       ctx.stroke();
+
+      // Prize text — rotated to middle of slice
       ctx.save();
       ctx.translate(cx, cy);
-      ctx.rotate(i * angle + angle / 2);
+      ctx.rotate(startA + angle / 2);
+      ctx.textAlign    = 'center';
+      ctx.textBaseline = 'middle';
+
       const prize = SPIN_PRIZES[i];
+      const dist  = r * 0.68; // distance from center
+
+      // White circle behind number
+      ctx.beginPath();
+      ctx.arc(dist, 0, 16, 0, 2 * Math.PI);
+      ctx.fillStyle = 'rgba(255,255,255,0.18)';
+      ctx.fill();
+
+      // Prize number — big and clear
       ctx.fillStyle = '#fff';
-      ctx.font = 'bold 13px Segoe UI';
-      ctx.textAlign = 'right';
-      ctx.fillText(prize + '🪙', r - 12, 5);
+      ctx.font = 'bold 14px Segoe UI';
+      ctx.fillText(prize, dist, -2);
+
+      // "C" small label
+      ctx.fillStyle = 'rgba(255,255,255,0.65)';
+      ctx.font = '8px Segoe UI';
+      ctx.fillText('coins', dist, 9);
+
       ctx.restore();
     }
+
+    // Center hub gradient
+    const hubGrad = ctx.createRadialGradient(cx, cy, 2, cx, cy, 24);
+    hubGrad.addColorStop(0, '#fde68a');
+    hubGrad.addColorStop(1, '#d97706');
     ctx.beginPath();
-    ctx.arc(cx, cy, 20, 0, 2 * Math.PI);
-    ctx.fillStyle = '#05051a';
+    ctx.arc(cx, cy, 24, 0, 2 * Math.PI);
+    ctx.fillStyle = hubGrad;
     ctx.fill();
-    ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+    ctx.strokeStyle = 'rgba(255,255,255,0.6)';
+    ctx.lineWidth = 2.5;
     ctx.stroke();
+
+    // Star
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold 18px serif';
+    ctx.textAlign    = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('★', cx, cy + 1);
   }
 
   function openSpinModal() {
@@ -2588,48 +2686,60 @@
     const d = getDailyData();
     if (d.spins >= 6) { showToast('Aaj ke spins khatam!', '#f59e0b'); return; }
     if (getCooldownRemaining(d.lastSpin) > 0) { showToast('30 second wait karo!', '#f59e0b'); return; }
-    if (isGlobalLocked()) return; // universal 1-min cooldown
+    if (isGlobalLocked()) return;
     if (!checkDailyLimit()) return;
     if (isSpinning) return;
     isSpinning = true;
 
-    const prize = getWeightedPrize();
-    // Map prize to nearest visual segment index for wheel animation
-    const prizeIdx = SPIN_PRIZES.findIndex(p => p === prize) !== -1
-      ? SPIN_PRIZES.findIndex(p => p === prize)
-      : 0;
-    const sliceAngle = 360 / SPIN_PRIZES.length;
-    const targetAngle = 360 * 5 + (360 - prizeIdx * sliceAngle - sliceAngle / 2);
-    const canvas = document.getElementById('wheelCanvas');
-    let start = null;
-    const duration = 3000;
+    const prize    = getWeightedPrize();
+    const prizeIdx = getPrizeIndex(prize);
+    const N        = SPIN_PRIZES.length;
+    const sliceDeg = 360 / N;
+
+    // Pointer is at TOP (12 o'clock = -90°).
+    // Slice i starts at i*sliceDeg (measured from 3 o'clock, canvas default).
+    // Centre of slice i (in canvas-angle degrees) = i*sliceDeg + sliceDeg/2
+    // We want that centre to land under the pointer (i.e. at -90° = 270°).
+    // So we need to rotate the wheel so that:
+    //   (centre_of_slice + totalRotation) mod 360 = 270
+    //   totalRotation = (270 - centre_of_slice + 360*5) mod 360  + 360*5
+    const sliceCentre  = prizeIdx * sliceDeg + sliceDeg / 2;
+    const extraSpins   = 360 * 5;                         // 5 full rotations for effect
+    const targetAngle  = extraSpins + ((270 - sliceCentre % 360) + 360) % 360;
+
+    const canvas   = document.getElementById('wheelCanvas');
+    const SIZE     = 270;
+    let start      = null;
+    const duration = 4000;
     const startAngle = currentSpinAngle;
 
     function animate(ts) {
       if (!start) start = ts;
       const progress = Math.min((ts - start) / duration, 1);
+      // Ease-out cubic
       const eased = 1 - Math.pow(1 - progress, 3);
       const angle = startAngle + targetAngle * eased;
+
       const ctx = canvas.getContext('2d');
+      ctx.clearRect(0, 0, SIZE, SIZE);
       ctx.save();
-      ctx.clearRect(0, 0, 260, 260);
-      ctx.translate(130, 130);
+      ctx.translate(SIZE / 2, SIZE / 2);
       ctx.rotate((angle * Math.PI) / 180);
-      ctx.translate(-130, -130);
+      ctx.translate(-SIZE / 2, -SIZE / 2);
       drawWheelAt(ctx);
       ctx.restore();
-      if (progress < 1) { requestAnimationFrame(animate); }
-      else {
+
+      if (progress < 1) {
+        requestAnimationFrame(animate);
+      } else {
         currentSpinAngle = angle % 360;
         isSpinning = false;
 
         const spinBtn    = document.getElementById('spinBtnMain');
         const spinResult = document.getElementById('spinResult');
-
-        // Every spin wins real coins
         if (spinResult) spinResult.textContent = '🎉 Aapne jeeta: +' + prize + ' Coins!';
         if (spinBtn) {
-          spinBtn.disabled    = false;
+          spinBtn.disabled = false;
           spinBtn.textContent = '📺 Watch Ad and Claim Coin';
           spinBtn.style.background = 'linear-gradient(135deg,#f59e0b,#ef4444)';
           spinBtn.style.color = '#fff';
@@ -2641,34 +2751,6 @@
       }
     }
     requestAnimationFrame(animate);
-  }
-
-  function drawWheelAt(ctx) {
-    const cx = 130, cy = 130, r = 126;
-    const slices = SPIN_PRIZES.length;
-    const angle = (2 * Math.PI) / slices;
-    for (let i = 0; i < slices; i++) {
-      ctx.beginPath();
-      ctx.moveTo(cx, cy);
-      ctx.arc(cx, cy, r, i * angle, (i + 1) * angle);
-      ctx.fillStyle = SPIN_COLORS[i];
-      ctx.fill();
-      ctx.strokeStyle = 'rgba(255,255,255,0.15)';
-      ctx.lineWidth = 2;
-      ctx.stroke();
-      ctx.save();
-      ctx.translate(cx, cy);
-      ctx.rotate(i * angle + angle / 2);
-      ctx.fillStyle = '#fff';
-      ctx.font = 'bold 13px Segoe UI';
-      ctx.textAlign = 'right';
-      ctx.fillText(SPIN_PRIZES[i] + '🪙', r - 12, 5);
-      ctx.restore();
-    }
-    ctx.beginPath();
-    ctx.arc(cx, cy, 20, 0, 2 * Math.PI);
-    ctx.fillStyle = '#05051a';
-    ctx.fill();
   }
 
   // ── SCRATCH CARD ──────────────────────────────────────────────
