@@ -9,10 +9,8 @@
   html, body { height: 100%; overflow: hidden; font-family: 'Segoe UI', sans-serif; background: #05051a; color: #fff; }
   body { display: flex; flex-direction: column; }
 
-  /* Header */
   .top-bar {
-    flex-shrink: 0;
-    z-index: 10;
+    flex-shrink: 0; z-index: 10;
     padding: 14px 16px 10px;
     display: flex; align-items: center; gap: 14px;
     background: rgba(5,5,26,0.97);
@@ -23,33 +21,21 @@
     border: 1.5px solid rgba(255,255,255,0.18);
     color: #fff; width: 40px; height: 40px;
     border-radius: 13px; font-size: 22px; cursor: pointer;
-    display: flex; align-items: center; justify-content: center;
-    flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
   }
   .back-btn:active { background: rgba(108,99,255,0.3); }
   .header-text h1 { font-size: 17px; font-weight: 800; }
   .header-text p  { font-size: 11px; color: rgba(255,255,255,0.4); margin-top: 2px; }
 
-  /* iFrame — fills all remaining space */
-  .offerwall-wrap {
-    flex: 1;
-    position: relative;
-    overflow: hidden;
-  }
-  .offerwall-wrap iframe {
-    position: absolute;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
-    border: none;
-  }
+  .offerwall-wrap { flex: 1; position: relative; overflow: hidden; }
+  .offerwall-wrap iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; }
 
-  /* Loading */
+  /* Loading overlay */
   .loading-overlay {
     position: absolute; inset: 0;
     display: flex; flex-direction: column;
     align-items: center; justify-content: center; gap: 14px;
-    background: #05051a; z-index: 5;
-    transition: opacity 0.4s;
+    background: #05051a; z-index: 5; transition: opacity 0.4s;
   }
   .spinner {
     width: 40px; height: 40px;
@@ -60,11 +46,35 @@
   @keyframes spin { to { transform: rotate(360deg); } }
   .loading-overlay p { font-size: 13px; color: rgba(255,255,255,0.4); }
   .loading-overlay.hidden { opacity: 0; pointer-events: none; }
+
+  /* Blocked popup */
+  .block-popup {
+    display: none;
+    position: fixed; inset: 0; z-index: 100;
+    background: rgba(0,0,0,0.7);
+    align-items: center; justify-content: center;
+  }
+  .block-popup.show { display: flex; }
+  .block-box {
+    background: #12122a;
+    border: 1px solid rgba(255,80,80,0.3);
+    border-radius: 20px; padding: 28px 24px;
+    max-width: 320px; width: 90%; text-align: center;
+  }
+  .block-icon { font-size: 40px; margin-bottom: 12px; }
+  .block-title { font-size: 16px; font-weight: 800; color: #fff; margin-bottom: 8px; }
+  .block-msg { font-size: 12px; color: rgba(255,255,255,0.45); line-height: 1.6; margin-bottom: 18px; }
+  .block-timer { font-size: 13px; font-weight: 700; color: #ff6b6b; margin-bottom: 18px; }
+  .block-close {
+    background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12);
+    color: #fff; padding: 10px 28px; border-radius: 50px;
+    font-size: 13px; font-weight: 600; cursor: pointer;
+    font-family: 'Segoe UI', sans-serif;
+  }
 </style>
 </head>
 <body>
 
-<!-- Header -->
 <div class="top-bar">
   <button class="back-btn" onclick="history.back()">‹</button>
   <div class="header-text">
@@ -73,7 +83,6 @@
   </div>
 </div>
 
-<!-- Offerwall iframe -->
 <div class="offerwall-wrap">
   <div class="loading-overlay" id="loadingOverlay">
     <div class="spinner"></div>
@@ -83,41 +92,104 @@
     id="offerwallFrame"
     sandbox="allow-popups allow-same-origin allow-scripts allow-top-navigation-by-user-activation allow-popups-to-escape-sandbox"
     referrerpolicy="no-referrer"
-    src="https://lnksforyou.com/wall/te2DA"
+    src="about:blank"
     title="CPALead Offerwall"
     scrolling="yes">
   </iframe>
 </div>
 
+<!-- Blocked Popup -->
+<div class="block-popup" id="blockPopup">
+  <div class="block-box">
+    <div class="block-icon">🚫</div>
+    <div class="block-title">Offer Already Clicked!</div>
+    <div class="block-msg">Aap ye offer pehle hi try kar chuke hain.<br>Duplicate clicks se account block ho sakta hai.</div>
+    <div class="block-timer" id="blockTimer"></div>
+    <button class="block-close" onclick="document.getElementById('blockPopup').classList.remove('show')">Theek Hai</button>
+  </div>
+</div>
+
 <script>
+  // ─────────────────────────────────────────────
+  // CONFIG
+  // ─────────────────────────────────────────────
+  const LOCK_MS       = 24 * 60 * 60 * 1000;  // 24 hours
+  const SESSION_KEY   = 'tn_offerwall_opened';
+  const SESSION_MS    = 10 * 60 * 1000;        // 10 min session cooldown
+  const CLICK_PREFIX  = 'cpalead_click_';
+
+  // ─────────────────────────────────────────────
+  // ANTI-REPEAT CLICK — Per Offer 24hr Lock
+  // ─────────────────────────────────────────────
+  function handleOfferClick(offerId, offerUrl) {
+    const lastClick  = localStorage.getItem(CLICK_PREFIX + offerId);
+    const now        = Date.now();
+
+    if (lastClick && (now - parseInt(lastClick)) < LOCK_MS) {
+      // Locked — show popup with remaining time
+      const remaining = LOCK_MS - (now - parseInt(lastClick));
+      const hrs  = Math.floor(remaining / 3600000);
+      const mins = Math.floor((remaining % 3600000) / 60000);
+      document.getElementById('blockTimer').textContent =
+        hrs + ' ghante ' + mins + ' minute baad available hoga';
+      document.getElementById('blockPopup').classList.add('show');
+      return false; // Block duplicate click
+    }
+
+    // First click — save timestamp and open offer
+    localStorage.setItem(CLICK_PREFIX + offerId, now.toString());
+    window.open(offerUrl, '_blank');
+    return true;
+  }
+
+  // ─────────────────────────────────────────────
+  // INTERCEPT clicks coming OUT of the iframe
+  // CPALead window.open calls are caught here
+  // ─────────────────────────────────────────────
+  window.addEventListener('message', function(e) {
+    // Some offerwall providers send postMessage with offer data
+    if (e.data && e.data.type === 'cpalead_click') {
+      handleOfferClick(e.data.offer_id, e.data.url);
+    }
+  });
+
+  // Intercept window.open globally — catches iframe popups that
+  // bubble up to parent when sandbox allows popups-to-escape
+  const _origOpen = window.open.bind(window);
+  window.open = function(url, target, features) {
+    if (url && url.indexOf('cpalead') !== -1 || url && url.indexOf('lnksforyou') !== -1) {
+      // Extract a stable offer ID from the URL
+      const offerId = btoa(url).substring(0, 32);
+      const allowed = handleOfferClick(offerId, url);
+      if (!allowed) return null;
+      return _origOpen(url, target || '_blank', features);
+    }
+    return _origOpen(url, target, features);
+  };
+
+  // ─────────────────────────────────────────────
+  // SESSION LOCK — 10 min cooldown (existing logic)
+  // ─────────────────────────────────────────────
+  const params  = new URLSearchParams(window.location.search);
+  const uid     = params.get('uid') || localStorage.getItem('tasknova_uid') || '';
+  const now     = Date.now();
+  const lastOpen   = parseInt(localStorage.getItem(SESSION_KEY) || '0');
+  const elapsed    = now - lastOpen;
+  const inCooldown = lastOpen > 0 && elapsed < SESSION_MS;
+
   const frame   = document.getElementById('offerwallFrame');
   const overlay = document.getElementById('loadingOverlay');
-
-  // ── UID lo ───────────────────────────────────────────────────
-  const params = new URLSearchParams(window.location.search);
-  const uid    = params.get('uid') || localStorage.getItem('tasknova_uid') || '';
-
-  // ── Session lock — 10 min cooldown ──────────────────────────
-  // Repeat clicks / baar baar kholne se CPALead errors aate hain
-  const SESSION_KEY   = 'tn_offerwall_opened';
-  const COOLDOWN_MS   = 10 * 60 * 1000; // 10 min
-  const now           = Date.now();
-  const lastOpen      = parseInt(localStorage.getItem(SESSION_KEY) || '0');
-  const elapsed       = now - lastOpen;
-  const inCooldown    = lastOpen > 0 && elapsed < COOLDOWN_MS;
 
   function loadOfferwall() {
     const wallUrl = 'https://lnksforyou.com/wall/te2DA' +
                     (uid ? '?sub_id=' + encodeURIComponent(uid) : '');
-    console.log('[Offerwall] uid:', uid, '| url:', wallUrl);
     frame.src = wallUrl;
     frame.addEventListener('load', function() { overlay.classList.add('hidden'); });
     setTimeout(function() { overlay.classList.add('hidden'); }, 8000);
   }
 
   if (inCooldown) {
-    // Cooldown mein hai — warning dikhao phir 5 sec baad load karo
-    const remMin = Math.ceil((COOLDOWN_MS - elapsed) / 60000);
+    const remMin = Math.ceil((SESSION_MS - elapsed) / 60000);
     overlay.innerHTML =
       '<div style="text-align:center;padding:40px 20px;">' +
         '<div style="font-size:36px;margin-bottom:12px;">⚠️</div>' +
@@ -129,23 +201,33 @@
         '</div>' +
         '<div style="font-size:11px;color:rgba(255,255,255,0.25);">5 seconds mein load ho raha hai...</div>' +
       '</div>';
-    setTimeout(function() {
-      loadOfferwall();
-    }, 5000);
+    setTimeout(loadOfferwall, 5000);
   } else {
-    // Fresh open — timestamp save karo aur load karo
     localStorage.setItem(SESSION_KEY, now.toString());
     loadOfferwall();
   }
 
-  // ── Visibility change — iframe reload mat karo ───────────────
-  // Jab user back aaye tab sirf overlay hide karo
+  // Visibility change — iframe reload mat karo
   document.addEventListener('visibilitychange', function() {
     if (document.visibilityState === 'visible') {
       setTimeout(function() { overlay.classList.add('hidden'); }, 300);
-      // Frame src mat change karo — ye repeat click prevent karta hai
     }
   });
+
+  // ─────────────────────────────────────────────
+  // CLEANUP — 24hr se purane locks hata do (optional)
+  // Page load pe ek baar run hota hai
+  // ─────────────────────────────────────────────
+  (function cleanOldLocks() {
+    const expiry = Date.now() - LOCK_MS;
+    for (let i = localStorage.length - 1; i >= 0; i--) {
+      const key = localStorage.key(i);
+      if (key && key.startsWith(CLICK_PREFIX)) {
+        const ts = parseInt(localStorage.getItem(key) || '0');
+        if (ts < expiry) localStorage.removeItem(key);
+      }
+    }
+  })();
 </script>
 </body>
 </html>
