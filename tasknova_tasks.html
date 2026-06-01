@@ -22,15 +22,53 @@
   .header h1 { font-size: 22px; font-weight: 800; color: #fff; }
   .header p { font-size: 12px; color: rgba(255,255,255,0.4); margin-top: 2px; }
 
-  .balance-mini { background: linear-gradient(135deg, #6c63ff, #3b82f6); border-radius: 16px; padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; box-shadow: 0 6px 25px rgba(108,99,255,0.3); }
-  .balance-mini .label { font-size: 12px; color: rgba(255,255,255,0.7); }
-  .balance-mini .amount { font-size: 22px; font-weight: 800; color: #fff; }
-  .balance-mini .coins { font-size: 12px; color: rgba(255,255,255,0.7); margin-top: 2px; }
+  /* ── Balance Card — Real Earning App Style ── */
+  .balance-mini {
+    background: linear-gradient(135deg, #16a34a 0%, #059669 50%, #047857 100%);
+    border-radius: 20px; padding: 20px 20px 18px;
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 14px;
+    box-shadow: 0 8px 28px rgba(22,163,74,0.4), 0 2px 8px rgba(0,0,0,0.3);
+    position: relative; overflow: hidden;
+  }
+  .balance-mini::before {
+    content: ''; position: absolute; top: -30px; right: -30px;
+    width: 120px; height: 120px;
+    background: radial-gradient(circle, rgba(255,255,255,0.12) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .balance-mini::after {
+    content: ''; position: absolute; bottom: -20px; left: 20px;
+    width: 80px; height: 80px;
+    background: radial-gradient(circle, rgba(255,255,255,0.07) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .balance-mini .label { font-size: 11px; color: rgba(255,255,255,0.75); font-weight: 600; letter-spacing: 0.8px; text-transform: uppercase; }
+  .balance-mini .amount { font-size: 32px; font-weight: 900; color: #fff; margin-top: 4px; letter-spacing: -1px; text-shadow: 0 2px 8px rgba(0,0,0,0.2); }
+  .balance-mini .coins { font-size: 13px; font-weight: 700; margin-top: 4px; color: rgba(255,255,255,0.85); }
+  .balance-right { text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+  .balance-coin-icon { font-size: 44px; filter: drop-shadow(0 4px 10px rgba(0,0,0,0.3)); }
+  .balance-earn-tag {
+    font-size: 10px; font-weight: 800; color: #16a34a;
+    background: #fff; padding: 3px 10px; border-radius: 50px;
+    letter-spacing: 0.3px;
+  }
+
+  /* ── Daily Limit Bar ── */
+  .daily-limit-bar {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 14px; padding: 11px 16px; margin-bottom: 14px;
+  }
+  .daily-limit-bar .limit-label { font-size: 11px; color: rgba(255,255,255,0.45); margin-bottom: 7px; display: flex; justify-content: space-between; align-items: center; font-weight: 600; }
+  .daily-limit-bar .limit-label .limit-count { color: #22c55e; font-weight: 800; font-size: 12px; }
+  .daily-limit-bar .limit-fill { height: 6px; background: rgba(255,255,255,0.07); border-radius: 4px; overflow: hidden; }
+  .daily-limit-bar .limit-fill-inner { height: 100%; background: linear-gradient(90deg, #22c55e, #16a34a); border-radius: 4px; transition: width 0.5s ease; box-shadow: 0 0 6px rgba(34,197,94,0.5); }
 
   .cat-tabs { display: flex; gap: 8px; margin-bottom: 20px; overflow-x: auto; scrollbar-width: none; padding-bottom: 4px; }
   .cat-tabs::-webkit-scrollbar { display: none; }
   .cat-tab { padding: 8px 16px; border-radius: 50px; font-size: 13px; font-weight: 600; white-space: nowrap; cursor: pointer; border: 1.5px solid rgba(255,255,255,0.1); color: rgba(255,255,255,0.5); background: rgba(255,255,255,0.05); transition: all 0.2s; }
-  .cat-tab.active { background: linear-gradient(135deg, #6c63ff, #3b82f6); border-color: transparent; color: #fff; box-shadow: 0 4px 15px rgba(108,99,255,0.3); }
+  .cat-tab.active { background: linear-gradient(135deg, #16a34a, #22c55e); border-color: transparent; color: #fff; box-shadow: 0 4px 15px rgba(34,197,94,0.35); }
 
   .tasks-grid { display: flex; flex-direction: column; gap: 12px; }
   .task-card {
@@ -86,11 +124,56 @@
   .task-meta { display: flex; align-items: center; gap: 6px; margin-top: 6px; }
   .task-time { font-size: 10px; color: rgba(255,255,255,0.3); background: rgba(255,255,255,0.05); padding: 3px 8px; border-radius: 50px; }
 
-  .task-reward { text-align: right; flex-shrink: 0; }
-  .task-reward .coins-reward { font-size: 16px; font-weight: 800; color: #6c63ff; }
-  .task-reward .rupee { font-size: 11px; color: rgba(255,255,255,0.3); margin-top: 2px; }
-  .do-btn { margin-top: 8px; background: linear-gradient(135deg, #6c63ff, #3b82f6); border: none; border-radius: 8px; padding: 6px 14px; color: #fff; font-size: 11px; font-weight: 700; cursor: pointer; font-family: 'Segoe UI', sans-serif; }
-  .coming-soon-badge { display: inline-block; background: rgba(234,179,8,0.15); border: 1px solid rgba(234,179,8,0.3); color: #eab308; font-size: 10px; font-weight: 700; padding: 4px 10px; border-radius: 50px; margin-top: 8px; }
+  .task-reward { text-align: right; flex-shrink: 0; min-width: 82px; }
+  .task-reward .coins-reward {
+    font-size: 16px; font-weight: 900; white-space: nowrap;
+    background: linear-gradient(135deg, #fbbf24, #f59e0b, #fcd34d);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+    filter: drop-shadow(0 0 6px rgba(251,191,36,0.6));
+    letter-spacing: -0.5px;
+  }
+  .task-reward .rupee { font-size: 10px; color: rgba(255,255,255,0.35); margin-top: 1px; }
+
+  /* ── ALL buttons SAME green style ── */
+  .do-btn {
+    display: block;
+    margin-top: 8px;
+    width: 78px;
+    height: 34px;
+    background: linear-gradient(135deg, #16a34a, #22c55e);
+    border: none;
+    border-radius: 10px;
+    color: #fff;
+    font-size: 12px;
+    font-weight: 800;
+    cursor: pointer;
+    font-family: 'Segoe UI', sans-serif;
+    text-align: center;
+    line-height: 34px;
+    padding: 0;
+    white-space: nowrap;
+    box-shadow: 0 4px 14px rgba(34,197,94,0.45), 0 1px 4px rgba(0,0,0,0.2);
+    transition: transform 0.12s, box-shadow 0.12s;
+    letter-spacing: 0.3px;
+  }
+  .do-btn:active { transform: scale(0.93); box-shadow: 0 2px 6px rgba(34,197,94,0.3); }
+  .do-btn:disabled { background: rgba(255,255,255,0.1); box-shadow: none; cursor: not-allowed; color: rgba(255,255,255,0.35); }
+  .do-btn.btn-green, .do-btn.btn-orange, .do-btn.btn-purple {
+    background: linear-gradient(135deg, #16a34a, #22c55e);
+    box-shadow: 0 4px 14px rgba(34,197,94,0.45);
+  }
+  /* Counter badge — improved */
+  .counter-badge {
+    display: inline-flex; align-items: center; gap: 3px;
+    font-size: 11px; font-weight: 800;
+    background: linear-gradient(135deg, rgba(34,197,94,0.2), rgba(22,163,74,0.15));
+    border: 1px solid rgba(34,197,94,0.4);
+    color: #22c55e;
+    padding: 3px 9px; border-radius: 50px;
+    margin-left: 4px;
+  }
+  .coming-soon-badge { display: block; width: 78px; background: rgba(234,179,8,0.15); border: 1px solid rgba(234,179,8,0.3); color: #eab308; font-size: 9px; font-weight: 700; padding: 0; height: 34px; line-height: 34px; border-radius: 10px; margin-top: 8px; text-align: center; }
 
   .section-title { font-size: 16px; font-weight: 700; color: #fff; margin-bottom: 12px; }
 
@@ -260,23 +343,27 @@
 
   <div class="balance-mini">
     <div>
-      <div class="label">Your Balance</div>
-      <div class="amount user-balance">₹0.00</div>
-      <div class="coins user-coins">0 Coins</div>
+      <div class="label">💰 Total Earnings</div>
+      <div class="amount user-balance" id="balanceDisplay">
+        <span style="opacity:0.5;font-size:18px;">Loading...</span>
+      </div>
+      <div class="coins user-coins" id="coinsDisplay">— Coins</div>
     </div>
-    <div style="font-size:40px;">💰</div>
+    <div class="balance-right">
+      <div class="balance-coin-icon">🪙</div>
+      <div class="balance-earn-tag">EARN NOW</div>
+    </div>
   </div>
 
   <!-- Daily Limit Bar -->
   <div class="daily-limit-bar">
     <div class="limit-label">
       <span>📊 Aaj ki Earning</span>
-      <span id="dailyLimitText">0 / 1000 Coins</span>
+      <span class="limit-count" id="dailyLimitText">0 / 1000</span>
     </div>
     <div class="limit-fill">
       <div class="limit-fill-inner" id="dailyLimitBar" style="width:0%"></div>
     </div>
-    <div style="font-size:10px;color:rgba(255,255,255,0.25);margin-top:5px;text-align:right;">Max: SL(40)+Ads(180)+Spin(150)+Scratch(150)+Quiz(150)+Check-in(20)</div>
   </div>
 
   <div class="cat-tabs">
@@ -290,7 +377,7 @@
   <div class="section-title">🔥 Available Tasks</div>
   <div class="tasks-grid" id="tasksGrid">
 
-    <!-- ★ Offerwall Task — SABSE UPAR ★ -->
+    <!-- 1. Offerwall Task -->
     <div class="task-card" data-category="survey"
       style="background:linear-gradient(135deg,rgba(108,99,255,0.18),rgba(59,130,246,0.12));border-color:rgba(108,99,255,0.35);"
       onclick="openOfferwallPage()">
@@ -306,13 +393,13 @@
         </div>
       </div>
       <div class="task-reward">
-        <div class="coins-reward" style="color:#a78bfa;">+2000</div>
-        <div class="rupee">coins/offer</div>
-        <button class="do-btn" style="background:linear-gradient(135deg,#a78bfa,#6c63ff);">Open</button>
+        <div class="coins-reward">+2000</div>
+        <div class="rupee">🪙 per offer</div>
+        <button class="do-btn">Open</button>
       </div>
     </div>
 
-    <!-- Shortlink Task -->
+    <!-- 2. Shortlink Task -->
     <div class="task-card" data-category="daily" id="shortlinkTaskCard" onclick="openShortlinkModal()">
       <div class="task-icon icon-teal">
         <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
@@ -322,82 +409,77 @@
         <p>Link visit karo aur coins pao</p>
         <div class="task-meta">
           <span class="task-time">⏱ 2/day</span>
-          <span id="shortlinkCountBadge" class="cooldown-badge">0/2</span>
+          <span id="shortlinkCountBadge" class="counter-badge">0/2</span>
         </div>
       </div>
       <div class="task-reward">
         <div class="coins-reward">+20</div>
-        <div class="rupee">coins/link</div>
+        <div class="rupee">🪙 per link</div>
         <button class="do-btn" id="shortlinkTaskBtn">Visit</button>
       </div>
     </div>
 
-    <!-- Survey Task -->
+    <!-- 3. Survey Task -->
     <div class="task-card" data-category="survey" id="surveyCard" onclick="openSurvey()">
       <div class="task-icon icon-blue">
         <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/></svg>
       </div>
       <div class="task-info">
         <h3>Complete Survey</h3>
-        <p>Answer questions from brands & earn coins</p>
+        <p>Questions answer karo & earn karo</p>
         <div class="task-meta">
           <span class="task-time">⏱ 5-10 min</span>
           <span id="surveyCooldownBadge" style="display:none;font-size:10px;color:#f59e0b;font-weight:700;margin-left:8px;background:rgba(245,158,11,0.15);padding:3px 8px;border-radius:50px;">⏳ 00:00</span>
         </div>
       </div>
       <div class="task-reward">
-        <div class="coins-reward">500-2000</div>
-        <div class="rupee">coins/survey</div>
+        <div class="coins-reward">+2000</div>
+        <div class="rupee">🪙 per survey</div>
         <button class="do-btn" id="surveyBtn">Start</button>
       </div>
     </div>
 
-    <!-- Watch Video Ad -->
+    <!-- 4. Watch Video Ad -->
     <div class="task-card" data-category="watchads" id="watchAdCard">
       <div class="task-icon icon-purple">
         <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="15" rx="2" ry="2"/><polyline points="17 2 12 7 7 2"/><polygon points="10 11 10 18 17 14.5" fill="#fff" stroke="none"/></svg>
       </div>
       <div class="task-info">
         <h3>Watch Video Ad</h3>
-        <p>Watch a short video ad & earn coins</p>
+        <p>Short video ad dekho & coins pao</p>
         <div class="task-meta">
           <span class="task-time">⏱ 15 sec</span>
-          <span id="adCounter" style="font-size:11px;color:#6c63ff;font-weight:700;margin-left:8px;">0/20</span>
+          <span id="adCounter" class="counter-badge">0/20</span>
         </div>
       </div>
       <div class="task-reward">
         <div class="coins-reward" id="adCoins">+10</div>
-        <div class="rupee">coins</div>
+        <div class="rupee">🪙 per ad</div>
         <button class="do-btn" id="watchAdBtn" onclick="watchAd()">Watch</button>
       </div>
     </div>
 
-    <!-- Daily Check-In -->
-    <div class="task-card" data-category="daily" id="checkinCard" onclick="doCheckin()" style="flex-wrap:wrap;">
-      <div style="display:flex;align-items:center;gap:14px;width:100%;">
-        <div class="task-icon icon-green">
-          <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01" stroke-width="2.5" stroke-linecap="round"/></svg>
-        </div>
-        <div class="task-info">
-          <h3>Daily Check-In</h3>
-          <p>Har roz ek baar claim karo</p>
-          <div class="task-meta">
-            <span class="task-time">⏱ 1 baar/day</span>
-            <span id="checkinBadge" style="display:none;" class="cooldown-badge">✅ Done</span>
-          </div>
-        </div>
-        <div class="task-reward">
-          <div class="coins-reward">+20</div>
-          <div class="rupee">coins</div>
-          <button class="do-btn" id="checkinBtn">Claim</button>
+    <!-- 5. Daily Check-In -->
+    <div class="task-card" data-category="daily" id="checkinCard" onclick="doCheckin()">
+      <div class="task-icon icon-green">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01" stroke-width="2.5" stroke-linecap="round"/></svg>
+      </div>
+      <div class="task-info">
+        <h3>Daily Check-In</h3>
+        <p>Har roz ek baar claim karo</p>
+        <div class="task-meta">
+          <span class="task-time">⏱ 1/day</span>
+          <span id="checkinBadge" style="display:none;" class="counter-badge">✅ Done</span>
         </div>
       </div>
-      <!-- Countdown hidden -->
+      <div class="task-reward">
+        <div class="coins-reward">+20</div>
+        <div class="rupee">🪙 per day</div>
+        <button class="do-btn" id="checkinBtn">Claim</button>
+      </div>
     </div>
 
-
-
-    <!-- Spin Wheel -->
+    <!-- 6. Spin & Win -->
     <div class="task-card" data-category="daily" id="spinTaskCard" onclick="openSpinModal()">
       <div class="task-icon icon-orange">
         <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M3 22v-6h6"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/></svg>
@@ -406,37 +488,31 @@
         <h3>Spin & Win</h3>
         <p>Wheel spin karo aur coins jeeto</p>
         <div class="task-meta">
-          <span class="task-time">⏱ 15/day</span>
-          <span id="spinCountBadge" class="cooldown-badge">0/6</span>
+          <span class="task-time">⏱ 6/day</span>
+          <span id="spinCountBadge" class="counter-badge">0/6</span>
         </div>
       </div>
       <div class="task-reward">
-        <div class="coins-reward">~10</div>
-        <div class="rupee">coins/spin</div>
+        <div class="coins-reward">+10</div>
+        <div class="rupee">🪙 per spin</div>
         <button class="do-btn" id="spinTaskBtn">Spin</button>
       </div>
     </div>
 
-    <!-- Scratch Card -->
-    
-
-    <!-- Math Quiz -->
-    
-
-
+    <!-- 7. Instagram Post (Coming Soon) -->
     <div class="task-card disabled" data-category="instagram">
       <div class="task-icon icon-pink">
         <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5" stroke-width="3"/></svg>
       </div>
       <div class="task-info">
         <h3>Instagram Post</h3>
-        <p>Share TaskNova on your Instagram</p>
+        <p>Share TaskNova on Instagram</p>
         <div class="task-meta"><span class="task-time">⏱ 2 min</span></div>
       </div>
       <div class="task-reward">
         <div class="coins-reward">+500</div>
-        <div class="rupee">= ₹5</div>
-        <div class="coming-soon-badge">🔒 Coming Soon</div>
+        <div class="rupee">🪙 = ₹5</div>
+        <div class="coming-soon-badge">🔒 Soon</div>
       </div>
     </div>
 
@@ -848,43 +924,34 @@
   let crossTaskFreezeInterval = null;
   let globalLockInterval  = null; // universal 1-min countdown interval
 
-  // ── STRICT 7:30 PM IST RESET ─────────────────────────────────
-  // Reset happens at exactly 19:30 IST every day.
-  // Uses server-side worldtimeapi for accurate IST time (fallback: device time + IST offset).
+  // ── MIDNIGHT 12:00 AM IST RESET ──────────────────────────────
+  // Sab tasks raat 12 baje (12:00 AM IST) reset hote hain.
 
-  async function getISTTime() {
-    try {
-      const res = await fetch('https://worldtimeapi.org/api/timezone/Asia/Kolkata', { signal: AbortSignal.timeout(3000) });
-      if (!res.ok) throw new Error('API error');
-      const data = await res.json();
-      return new Date(data.datetime); // accurate IST datetime
-    } catch(e) {
-      // Fallback: device UTC + 5.5h offset
-      const now = new Date();
-      return new Date(now.getTime() + (5.5 * 60 * 60 * 1000) - (now.getTimezoneOffset() * 60 * 1000));
-    }
-  }
-
-  // Returns the most recent midnight (12:00 AM) IST reset timestamp (in ms, UTC-based)
-  function getLast730PMReset() {
+  // Returns today's date string in IST (YYYY-MM-DD)
+  function getTodayIST() {
     const now = new Date();
     const istOffset = 5.5 * 60 * 60 * 1000;
-    const nowIST = new Date(now.getTime() + istOffset - (now.getTimezoneOffset() * 60 * 1000));
-    // Build today's midnight IST (00:00)
-    const reset = new Date(nowIST);
-    reset.setHours(0, 0, 0, 0);
-    // If it's before midnight IST today (shouldn't happen, but safety)
-    if (nowIST < reset) {
-      reset.setDate(reset.getDate() - 1);
-    }
-    return reset.getTime() - istOffset + (now.getTimezoneOffset() * 60 * 1000);
+    const istNow = new Date(now.getTime() + istOffset);
+    return istNow.toISOString().split('T')[0]; // "2026-06-01"
+  }
+
+  // Returns UTC timestamp of today's midnight 12:00 AM IST
+  function getMidnightISTTimestamp() {
+    const now = new Date();
+    const istOffset = 5.5 * 60 * 60 * 1000;
+    const nowIST = new Date(now.getTime() + istOffset);
+    // Set to 00:00:00 IST today
+    const midnight = new Date(nowIST);
+    midnight.setUTCHours(0, 0, 0, 0);
+    // Convert back to UTC
+    return midnight.getTime() - istOffset;
   }
 
   function shouldReset() {
-    const lastClaimed = localStorage.getItem('adLastReset');
-    if (!lastClaimed) return true;
-    const lastResetUTC = getLast730PMReset();
-    return new Date(lastClaimed).getTime() < lastResetUTC;
+    const lastReset = localStorage.getItem('adLastReset');
+    if (!lastReset) return true;
+    const midnightUTC = getMidnightISTTimestamp();
+    return new Date(lastReset).getTime() < midnightUTC;
   }
 
   // ── AD TIMER HELPERS (Persistent localStorage) ───────────────────
@@ -1206,7 +1273,7 @@
     if (until > Date.now()) applyBackBtnPenalty(until);
   }
 
-  // Daily Bonus: strict 7:30 PM IST reset
+  // Daily Bonus: midnight 12:00 AM IST reset
   const DAILY_BONUS_KEY = 'tasknova_dailyBonus';
   let dailyBonusCountdownInterval = null;
 
@@ -1230,9 +1297,9 @@
     const now = new Date();
     const istOffset = 5.5 * 60 * 60 * 1000;
     const nowIST = new Date(now.getTime() + istOffset - (now.getTimezoneOffset() * 60 * 1000));
+    // Next midnight IST
     const next = new Date(nowIST);
-    next.setHours(19, 30, 0, 0);
-    if (nowIST >= next) next.setDate(next.getDate() + 1);
+    next.setHours(24, 0, 0, 0); // next midnight
     return next.getTime() - nowIST.getTime(); // ms remaining
   }
 
@@ -1286,7 +1353,7 @@
 
   function claimDailyBonus() {
     if (!isDailyBonusAvailable()) {
-      showToast('Bonus already claim ho chuka! Aaj 7:30 PM pe reset hoga.', '#f59e0b');
+      showToast('Bonus already claim ho chuka! Raat 12 baje reset hoga.', '#f59e0b');
       return;
     }
     if (isGlobalLocked()) return; // universal 1-min cooldown
@@ -1518,7 +1585,7 @@
     const lock = getAdLockState();
     if (lock.locked) {
       if (lock.isDailyDone) {
-        showToast('🚫 Aaj ke 20 ads ho gaye! Kal 12 AM pe reset hoga.', '#ef4444');
+        showToast('🚫 Aaj ke 20 ads ho gaye! Raat 12 baje reset hoga.', '#ef4444');
       } else if (lock.isMega) {
         showToast('🔒 3 ghante ka break! Wapas aao: ' + formatAdTimer(lock.remaining), '#ef4444');
       } else {
@@ -1529,7 +1596,7 @@
 
     const batchCount = getAdBatchCount();
     if (batchCount >= MAX_ADS) {
-      showToast('🚫 Aaj ke 20 ads ho gaye! Kal 12 AM pe reset hoga.', '#ef4444');
+      showToast('🚫 Aaj ke 20 ads ho gaye! Raat 12 baje reset hoga.', '#ef4444');
       return;
     }
 
@@ -1973,7 +2040,7 @@
     // Load CPX Research widget script
     loadCPXScript(uid);
 
-    // Check daily reset (strict 7:30 PM IST)
+    // Check daily reset (midnight 12:00 AM IST)
     if (shouldReset()) {
       localStorage.setItem('adsWatchedToday', '0');
       localStorage.setItem('adLastReset', new Date().toISOString());
@@ -2023,17 +2090,70 @@
     restoreGlobalLockIfActive();     // resume 1-min global lock if app was restarted
     restoreBackBtnPenaltyIfActive(); // resume back-btn skip penalty if app was restarted
 
-    // Fetch balance and calculate live rupees from total coins
+    // ── Instant UI update from Firebase (no delay) ──────────────
     window._getAuthToken().then(token => {
       const authParam = token ? '?auth=' + token : '';
+
+      // Get today's IST date key for daily task tracking
+      function getTodayIST() {
+        const now = new Date(Date.now() + 5.5*60*60*1000);
+        return now.toISOString().split('T')[0];
+      }
+      const todayKey = getTodayIST(); // e.g. '2026-06-01'
+
       fetch(DB_URL + '/users/' + uid + '.json' + authParam)
         .then(res => res.json())
         .then(data => {
           if (!data) return;
+
+          // ── Balance & Coins — instant display ─────────────────
           const totalCoins = data.coins || 0;
           const calculatedBalance = parseFloat((totalCoins / 100).toFixed(2));
-          document.querySelector('.user-balance').textContent = '₹' + calculatedBalance.toFixed(2);
-          document.querySelector('.user-coins').textContent = totalCoins + ' Coins';
+          const balEl = document.getElementById('balanceDisplay');
+          const coinEl = document.getElementById('coinsDisplay');
+          if (balEl) balEl.innerHTML = '₹' + calculatedBalance.toFixed(2);
+          if (coinEl) coinEl.textContent = totalCoins.toLocaleString('en-IN') + ' Coins';
+          // Also update legacy selectors
+          const legacyBal = document.querySelector('.user-balance');
+          const legacyCoin = document.querySelector('.user-coins');
+          if (legacyBal) legacyBal.textContent = '₹' + calculatedBalance.toFixed(2);
+          if (legacyCoin) legacyCoin.textContent = totalCoins + ' Coins';
+
+          // ── Shortlink — DB se today count ─────────────────────
+          const slBadge = document.getElementById('shortlinkCountBadge');
+          const slToday = (data.dailyTasks && data.dailyTasks[todayKey] && data.dailyTasks[todayKey].shortlinks) || data.shortlinkToday || 0;
+          if (slBadge) slBadge.textContent = slToday + '/2';
+          if (slToday >= 2) {
+            const slBtn = document.getElementById('shortlinkTaskBtn');
+            if (slBtn) { slBtn.textContent = '✅ Done'; slBtn.disabled = true; }
+            const slCard = document.getElementById('shortlinkTaskCard');
+            if (slCard) { slCard.style.opacity = '0.6'; slCard.style.pointerEvents = 'none'; }
+          }
+
+          // ── Watch Ads — DB se today count ─────────────────────
+          const adBadge = document.getElementById('adCounter');
+          const adsDB = (data.dailyTasks && data.dailyTasks[todayKey] && data.dailyTasks[todayKey].adsWatched) || data.adsWatchedToday || 0;
+          if (adBadge) adBadge.textContent = adsDB + '/20';
+          if (adsDB >= 20) {
+            const adBtn = document.getElementById('watchAdBtn');
+            if (adBtn) { adBtn.textContent = '✅ Done'; adBtn.disabled = true; }
+          }
+
+          // ── Check-in — DB se today status ─────────────────────
+          const checkinDoneDB = (data.dailyTasks && data.dailyTasks[todayKey] && data.dailyTasks[todayKey].checkin) || data.checkinDoneToday || false;
+          if (checkinDoneDB) {
+            const cbtn = document.getElementById('checkinBtn');
+            const cb   = document.getElementById('checkinBadge');
+            const cc   = document.getElementById('checkinCard');
+            if (cbtn) { cbtn.textContent = '✅ Done'; cbtn.disabled = true; }
+            if (cb)   { cb.style.display = ''; cb.textContent = '✅ Done'; }
+            if (cc)   { cc.style.opacity = '0.6'; cc.style.pointerEvents = 'none'; }
+          }
+
+          // ── Spin — DB se today count ──────────────────────────
+          const spinBadge = document.getElementById('spinCountBadge');
+          const spinsDB = data.spinsToday || 0;
+          if (spinBadge) spinBadge.textContent = spinsDB + '/6';
         })
         .catch(e => console.log(e));
     });
