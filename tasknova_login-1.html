@@ -7,9 +7,8 @@
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body { font-family: 'Segoe UI', sans-serif; background: #05051a; min-height: 100vh; overflow-x: hidden; }
-  .stars { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; }
-  .star { position: absolute; background: white; border-radius: 50%; animation: twinkle 3s infinite; }
-  @keyframes twinkle { 0%, 100% { opacity: 0.2; } 50% { opacity: 1; } }
+  .glow-circle { display:none; }
+  body { background: #000; }  @keyframes twinkle { 0%, 100% { opacity: 0.2; } 50% { opacity: 1; } }
   .glow-circle { position: fixed; border-radius: 50%; filter: blur(80px); z-index: 0; pointer-events: none; }
   .glow-1 { width: 300px; height: 300px; background: rgba(108,99,255,0.25); top: -100px; left: -100px; }
   .glow-2 { width: 250px; height: 250px; background: rgba(59,130,246,0.2); bottom: -80px; right: -80px; }
@@ -169,9 +168,7 @@
 </head>
 <body>
 
-<div class="stars" id="stars"></div>
-<div class="glow-circle glow-1"></div>
-<div class="glow-circle glow-2"></div>
+
 <div class="toast" id="toast"></div>
 
 <!-- OTP MODAL -->
@@ -431,14 +428,6 @@
         </button>
       </div>
     </div>
-    <div class="section-title" style="margin-bottom:12px;">Recent Activity</div>
-    <div id="activityList">
-      <div class="activity-item">
-        <div class="activity-icon" style="background:rgba(34,197,94,0.15);">🎁</div>
-        <div class="activity-info"><h4>Welcome Bonus</h4><p>Earned</p></div>
-        <div class="activity-amount"><h4>+₹10.00</h4><p>Today</p></div>
-      </div>
-    </div>
   </div>
   <div class="bottom-nav">
     <div class="nav-item active" onclick="window.location.href='tasknova_login-1.html'">
@@ -488,20 +477,6 @@
   window.addEventListener('load', () => {
     if (alreadyChecked) return;
     alreadyChecked = true;
-
-    // Stars load
-    requestAnimationFrame(() => {
-      const sc = document.getElementById('stars');
-      const f  = document.createDocumentFragment();
-      for (let i = 0; i < 60; i++) {
-        const s = document.createElement('div');
-        s.classList.add('star');
-        const sz = Math.random() * 2 + 0.5;
-        s.style.cssText = `width:${sz}px;height:${sz}px;top:${Math.random()*100}%;left:${Math.random()*100}%;animation-delay:${Math.random()*3}s;animation-duration:${Math.random()*3+2}s;`;
-        f.appendChild(s);
-      }
-      sc.appendChild(f);
-    });
 
     // EmailJS load
     const ejs = document.createElement('script');
