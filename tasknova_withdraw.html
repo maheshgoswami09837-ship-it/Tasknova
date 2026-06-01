@@ -308,23 +308,7 @@
     <div class="balance-card-right">💰</div>
   </div>
 
-  <!-- PENDING WITHDRAW CARD -->
-  <div class="pending-card" id="pendingCard">
-    <div class="pending-top">
-      <div>
-        <div class="pending-label">⏳ Pending Withdrawal</div>
-        <div class="pending-amount" id="pendingAmount">₹0</div>
-        <div class="pending-status" id="pendingStatusText">Processing • Usually within 24 hours</div>
-      </div>
-      <div style="text-align:right;">
-        <div style="font-size:10px;color:rgba(255,255,255,0.3);margin-bottom:4px;">Time remaining</div>
-        <div class="pending-timer" id="pendingTimer">24:00:00</div>
-      </div>
-    </div>
-    <div style="height:4px;background:rgba(255,255,255,0.08);border-radius:2px;overflow:hidden;margin-top:8px;">
-      <div id="pendingBar" style="height:100%;background:linear-gradient(90deg,#f59e0b,#ef4444);border-radius:2px;width:100%;transition:width 1s linear;"></div>
-    </div>
-  </div>
+  <!-- pendingCard removed — sirf niche historyContainer mein dikhega -->
 
   <!-- HISTORY BUTTON -->
   <button class="history-btn" onclick="openHistoryPage()">
@@ -1085,84 +1069,9 @@
 let _pendingTimerInterval = null;
 
 function showPendingCard(withdrawals) {
-  if (!withdrawals) return;
-  const list = Object.values(withdrawals).filter(Boolean);
-  const card = document.getElementById('pendingCard');
-
-  // Latest item jo success NAHI hai (pending ya rejected)
-  const active = list
-    .sort((a,b) => new Date(b.date) - new Date(a.date))
-    .find(w => {
-      const st = (w.status || '').toLowerCase().trim();
-      return !['success','done','completed','approved'].includes(st);
-    });
-
-  // Success ho gaya ya kuch nahi — card hide karo
-  if (!active) { card.classList.remove('show'); return; }
-
-  const st         = (active.status || 'pending').toLowerCase().trim();
-  const isRejected = ['rejected','reject','failed','fail','cancelled','canceled'].includes(st);
-
-  card.classList.add('show');
-
-  // Pending card ka HTML dynamically update karo
-  card.innerHTML = isRejected
-    ? // ── REJECTED card ──
-      '<div class="pending-top">' +
-        '<div>' +
-          '<div class="pending-label" style="color:#ef4444;">❌ Withdraw Rejected</div>' +
-          '<div class="pending-amount">₹' + active.amount + '</div>' +
-          '<div class="pending-status">Dobara withdraw karo — reason niche dekho</div>' +
-        '</div>' +
-        '<div style="text-align:right;">' +
-          '<div style="font-size:22px;">❌</div>' +
-        '</div>' +
-      '</div>' +
-      '<div style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.25);border-radius:10px;padding:10px 14px;margin-top:10px;">' +
-        '<div style="font-size:10px;color:#f87171;font-weight:800;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px;">⚠️ Rejection Reason</div>' +
-        '<div style="font-size:13px;color:rgba(255,255,255,0.75);">' + (active.rejectReason || active.reason || active.note || 'Galat details ya suspicious activity detected.') + '</div>' +
-      '</div>'
-    : // ── PENDING card ──
-      '<div class="pending-top">' +
-        '<div>' +
-          '<div class="pending-label">⏳ Pending Withdrawal</div>' +
-          '<div class="pending-amount">₹' + active.amount + '</div>' +
-          '<div class="pending-status" id="pendingStatusText">Processing • Usually within 24 hours</div>' +
-        '</div>' +
-        '<div style="text-align:right;">' +
-          '<div style="font-size:10px;color:rgba(255,255,255,0.3);margin-bottom:4px;">Time remaining</div>' +
-          '<div class="pending-timer" id="pendingTimer">24:00:00</div>' +
-        '</div>' +
-      '</div>' +
-      '<div style="height:4px;background:rgba(255,255,255,0.08);border-radius:2px;overflow:hidden;margin-top:8px;">' +
-        '<div id="pendingBar" style="height:100%;background:linear-gradient(90deg,#f59e0b,#ef4444);border-radius:2px;width:100%;transition:width 1s linear;"></div>' +
-      '</div>';
-
-  if (isRejected) return; // Rejected — timer nahi chahiye
-
-  // Pending timer
-  const submitted = new Date(active.date).getTime();
-  const deadline  = submitted + 24 * 60 * 60 * 1000;
-  if (_pendingTimerInterval) clearInterval(_pendingTimerInterval);
-
-  function tick() {
-    const now  = Date.now();
-    const diff = Math.max(0, deadline - now);
-    const h = Math.floor(diff / 3600000);
-    const m = Math.floor((diff % 3600000) / 60000);
-    const s = Math.floor((diff % 60000) / 1000);
-    const timerEl = document.getElementById('pendingTimer');
-    if (timerEl) timerEl.textContent = String(h).padStart(2,'0') + ':' + String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
-    const barEl = document.getElementById('pendingBar');
-    if (barEl) {
-      const pct = Math.max(0, 100 - ((Date.now() - submitted) / (24*3600000) * 100));
-      barEl.style.width = pct + '%';
-    }
-    if (diff <= 0) clearInterval(_pendingTimerInterval);
-  }
-  tick();
-  _pendingTimerInterval = setInterval(tick, 1000);
+  // pendingCard removed — historyContainer handles display
 }
+
 
 // ── HISTORY PAGE ─────────────────────────────────────────────────
 // Auto-refresh pending card every 30s to detect status change
