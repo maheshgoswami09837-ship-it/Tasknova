@@ -9,13 +9,13 @@
 <title>TaskNova Tasks</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { font-family: 'Segoe UI', sans-serif; background: #05051a; min-height: 100vh; overflow-x: hidden; padding-bottom: 80px; }
-  .stars { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; }
-  .star { position: absolute; background: white; border-radius: 50%; animation: twinkle 3s infinite; }
+  body { font-family: 'Segoe UI', sans-serif; background: #000; min-height: 100vh; overflow-x: hidden; padding-bottom: 80px; }
+
+
   @keyframes twinkle { 0%, 100% { opacity: 0.2; } 50% { opacity: 1; } }
-  .glow-circle { position: fixed; border-radius: 50%; filter: blur(80px); z-index: 0; pointer-events: none; }
-  .glow-1 { width: 300px; height: 300px; background: rgba(108,99,255,0.2); top: -100px; left: -100px; }
-  .glow-2 { width: 250px; height: 250px; background: rgba(59,130,246,0.15); bottom: -80px; right: -80px; }
+
+
+
   .content { position: relative; z-index: 10; padding: 20px 16px; animation: fadeUp 0.5s ease; }
 
   .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
@@ -182,7 +182,7 @@
   .nav-item span { font-size: 20px; }
   .nav-item p { font-size: 10px; color: rgba(255,255,255,0.3); font-weight: 500; }
   .nav-item.active p { color: #6c63ff; }
-  .nav-center { width: 52px; height: 52px; background: linear-gradient(135deg, #6c63ff, #3b82f6); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 22px; margin-top: -20px; box-shadow: 0 4px 20px rgba(108,99,255,0.4); cursor: pointer; }
+  .nav-center { width: 52px; height: 52px; background: linear-gradient(135deg, #16a34a, #22c55e); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 22px; margin-top: -20px; box-shadow: 0 4px 20px rgba(34,197,94,0.45); cursor: pointer; }
 
   @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
   @keyframes spinWheel { from { transform: rotate(0deg); } to { transform: rotate(var(--spin-deg)); } }
@@ -197,7 +197,7 @@
   /* Full screen modal */
   .feature-modal {
     display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background: #05051a;
+    background: #000;
     background-image: radial-gradient(ellipse at 20% 10%, rgba(108,99,255,0.18) 0%, transparent 55%),
                       radial-gradient(ellipse at 80% 90%, rgba(59,130,246,0.12) 0%, transparent 55%);
     z-index: 999; flex-direction: column; align-items: center;
@@ -332,9 +332,9 @@
 </head>
 <body>
 
-<div class="stars" id="stars"></div>
-<div class="glow-circle glow-1"></div>
-<div class="glow-circle glow-2"></div>
+
+
+
 
 <div class="content">
   <div class="header">
@@ -842,16 +842,6 @@
 </script>
 
 <script>
-  // Stars
-  const starsContainer = document.getElementById('stars');
-  for (let i = 0; i < 60; i++) {
-    const star = document.createElement('div');
-    star.classList.add('star');
-    const size = Math.random() * 2 + 0.5;
-    star.style.cssText = `width:${size}px;height:${size}px;top:${Math.random()*100}%;left:${Math.random()*100}%;animation-delay:${Math.random()*3}s;animation-duration:${Math.random()*3+2}s;`;
-    starsContainer.appendChild(star);
-  }
-
   // Task card micro-interaction: scale-up bounce on tap
   document.querySelectorAll('.task-card:not(.disabled)').forEach(card => {
     card.addEventListener('pointerdown', function() {
@@ -2154,20 +2144,45 @@
             if (cc)   { cc.style.opacity = '0.6'; cc.style.pointerEvents = 'none'; }
           }
 
-          // ── Spin — DB se today count ──────────────────────────
+          // ── Spin — DB se today count (dailyTasks node priority) ──
           const spinBadge = document.getElementById('spinCountBadge');
-          const spinsDB = data.spinsToday || 0;
+          const spinsDB = (data.dailyTasks && data.dailyTasks[todayKey] && data.dailyTasks[todayKey].spins != null)
+            ? data.dailyTasks[todayKey].spins
+            : (data.spinsToday || 0);
           if (spinBadge) spinBadge.textContent = spinsDB + '/6';
+          // Sync to localStorage so cooldown logic is correct
+          const _ld = getDailyData();
+          if (_ld.spins !== spinsDB) { _ld.spins = spinsDB; saveDailyData(_ld); }
+          if (spinsDB >= 6) {
+            const spinBtn = document.getElementById('spinTaskBtn');
+            if (spinBtn) { spinBtn.textContent = '✅ Done'; spinBtn.disabled = true; }
+          }
 
           // ── Scratch — DB se today count ───────────────────────
           const scratchBadge = document.getElementById('scratchCountBadge');
-          const scratchesDB = data.scratchesToday || 0;
+          const scratchesDB = (data.dailyTasks && data.dailyTasks[todayKey] && data.dailyTasks[todayKey].scratches != null)
+            ? data.dailyTasks[todayKey].scratches
+            : (data.scratchesToday || 0);
           if (scratchBadge) scratchBadge.textContent = scratchesDB + '/15';
+          const _ld2 = getDailyData();
+          if (_ld2.scratches !== scratchesDB) { _ld2.scratches = scratchesDB; saveDailyData(_ld2); }
 
           // ── Quiz — DB se today count ──────────────────────────
           const quizBadge = document.getElementById('quizCountBadge');
-          const quizzesDB = data.quizzesToday || 0;
+          const quizzesDB = (data.dailyTasks && data.dailyTasks[todayKey] && data.dailyTasks[todayKey].quizzes != null)
+            ? data.dailyTasks[todayKey].quizzes
+            : (data.quizzesToday || 0);
           if (quizBadge) quizBadge.textContent = quizzesDB + '/15';
+          const _ld3 = getDailyData();
+          if (_ld3.quizzes !== quizzesDB) { _ld3.quizzes = quizzesDB; saveDailyData(_ld3); }
+
+          // ── Daily Earned — DB se today total ─────────────────
+          const earnedDB = (data.dailyTasks && data.dailyTasks[todayKey] && data.dailyTasks[todayKey].earned != null)
+            ? data.dailyTasks[todayKey].earned
+            : 0;
+          const _ld4 = getDailyData();
+          if (earnedDB > 0 && _ld4.earned !== earnedDB) { _ld4.earned = earnedDB; saveDailyData(_ld4); }
+          updateDailyLimitUI();
         })
         .catch(e => console.log(e));
     });
@@ -2404,17 +2419,44 @@
             const newTasks   = (data.tasksDone || 0) + 1;
 
             // ── Build patch — coins + type-specific counter ──────
+            const todayIST = new Date(Date.now() + 5.5*60*60*1000).toISOString().split('T')[0];
+            const dailyPath = 'dailyTasks/' + todayIST + '/';
             const patch = {
               coins:       newCoins,
               balance:     newBalance,
               totalEarned: newBalance,
               tasksDone:   newTasks
             };
-            if (type === 'spin')    patch.spinsToday    = d.spins;
-            if (type === 'scratch') patch.scratchesToday = d.scratches;
-            if (type === 'quiz')    patch.quizzesToday   = d.quizzes;
-            if (type === 'checkin') patch.checkinDoneToday = true;
-            if (type === 'watchAd') patch.adsWatchedToday = getAdBatchCount();
+            // Save type-specific counts under dailyTasks[today] for accurate daily reset
+            if (type === 'spin')    {
+              patch.spinsToday = d.spins;
+              patch[dailyPath + 'spins'] = d.spins;
+              patch[dailyPath + 'earned'] = d.earned;
+            }
+            if (type === 'scratch') {
+              patch.scratchesToday = d.scratches;
+              patch[dailyPath + 'scratches'] = d.scratches;
+              patch[dailyPath + 'earned'] = d.earned;
+            }
+            if (type === 'quiz')    {
+              patch.quizzesToday = d.quizzes;
+              patch[dailyPath + 'quizzes'] = d.quizzes;
+              patch[dailyPath + 'earned'] = d.earned;
+            }
+            if (type === 'checkin') {
+              patch.checkinDoneToday = true;
+              patch[dailyPath + 'checkin'] = true;
+              patch[dailyPath + 'earned'] = d.earned;
+            }
+            if (type === 'watchAd') {
+              patch.adsWatchedToday = getAdBatchCount();
+              patch[dailyPath + 'adsWatched'] = getAdBatchCount();
+              patch[dailyPath + 'earned'] = d.earned;
+            }
+            if (type === 'bonus') {
+              patch[dailyPath + 'bonus'] = true;
+              patch[dailyPath + 'earned'] = d.earned;
+            }
 
             fetch(DB_URL + '/users/' + uid + '.json' + ap, {
               method: 'PATCH',
