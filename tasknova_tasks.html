@@ -2593,29 +2593,81 @@
 
   // ── CHECK-IN ──────────────────────────────────────────────────
   function doCheckin() {
-    const d = getDailyData();
-    if (d.checkin) { showToast('Aaj check-in ho chuka hai! 7:30 PM pe reset hoga.', '#f59e0b'); return; }
     if (!checkDailyLimit()) return;
 
     const btn  = document.getElementById('checkinBtn');
     const card = document.getElementById('checkinCard');
     const cb   = document.getElementById('checkinBadge');
 
-    // Loading state
+    // Loading — Firebase se verify karo
     if (btn) { btn.textContent = '⏳...'; btn.disabled = true; }
     if (card) card.style.pointerEvents = 'none';
 
-    // ✅ Direct credit — no ad for check-in
-    creditCoins(20, 'checkin').then(earned => {
-      // Button hide karo, sirf Done badge dikhao
-      if (btn) btn.style.display = 'none';
-      if (cb)  cb.style.display = 'inline-block';
+    const uid = localStorage.getItem('tasknova_uid');
+    if (!uid || uid === 'null') {
+      if (btn) { btn.textContent = 'Claim'; btn.disabled = false; }
+      if (card) card.style.pointerEvents = '';
+      return;
+    }
 
-      if (earned > 0) {
-        showToast('+20 Coins! Daily Check-in complete! 🎉', 'linear-gradient(135deg,#22c55e,#16a34a)');
-      }
-      updateDailyLimitUI();
-      startCheckinCountdown();
+    const todayIST = new Date(Date.now() + 5.5*60*60*1000).toISOString().split('T')[0];
+
+    // ✅ FIRST: Firebase se check karo — localStorage pe rely mat karo
+    window._getAuthToken && window._getAuthToken().then(token => {
+      const ap = token ? '?auth=' + token : '';
+      fetch(DB_URL + '/users/' + uid + '/dailyTasks/' + todayIST + '/checkin.json' + ap)
+        .then(r => r.json())
+        .then(checkinDB => {
+          if (checkinDB === true) {
+            // Already done Firebase mein
+            if (btn) { btn.textContent = '✅ Done'; btn.disabled = true; btn.style.display = 'none'; }
+            if (cb)  cb.style.display = 'inline-block';
+            if (card) { card.style.opacity = '0.6'; card.style.pointerEvents = 'none'; }
+            // Sync localStorage
+            const d = getDailyData();
+            d.checkin = true;
+            saveDailyData(d);
+            showToast('Aaj check-in ho chuka hai!', '#f59e0b');
+            return;
+          }
+
+          // LocalStorage check
+          const d = getDailyData();
+          if (d.checkin) {
+            if (btn) { btn.textContent = '✅ Done'; btn.disabled = true; btn.style.display = 'none'; }
+            if (cb)  cb.style.display = 'inline-block';
+            showToast('Aaj check-in ho chuka hai!', '#f59e0b');
+            return;
+          }
+
+          // ✅ Allow — credit karo
+          creditCoins(20, 'checkin').then(earned => {
+            if (btn) btn.style.display = 'none';
+            if (cb)  cb.style.display = 'inline-block';
+            if (earned > 0) {
+              showToast('+20 Coins! Daily Check-in complete! 🎉', 'linear-gradient(135deg,#22c55e,#16a34a)');
+            }
+            updateDailyLimitUI();
+            startCheckinCountdown();
+          });
+        })
+        .catch(() => {
+          // Network error — localStorage fallback
+          const d = getDailyData();
+          if (d.checkin) {
+            if (btn) { btn.textContent = 'Claim'; btn.disabled = false; }
+            if (card) card.style.pointerEvents = '';
+            showToast('Aaj check-in ho chuka hai!', '#f59e0b');
+            return;
+          }
+          creditCoins(20, 'checkin').then(earned => {
+            if (btn) btn.style.display = 'none';
+            if (cb)  cb.style.display = 'inline-block';
+            if (earned > 0) showToast('+20 Coins! Check-in complete! 🎉', 'linear-gradient(135deg,#22c55e,#16a34a)');
+            updateDailyLimitUI();
+            startCheckinCountdown();
+          });
+        });
     });
   }
 
@@ -2780,6 +2832,24 @@
 
   function doSpin() {
     const d = getDailyData();
+    // Firebase se latest spin count sync karke check karo
+    const uid = localStorage.getItem('tasknova_uid');
+    if (uid && uid !== 'null') {
+      const todayIST = new Date(Date.now() + 5.5*60*60*1000).toISOString().split('T')[0];
+      window._getAuthToken && window._getAuthToken().then(token => {
+        const ap = token ? '?auth=' + token : '';
+        fetch(DB_URL + '/users/' + uid + '/dailyTasks/' + todayIST + '/spins.json' + ap)
+          .then(r => r.json())
+          .then(spinsDB => {
+            if (spinsDB !== null && spinsDB !== undefined && spinsDB > d.spins) {
+              d.spins = spinsDB;
+              saveDailyData(d);
+              const spinBadge = document.getElementById('spinCountBadge');
+              if (spinBadge) spinBadge.textContent = spinsDB + '/6';
+            }
+          }).catch(() => {});
+      });
+    }
     if (d.spins >= 6) { showToast('Aaj ke spins khatam!', '#f59e0b'); return; }
     if (getCooldownRemaining(d.lastSpin) > 0) { showToast('30 second wait karo!', '#f59e0b'); return; }
     if (isGlobalLocked()) return;
