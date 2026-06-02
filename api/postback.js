@@ -64,7 +64,14 @@ export default async function handler(req, res) {
       }
 
       // ── Coins calculate ──────────────────────────────────────
-      const rupees     = parseFloat(amount_local || '5');
+      // amount_local = CPX se INR rupees mein aata hai (e.g. '10.50')
+      // 100 coins = Rs 1  =>  coinsToAdd = rupees x 100
+      // balance   = totalCoins / 100  =>  balance = rupees (SAHI)
+      const rupees     = parseFloat(amount_local || '0');
+      if (isNaN(rupees) || rupees <= 0) {
+        console.error('[CPX] Invalid amount_local:', amount_local);
+        return res.status(200).send('1');
+      }
       const coinsToAdd = Math.max(50, Math.round(rupees * CPX_COINS_PER_RUPEE));
 
       const newCoins    = (userData.coins     || 0) + coinsToAdd;
