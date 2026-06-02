@@ -13,9 +13,6 @@ const FIREBASE_URL      = 'https://tasknova-66d0f-default-rtdb.firebaseio.com';
 const FIREBASE_SECRET   = process.env.FIREBASE_SECRET;
 const POSTBACK_PASSWORD = process.env.POSTBACK_PASSWORD;
 
-// ── Coins formula ──────────────────────────────────────────────
-// CPALead: payout USD mein aata hai  → $0.10 = 200 coins  ($1 = 2000)
-// CPX:     amount_local INR mein     → ₹5   = 500 coins   (₹1 = 100)
 const CPALEAD_COINS_PER_DOLLAR = 2000;
 const CPX_COINS_PER_RUPEE      = 100;
 
@@ -49,9 +46,10 @@ export default async function handler(req, res) {
     try {
       // ── Duplicate check ──────────────────────────────────────
       const safeTransId = (trans_id || ('cpx_' + Date.now())).replace(/[^a-zA-Z0-9_-]/g, '_');
-      const dupUrl  = `${FIREBASE_URL}/postback_log/cpx/${user_id}/${safeTransId}.json${authParam}`;
-      const dupData = await (await fetch(dupUrl)).json();
-      if (dupData && dupData.credited) {
+      const cpxDupUrl   = `${FIREBASE_URL}/postback_log/cpx/${user_id}/${safeTransId}.json${authParam}`;
+      const cpxDupData  = await (await fetch(cpxDupUrl)).json();
+
+      if (cpxDupData && cpxDupData.credited) {
         console.log('[CPX] Duplicate — skip:', safeTransId);
         return res.status(200).send('1');
       }
@@ -59,17 +57,17 @@ export default async function handler(req, res) {
       // ── User fetch ───────────────────────────────────────────
       const userUrl  = `${FIREBASE_URL}/users/${user_id}.json${authParam}`;
       const userData = await (await fetch(userUrl)).json();
+
       if (!userData || userData.error) {
         console.error('[CPX] User not found:', user_id);
         return res.status(200).json({ success: false, reason: 'User not found' });
       }
 
       // ── Coins calculate ──────────────────────────────────────
-      // amount_local = INR mein, ×100 = coins
-      const rupees    = parseFloat(amount_local || '5');
+      const rupees     = parseFloat(amount_local || '5');
       const coinsToAdd = Math.max(50, Math.round(rupees * CPX_COINS_PER_RUPEE));
 
-      const newCoins    = (userData.coins    || 0) + coinsToAdd;
+      const newCoins    = (userData.coins     || 0) + coinsToAdd;
       const newBalance  = parseFloat((newCoins / 100).toFixed(2));
       const newTasksDone= (userData.tasksDone || 0) + 1;
 
@@ -91,7 +89,7 @@ export default async function handler(req, res) {
         body   : JSON.stringify({
           userId   : user_id,
           taskType : 'Survey',
-          taskName : '📋 CPX Survey Completed',
+          taskName : 'CPX Survey Completed',
           coins    : coinsToAdd,
           status   : 'Success',
           source   : 'CPX Research',
@@ -102,19 +100,18 @@ export default async function handler(req, res) {
       });
 
       // ── Mark credited ────────────────────────────────────────
-      const dupUrl = `${FIREBASE_URL}/postback_log/cpalead/${subid}/${finalTxKey}.json${authParam}`;
-      await fetch(dupUrl, {
+      await fetch(cpxDupUrl, {
         method : 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body   : JSON.stringify({ credited: true, coins: coinsToAdd, ts: Date.now() })
       });
 
       console.log(`[CPX] ✅ +${coinsToAdd} coins → user: ${user_id} | ₹${rupees}`);
-      return res.status(200).send('1'); // CPX expects "1"
+      return res.status(200).send('1');
 
     } catch (e) {
       console.error('[CPX] Error:', e.message);
-      return res.status(200).send('1'); // Always 200 to CPX
+      return res.status(200).send('1');
     }
   }
 
@@ -126,13 +123,11 @@ export default async function handler(req, res) {
 
     console.log('[CPALead] Postback received:', { subid, payout, offer_name });
 
-    // ── Params check ─────────────────────────────────────────
     if (!subid || !payout) {
       console.error('[CPALead] Missing params:', req.query);
-      return res.status(200).send('1'); // Always 200 to CPALead
+      return res.status(200).send('1');
     }
 
-    // ── Password verify ───────────────────────────────────────
     if (POSTBACK_PASSWORD && password !== POSTBACK_PASSWORD) {
       console.error('[CPALead] Wrong password — got:', password);
       return res.status(200).send('1');
@@ -147,10 +142,9 @@ export default async function handler(req, res) {
     const coinsToAdd = Math.round(payoutUsd * CPALEAD_COINS_PER_DOLLAR);
 
     try {
-      // ── Duplicate check — lead_id OR 2-min window ────────────
-      const txKey  = (lead_id || offer_id || '').replace(/[^a-zA-Z0-9_-]/g, '_');
+      // ── Duplicate check ──────────────────────────────────────
+      const txKey = (lead_id || offer_id || '').replace(/[^a-zA-Z0-9_-]/g, '_');
 
-      // Agar lead_id hai to exact duplicate check
       if (txKey) {
         const dupUrl  = `${FIREBASE_URL}/postback_log/cpalead/${subid}/${txKey}.json${authParam}`;
         const dupData = await (await fetch(dupUrl)).json();
@@ -160,18 +154,16 @@ export default async function handler(req, res) {
         }
       }
 
-      // Rate limit — same user ka last postback 2 min ke andar hai?
+      // ── Rate limit — 2 min ───────────────────────────────────
       const rateLimitUrl  = `${FIREBASE_URL}/postback_log/cpalead_rate/${subid}.json${authParam}`;
       const rateLimitData = await (await fetch(rateLimitUrl)).json();
       const lastPostback  = rateLimitData ? rateLimitData.lastTs : 0;
-      const TWO_MINUTES   = 2 * 60 * 1000;
 
-      if (lastPostback && (Date.now() - lastPostback) < TWO_MINUTES) {
-        console.log('[CPALead] Rate limited — too fast:', subid);
+      if (lastPostback && (Date.now() - lastPostback) < 2 * 60 * 1000) {
+        console.log('[CPALead] Rate limited:', subid);
         return res.status(200).send('1');
       }
 
-      // Rate limit timestamp update karo
       await fetch(rateLimitUrl, {
         method : 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -190,7 +182,7 @@ export default async function handler(req, res) {
       }
 
       // ── Update coins ──────────────────────────────────────────
-      const newCoins   = (userData.coins    || 0) + coinsToAdd;
+      const newCoins   = (userData.coins     || 0) + coinsToAdd;
       const newBalance = parseFloat((newCoins / 100).toFixed(2));
       const newTasks   = (userData.tasksDone || 0) + 1;
 
@@ -212,7 +204,7 @@ export default async function handler(req, res) {
         body   : JSON.stringify({
           userId   : subid,
           taskType : 'Offerwall',
-          taskName : '🎁 ' + offerLabel,
+          taskName : offerLabel,
           coins    : coinsToAdd,
           status   : 'Success',
           source   : 'CPALead',
@@ -224,19 +216,19 @@ export default async function handler(req, res) {
       });
 
       // ── Mark credited ─────────────────────────────────────────
-      const dupUrl = `${FIREBASE_URL}/postback_log/cpalead/${subid}/${finalTxKey}.json${authParam}`;
-      await fetch(dupUrl, {
+      const clDupUrl = `${FIREBASE_URL}/postback_log/cpalead/${subid}/${finalTxKey}.json${authParam}`;
+      await fetch(clDupUrl, {
         method : 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body   : JSON.stringify({ credited: true, coins: coinsToAdd, ts: Date.now() })
       });
 
       console.log(`[CPALead] ✅ +${coinsToAdd} coins → user: ${subid} | $${payoutUsd} | ${offerLabel}`);
-      return res.status(200).send('1'); // CPALead success signal
+      return res.status(200).send('1');
 
     } catch (err) {
       console.error('[CPALead] Error:', err.message);
-      return res.status(200).send('1'); // Always 200 to CPALead
+      return res.status(200).send('1');
     }
   }
 
