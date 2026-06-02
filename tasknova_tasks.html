@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline' 'unsafe-eval' data: blob:; frame-src * youtube.com www.youtube.com youtu.be;">
 <!-- WebView: JS must be enabled (setJavaScriptEnabled=true) for ads to load -->
 <meta name="ad-render-mode" content="js-enabled">
 <title>TaskNova Tasks</title>
@@ -339,6 +340,69 @@
 <div class="content">
   <div class="header">
     <div><h1>Tasks 📋</h1><p>Complete tasks & earn coins</p></div>
+    <button onclick="openTutorialModal()" style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:12px;padding:8px 14px;color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:6px;">
+      📚 Tutorial
+    </button>
+  </div>
+
+  <!-- TUTORIAL MODAL -->
+  <div id="tutorialModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:#000;z-index:999;overflow-y:auto;padding:20px 16px 40px;">
+    <div style="max-width:440px;margin:0 auto;">
+      <!-- Header -->
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+        <div>
+          <div style="font-size:20px;font-weight:900;color:#fff;">📚 Task Tutorials</div>
+          <div style="font-size:12px;color:rgba(255,255,255,0.4);margin-top:2px;">Har task kaise kare seekho</div>
+        </div>
+        <button onclick="closeTutorialModal()" style="width:36px;height:36px;background:rgba(255,255,255,0.1);border:none;border-radius:10px;color:#fff;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;">✕</button>
+      </div>
+
+      <!-- Video Modal — full screen -->
+      <div id="tutVideoModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:#000;z-index:9999;flex-direction:column;">
+        <!-- X button top right -->
+        <button onclick="closeTutVideo()" style="position:absolute;top:14px;right:14px;z-index:10000;background:rgba(0,0,0,0.6);border:1.5px solid rgba(255,255,255,0.25);color:#fff;width:38px;height:38px;border-radius:50%;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;">✕</button>
+        <!-- Full screen iframe -->
+        <iframe id="tutVideoIframe" src="" style="width:100%;height:100%;border:none;display:block;flex:1;" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+      </div>
+
+      <!-- Watch Video Ad Task Card -->
+      <div onclick="openTutVideo('cOKPucXcL_Y','Watch Ads Tutorial')" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:20px;padding:16px;margin-bottom:12px;display:flex;align-items:center;gap:14px;cursor:pointer;">
+        <div style="width:56px;height:56px;background:linear-gradient(135deg,#4f3ff0,#7c6fff);border-radius:16px;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 4px 12px rgba(108,99,255,0.3);">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none"><rect x="2" y="4" width="20" height="16" rx="3" fill="rgba(255,255,255,0.2)"/><polygon points="10,8 10,16 17,12" fill="white"/></svg>
+        </div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:15px;font-weight:800;color:#fff;">Watch Video Ad</div>
+          
+          <div style="display:flex;align-items:center;gap:8px;margin-top:6px;">
+            <div style="font-size:11px;color:rgba(255,255,255,0.35);background:rgba(255,255,255,0.06);padding:3px 10px;border-radius:20px;display:flex;align-items:center;gap:4px;"><span style="opacity:0.6;">⏱</span> 15 sec</div>
+          </div>
+        </div>
+        <div style="text-align:right;flex-shrink:0;">
+          <div style="font-size:20px;font-weight:900;color:#f59e0b;">+10</div>
+          <div style="font-size:10px;color:rgba(255,255,255,0.35);margin-bottom:8px;">per ad</div>
+          <div style="background:linear-gradient(135deg,#16a34a,#22c55e);border-radius:50px;padding:9px 20px;font-size:13px;font-weight:700;color:#fff;white-space:nowrap;box-shadow:0 4px 12px rgba(34,197,94,0.35);">Watch Tutorial</div>
+        </div>
+      </div>
+
+      <!-- Shortlink Task Card -->
+      <div onclick="openTutVideo('pu0EPoqNQ5A','Shortlink Tutorial')" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:20px;padding:16px;margin-bottom:12px;display:flex;align-items:center;gap:14px;cursor:pointer;">
+        <div style="width:56px;height:56px;background:linear-gradient(135deg,#059669,#22c55e);border-radius:16px;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 4px 12px rgba(34,197,94,0.3);">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71" stroke="white" stroke-width="2.2" stroke-linecap="round"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71" stroke="white" stroke-width="2.2" stroke-linecap="round"/></svg>
+        </div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:15px;font-weight:800;color:#fff;">Shortlink Task</div>
+          
+          <div style="display:flex;align-items:center;gap:8px;margin-top:6px;">
+            <div style="font-size:11px;color:rgba(255,255,255,0.35);background:rgba(255,255,255,0.06);padding:3px 10px;border-radius:20px;display:flex;align-items:center;gap:4px;"><span style="opacity:0.6;">⏱</span> 2/day</div>
+          </div>
+        </div>
+        <div style="text-align:right;flex-shrink:0;">
+          <div style="font-size:20px;font-weight:900;color:#f59e0b;">+20</div>
+          <div style="font-size:10px;color:rgba(255,255,255,0.35);margin-bottom:8px;">per link</div>
+          <div style="background:linear-gradient(135deg,#16a34a,#22c55e);border-radius:50px;padding:9px 20px;font-size:13px;font-weight:700;color:#fff;white-space:nowrap;box-shadow:0 4px 12px rgba(34,197,94,0.35);">Watch Tutorial</div>
+        </div>
+      </div>
+    </div>
   </div>
 
   <div class="balance-mini">
@@ -380,7 +444,7 @@
     <!-- 1. Offerwall Task -->
     <div class="task-card" data-category="survey"
       style="background:linear-gradient(135deg,rgba(108,99,255,0.18),rgba(59,130,246,0.12));border-color:rgba(108,99,255,0.35);"
-      onclick="openOfferwallPage()">
+      id="offerwallCard">
       <div class="task-icon icon-purple">
         <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg>
       </div>
@@ -391,11 +455,12 @@
           <span class="task-time">⏱ Unlimited</span>
           <span style="font-size:10px;color:#a78bfa;font-weight:700;background:rgba(108,99,255,0.15);padding:3px 8px;border-radius:50px;">🔥 High Reward</span>
         </div>
+        <span id="offerwallCooldownBadge" style="display:none;font-size:10px;color:#f59e0b;font-weight:700;margin-top:6px;display:inline-block;background:rgba(245,158,11,0.15);padding:3px 8px;border-radius:50px;">⏳ --:--:--</span>
       </div>
       <div class="task-reward">
         <div class="coins-reward">+2000</div>
         <div class="rupee">🪙 per offer</div>
-        <button class="do-btn">Open</button>
+        <button class="do-btn" id="offerwallBtn">Open</button>
       </div>
     </div>
 
@@ -521,95 +586,83 @@
 </div>
 
 
-<!-- Shortlink Modal -->
+<!-- Shortlink Modal — Exact Watch Ad UI -->
 <div class="feature-modal" id="shortlinkModal">
-  <div class="modal-content" style="width:100%;overflow-y:auto;max-height:100vh;padding-bottom:40px;">
-    <div class="modal-header" style="padding:0 4px;">
-      <button class="modal-back" onclick="closeModal('shortlinkModal')">&#8592;</button>
-      <div class="modal-title">🔗 Shortlink Task</div>
-    </div>
-    <div style="padding:20px;">
+  <div class="modal-content" style="width:100%;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:28px 24px;box-sizing:border-box;background:#030712;font-family:'Segoe UI',sans-serif;position:relative;overflow-y:auto;overflow-x:hidden;">
 
-      <!-- Stats -->
-      <div style="display:flex;justify-content:space-between;background:rgba(255,255,255,0.05);border-radius:14px;padding:14px 20px;margin-bottom:20px;">
-        <div style="text-align:center;">
-          <div style="color:#6c63ff;font-size:20px;font-weight:800;" id="slDoneCount">0</div>
-          <div style="color:rgba(255,255,255,0.4);font-size:11px;">Completed</div>
+    <!-- Background blobs — same as Watch Ad -->
+    <div style="position:absolute;width:320px;height:320px;background:#2563eb;border-radius:50%;filter:blur(80px);opacity:0.15;top:-80px;left:-60px;pointer-events:none;"></div>
+    <div style="position:absolute;width:260px;height:260px;background:#1d4ed8;border-radius:50%;filter:blur(80px);opacity:0.15;bottom:-60px;right:-40px;pointer-events:none;"></div>
+
+    <!-- Back button -->
+    <button onclick="closeModal('shortlinkModal')" style="position:absolute;top:20px;left:20px;z-index:2;background:rgba(255,255,255,0.07);border:1.5px solid rgba(255,255,255,0.12);color:#fff;width:38px;height:38px;border-radius:12px;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;">&#8249;</button>
+
+    <!-- Inner card — same as Watch Ad .card -->
+    <div style="position:relative;z-index:1;width:100%;max-width:360px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:24px;padding:32px 24px 28px;display:flex;flex-direction:column;align-items:center;gap:20px;backdrop-filter:blur(12px);">
+
+      <!-- Coin badge — same style as Watch Ad -->
+      <div style="display:inline-flex;align-items:center;gap:8px;background:rgba(37,99,235,0.18);border:1px solid rgba(96,165,250,0.3);border-radius:50px;padding:9px 22px;font-size:16px;font-weight:800;color:#93c5fd;letter-spacing:0.3px;">
+        🔗 &nbsp;<span id="slDoneCount" style="display:none;">0</span> +20 Coins
+      </div>
+
+      <!-- Subtitle -->
+      <div style="font-size:13px;color:rgba(255,255,255,0.4);text-align:center;margin-top:-8px;">
+        Link visit karo aur coins kamao!
+      </div>
+
+      <!-- Stats row -->
+      <div style="display:flex;align-items:center;gap:0;width:100%;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:16px;overflow:hidden;">
+        <div style="flex:1;text-align:center;padding:14px 8px;">
+          <div style="font-size:20px;font-weight:900;color:#a78bfa;" id="slDoneCount2">0</div>
+          <div style="font-size:10px;color:rgba(255,255,255,0.3);margin-top:3px;text-transform:uppercase;letter-spacing:0.5px;">Done</div>
         </div>
-        <div style="text-align:center;">
-          <div style="color:#22c55e;font-size:20px;font-weight:800;">2</div>
-          <div style="color:rgba(255,255,255,0.4);font-size:11px;">Daily Limit</div>
+        <div style="width:1px;background:rgba(255,255,255,0.07);align-self:stretch;"></div>
+        <div style="flex:1;text-align:center;padding:14px 8px;">
+          <div style="font-size:20px;font-weight:900;color:#22c55e;">2</div>
+          <div style="font-size:10px;color:rgba(255,255,255,0.3);margin-top:3px;text-transform:uppercase;letter-spacing:0.5px;">Daily</div>
         </div>
-        <div style="text-align:center;">
-          <div style="color:#f59e0b;font-size:20px;font-weight:800;">+20</div>
-          <div style="color:rgba(255,255,255,0.4);font-size:11px;">Coins/Link</div>
+        <div style="width:1px;background:rgba(255,255,255,0.07);align-self:stretch;"></div>
+        <div style="flex:1;text-align:center;padding:14px 8px;">
+          <div style="font-size:20px;font-weight:900;color:#f59e0b;">+20</div>
+          <div style="font-size:10px;color:rgba(255,255,255,0.3);margin-top:3px;text-transform:uppercase;letter-spacing:0.5px;">Coins</div>
         </div>
       </div>
 
-      <!-- Instructions -->
-      <div style="background:rgba(108,99,255,0.1);border:1px solid rgba(108,99,255,0.3);border-radius:12px;padding:14px;margin-bottom:14px;font-size:12px;color:rgba(255,255,255,0.6);line-height:1.7;">
-        📌 <strong style="color:#a78bfa;">Kaise kaam karta hai:</strong><br>
-        1. "Visit Link" button dabao<br>
-        2. Link open hoga — thoda wait karo<br>
-        3. Wapas aao aur "Claim 20 Coins" dabao<br>
-        4. ✅ 20 coins wallet mein credit!
-      </div>
+      <!-- Task area -->
+      <div id="slTaskArea" style="width:100%;display:flex;flex-direction:column;gap:12px;">
 
-      <!-- Tutorial Button -->
-      <button onclick="document.getElementById('slTutorialModal').style.display='flex'"
-        style="width:100%;background:rgba(255,200,0,0.12);border:1.5px solid rgba(255,200,0,0.4);border-radius:12px;padding:12px;color:#fbbf24;font-size:13px;font-weight:700;cursor:pointer;margin-bottom:18px;display:flex;align-items:center;justify-content:center;gap:8px;">
-        🎬 Tutorial Video Dekho
-      </button>
-
-      <!-- Tutorial Video Modal -->
-      <div id="slTutorialModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);z-index:9999;align-items:center;justify-content:center;flex-direction:column;padding:20px;box-sizing:border-box;">
-        <div style="width:100%;max-width:400px;background:#1a1a2e;border-radius:16px;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,0.5);">
-          <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid rgba(255,255,255,0.08);">
-            <span style="color:#fff;font-weight:800;font-size:15px;">🎬 Shortlink Tutorial</span>
-            <button onclick="closeTutorialVideo()" style="background:rgba(255,255,255,0.1);border:none;color:#fff;width:32px;height:32px;border-radius:10px;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;">✕</button>
-          </div>
-          <div style="position:relative;width:100%;padding-bottom:177%;height:0;overflow:hidden;">
-            <iframe id="slTutorialIframe"
-              src="https://www.youtube.com/embed/pu0EPoqNQ5A?autoplay=1&playsinline=1"
-              style="position:absolute;top:0;left:0;width:100%;height:100%;border:none;"
-              allow="autoplay;encrypted-media"
-              allowfullscreen>
-            </iframe>
-          </div>
-        </div>
-      </div>
-
-      <!-- Task Buttons -->
-      <div id="slTaskArea" style="text-align:center;">
-
-        <!-- Step 1: Visit Button -->
+        <!-- Visit Link button — exact Watch Ad btn-start style -->
         <button id="slVisitBtn" onclick="doShortlinkTask()"
-          style="width:100%;background:linear-gradient(135deg,#6c63ff,#3b82f6);border:none;border-radius:16px;padding:16px;color:#fff;font-size:16px;font-weight:800;cursor:pointer;margin-bottom:14px;">
-          🔗 Visit Link
+          style="width:100%;padding:15px;border:none;border-radius:14px;background:linear-gradient(135deg,#1d4ed8,#2563eb,#3b82f6);color:#fff;font-size:16px;font-weight:800;letter-spacing:0.4px;cursor:pointer;font-family:'Segoe UI',sans-serif;box-shadow:0 4px 24px rgba(37,99,235,0.45);">
+          🔗 &nbsp;Visit Link
         </button>
 
-        <!-- Step 2: Code Input (hidden by default) -->
-        <div id="slCodeLabel" style="display:none;color:rgba(255,255,255,0.5);font-size:12px;margin-bottom:8px;">
-          🔐 Success page se code daalo:
+        <!-- Code input (hidden) -->
+        <div id="slCodeLabel" style="display:none;font-size:12px;color:rgba(255,255,255,0.35);text-align:center;">
+          Success page se code daalo:
         </div>
         <input id="slCodeInput" type="text" maxlength="4" placeholder="CODE"
-          style="display:none;width:100%;background:rgba(255,255,255,0.08);border:1.5px solid rgba(108,99,255,0.5);border-radius:12px;padding:14px;color:#fff;font-size:24px;font-weight:900;text-align:center;letter-spacing:8px;text-transform:uppercase;outline:none;margin-bottom:10px;box-sizing:border-box;"
+          style="display:none;width:100%;background:rgba(255,255,255,0.06);border:1.5px solid rgba(37,99,235,0.4);border-radius:12px;padding:16px;color:#fff;font-size:28px;font-weight:900;text-align:center;letter-spacing:10px;text-transform:uppercase;outline:none;box-sizing:border-box;font-family:'Segoe UI',sans-serif;"
           oninput="this.value=this.value.toUpperCase()">
 
-        <!-- Step 3: Claim Button (hidden by default) -->
+        <!-- Claim button — exact Watch Ad btn-claim style -->
         <button id="slClaimBtn" onclick="claimShortlink()"
-          style="display:none;width:100%;background:linear-gradient(135deg,#22c55e,#16a34a);border:none;border-radius:14px;padding:16px;color:#fff;font-size:16px;font-weight:800;cursor:pointer;margin-bottom:20px;">
-          🎁 Claim 20 Coins
+          style="display:none;width:100%;padding:15px;border:none;border-radius:14px;background:linear-gradient(135deg,#059669,#10b981);color:#fff;font-size:16px;font-weight:800;cursor:pointer;font-family:'Segoe UI',sans-serif;box-shadow:0 4px 20px rgba(16,185,129,0.4);">
+          ✅ &nbsp;Claim 20 Coins
         </button>
 
       </div>
 
       <!-- Reset info -->
-      <div style="text-align:center;margin-top:16px;color:rgba(255,255,255,0.3);font-size:11px;">
-        🕛 Raat 12 baje (midnight) reset hota hai
+      <div style="font-size:11px;color:rgba(255,255,255,0.2);text-align:center;margin-top:-8px;">
+        Raat 12 baje reset hota hai
       </div>
 
     </div>
+
+    <!-- TASKNOVA watermark -->
+    <div style="position:relative;z-index:1;margin-top:20px;font-size:11px;font-weight:800;color:rgba(255,255,255,0.12);letter-spacing:3px;text-transform:uppercase;">⚡ TASKNOVA</div>
+
   </div>
 </div>
 <!-- Ad Popup -->
@@ -1151,6 +1204,7 @@
         updateQuizUI();
         updateDailyBonusUI();
         updateDailyLimitUI();
+        updateOfferwallUI();
         return;
       }
     }
@@ -2786,6 +2840,15 @@
           spinBtn.style.background = 'linear-gradient(135deg,#f59e0b,#ef4444)';
           spinBtn.style.color = '#fff';
           spinBtn.onclick = function() {
+            // Spin count pehle localStorage mein mark karo
+            const _d = getDailyData();
+            _d.spins++;
+            _d.lastSpin = Date.now();
+            saveDailyData(_d);
+            // Badge turant update karo
+            const sb = document.getElementById('spinCountBadge');
+            if (sb) sb.textContent = _d.spins + '/6';
+            // Spin prize save karo
             localStorage.setItem('tn_spin_prize', prize);
             window.location.href = 'spin_ad.html';
           };
@@ -3693,7 +3756,15 @@
         const inp = document.getElementById('slCodeInput');
         const clm = document.getElementById('slClaimBtn');
         if (lbl) lbl.style.display = 'block';
-        if (inp) { inp.style.display = 'block'; inp.value = ''; inp.focus(); }
+        if (inp) {
+          inp.style.display = 'block';
+          inp.value = '';
+          // Scroll + focus — smooth scroll to input
+          setTimeout(function() {
+            inp.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            inp.focus();
+          }, 100);
+        }
         if (clm) clm.style.display = 'block';
       })
       .catch(err => {
@@ -3822,12 +3893,80 @@
     });
   }
   // ── SHORTLINK TASK END ────────────────────────────────────────
+  function openTutVideo(videoId, title) {
+    document.getElementById('tutVideoIframe').src = 'https://www.youtube.com/embed/' + videoId + '?autoplay=1&playsinline=1&rel=0';
+    var modal = document.getElementById('tutVideoModal');
+    modal.style.display = 'flex';
+    modal.style.flexDirection = 'column';
+    document.body.style.overflow = 'hidden';
+  }
+  function closeTutVideo() {
+    document.getElementById('tutVideoIframe').src = '';
+    document.getElementById('tutVideoModal').style.display = 'none';
+    document.body.style.overflow = '';
+  }
+  function openTutorialModal() {
+    document.getElementById('tutorialModal').style.display = 'block';
+    document.body.style.overflow = 'hidden';
+  }
+  function closeTutorialModal() {
+    document.getElementById('tutorialModal').style.display = 'none';
+    document.body.style.overflow = '';
+  }
+
   // ── OFFERWALL ────────────────────────────────────────────────
-  async function openOfferwallPage() {
-    const uid = localStorage.getItem('tasknova_uid');
-    if (uid && uid !== 'null') {
-      // Offerwall log postback se aayega (cpalead-postback.js)
+  const OFFERWALL_KEY    = 'tn_offerwall_last';
+  const OFFERWALL_24HR   = 24 * 60 * 60 * 1000;
+  let offerwallTimerInt  = null;
+
+  function updateOfferwallUI() {
+    const last      = parseInt(localStorage.getItem(OFFERWALL_KEY) || '0');
+    const badge     = document.getElementById('offerwallCooldownBadge');
+    const btn       = document.getElementById('offerwallBtn');
+    const card      = document.getElementById('offerwallCard');
+    const remaining = OFFERWALL_24HR - (Date.now() - last);
+
+    if (last && remaining > 0) {
+      if (btn)  { btn.textContent = '⏳ Wait'; btn.disabled = true; btn.style.opacity = '0.5'; }
+      if (card) { card.style.pointerEvents = 'none'; card.style.opacity = '0.65'; }
+      if (badge) badge.style.display = 'inline-block';
+
+      if (offerwallTimerInt) clearInterval(offerwallTimerInt);
+      offerwallTimerInt = setInterval(() => {
+        const rem2 = OFFERWALL_24HR - (Date.now() - last);
+        if (rem2 <= 0) {
+          clearInterval(offerwallTimerInt);
+          if (badge) badge.style.display = 'none';
+          if (btn)  { btn.textContent = 'Open'; btn.disabled = false; btn.style.opacity = ''; }
+          if (card) { card.style.pointerEvents = ''; card.style.opacity = ''; }
+          return;
+        }
+        const h = String(Math.floor(rem2 / 3600000)).padStart(2,'0');
+        const m = String(Math.floor((rem2 % 3600000) / 60000)).padStart(2,'0');
+        const s = String(Math.floor((rem2 % 60000) / 1000)).padStart(2,'0');
+        if (badge) badge.textContent = '⏳ ' + h + ':' + m + ':' + s;
+      }, 1000);
+
+      const h = String(Math.floor(remaining / 3600000)).padStart(2,'0');
+      const m = String(Math.floor((remaining % 3600000) / 60000)).padStart(2,'0');
+      const s = String(Math.floor((remaining % 60000) / 1000)).padStart(2,'0');
+      if (badge) badge.textContent = '⏳ ' + h + ':' + m + ':' + s;
+    } else {
+      if (badge) badge.style.display = 'none';
+      if (btn)  { btn.textContent = 'Open'; btn.disabled = false; btn.style.opacity = ''; }
+      if (card) { card.style.pointerEvents = ''; card.style.opacity = ''; }
     }
+  }
+
+  async function openOfferwallPage() {
+    const last = parseInt(localStorage.getItem(OFFERWALL_KEY) || '0');
+    if (last && (OFFERWALL_24HR - (Date.now() - last)) > 0) {
+      showToast('⏳ 24 ghante baad dobara try karo!', '#f59e0b');
+      return;
+    }
+    localStorage.setItem(OFFERWALL_KEY, Date.now().toString());
+    updateOfferwallUI();
+    const uid = localStorage.getItem('tasknova_uid');
     window.location.href = 'cpalead_offerwall.html?uid=' + (uid || '');
   }
   // ── OFFERWALL END ────────────────────────────────────────────
