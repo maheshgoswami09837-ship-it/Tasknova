@@ -200,7 +200,7 @@
     border:none;border-radius:16px;padding:16px 40px;color:#fff;font-size:16px;font-weight:800;
     cursor:pointer;font-family:'Segoe UI',sans-serif;
     box-shadow:0 8px 24px rgba(34,197,94,0.35);letter-spacing:0.3px;">
-    ← Wapas Jao
+    Wapas Jao
   </button>
 
   <div style="margin-top:20px;font-size:11px;color:rgba(255,255,255,0.2);">TaskNova • Spin & Earn</div>
@@ -470,34 +470,39 @@
     if (wp) wp.style.display = 'none';
     if (pb) pb.style.display = 'none';
 
-    const overlay = document.getElementById('errorOverlay');
+    const overlay  = document.getElementById('errorOverlay');
     if (!overlay) return;
     overlay.style.display = 'flex';
 
+    const errIcon  = document.getElementById('errIcon');
+    const errTitle = document.getElementById('errTitle');
+    const errMsg   = document.getElementById('errMsg');
+    const errTimer = document.getElementById('errTimer');
+    const errBadge = document.getElementById('errCoinBadge');
+    const errCoin  = document.getElementById('errCoinText');
+
     if (type === 'penalty') {
-      document.getElementById('errIcon').textContent  = '❌';
-      document.getElementById('errTitle').textContent = 'Ad Skip Penalty';
-      document.getElementById('errMsg').textContent   = 'Ad skip ki thi — 10 min baad wapas aao';
+      if (errIcon)  errIcon.textContent  = '';
+      if (errTitle) errTitle.textContent = 'Ad Skip Penalty';
+      if (errMsg)   errMsg.textContent   = 'Ad skip ki thi — 10 min baad wapas aao';
       startErrCountdown(until, KEY_PENALTY_UNTIL);
     } else if (type === 'cooldown') {
-      document.getElementById('errIcon').textContent  = '⏳';
-      document.getElementById('errTitle').textContent = 'Next Ad ka Wait Karo';
-      document.getElementById('errMsg').textContent   = 'Thoda sa aur wait karo';
+      if (errIcon)  errIcon.textContent  = '';
+      if (errTitle) errTitle.textContent = 'Next Spin ka Wait Karo';
+      if (errMsg)   errMsg.textContent   = 'Thoda sa aur wait karo';
       startErrCountdown(until, KEY_COOLDOWN_UNTIL);
     } else if (type === 'success') {
-      document.getElementById('errIcon').textContent  = '✅';
-      document.getElementById('errTitle').textContent = 'Coins Credited!';
-      document.getElementById('errMsg').textContent   = 'Aapke wallet mein add ho gaye\nNext spin ke liye wait karo';
-      const badge = document.getElementById('errCoinBadge');
-      const coinText = document.getElementById('errCoinText');
-      if (badge) badge.style.display = 'block';
-      if (coinText) coinText.textContent = '+' + prize + ' 🪙';
+      if (errIcon)  errIcon.textContent  = '';
+      if (errTitle) errTitle.textContent = 'Coins Credited!';
+      if (errMsg)   errMsg.textContent   = 'Aapke wallet mein add ho gaye\nNext spin ke liye wait karo';
+      if (errBadge) errBadge.style.display = 'block';
+      if (errCoin)  errCoin.textContent    = '+' + prize + ' Coins';
       startErrCountdown(until, KEY_COOLDOWN_UNTIL, true);
     } else {
-      document.getElementById('errIcon').textContent  = '🚫';
-      document.getElementById('errTitle').textContent = 'Aaj ki Limit Khatam!';
-      document.getElementById('errMsg').textContent   = 'Kal wapas aao aur aur coins kamao';
-      document.getElementById('errTimer').textContent = '';
+      if (errIcon)  errIcon.textContent  = '';
+      if (errTitle) errTitle.textContent = 'Aaj ki Limit Khatam!';
+      if (errMsg)   errMsg.textContent   = 'Kal wapas aao aur aur coins kamao';
+      if (errTimer) errTimer.textContent = '';
     }
   }
 
@@ -609,43 +614,75 @@
     creditFired = true;
 
     const btn = document.getElementById('claimBtn');
-    btn.disabled    = true;
-    btn.textContent = '⏳ Crediting...';
+    if (btn) { btn.disabled = true; btn.textContent = '⏳ Crediting...'; }
 
     incrementWatchCount();
     const cooldownUntil = Date.now() + COOLDOWN_DURATION * 1000;
     localStorage.setItem(KEY_COOLDOWN_UNTIL, String(cooldownUntil));
 
     if (uid && uid !== 'null') {
+      // ── Update localStorage spin count ──────────────────
+      let newSpins = 1;
+      try {
+        const today = new Date().toISOString().split('T')[0];
+        const raw   = localStorage.getItem('tn_daily_' + today);
+        const localData = raw ? JSON.parse(raw) : {};
+        localData.spins    = (localData.spins || 0) + 1;
+        localData.lastSpin = Date.now();
+        newSpins = localData.spins;
+        localStorage.setItem('tn_daily_' + today, JSON.stringify(localData));
+      } catch(e) {}
+
+      // ── Firebase update ──────────────────────────────────
       fetch(DB_URL + '/users/' + uid + '.json')
         .then(r => r.json())
         .then(data => {
-          if (!data) throw new Error('No user');
+          if (!data) throw new Error('No user data');
           const newCoins   = (data.coins   || 0) + prize;
           const newBalance = parseFloat((newCoins / 100).toFixed(2));
-          return fetch(DB_URL + '/users/' + uid + '.json', {
-            method: 'PATCH',
+
+          // Main coins update + taskHistory — parallel, don't wait for history
+          const mainUpdate = fetch(DB_URL + '/users/' + uid + '.json', {
+            method:  'PATCH',
             headers: {'Content-Type':'application/json'},
-            body: JSON.stringify({ coins:newCoins, balance:newBalance, tasksDone:(data.tasksDone||0)+1 })
+            body:    JSON.stringify({
+              coins:      newCoins,
+              balance:    newBalance,
+              tasksDone:  (data.tasksDone || 0) + 1,
+              spinsToday: newSpins
+            })
           });
+
+          // taskHistory — fire and forget, don't block claim
+          fetch(DB_URL + '/users/' + uid + '/taskHistory.json', {
+            method:  'POST',
+            headers: {'Content-Type':'application/json'},
+            body:    JSON.stringify({
+              userId: uid, taskType: 'Spin', taskName: 'Spin & Win',
+              coins: prize, status: 'Success', timestamp: Date.now()
+            })
+          }).catch(() => {}); // silently ignore if fails
+
+          return mainUpdate;
         })
-        .then(() => fetch(DB_URL + '/users/' + uid + '/taskHistory.json', {
-          method: 'POST',
-          headers: {'Content-Type':'application/json'},
-          body: JSON.stringify({ userId:uid, taskType:'Ad', taskName:'📺 Watch Video Ad', coins:prize, status:'Success', timestamp:Date.now() })
-        }))
         .then(() => {
-          btn.textContent = '✅ +' + prize + ' Coins Claimed!';
-          setTimeout(() => showErrorPage('success', cooldownUntil), 1200);
+          // ── Success — smoothly show result screen ────────
+          if (btn) {
+            btn.textContent = '+' + prize + ' Coins Credited!';
+            btn.style.background = 'linear-gradient(135deg,#22c55e,#16a34a)';
+          }
+          setTimeout(() => showErrorPage('success', cooldownUntil), 800);
         })
         .catch(e => {
-          console.error(e);
-          btn.disabled    = false;
-          btn.textContent = '💰 Claim Coins';
-          creditFired     = false;
+          console.error('[Spin Claim Error]', e);
+          if (btn) {
+            btn.disabled    = false;
+            btn.textContent = 'Claim Coins';
+          }
+          creditFired = false;
         });
     } else {
-      btn.textContent = '❌ Login karo pehle!';
+      if (btn) btn.textContent = 'Login karo pehle!';
     }
   }
 
