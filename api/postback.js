@@ -4,7 +4,7 @@
 //  CPX Postback URL (CPX dashboard mein lagao):
 //  https://tasknovaofficial.vercel.app/api/postback?source=cpx
 //    &status={status}&trans_id={trans_id}
-//    &amount_usd={amount_usd}&user_id={user_id}
+//    &amount_usd={amount_usd}&amount_local={amount_local}&user_id={user_id}
 //
 //  CPALead Postback URL:
 //  https://tasknovaofficial.vercel.app/api/postback?source=cpalead
@@ -51,7 +51,7 @@ export default async function handler(req, res) {
   //  Example: $0.50 × 84 = ₹42 → ₹42 × 0.25 = ₹10.50 → 1050 coins
   // ════════════════════════════════════════════════════════════
   if (source === 'cpx') {
-    const { status, trans_id, amount_usd, user_id } = req.query;
+    const { status, trans_id, amount_usd, amount_local, user_id } = req.query;
 
     console.log('[CPX] Postback received:', { status, trans_id, amount_usd, user_id });
 
@@ -65,10 +65,18 @@ export default async function handler(req, res) {
     }
 
     // Parse USD amount
-    const usdAmount = parseFloat(amount_usd || '0');
+    // amount_usd = direct dollar value (e.g. 0.50)
+    // amount_local = CPX points (e.g. 50) — 100 points =  approx, divide by 100
+    let usdAmount = parseFloat(amount_usd || '0');
     if (isNaN(usdAmount) || usdAmount <= 0) {
-      console.error('[CPX] Invalid amount_usd:', amount_usd);
-      return res.status(200).send('1');
+      // Fallback: amount_local use karo
+      const localVal = parseFloat(amount_local || '0');
+      if (isNaN(localVal) || localVal <= 0) {
+        console.error('[CPX] Both amount_usd and amount_local missing/invalid');
+        return res.status(200).send('1');
+      }
+      usdAmount = localVal / 100; // CPX points to USD
+      console.log('[CPX] Using amount_local fallback:', localVal, '→ $' + usdAmount);
     }
 
     // Calculate coins
