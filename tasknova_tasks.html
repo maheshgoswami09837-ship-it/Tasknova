@@ -581,85 +581,78 @@
 </div>
 
 
-<!-- Shortlink Modal — Exact Watch Ad UI -->
-<div class="feature-modal" id="shortlinkModal">
-  <div class="modal-content" style="width:100%;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:28px 24px;box-sizing:border-box;background:#030712;font-family:'Segoe UI',sans-serif;position:relative;overflow-y:auto;overflow-x:hidden;">
+<!-- Shortlink Modal — Exact Watch Ad v4 Style -->
+<div id="shortlinkModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;z-index:9999;overflow:hidden;background:#07071f;flex-direction:column;align-items:center;justify-content:center;">
+  <!-- BG glow -->
+  <div style="position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse 80% 60% at 50% 0%,rgba(108,99,255,0.18) 0%,transparent 70%);"></div>
 
-    <!-- Background blobs — same as Watch Ad -->
-    <div style="position:absolute;width:320px;height:320px;background:#2563eb;border-radius:50%;filter:blur(80px);opacity:0.15;top:-80px;left:-60px;pointer-events:none;"></div>
-    <div style="position:absolute;width:260px;height:260px;background:#1d4ed8;border-radius:50%;filter:blur(80px);opacity:0.15;bottom:-60px;right:-40px;pointer-events:none;"></div>
+  <div style="position:absolute;top:0;left:0;right:0;bottom:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px 20px;z-index:1;font-family:'Segoe UI',sans-serif;">
 
     <!-- Back button -->
-    <button onclick="closeModal('shortlinkModal')" style="position:absolute;top:20px;left:20px;z-index:2;background:rgba(255,255,255,0.07);border:1.5px solid rgba(255,255,255,0.12);color:#fff;width:38px;height:38px;border-radius:12px;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;">&#8249;</button>
+    <button onclick="closeModal('shortlinkModal')" style="position:absolute;top:20px;left:20px;background:rgba(255,255,255,0.07);border:1.5px solid rgba(255,255,255,0.12);color:#fff;width:38px;height:38px;border-radius:12px;font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:2;">&#8249;</button>
 
-    <!-- Inner card — same as Watch Ad .card -->
-    <div style="position:relative;z-index:1;width:100%;max-width:360px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:24px;padding:32px 24px 28px;display:flex;flex-direction:column;align-items:center;gap:20px;backdrop-filter:blur(12px);">
+    <!-- Logo -->
+    <div style="font-size:13px;font-weight:900;letter-spacing:3px;color:rgba(255,255,255,0.25);text-transform:uppercase;margin-bottom:28px;">⚡ TaskNova</div>
 
-      <!-- Coin badge — same style as Watch Ad -->
-      <div style="display:inline-flex;align-items:center;gap:8px;background:rgba(37,99,235,0.18);border:1px solid rgba(96,165,250,0.3);border-radius:50px;padding:9px 22px;font-size:16px;font-weight:800;color:#93c5fd;letter-spacing:0.3px;">
-        🔗 &nbsp;<span id="slDoneCount" style="display:none;">0</span> +20 Coins
+    <!-- Timer circle (hidden by default, shows after visit) -->
+    <div id="slTimerCircle" style="position:relative;width:180px;height:180px;margin-bottom:28px;display:none;">
+      <svg style="width:180px;height:180px;transform:rotate(-90deg);" viewBox="0 0 180 180">
+        <defs>
+          <linearGradient id="slG" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="#6c63ff"/>
+            <stop offset="100%" stop-color="#3b82f6"/>
+          </linearGradient>
+        </defs>
+        <circle fill="none" stroke="rgba(108,99,255,0.12)" stroke-width="10" cx="90" cy="90" r="80"/>
+        <circle id="slTFill" fill="none" stroke="url(#slG)" stroke-width="10" stroke-linecap="round" stroke-dasharray="502" stroke-dashoffset="0" cx="90" cy="90" r="80" style="transition:stroke-dashoffset 1s linear;"/>
+      </svg>
+      <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;">
+        <span id="slTNum" style="font-size:58px;font-weight:900;line-height:1;color:#fff;">15</span>
+        <span style="font-size:11px;color:rgba(255,255,255,0.35);letter-spacing:2px;margin-top:2px;">SECONDS</span>
       </div>
-
-      <!-- Subtitle -->
-      <div style="font-size:13px;color:rgba(255,255,255,0.4);text-align:center;margin-top:-8px;">
-        Link visit karo aur coins kamao!
-      </div>
-
-      <!-- Stats row -->
-      <div style="display:flex;align-items:center;gap:0;width:100%;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:16px;overflow:hidden;">
-        <div style="flex:1;text-align:center;padding:14px 8px;">
-          <div style="font-size:20px;font-weight:900;color:#a78bfa;" id="slDoneCount2">0</div>
-          <div style="font-size:10px;color:rgba(255,255,255,0.3);margin-top:3px;text-transform:uppercase;letter-spacing:0.5px;">Done</div>
-        </div>
-        <div style="width:1px;background:rgba(255,255,255,0.07);align-self:stretch;"></div>
-        <div style="flex:1;text-align:center;padding:14px 8px;">
-          <div style="font-size:20px;font-weight:900;color:#22c55e;">2</div>
-          <div style="font-size:10px;color:rgba(255,255,255,0.3);margin-top:3px;text-transform:uppercase;letter-spacing:0.5px;">Daily</div>
-        </div>
-        <div style="width:1px;background:rgba(255,255,255,0.07);align-self:stretch;"></div>
-        <div style="flex:1;text-align:center;padding:14px 8px;">
-          <div style="font-size:20px;font-weight:900;color:#f59e0b;">+20</div>
-          <div style="font-size:10px;color:rgba(255,255,255,0.3);margin-top:3px;text-transform:uppercase;letter-spacing:0.5px;">Coins</div>
-        </div>
-      </div>
-
-      <!-- Task area -->
-      <div id="slTaskArea" style="width:100%;display:flex;flex-direction:column;gap:12px;">
-
-        <!-- Visit Link button — exact Watch Ad btn-start style -->
-        <button id="slVisitBtn" onclick="doShortlinkTask()"
-          style="width:100%;padding:15px;border:none;border-radius:14px;background:linear-gradient(135deg,#1d4ed8,#2563eb,#3b82f6);color:#fff;font-size:16px;font-weight:800;letter-spacing:0.4px;cursor:pointer;font-family:'Segoe UI',sans-serif;box-shadow:0 4px 24px rgba(37,99,235,0.45);">
-          🔗 &nbsp;Visit Link
-        </button>
-
-        <!-- Code input (hidden) -->
-        <div id="slCodeLabel" style="display:none;font-size:12px;color:rgba(255,255,255,0.35);text-align:center;">
-          Success page se code daalo:
-        </div>
-        <input id="slCodeInput" type="text" maxlength="4" placeholder="CODE"
-          style="display:none;width:100%;background:rgba(255,255,255,0.06);border:1.5px solid rgba(37,99,235,0.4);border-radius:12px;padding:16px;color:#fff;font-size:28px;font-weight:900;text-align:center;letter-spacing:10px;text-transform:uppercase;outline:none;box-sizing:border-box;font-family:'Segoe UI',sans-serif;"
-          oninput="this.value=this.value.toUpperCase()">
-
-        <!-- Claim button — exact Watch Ad btn-claim style -->
-        <button id="slClaimBtn" onclick="claimShortlink()"
-          style="display:none;width:100%;padding:15px;border:none;border-radius:14px;background:linear-gradient(135deg,#059669,#10b981);color:#fff;font-size:16px;font-weight:800;cursor:pointer;font-family:'Segoe UI',sans-serif;box-shadow:0 4px 20px rgba(16,185,129,0.4);">
-          ✅ &nbsp;Claim 20 Coins
-        </button>
-
-      </div>
-
-      <!-- Reset info -->
-      <div style="font-size:11px;color:rgba(255,255,255,0.2);text-align:center;margin-top:-8px;">
-        Raat 12 baje reset hota hai
-      </div>
-
     </div>
 
-    <!-- TASKNOVA watermark -->
-    <div style="position:relative;z-index:1;margin-top:20px;font-size:11px;font-weight:800;color:rgba(255,255,255,0.12);letter-spacing:3px;text-transform:uppercase;">⚡ TASKNOVA</div>
+    <!-- Reward badge -->
+    <div style="display:flex;align-items:center;gap:8px;background:rgba(249,200,70,0.1);border:1.5px solid rgba(249,200,70,0.3);border-radius:50px;padding:10px 22px;font-size:20px;font-weight:900;color:#f9c846;margin-bottom:28px;">
+      🔗 +20 Coins
+    </div>
 
+    <!-- Status text -->
+    <p id="slStatus" style="font-size:15px;font-weight:700;color:rgba(255,255,255,0.4);text-align:center;margin-bottom:28px;min-height:22px;transition:color 0.3s;">Link visit karo aur coins kamao!</p>
+
+    <!-- Progress bar (hidden by default) -->
+    <div id="slBarWrap" style="display:none;width:100%;max-width:320px;height:4px;background:rgba(255,255,255,0.06);border-radius:99px;margin-bottom:28px;overflow:hidden;">
+      <div id="slBarFill" style="height:100%;border-radius:99px;background:linear-gradient(90deg,#6c63ff,#3b82f6);transform-origin:left;transform:scaleX(1);transition:transform 1s linear;"></div>
+    </div>
+
+    <!-- Warning box -->
+    <div id="slWarn" style="display:none;width:100%;max-width:320px;background:rgba(255,94,94,0.08);border:1px solid rgba(255,94,94,0.2);border-radius:14px;padding:12px 16px;font-size:13px;color:#ff7a7a;text-align:center;margin-bottom:16px;"></div>
+
+    <!-- Visit Link button -->
+    <button id="slVisitBtn" onclick="doShortlinkTask()"
+      style="width:100%;max-width:320px;padding:20px;border:none;border-radius:20px;background:linear-gradient(135deg,#6c63ff,#3b82f6);color:#fff;font-size:18px;font-weight:900;cursor:pointer;font-family:'Segoe UI',sans-serif;box-shadow:0 12px 40px rgba(108,99,255,0.45),0 0 0 1px rgba(108,99,255,0.2);letter-spacing:0.3px;">
+      🔗 Visit Link &amp; Earn
+    </button>
+    <div style="height:12px;"></div>
+
+    <!-- Code input (hidden) -->
+    <div id="slCodeLabel" style="display:none;font-size:12px;color:rgba(255,255,255,0.35);text-align:center;margin-bottom:8px;">Success page se code daalo:</div>
+    <input id="slCodeInput" type="text" maxlength="4" placeholder="CODE"
+      style="display:none;width:100%;max-width:320px;background:rgba(255,255,255,0.06);border:1.5px solid rgba(108,99,255,0.4);border-radius:14px;padding:16px;color:#fff;font-size:28px;font-weight:900;text-align:center;letter-spacing:10px;text-transform:uppercase;outline:none;box-sizing:border-box;font-family:'Segoe UI',sans-serif;margin-bottom:12px;"
+      oninput="this.value=this.value.toUpperCase()">
+
+    <!-- Claim button -->
+    <button id="slClaimBtn" onclick="claimShortlink()"
+      style="display:none;width:100%;max-width:320px;padding:20px;border:none;border-radius:20px;background:linear-gradient(135deg,#1db954,#22d67a);color:#fff;font-size:18px;font-weight:900;cursor:pointer;font-family:'Segoe UI',sans-serif;box-shadow:0 12px 40px rgba(34,214,122,0.45);">
+      🎉 Claim 20 Coins
+    </button>
+
+    <!-- Hidden spans used by JS -->
+    <span id="slDoneCount" style="display:none;">0</span>
+    <span id="slDoneCount2" style="display:none;">0</span>
   </div>
 </div>
+
 <!-- Ad Popup -->
 <div id="adPopup">
   <div style="width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;">
@@ -3727,7 +3720,11 @@
 
   function openShortlinkModal() {
     slVisited = false;
-    document.getElementById('shortlinkModal').classList.add('show');
+    document.getElementById('shortlinkModal').style.display = 'flex';
+    // Scroll lock
+    document.body.style.overflow = 'hidden';
+    document.body.style.position = 'fixed';
+    document.body.style.width = '100%';
     // Firebase se latest data load karo pehle
     const uid = localStorage.getItem('tasknova_uid');
     const today = new Date().toDateString();
@@ -4036,7 +4033,16 @@
     iframe.src = iframe.src;
   }
   function closeModal(id) {
-    document.getElementById(id).classList.remove('show');
+    const el = document.getElementById(id);
+    if (id === 'shortlinkModal') {
+      el.style.display = 'none';
+    } else {
+      el.classList.remove('show');
+    }
+    // Scroll unlock
+    document.body.style.overflow = '';
+    document.body.style.position = '';
+    document.body.style.width = '';
     updateDailyLimitUI();
   }
 </script>
