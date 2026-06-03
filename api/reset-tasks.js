@@ -39,15 +39,29 @@ export default async function handler(req, res) {
     console.log(`[Reset] Total users to reset: ${userIds.length}`);
 
     // ── Step 2: Har user ka task reset karo ──────────────────
+    // IST today key
+    const nowIST   = new Date(Date.now() + 5.5 * 60 * 60 * 1000);
+    const todayKey = nowIST.toISOString().split('T')[0];
+
     const resetPromises = userIds.map(uid => {
-      return fetch(`${FIREBASE_URL}/users/${uid}.json${authParam}`, {
+      const resetData = {
+        tasksDone         : 0,
+        dailyTasksClaimed : false,
+        lastResetDate     : new Date().toDateString(),
+        spinsToday        : 0,
+        scratchesToday    : 0,
+        quizzesToday      : 0,
+        adsWatchedToday   : 0,
+        shortlinkToday    : 0,
+        checkinDoneToday  : false,
+      };
+      // aaj ki dailyTasks key Firebase se delete karo
+      resetData['dailyTasks/' + todayKey] = null;
+
+      return fetch(FIREBASE_URL + '/users/' + uid + '.json' + authParam, {
         method : 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body   : JSON.stringify({
-          tasksDone         : 0,
-          dailyTasksClaimed : false,
-          lastResetDate     : new Date().toDateString(),
-        })
+        body   : JSON.stringify(resetData)
       });
     });
 
