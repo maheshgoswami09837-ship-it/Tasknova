@@ -984,9 +984,10 @@
     const badgeText  = isSuccess ? '✅ Success' : isRejected ? '❌ Rejected' : '⏳ Pending';
     const isUPI      = (item.method || '').toLowerCase() === 'upi';
     const pd         = item.paymentDetails || {};
-    const dateObj    = new Date(item.date);
-    const dateStr    = dateObj.toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' });
-    const timeStr    = dateObj.toLocaleTimeString('en-IN', { hour:'2-digit', minute:'2-digit', hour12:true });
+    const dateObj    = new Date(item.date || item.timestamp || item.createdAt || item.requestedAt || Date.now());
+    const isValidDate = !isNaN(dateObj.getTime());
+    const dateStr    = isValidDate ? dateObj.toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' }) : 'N/A';
+    const timeStr    = isValidDate ? dateObj.toLocaleTimeString('en-IN', { hour:'2-digit', minute:'2-digit', hour12:true }) : '';
     const methodIcon = isUPI ? '📱' : '🏦';
     const methodName = isUPI ? 'UPI Transfer' : 'Bank Transfer';
     const holderName = isUPI ? (pd.upiName || '—') : (pd.accName || '—');
@@ -1020,7 +1021,7 @@
           '<div class="tx-sub">' + dateStr + ' · ' + timeStr + ' · ' + bankVal + '</div>' +
         '</div>' +
         '<div class="tx-right">' +
-          '<div class="tx-amount">₹' + item.amount + '</div>' +
+          '<div class="tx-amount">₹' + (item.amount || item.withdrawAmount || '—') + '</div>' +
           '<div class="tx-badge">' + badgeText + '</div>' +
         '</div>' +
       '</div>' +
@@ -1120,7 +1121,7 @@ function renderHistoryPage() {
         }
         // ALL withdrawals — pending + approved + rejected sab
         var items = Object.values(data).filter(Boolean)
-          .sort(function(a,b) { return new Date(b.date) - new Date(a.date); });
+          .sort(function(a,b) { return new Date(b.date||b.timestamp||b.createdAt||0) - new Date(a.date||a.timestamp||a.createdAt||0); });
 
         // buildTxCard use karo — same clean UI
         list.innerHTML = '<div class="history-list" style="padding:0;">' + items.map(buildTxCard).join('') + '</div>';
