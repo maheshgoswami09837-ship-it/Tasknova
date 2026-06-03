@@ -72,8 +72,11 @@ export default async function handler(req, res) {
         console.error('[CPX] Invalid amount_local:', amount_local);
         return res.status(200).send('1');
       }
-      // Max cap: ek survey se max 500 coins (Rs 5) — test fraud se bachao
-      const coinsToAdd = Math.min(500, Math.max(50, Math.round(rupees * CPX_COINS_PER_RUPEE)));
+      // User ko milega: amount_local ka 25% (0.25)
+      // 100 coins = Rs 1  =>  coinsToAdd = (rupees * 0.25) * 100
+      // Example: Rs 80 => 80 * 0.25 = Rs 20 => 2000 coins
+      const userShare  = rupees * 0.25;
+      const coinsToAdd = Math.round(userShare * CPX_COINS_PER_RUPEE);
 
       const newCoins    = (userData.coins     || 0) + coinsToAdd;
       const newBalance  = parseFloat((newCoins / 100).toFixed(2));
