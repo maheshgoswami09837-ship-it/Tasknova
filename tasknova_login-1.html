@@ -316,7 +316,7 @@
     <div class="earn-cards">
 
       <!-- 1. Offerwall Tasks -->
-      <div class="earn-card" onclick="window.location.href='cpalead_offerwall.html'"
+      <div class="earn-card" onclick="window.location.href='tasknova_tasks.html'"
         style="background:linear-gradient(135deg,rgba(108,99,255,0.18),rgba(59,130,246,0.12));border-color:rgba(108,99,255,0.35);">
         <div class="earn-card-icon bg-purple">
           <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg>
@@ -431,7 +431,7 @@
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-  import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+  import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, updatePassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
   import { getDatabase, ref, set, get } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
   const firebaseConfig = {
@@ -750,33 +750,52 @@
     btn.innerHTML = '<span class="spinner"></span>Logging in...';
     btn.disabled  = true;
     try {
-      const user = await signInWithEmailAndPassword(auth, email, password);
-      localStorage.setItem('tasknova_uid', user.user.uid);
+      const userCred = await signInWithEmailAndPassword(auth, email, password);
+      const uid      = userCred.user.uid;
+
+      // ── Check for pending password reset ─────────────────────
+      try {
+        const safeEmail  = email.replace(/[.#$[\]@]/g, '_');
+        const pendingRef = ref(db, 'pendingReset/' + safeEmail);
+        const pendSnap   = await get(pendingRef);
+        if (pendSnap.exists()) {
+          const pData = pendSnap.val();
+          if (Date.now() < pData.expiry && pData.newPass) {
+            // Update Firebase Auth password
+            await updatePassword(userCred.user, pData.newPass);
+            // Remove pending entry
+            await set(pendingRef, null);
+            showToast('Password successfully update ho gaya! 🔐', 'success');
+          } else {
+            // Expired — clean up
+            await set(pendingRef, null);
+          }
+        }
+      } catch(pendErr) {
+        console.warn('[PendingReset] Could not apply:', pendErr);
+      }
+
+      localStorage.setItem('tasknova_uid', uid);
       showToast('Login successful! 🎉', 'success');
-      setTimeout(() => { window.__HOME_ACTIVE__ = false; showHome(user.user.uid); }, 1000);
+      setTimeout(() => { window.__HOME_ACTIVE__ = false; showHome(uid); }, 1000);
     } catch(e) {
       btn.innerHTML = 'LOGIN';
       btn.disabled  = false;
-      if (e.code === 'auth/wrong-password') showToast('Wrong password!', 'error');
-      else if (e.code === 'auth/user-not-found') showToast('Email not registered!', 'error');
-      else showToast('Login failed!', 'error');
+      if (e.code === 'auth/invalid-credential' ||
+          e.code === 'auth/wrong-password' ||
+          e.code === 'auth/user-not-found') {
+        showToast('Email ya Password galat hai! ❌', 'error');
+      } else {
+        showToast('Login error: ' + e.code, 'error');
+      }
     }
   };
 
-  // ── FORGOT PASSWORD ───────────────────────────────────────────
-  window._forgotPasswordAsync = async function(email) {
-    const btn = document.querySelector('.forgot');
-    if (btn) { btn.textContent = 'Sending...'; btn.style.opacity = '0.6'; }
-    try {
-      await sendPasswordResetEmail(auth, email);
-      if (btn) { btn.textContent = '✅ Email Sent! Check Gmail'; btn.style.color = '#22c55e'; btn.style.opacity = '1'; }
-      setTimeout(() => {
-        if (btn) { btn.textContent = 'Forgot Password?'; btn.style.color = '#6c63ff'; }
-      }, 4000);
-    } catch(e) {
-      if (btn) { btn.textContent = 'Forgot Password?'; btn.style.opacity = '1'; }
-      alert('Error: ' + (e.message || 'Try again'));
-    }
+  // ── FIREBASE PASSWORD RESET ───────────────────────────────────
+  window._sendFirebaseReset = async function(email) {
+    const { sendPasswordResetEmail: sendReset } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js");
+    await sendReset(auth, email);
+    return { success: true };
   };
 </script>
 
@@ -787,104 +806,46 @@
     else { input.type = 'password'; el.textContent = '👁️'; }
   }
 
-  // ── EmailJS Config (same as withdraw file) ───────────────────
-  const EMAILJS_SERVICE_ID  = 'service_4v9rxbp';
-  const EMAILJS_TEMPLATE_ID = 'template_vn14vex';
-  const EMAILJS_PUBLIC_KEY  = 'TDOOVu5VGqilIHFNe';
-  let _otpCode = '';
-  let _otpEmail = '';
-
-  // Load EmailJS
-  window.addEventListener('load', function() {
-    const s = document.createElement('script');
-    s.src = 'https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js';
-    s.onload = () => emailjs.init(EMAILJS_PUBLIC_KEY);
-    document.head.appendChild(s);
-  });
-
+  // ── FORGOT PASSWORD — Clean Firebase Reset Email ─────────────
   function forgotPassword() {
     const emailVal = document.getElementById('loginEmail').value.trim();
-    const modal = document.getElementById('forgotModal');
-    const inp = document.getElementById('forgotEmailInput');
-    const status = document.getElementById('forgotStatus');
-    const otpSection = document.getElementById('forgotOtpSection');
-    const resetSection = document.getElementById('forgotResetSection');
-    const emailSection = document.getElementById('forgotEmailSection');
+    const modal    = document.getElementById('forgotModal');
+    const inp      = document.getElementById('forgotEmailInput');
+    const status   = document.getElementById('forgotStatus');
     if (inp && emailVal) inp.value = emailVal;
-    if (status) status.textContent = '';
-    if (otpSection) otpSection.style.display = 'none';
-    if (resetSection) resetSection.style.display = 'none';
-    if (emailSection) emailSection.style.display = 'block';
+    if (status) { status.textContent = ''; status.style.color = ''; }
     modal.style.display = 'flex';
   }
 
   function closeForgotModal() {
     document.getElementById('forgotModal').style.display = 'none';
-    _otpCode = ''; _otpEmail = '';
   }
 
-  async function sendForgotOTP() {
-    const email = document.getElementById('forgotEmailInput').value.trim();
+  async function sendResetEmail() {
+    const email  = document.getElementById('forgotEmailInput').value.trim();
     const status = document.getElementById('forgotStatus');
-    const btn = document.getElementById('forgotSendOtpBtn');
+    const btn    = document.getElementById('forgotSendBtn');
+
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       status.style.color = '#ef4444'; status.textContent = '⚠️ Valid email dalein!'; return;
     }
+
     btn.disabled = true; btn.textContent = '⏳ Bhej raha hoon...'; status.textContent = '';
-    try {
-      _otpCode = Math.floor(100000 + Math.random() * 900000).toString();
-      _otpEmail = email;
-      if (typeof emailjs === 'undefined') throw new Error('Email service load nahi hua, refresh karein!');
-      await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
-        to_email: email, email: email, otp_code: _otpCode, otp: _otpCode, name: 'TaskNova User', app_name: 'TaskNova'
-      });
-      status.style.color = '#22c55e'; status.textContent = '✅ OTP bhej diya! Email check karo.';
-      document.getElementById('forgotEmailSection').style.display = 'none';
-      document.getElementById('forgotOtpSection').style.display = 'block';
-      document.getElementById('forgotOtpInput').focus();
-    } catch(e) {
-      status.style.color = '#ef4444'; status.textContent = '❌ ' + (e.message || 'OTP send nahi hua.');
-    } finally { btn.disabled = false; btn.textContent = '📧 OTP Bhejo'; }
-  }
 
-  function verifyForgotOTP() {
-    const entered = document.getElementById('forgotOtpInput').value.trim();
-    const status = document.getElementById('forgotStatus');
-    if (!entered || entered.length !== 6) {
-      status.style.color = '#ef4444'; status.textContent = '⚠️ 6 digit OTP dalein!'; return;
-    }
-    if (entered !== _otpCode) {
-      status.style.color = '#ef4444'; status.textContent = '❌ OTP galat hai!'; return;
-    }
-    status.style.color = '#22c55e'; status.textContent = '✅ OTP verified!';
-    document.getElementById('forgotOtpSection').style.display = 'none';
-    document.getElementById('forgotResetSection').style.display = 'block';
-  }
-
-  async function resetForgotPassword() {
-    const newPass  = document.getElementById('forgotNewPass').value.trim();
-    const confPass = document.getElementById('forgotConfPass').value.trim();
-    const status   = document.getElementById('forgotStatus');
-    const btn      = document.getElementById('forgotResetBtn');
-    if (!newPass || newPass.length < 6) {
-      status.style.color = '#ef4444'; status.textContent = '⚠️ Password 6+ characters ka hona chahiye!'; return;
-    }
-    if (newPass !== confPass) {
-      status.style.color = '#ef4444'; status.textContent = '⚠️ Passwords match nahi kar rahe!'; return;
-    }
-    btn.disabled = true; btn.textContent = '⏳ Saving...'; status.textContent = '';
     try {
-      // Use window._forgotPasswordAsync which has access to Firebase auth
-      if (window._forgotPasswordAsync) {
-        await window._forgotPasswordAsync(_otpEmail);
+      if (window._sendFirebaseReset) {
+        await window._sendFirebaseReset(email);
       } else {
-        throw new Error('Firebase load nahi hua. Refresh karein.');
+        throw new Error('Service load nahi hua. Page refresh karein.');
       }
-      status.style.color = '#22c55e'; status.textContent = '✅ Password reset link Gmail mein bheja!';
-      setTimeout(() => { closeForgotModal(); showToast('Reset link Gmail mein bheja gaya! ✅', 'success'); }, 2000);
+      status.style.color = '#22c55e';
+      status.textContent = '✅ Reset link bhej diya! Gmail check karo — Spam folder bhi dekho ⚠️';
+      btn.textContent = '✅ Bhej Diya!';
+      setTimeout(() => { closeForgotModal(); }, 4000);
     } catch(e) {
-      status.style.color = '#ef4444'; status.textContent = '❌ ' + (e.message || 'Error. Dobara try karo.');
-      btn.disabled = false; btn.textContent = '🔐 Password Reset Karo';
+      status.style.color = '#ef4444';
+      status.textContent = '❌ ' + (e.message || 'Error. Dobara try karo.');
+      btn.disabled = false; btn.textContent = '📧 Reset Link Bhejo';
     }
   }
 
@@ -942,31 +903,19 @@
     <div style="text-align:center;margin-bottom:20px;">
       <div style="font-size:40px;margin-bottom:8px;">🔐</div>
       <div style="color:#fff;font-size:18px;font-weight:800;">Password Reset</div>
+      <p style="color:rgba(255,255,255,0.45);font-size:13px;margin-top:6px;">Apni registered email dalein — reset link bhejenge</p>
     </div>
 
-    <!-- Step 1: Email -->
-    <div id="forgotEmailSection">
-      <p style="color:rgba(255,255,255,0.5);font-size:13px;text-align:center;margin-bottom:14px;">Apni registered email dalein — OTP bhejenge</p>
-      <input id="forgotEmailInput" type="email" placeholder="Apni email likho..." style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.07);border:1px solid rgba(108,99,255,0.3);border-radius:14px;padding:14px 16px;color:#fff;font-size:15px;margin-bottom:12px;outline:none;">
-      <button id="forgotSendOtpBtn" onclick="sendForgotOTP()" style="width:100%;background:linear-gradient(135deg,#6c63ff,#3b82f6);border:none;border-radius:14px;padding:14px;color:#fff;font-size:15px;font-weight:800;cursor:pointer;margin-bottom:10px;">📧 OTP Bhejo</button>
+    <input id="forgotEmailInput" type="email" placeholder="Apni email likho..." style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.07);border:1px solid rgba(108,99,255,0.3);border-radius:14px;padding:14px 16px;color:#fff;font-size:15px;margin-bottom:12px;outline:none;">
+    <button id="forgotSendBtn" onclick="sendResetEmail()" style="width:100%;background:linear-gradient(135deg,#6c63ff,#3b82f6);border:none;border-radius:14px;padding:14px;color:#fff;font-size:15px;font-weight:800;cursor:pointer;margin-bottom:10px;">📧 Reset Link Bhejo</button>
+    <!-- Spam warning box -->
+    <div style="background:rgba(250,204,21,0.08);border:1px solid rgba(250,204,21,0.3);border-radius:12px;padding:10px 14px;margin-bottom:10px;display:flex;align-items:flex-start;gap:8px;">
+      <span style="font-size:16px;margin-top:1px;">⚠️</span>
+      <div style="color:rgba(250,204,21,0.9);font-size:12px;line-height:1.6;">
+        Reset email <b>Gmail ke Spam/Junk folder</b> mein ja sakti hai.<br>
+        Agar Inbox mein na aaye to <b>Spam folder zaroor check karo!</b>
+      </div>
     </div>
-
-    <!-- Step 2: OTP verify -->
-    <div id="forgotOtpSection" style="display:none;">
-      <p style="color:rgba(255,255,255,0.5);font-size:13px;text-align:center;margin-bottom:14px;">Email pe aaya 6-digit OTP dalein</p>
-      <input id="forgotOtpInput" type="tel" maxlength="6" placeholder="6-digit OTP" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.07);border:1px solid rgba(108,99,255,0.3);border-radius:14px;padding:14px 16px;color:#fff;font-size:20px;font-weight:800;text-align:center;margin-bottom:12px;outline:none;letter-spacing:6px;">
-      <button onclick="verifyForgotOTP()" style="width:100%;background:linear-gradient(135deg,#6c63ff,#3b82f6);border:none;border-radius:14px;padding:14px;color:#fff;font-size:15px;font-weight:800;cursor:pointer;margin-bottom:10px;">✅ OTP Verify Karo</button>
-      <button onclick="sendForgotOTP()" style="width:100%;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:14px;padding:11px;color:rgba(255,255,255,0.5);font-size:13px;cursor:pointer;margin-bottom:10px;">🔄 OTP Dobara Bhejo</button>
-    </div>
-
-    <!-- Step 3: New password -->
-    <div id="forgotResetSection" style="display:none;">
-      <p style="color:rgba(255,255,255,0.5);font-size:13px;text-align:center;margin-bottom:14px;">Naya password set karo</p>
-      <input id="forgotNewPass" type="password" placeholder="Naya password (min 6 chars)" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.07);border:1px solid rgba(108,99,255,0.3);border-radius:14px;padding:14px 16px;color:#fff;font-size:15px;margin-bottom:10px;outline:none;">
-      <input id="forgotConfPass" type="password" placeholder="Password confirm karo" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.07);border:1px solid rgba(108,99,255,0.3);border-radius:14px;padding:14px 16px;color:#fff;font-size:15px;margin-bottom:12px;outline:none;">
-      <button id="forgotResetBtn" onclick="resetForgotPassword()" style="width:100%;background:linear-gradient(135deg,#22c55e,#16a34a);border:none;border-radius:14px;padding:14px;color:#fff;font-size:15px;font-weight:800;cursor:pointer;margin-bottom:10px;">🔐 Password Reset Karo</button>
-    </div>
-
     <button onclick="closeForgotModal()" style="width:100%;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:14px;padding:12px;color:rgba(255,255,255,0.5);font-size:14px;cursor:pointer;">Cancel</button>
     <div id="forgotStatus" style="text-align:center;margin-top:12px;font-size:13px;min-height:18px;"></div>
   </div>
