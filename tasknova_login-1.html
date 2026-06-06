@@ -448,9 +448,8 @@
   const auth = getAuth(app);
   const db   = getDatabase(app);
 
-  // ── Brevo config ─────────────────────────────────────────────
-  const BREVO_API_KEY = 'xsmtpsib-4f0e344f5f134d6e015d368303e2143f6ff2b895d7f98576e12e335ef377d88c-q6rYx08bJ0XTmYwS';
-  const BREVO_SENDER  = { name: 'TaskNova Team', email: 'bekarboy73@gmail.com' };
+  // ── OTP API endpoint ──────────────────────────────────────────
+  const OTP_API = '/api/send-otp';
 
   let currentOTP   = '';
   let pendingRegData = null;
@@ -600,45 +599,25 @@
     btn.innerHTML  = '<span class="spinner"></span>Sending OTP...';
     btn.disabled   = true;
 
-    fetch('https://api.brevo.com/v3/smtp/email', {
+    fetch(OTP_API, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'api-key': BREVO_API_KEY
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        sender: BREVO_SENDER,
-        to: [{ email: pendingRegData.email, name: pendingRegData.name }],
-        subject: 'TaskNova - Your OTP Code: ' + currentOTP,
-        htmlContent: `
-          <div style="font-family:Segoe UI,sans-serif;background:#05051a;padding:32px;border-radius:16px;max-width:480px;margin:auto;">
-            <div style="text-align:center;margin-bottom:24px;">
-              <div style="display:inline-block;background:linear-gradient(135deg,#6c63ff,#3b82f6);border-radius:16px;padding:12px 20px;">
-                <span style="font-size:28px;">⚡</span>
-                <span style="color:#fff;font-size:22px;font-weight:800;margin-left:8px;">TaskNova</span>
-              </div>
-            </div>
-            <h2 style="color:#fff;text-align:center;margin-bottom:8px;">Email Verification</h2>
-            <p style="color:rgba(255,255,255,0.6);text-align:center;margin-bottom:28px;">Hi ${pendingRegData.name}, apna account verify karne ke liye neeche diya OTP use karein:</p>
-            <div style="background:linear-gradient(135deg,rgba(108,99,255,0.2),rgba(59,130,246,0.2));border:2px solid rgba(108,99,255,0.4);border-radius:14px;padding:24px;text-align:center;margin-bottom:24px;">
-              <div style="font-size:40px;font-weight:900;letter-spacing:12px;color:#fff;">${currentOTP}</div>
-              <p style="color:rgba(255,255,255,0.4);font-size:12px;margin-top:8px;">Yeh OTP 10 minutes mein expire ho jayega</p>
-            </div>
-            <p style="color:rgba(255,255,255,0.4);font-size:12px;text-align:center;">Agar aapne signup nahi kiya toh is email ko ignore karein.</p>
-          </div>
-        `
+        email: pendingRegData.email,
+        name:  pendingRegData.name,
+        otp:   currentOTP
       })
     }).then(res => res.json()).then(data => {
-      if (data.messageId) {
+      if (data.success) {
         showToast('OTP bheja! Gmail check karein 📧', 'success');
         document.getElementById('otpModal').classList.add('show');
         document.querySelectorAll('.otp-box')[0].focus();
       } else {
-        console.error('Brevo Error:', data);
-        showToast('OTP send failed: ' + (data.message || 'Try again'), 'error');
+        console.error('OTP Error:', data);
+        showToast('OTP send failed: ' + (data.error || 'Try again'), 'error');
       }
     }).catch(err => {
-      console.error('Brevo Error:', err);
+      console.error('OTP Error:', err);
       showToast('OTP send failed. Internet check karein.', 'error');
     }).finally(() => {
       btn.innerHTML = 'SEND OTP & REGISTER';
