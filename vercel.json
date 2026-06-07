@@ -1,10 +1,6 @@
 {
   "rewrites": [
+    { "source": "/api/:path*", "destination": "/api/:path*" },
     { "source": "/", "destination": "/tasknova_login-1.html" }
-  ],
-  "functions": {
-    "api/*.js": {
-      "runtime": "node@18"
-    }
-  }
+  ]
 }
