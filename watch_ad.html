@@ -1,74 +1,237 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="hi">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Ad Test Page</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      min-height: 100vh;
-      margin: 0;
-      background: #f0f0f0;
-    }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Watch Ad – TaskNova</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;800;900&display=swap" rel="stylesheet">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body { height:100%; overflow:hidden; font-family:'Nunito',sans-serif; background:#07071f; color:#fff; }
 
-    h1 {
-      color: #333;
-      margin-bottom: 20px;
-    }
+  /* BG glow */
+  body::before {
+    content:''; position:fixed; inset:0; pointer-events:none;
+    background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(108,99,255,0.18) 0%, transparent 70%);
+  }
 
-    .watch-btn {
-      background-color: #ff0000;
-      color: white;
-      border: none;
-      padding: 15px 40px;
-      font-size: 18px;
-      border-radius: 8px;
-      cursor: pointer;
-      margin-bottom: 40px;
-      transition: background 0.3s;
-    }
+  .screen {
+    height:100%; display:flex; flex-direction:column;
+    align-items:center; justify-content:center;
+    padding:24px 20px; position:relative; z-index:1;
+    gap:0;
+  }
 
-    .watch-btn:hover {
-      background-color: #cc0000;
-    }
+  /* ── Logo ── */
+  .logo {
+    font-size:13px; font-weight:900; letter-spacing:3px;
+    color:rgba(255,255,255,0.25); text-transform:uppercase;
+    margin-bottom:28px;
+  }
 
-    .ad-container {
-      background: white;
-      padding: 20px;
-      border-radius: 10px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-      text-align: center;
-      min-width: 300px;
-    }
+  /* ── Big Timer Circle ── */
+  .timer-circle {
+    position:relative; width:180px; height:180px;
+    margin-bottom:28px; display:none;
+  }
+  .timer-circle.show { display:block; animation:pop 0.35s cubic-bezier(0.34,1.56,0.64,1) both; }
+  @keyframes pop { from{transform:scale(0.6);opacity:0} to{transform:scale(1);opacity:1} }
 
-    .ad-container p {
-      color: #888;
-      font-size: 12px;
-      margin-bottom: 10px;
-    }
-  </style>
+  .timer-svg { width:180px; height:180px; transform:rotate(-90deg); }
+  .t-bg   { fill:none; stroke:rgba(108,99,255,0.12); stroke-width:10; }
+  .t-fill { fill:none; stroke-width:10; stroke-linecap:round;
+            stroke-dasharray:502; stroke-dashoffset:0;
+            stroke:url(#g); transition:stroke-dashoffset 1s linear; }
+  .t-inner {
+    position:absolute; inset:0; display:flex;
+    flex-direction:column; align-items:center; justify-content:center;
+  }
+  .t-num  { font-size:58px; font-weight:900; line-height:1; }
+  .t-lbl  { font-size:11px; color:rgba(255,255,255,0.35); letter-spacing:2px; margin-top:2px; }
+
+  /* ── Reward badge ── */
+  .reward {
+    display:flex; align-items:center; gap:8px;
+    background:rgba(249,200,70,0.1); border:1.5px solid rgba(249,200,70,0.3);
+    border-radius:50px; padding:10px 22px;
+    font-size:20px; font-weight:900; color:#f9c846;
+    margin-bottom:28px;
+  }
+
+  /* ── Status ── */
+  .status {
+    font-size:15px; font-weight:700; color:rgba(255,255,255,0.4);
+    text-align:center; margin-bottom:28px; min-height:22px;
+    transition:color 0.3s;
+  }
+  .status.green { color:#22d67a; }
+  .status.red   { color:#ff5e5e; }
+
+  /* ── Main CTA Button ── */
+  .cta {
+    width:100%; max-width:320px;
+    padding:20px; border:none; border-radius:20px;
+    font-family:'Nunito',sans-serif; font-size:18px; font-weight:900;
+    cursor:pointer; transition:transform 0.15s, box-shadow 0.15s;
+    letter-spacing:0.3px;
+  }
+  .cta:active { transform:scale(0.96); }
+
+  .cta-watch {
+    background:linear-gradient(135deg, #6c63ff 0%, #3b82f6 100%);
+    color:#fff;
+    box-shadow:0 12px 40px rgba(108,99,255,0.45), 0 0 0 1px rgba(108,99,255,0.2);
+  }
+  .cta-back {
+    background:rgba(108,99,255,0.12);
+    border:2px solid rgba(108,99,255,0.35) !important;
+    color:#a89fff;
+    box-shadow:none;
+    display:none;
+  }
+  .cta-back.show { display:block; }
+  .cta-claim {
+    background:linear-gradient(135deg, #1db954, #22d67a);
+    color:#fff;
+    box-shadow:0 12px 40px rgba(34,214,122,0.45);
+    animation:glow 1.8s ease-in-out infinite;
+    display:none;
+  }
+  .cta-claim.show { display:block; }
+  @keyframes glow {
+    0%,100%{box-shadow:0 12px 40px rgba(34,214,122,0.4)}
+    50%{box-shadow:0 12px 60px rgba(34,214,122,0.7)}
+  }
+
+  /* ── Progress thin bar ── */
+  .bar-wrap { width:100%; max-width:320px; height:4px; background:rgba(255,255,255,0.06); border-radius:99px; margin-bottom:28px; overflow:hidden; display:none; }
+  .bar-wrap.show { display:block; }
+  .bar-fill { height:100%; border-radius:99px; background:linear-gradient(90deg,#6c63ff,#3b82f6); transform-origin:left; transform:scaleX(1); transition:transform 1s linear; }
+
+  /* ── Warn ── */
+  .warn { width:100%; max-width:320px; background:rgba(255,94,94,0.08); border:1px solid rgba(255,94,94,0.2); border-radius:14px; padding:12px 16px; font-size:13px; color:#ff7a7a; text-align:center; margin-bottom:16px; display:none; animation:shake 0.3s ease; }
+  .warn.show { display:block; }
+  @keyframes shake{0%,100%{transform:translateX(0)}30%{transform:translateX(-5px)}70%{transform:translateX(5px)}}
+
+  /* gap between buttons */
+  .gap { height:12px; }
+</style>
 </head>
 <body>
+<div class="screen">
 
-  <h1>Ad Test Page</h1>
+  <div class="logo">⚡ TaskNova</div>
 
-  <!-- Watch Button -->
-  <button class="watch-btn" onclick="alert('Watch button clicked!')">▶ Watch Now</button>
-
-  <!-- Ad Container -->
-  <div class="ad-container">
-    <p>Advertisement</p>
-
-    <!-- Your Ad Code -->
-    <script async type="application/javascript" src="https://a.pemsrv.com/ad-provider.js"></script>
-    <ins class="eas6a97888e33" data-zoneid="5946220"></ins>
-    <script>(AdProvider = window.AdProvider || []).push({"serve": {}});</script>
+  <!-- Timer ring -->
+  <div class="timer-circle" id="timerCircle">
+    <svg class="timer-svg" viewBox="0 0 180 180">
+      <defs>
+        <linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stop-color="#6c63ff"/>
+          <stop offset="100%" stop-color="#3b82f6"/>
+        </linearGradient>
+      </defs>
+      <circle class="t-bg" cx="90" cy="90" r="80"/>
+      <circle class="t-fill" id="tFill" cx="90" cy="90" r="80"/>
+    </svg>
+    <div class="t-inner">
+      <span class="t-num" id="tNum">20</span>
+      <span class="t-lbl">SECONDS</span>
+    </div>
   </div>
 
+  <!-- Reward -->
+  <div class="reward">🪙 +10 Coins</div>
+
+  <!-- Status -->
+  <p class="status" id="status">Ad dekho aur coins kamao!</p>
+
+  <!-- Progress bar -->
+  <div class="bar-wrap" id="barWrap">
+    <div class="bar-fill" id="barFill"></div>
+  </div>
+
+  <!-- Warning -->
+  <div class="warn" id="warn"></div>
+
+  <!-- Buttons -->
+  <button class="cta cta-watch" id="watchBtn" onclick="startWatch()">📺 Watch Ad &amp; Earn</button>
+  <div class="gap"></div>
+  <button class="cta cta-back" id="backBtn" onclick="userReturned()">✅ Ad Dekh Li — Wapas Aao</button>
+  <button class="cta cta-claim" id="claimBtn" onclick="claimCoins()">🎉 Claim 10 Coins</button>
+
+</div>
+<script>
+  const AD_URL     = 'https://omg10.com/4/11063028';
+  const RETURN_URL = 'https://tasknovaofficial.vercel.app/tasknova_tasks.html?status=success&task=video1';
+  const TOTAL      = 20;
+  const CIRC       = 2 * Math.PI * 80;
+
+  let secsLeft = TOTAL, adOpened = false, adViewed = false, timerDone = false, iv = null;
+
+  const tFill  = document.getElementById('tFill');
+  const tNum   = document.getElementById('tNum');
+  const barFill= document.getElementById('barFill');
+  const statusEl = document.getElementById('status');
+
+  tFill.style.strokeDasharray  = CIRC;
+  tFill.style.strokeDashoffset = 0;
+
+  function setStatus(msg, cls) { statusEl.textContent = msg; statusEl.className = 'status ' + (cls||''); }
+  function showWarn(msg) { const w=document.getElementById('warn'); w.textContent=msg; w.className='warn show'; }
+  function hideWarn()    { document.getElementById('warn').className='warn'; }
+
+  function startWatch() {
+    document.getElementById('watchBtn').style.display = 'none';
+    document.getElementById('timerCircle').classList.add('show');
+    document.getElementById('barWrap').classList.add('show');
+    document.getElementById('backBtn').classList.add('show');
+    setStatus('👀 Ad dekh rahe ho...', '');
+    if (!adOpened) { adOpened=true; try { window.open(AD_URL,'_blank'); } catch(e){} }
+    startTimer();
+  }
+
+  function userReturned() {
+    const watched = TOTAL - secsLeft;
+    if (watched < 15) { showWarn('⏳ Aur ' + (15-watched) + 's ad dekho!'); return; }
+    adViewed = true;
+    document.getElementById('backBtn').classList.remove('show');
+    hideWarn();
+    if (timerDone) showClaim();
+    else setStatus('✅ Ad dekh li! Ruko...', 'green');
+  }
+
+  function startTimer() {
+    if (iv) return;
+    iv = setInterval(() => {
+      secsLeft--;
+      const pct = secsLeft / TOTAL;
+      tFill.style.strokeDashoffset = CIRC * (1 - pct);
+      tNum.textContent = secsLeft;
+      barFill.style.transform = 'scaleX(' + pct + ')';
+      if (secsLeft <= 5) { tFill.style.stroke='#f9c846'; tNum.style.color='#f9c846'; }
+      if (secsLeft <= 0) {
+        clearInterval(iv); timerDone = true; tNum.textContent='0';
+        if (adViewed) showClaim();
+        else { showWarn('⚠️ Pehle ad dekho, fir Wapas Aao dabao!'); setStatus('Ad puri dekho!','red'); }
+      }
+    }, 1000);
+  }
+
+  function showClaim() {
+    document.getElementById('backBtn').classList.remove('show');
+    document.getElementById('claimBtn').classList.add('show');
+    setStatus('🎉 Ab claim karo!', 'green');
+  }
+
+  function claimCoins() {
+    const btn = document.getElementById('claimBtn');
+    btn.disabled=true; btn.textContent='⏳ Crediting...';
+    btn.style.background='linear-gradient(135deg,#6c63ff,#3b82f6)';
+    btn.style.animation='none';
+    localStorage.setItem('pendingAdReward', JSON.stringify({coins:10,type:'watchAd',ts:Date.now()}));
+    setTimeout(() => { window.location.href = RETURN_URL; }, 400);
+  }
+</script>
 </body>
 </html>
