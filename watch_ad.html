@@ -1137,24 +1137,23 @@ window.TNTracker = (function() {
 
   // Script tags ko safely inject karta hai (innerHTML se scripts execute nahi hote)
   function injectAdScripts(container, htmlStr) {
-    if (!container) return;
+    if (!container || !htmlStr) return;
     container.innerHTML = '';
-    // HTML parse karke scripts manually execute karo
     const temp = document.createElement('div');
     temp.innerHTML = htmlStr;
     Array.from(temp.childNodes).forEach(node => {
       if (node.nodeName === 'SCRIPT') {
         const s = document.createElement('script');
-        if (node.src) {
-          s.src = node.src;
-          if (node.async) s.async = true;
-          if (node.type) s.type = node.type;
-        } else {
-          s.textContent = node.textContent;
-        }
+        // Saare attributes copy karo (data-admpid, async, src, type, referrerpolicy etc.)
+        Array.from(node.attributes).forEach(attr => s.setAttribute(attr.name, attr.value));
+        if (!node.src) s.textContent = node.textContent;
         container.appendChild(s);
-      } else {
-        container.appendChild(node.cloneNode(true));
+      } else if (node.nodeType === 1) {
+        // DIV, INS ya koi bhi element — saare attributes ke saath clone karo
+        const el = document.createElement(node.nodeName);
+        Array.from(node.attributes).forEach(attr => el.setAttribute(attr.name, attr.value));
+        el.innerHTML = node.innerHTML;
+        container.appendChild(el);
       }
     });
   }
@@ -1170,14 +1169,17 @@ window.TNTracker = (function() {
 
     // Direct link rotate karo Ad Watch popup mein
     const adLink = document.getElementById('adWatchLink');
-    if (adLink) {
+    const adBtn  = document.getElementById('adWatchWatchBtn');
+    if (adLink && adBtn) {
       if (company.directLink) {
         adLink.href = company.directLink;
         adLink.style.display = 'block';
-        document.getElementById('adWatchWatchBtn').style.display = 'block';
+        adBtn.style.display  = 'block';
       } else {
-        // Direct link nahi hai (e.g. B) — button hide karo
+        // Direct link nahi hai — Watch Ad button hide karo
+        // Lekin proceed button visible rahega taaki user next page ja sake
         adLink.style.display = 'none';
+        adBtn.style.display  = 'none';
       }
     }
 
@@ -1828,7 +1830,7 @@ window.TNTracker = (function() {
     var procBtn=document.getElementById('adWatchProceedBtn');
     var warn=document.getElementById('adWatchWarn');
     circle.textContent='30'; circle.className='adwatch-timer-circle';
-    procBtn.style.display='none'; warn.textContent='';
+    warn.textContent='';
     var wb=document.getElementById('adWatchWatchBtn'); if(wb){wb.disabled=false;wb.textContent='▶ Watch Ad';wb.style.background='';}
     var area=document.getElementById('adWatchAdArea'); if(area) area.style.display='';
     var bar=document.getElementById('adProgressBar'); if(bar){bar.style.width='0%';bar.style.background='';}
@@ -1836,13 +1838,26 @@ window.TNTracker = (function() {
     var txt=document.getElementById('adWatchVerifyText'); if(txt) txt.textContent='Verification Pending';
     var sub=document.getElementById('adWatchStatusSub'); if(sub) sub.textContent='Watch Ad button dabao';
     var wrap=document.getElementById('adProgressWrap'); if(wrap) wrap.style.display='none';
+
+    // Agar company ka direct link nahi hai — proceed button seedha dikhao
+    var curCompany = AD_COMPANIES[getCurrentCompanyIndex()];
+    if (!curCompany.directLink) {
+      _awCompleted = true;
+      if(procBtn) procBtn.style.display = 'block';
+      if(circle)  circle.style.display  = 'none';
+      clearInterval(_awTimer); _awTimer = null;
+    } else {
+      if(procBtn) procBtn.style.display='none';
+      if(circle)  circle.style.display='';
+      _awStartTime=Date.now();
+      document.addEventListener('visibilitychange',_awVisibilityHandler);
+      _awTimer=setInterval(_awTick,1000);
+    }
+
     document.getElementById('adWatchPopup').classList.add('show');
     // Back button disable
     history.pushState(null, null, location.href);
     window.addEventListener('popstate', _awBlockBack);
-    _awStartTime=Date.now();
-    document.addEventListener('visibilitychange',_awVisibilityHandler);
-    _awTimer=setInterval(_awTick,1000);
   }
 
   function _awTick() {
