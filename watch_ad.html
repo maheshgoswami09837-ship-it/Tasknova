@@ -524,18 +524,7 @@ window.TNTracker = (function() {
     }
   }
 
-  // ── Tick — sirf waiting state mein UI update ke liye ───
-  function _tick() {
-    if (!_state.running) return;
-    _state.activeTime++;
-    var remaining = Math.max(0, _state.requiredSec - _state.activeTime);
-    if (_state.onTick) _state.onTick({
-      event     : 'TICK',
-      activeTime: _state.activeTime,
-      remaining : remaining,
-      fraudFlag : _state.fraudFlag,
-    });
-  }
+  // Tick removed — complete sirf visibility change pe hoga
 
   // ── Back button block ────────────────────────────────
   function _blockBack() {
@@ -567,8 +556,7 @@ window.TNTracker = (function() {
       document.addEventListener('visibilitychange', _onVisibilityChange);
       history.pushState(null, null, location.href);
       window.addEventListener('popstate', _blockBack);
-
-      _state.ticker = setInterval(_tick, 1000);
+      // Ticker nahi chalega — complete sirf tab switch pe hoga
     },
 
     // Ad click mark karo — tab switch valid hai
@@ -1357,20 +1345,7 @@ l.parentNode.insertBefore(s, l);
     console.log('[AdRotation] Platform:', platform.name, '| Next index:', (result.index + 1) % AD_PLATFORMS.length);
   }
 
-  // Advance rotation AFTER ad is watched (in proceedToStep2)
-  var _origProceed = window.proceedToStep2;
-  window.proceedToStep2 = function() {
-    advanceRotation(); // move to next platform for next visit
-    if (typeof _origProceed === 'function') _origProceed();
-    else {
-      // fallback
-      document.getElementById('adWatchPopup').classList.remove('show');
-      var s2 = document.getElementById('step2');
-      if (s2) { s2.style.display = 'block'; s2.scrollIntoView({behavior:'smooth'}); }
-    }
-  };
-
-  // Setup button when popup opens
+  // Setup button when popup opens — showAdWatchPopup ke baad call hoga
   var _origShowPopup = window.showAdWatchPopup;
   window.showAdWatchPopup = function() {
     setupWatchAdButton();
@@ -1473,6 +1448,7 @@ l.parentNode.insertBefore(s, l);
       return;
     }
     window.TNTracker.stop();
+    advanceRotation();
     document.getElementById('adWatchPopup').classList.remove('show');
     goToStep2();
   }
