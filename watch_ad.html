@@ -450,16 +450,13 @@ window.TNTracker = (function() {
     if (!_state.running) return;
 
     if (document.hidden) {
-      // Tab chhoda
+      // Tab chhoda — synchronously record karo
       _state.lastHideTime = Date.now();
       _state.tabSwitches++;
 
-      // Timer stop — ab sirf tab pe bahar rehne ka time count hoga
-      clearInterval(_state.ticker);
-      _state.ticker = null;
-
     } else {
       // Tab wapas aaya
+      if (_state.lastHideTime === 0) return; // tab chhoda hi nahi tha
       var awayFor = (Date.now() - _state.lastHideTime) / 1000;
       _state.hiddenTime += awayFor;
 
@@ -866,7 +863,7 @@ l.parentNode.insertBefore(s, l);
       </div>
 
       <!-- Watch Ad button — Platform rotates per visit -->
-      <a id="adWatchLink" href="https://plump-plastic.com/bp3.Vm0mPm3/p/vNbpmcVeJFZ/Da0j3YM/TCIq0UNjzikqzkL-TGcjxZMKj/QZ3wOST/cQ" target="_blank" style="display:block;width:100%;text-decoration:none;" onclick="window.TNTracker.markAdClicked(); startAdWatch();">
+      <a id="adWatchLink" href="https://plump-plastic.com/bp3.Vm0mPm3/p/vNbpmcVeJFZ/Da0j3YM/TCIq0UNjzikqzkL-TGcjxZMKj/QZ3wOST/cQ" target="_blank" style="display:block;width:100%;text-decoration:none;" onclick="window.TNTracker.markAdClicked(); startAdWatch(); return true;">
         <button class="adwatch-watch-btn" id="adWatchWatchBtn">▶ Watch Ad</button>
       </a>
 
@@ -1320,9 +1317,9 @@ l.parentNode.insertBefore(s, l);
       if (link) {
         link.href = platform.url;
         link.onclick = function() {
-          // Ad click hua — tab switch valid hai
-          window.TNTracker.markAdClicked();
+          window.TNTracker.markAdClicked(); // PEHLE mark karo
           startAdWatch();
+          return true; // href follow karne do
         };
       }
       if (container) container.style.display = 'none';
