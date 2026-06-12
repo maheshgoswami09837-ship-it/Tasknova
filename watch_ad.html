@@ -418,76 +418,64 @@
 
 <script>
 // ═══════════════════════════════════════════════════════
-//  TaskNova Tracking Module v1.0
-//  Lightweight Anti-Fraud & Activity Monitor
+//  Simple Ad Timer — No SDK needed
+//  45 sec total: 15 sec baad Next Page button show ho
 // ═══════════════════════════════════════════════════════
 window.TNTracker = (function() {
-
-  var _clickTime    = 0;     // jab Watch Ad dabaya
-  var _required     = 30;    // seconds
-  var _onComplete   = null;
-  var _onFraud      = null;
-  var _running      = false;
-  var _adClicked    = false;
-  var _resultFired  = false; // ek baar complete/fraud fire ho — dobara nahi
+  var _timer       = null;
+  var _elapsed     = 0;
+  var _required    = 45;
+  var _onComplete  = null;
+  var _onFraud     = null;
+  var _running     = false;
+  var _adClicked   = false;
 
   return {
-
     start: function(config) {
-      _onComplete  = config.onComplete || null;
-      _onFraud     = config.onFraud    || null;
-      _required    = config.requiredSec || 30;
-      _running     = true;
-      _adClicked   = false;
-      _clickTime   = 0;
-      _resultFired = false; // fresh start — reset karo
+      _onComplete = config.onComplete || null;
+      _onFraud    = config.onFraud    || null;
+      _required   = config.requiredSec || 45;
+      _running    = true;
+      _adClicked  = false;
+      _elapsed    = 0;
+      clearInterval(_timer);
+
+      _timer = setInterval(function() {
+        _elapsed++;
+
+        // 15 sec baad — green Proceed button show karo
+        if (_elapsed === 15) {
+          var p = document.getElementById('adWatchProceedBtn');
+          if (p) p.style.display = 'block';
+        }
+
+        // 45 sec baad — complete
+        if (_elapsed >= _required) {
+          clearInterval(_timer);
+          _running = false;
+          if (_onComplete) _onComplete({ flag: 'VALID_ACTION', elapsed: _elapsed });
+        }
+      }, 1000);
     },
+
+    getElapsed: function() { return _elapsed; },
 
     markAdClicked: function() {
       _adClicked = true;
-      _clickTime = Date.now();
     },
 
-    // Jab user wapas aaye — call karo yahan se
-    checkOnReturn: function() {
-      // Agar already result fire ho chuka hai to dobara mat karo
-      if (_resultFired) return;
-
-      // Agar tracker running nahi — kuch mat karo (popup reset ho sakta hai)
-      if (!_running) return;
-
-      // Agar ad click nahi hua
-      if (!_adClicked) {
-        _resultFired = true;
-        if (_onFraud) _onFraud({ flag: 'NO_AD_CLICK' });
-        return;
-      }
-
-      var elapsed = (Date.now() - _clickTime) / 1000;
-      _resultFired = true; // ab koi bhi event dobara trigger nahi karega
-
-      if (elapsed >= _required) {
-        _running   = false;
-        _adClicked = false;
-        if (_onComplete) _onComplete({ flag: 'VALID_ACTION', elapsed: Math.round(elapsed) });
-      } else {
-        _adClicked = false;
-        _clickTime = 0;
-        if (_onFraud) _onFraud({ flag: 'AD_SKIPPED', elapsed: Math.round(elapsed) });
-      }
-    },
+    checkOnReturn: function() { /* unused */ },
 
     stop: function() {
-      _running     = false;
-      _adClicked   = false;
-      _clickTime   = 0;
-      _resultFired = false; // stop pe reset — taaki agli baar fresh start ho
+      clearInterval(_timer);
+      _running    = false;
+      _adClicked  = false;
+      _elapsed    = 0;
     },
 
-    isValid:  function() { return false; },
-    isFraud:  function() { return false; },
+    isValid: function() { return false; },
+    isFraud: function() { return false; },
   };
-
 })();
 </script>
 
@@ -720,7 +708,7 @@ l.parentNode.insertBefore(s, l);
 
       <!-- Title only — no icon -->
       <div class="adwatch-title" style="margin-top:4px;">Watch Ad to Unlock</div>
-      <div class="adwatch-sub">Watch an ad for 30 seconds to unlock the next page.</div>
+      <div class="adwatch-sub">Watch an ad for 45 seconds to unlock the next page.</div>
 
       <!-- Card 1: Ad not loaded -->
       <div class="adwatch-card" id="adNotLoadedCard">
@@ -769,8 +757,8 @@ l.parentNode.insertBefore(s, l);
       <!-- Dynamic ad container — used by non-direct-link platforms -->
       <div id="dynamicAdContainer" style="display:none;width:100%;margin-top:10px;"></div>
 
-      <!-- Proceed button -->
-      <button class="adwatch-proceed-btn" id="adWatchProceedBtn" onclick="proceedToStep2()">
+      <!-- Proceed button — 15 sec baad show hoga -->
+      <button class="adwatch-proceed-btn" id="adWatchProceedBtn" onclick="onProceedClicked()">
         ✅ Verified — Next Page Kholo
       </button>
 
@@ -1135,7 +1123,7 @@ l.parentNode.insertBefore(s, l);
   /* ── Step 2 load ─────────────────────────────────────── */
   // ── Ad Watch Popup System ────────────────────────────────
   var _awTimer      = null;
-  var _awSeconds    = 30;
+  var _awSeconds    = 45;
   var _awStartTime  = 0;
   var _awCompleted  = false;
   var _awTabHidden  = 0;  // kitni baar tab hide hua
@@ -1278,61 +1266,48 @@ l.parentNode.insertBefore(s, l);
   }
 
   function startAdWatch() {
-    var btn  = document.getElementById('adWatchWatchBtn');
     var warn = document.getElementById('adWatchWarn');
     if(window._awWatching) return;
     window._awWatching = true;
     _awCompleted = false;
-    _returnHandled = false; // next return ke liye reset
 
-    if(btn)  { btn.disabled = true; btn.textContent = '⏳ Watching...'; }
     if(warn) warn.textContent = '';
 
-    window.TNTracker.start({
-      requiredSec: 30,
+    // Watch button bilkul enable rahe — kuch mat karo usse
+    // Timer pill bilkul mat dikhao
 
-      onFraud: function(data) {
-        var txt = document.getElementById('adWatchVerifyText');
-        var sub = document.getElementById('adWatchStatusSub');
-        var w   = document.getElementById('adWatchWarn');
-        var b   = document.getElementById('adWatchWatchBtn');
-        var msg = data.flag === 'AD_SKIPPED'
-          ? '⚠️ Sirf ' + (data.elapsed || 0) + ' sec dekha! 30 sec genuinely ads dekho.'
-          : '⚠️ Pehle Watch Ad dabao!';
-        if(txt) txt.textContent = 'Ad Skip Detect!';
-        if(sub) sub.textContent = '0 coins milenge — dobara try karo';
-        if(w)   w.textContent   = msg;
-        if(b) { b.disabled = false; b.textContent = '▶ Watch Ad'; b.style.background = ''; }
-        window._awWatching = false;
-        _awCompleted = false;
-      },
+    window.TNTracker.start({
+      requiredSec: 45,
 
       onComplete: function(data) {
         _awCompleted = true;
-        var icon = document.getElementById('adWatchIcon');
         var txt  = document.getElementById('adWatchVerifyText');
         var sub  = document.getElementById('adWatchStatusSub');
-        var b    = document.getElementById('adWatchWatchBtn');
-        var p    = document.getElementById('adWatchProceedBtn');
         var w    = document.getElementById('adWatchWarn');
-        if(icon) icon.textContent = '✅';
-        if(txt)  txt.textContent  = 'Verification Complete!';
+        if(txt)  txt.textContent  = 'Verification Complete! ✅';
         if(sub)  sub.textContent  = 'Ad dekh liya — proceed karo!';
-        if(b)  { b.disabled = true; b.textContent = '✅ Ad Watched'; }
-        if(p)    p.style.display  = 'block';
         if(w)    w.textContent    = '';
         window._awWatching = false;
       }
     });
+  }
 
-    // Dono events — jo pehle fire kare wahi checkOnReturn karega
-    window.addEventListener('focus', _onAdReturn);
-    document.addEventListener('visibilitychange', _onAdReturnVis);
+  // Green button click — 45 sec se pehle warning, baad mein proceed
+  function onProceedClicked() {
+    var warn = document.getElementById('adWatchWarn');
+
+    if (!_awCompleted) {
+      if(warn) warn.textContent = '⚠️ 30 second genuinely watch karo';
+      return;
+    }
+
+    if(warn) warn.textContent = '';
+    proceedToStep2();
   }
 
   function showAdWatchPopup() {
     // Reset state
-    _awSeconds   = 30;
+    _awSeconds   = 45;
     _awCompleted = false;
     _awTabHidden = 0;
     _awSkipTries = 0;
@@ -1343,6 +1318,7 @@ l.parentNode.insertBefore(s, l);
     var txt     = document.getElementById('adWatchVerifyText');
     var sub     = document.getElementById('adWatchStatusSub');
     var icon    = document.getElementById('adWatchIcon');
+    var nb      = document.getElementById('awNextPageBtn');
 
     // Full reset
     _awCompleted = false;
@@ -1362,15 +1338,12 @@ l.parentNode.insertBefore(s, l);
   }
 
   function proceedToStep2() {
-    if (!_awCompleted) {
-      document.getElementById('adWatchWarn').textContent = '⚠️ Pehle 30 sec genuinely watch karo!';
-      return;
-    }
     window.TNTracker.stop();
     advanceRotation();
     document.getElementById('adWatchPopup').classList.remove('show');
     goToStep2();
   }
+
   // ─────────────────────────────────────────────────────────
 
   // ── Ad Watch Popup System (TNTracker handles everything above) ──
