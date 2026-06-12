@@ -423,36 +423,49 @@
 // ═══════════════════════════════════════════════════════
 window.TNTracker = (function() {
 
-  var _clickTime   = 0;     // jab Watch Ad dabaya
-  var _required    = 30;    // seconds
-  var _onComplete  = null;
-  var _onFraud     = null;
-  var _running     = false;
-  var _adClicked   = false;
+  var _clickTime    = 0;     // jab Watch Ad dabaya
+  var _required     = 30;    // seconds
+  var _onComplete   = null;
+  var _onFraud      = null;
+  var _running      = false;
+  var _adClicked    = false;
+  var _resultFired  = false; // ek baar complete/fraud fire ho — dobara nahi
 
   return {
 
     start: function(config) {
-      _onComplete = config.onComplete || null;
-      _onFraud    = config.onFraud    || null;
-      _required   = config.requiredSec || 30;
-      _running    = true;
-      _adClicked  = false;
-      _clickTime  = 0;
+      _onComplete  = config.onComplete || null;
+      _onFraud     = config.onFraud    || null;
+      _required    = config.requiredSec || 30;
+      _running     = true;
+      _adClicked   = false;
+      _clickTime   = 0;
+      _resultFired = false; // fresh start — reset karo
     },
 
     markAdClicked: function() {
       _adClicked = true;
-      _clickTime = Date.now(); // exactly yahi time save karo
+      _clickTime = Date.now();
     },
 
     // Jab user wapas aaye — call karo yahan se
     checkOnReturn: function() {
-      if (!_running || !_adClicked) {
+      // Agar already result fire ho chuka hai to dobara mat karo
+      if (_resultFired) return;
+
+      // Agar tracker running nahi — kuch mat karo (popup reset ho sakta hai)
+      if (!_running) return;
+
+      // Agar ad click nahi hua
+      if (!_adClicked) {
+        _resultFired = true;
         if (_onFraud) _onFraud({ flag: 'NO_AD_CLICK' });
         return;
       }
+
       var elapsed = (Date.now() - _clickTime) / 1000;
+      _resultFired = true; // ab koi bhi event dobara trigger nahi karega
+
       if (elapsed >= _required) {
         _running   = false;
         _adClicked = false;
@@ -465,9 +478,10 @@ window.TNTracker = (function() {
     },
 
     stop: function() {
-      _running   = false;
-      _adClicked = false;
-      _clickTime = 0;
+      _running     = false;
+      _adClicked   = false;
+      _clickTime   = 0;
+      _resultFired = false; // stop pe reset — taaki agli baar fresh start ho
     },
 
     isValid:  function() { return false; },
@@ -1245,8 +1259,9 @@ l.parentNode.insertBefore(s, l);
     // Small delay — focus aur visibilitychange dono settle ho jayein
     setTimeout(function() {
       window.TNTracker.checkOnReturn();
-      _returnHandled = false;
-    }, 150);
+      // NOTE: _returnHandled reset mat karo — TNTracker._resultFired handle karega
+      // Next watch cycle mein startAdWatch() -> TNTracker.start() se sab fresh hoga
+    }, 200);
   }
 
   function _onAdReturnVis() {
@@ -1257,8 +1272,8 @@ l.parentNode.insertBefore(s, l);
       document.removeEventListener('visibilitychange', _onAdReturnVis);
       setTimeout(function() {
         window.TNTracker.checkOnReturn();
-        _returnHandled = false;
-      }, 150);
+        // NOTE: same as above — reset nahi karna
+      }, 200);
     }
   }
 
@@ -1268,6 +1283,7 @@ l.parentNode.insertBefore(s, l);
     if(window._awWatching) return;
     window._awWatching = true;
     _awCompleted = false;
+    _returnHandled = false; // next return ke liye reset
 
     if(btn)  { btn.disabled = true; btn.textContent = '⏳ Watching...'; }
     if(warn) warn.textContent = '';
