@@ -7,9 +7,8 @@
 <title>TaskNova</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-  body { font-family: 'Segoe UI', sans-serif; background: #05051a; min-height: 100vh; overflow-x: hidden; }
+  body { font-family: 'Segoe UI', sans-serif; background: #f5f6fa; min-height: 100vh; overflow-x: hidden; }
   .glow-circle { display:none; }
-  body { background: #000; }  @keyframes twinkle { 0%, 100% { opacity: 0.2; } 50% { opacity: 1; } }
   .glow-circle { position: fixed; border-radius: 50%; filter: blur(80px); z-index: 0; pointer-events: none; }
   .glow-1 { width: 300px; height: 300px; background: rgba(108,99,255,0.25); top: -100px; left: -100px; }
   .glow-2 { width: 250px; height: 250px; background: rgba(59,130,246,0.2); bottom: -80px; right: -80px; }
@@ -86,7 +85,57 @@
   .rules-close-btn { width: 100%; padding: 14px; background: linear-gradient(135deg, #6c63ff, #3b82f6); border: none; border-radius: 12px; color: #fff; font-size: 14px; font-weight: 700; cursor: pointer; font-family: 'Segoe UI', sans-serif; margin-top: 8px; }
 
   /* HOME */
-  #homeSection { display: none; padding-bottom: 80px; }
+  #homeSection { display: none; padding-bottom: 80px; background: #f5f6fa; min-height: 100vh; position: relative; z-index: 20; }
+
+  /* ── White theme overrides for Login Section ───────────────── */
+  .logo-name { color: #1a1a2e; }
+  .logo-sub { color: rgba(26,26,46,0.4); }
+  .tabs { background: rgba(0,0,0,0.04); }
+  .tab { color: rgba(26,26,46,0.4); }
+  .form, .register-form { background: #fff; border: 1px solid rgba(0,0,0,0.06); border-radius: 18px; padding: 18px; box-shadow: 0 4px 20px rgba(0,0,0,0.04); }
+  input { background: rgba(0,0,0,0.03); border: 1.5px solid rgba(0,0,0,0.08); color: #1a1a2e; }
+  input::placeholder { color: rgba(26,26,46,0.35); }
+  input:focus { border-color: #6c63ff; background: rgba(108,99,255,0.06); }
+  .forgot { background: rgba(108,99,255,0.06); border: 1.5px solid rgba(108,99,255,0.25); color: #6c63ff; }
+  .forgot:active { background: rgba(108,99,255,0.15); }
+
+  /* OTP / RULES MODALS */
+  .modal-overlay, .rules-modal { background: rgba(0,0,0,0.5); }
+  .modal-box, .rules-box { background: #fff; border: 1px solid rgba(0,0,0,0.06); box-shadow: 0 20px 60px rgba(0,0,0,0.15); }
+  .modal-title, .rules-box h2 { color: #1a1a2e; }
+  .modal-sub { color: rgba(26,26,46,0.5); }
+  .otp-box { background: rgba(0,0,0,0.03); border: 2px solid rgba(108,99,255,0.25); color: #1a1a2e !important; -webkit-text-fill-color: #1a1a2e !important; border-bottom: 2px solid rgba(108,99,255,0.25) !important; }
+  .otp-box:focus { background: rgba(108,99,255,0.06); }
+  .resend-otp { color: rgba(26,26,46,0.5); }
+  .otp-cancel-btn { color: rgba(26,26,46,0.5); border-color: rgba(0,0,0,0.08); }
+  .rule-item { background: rgba(0,0,0,0.03); border: 1px solid rgba(0,0,0,0.06); }
+  .rule-text { color: rgba(26,26,46,0.7); }
+  .rule-text strong { color: #1a1a2e; }
+
+  /* ── White theme overrides for Home Section ────────────────── */
+  #homeSection .glow-circle { display: none; }
+  #homeSection .header-left h2 { color: #1a1a2e; }
+  #homeSection .header-left p { color: rgba(26,26,46,0.5); }
+  #homeSection .notif-btn { background: #fff; border-color: rgba(0,0,0,0.08); box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+  #homeSection #headerBalancePill { background: #fff; border-color: rgba(0,0,0,0.06); box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+  #homeSection .milestone-card { background: #fff; border-color: rgba(0,0,0,0.06); box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+  #homeSection .milestone-title { color: #1a1a2e; }
+  #homeSection .milestone-circle { background: rgba(37,99,235,0.08); border-color: rgba(37,99,235,0.3); }
+  #homeSection .milestone-item.reached .milestone-circle { border-color: #2563eb; background: rgba(37,99,235,0.15); box-shadow: 0 0 0 4px rgba(37,99,235,0.12); }
+  #homeSection .milestone-label { color: rgba(26,26,46,0.55); }
+  #homeSection .milestone-item:not(:last-child)::after { background: rgba(37,99,235,0.25); }
+  #homeSection .section-title { color: #1a1a2e; }
+  #homeSection .view-all { color: #2563eb; }
+  #homeSection .earn-card { background: #fff; border-color: rgba(0,0,0,0.06); box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+  #homeSection .earn-card:active { background: rgba(37,99,235,0.06); }
+  #homeSection .earn-card-info h3 { color: #1a1a2e; }
+  #homeSection .earn-card-info p { color: rgba(26,26,46,0.45); }
+  #homeSection .earn-card-reward { background: linear-gradient(135deg, #2563eb, #3b82f6); box-shadow: 0 3px 10px rgba(37,99,235,0.35); }
+  #homeSection .bottom-nav { background: rgba(255,255,255,0.95); border-top-color: rgba(0,0,0,0.06); }
+  #homeSection .nav-item p { color: rgba(26,26,46,0.4); }
+  #homeSection .nav-item.active p { color: #2563eb; }
+  #homeSection .invite-text h3 { color: #1a1a2e; }
+  #homeSection .invite-text p { color: rgba(26,26,46,0.5); }
   .content { position: relative; z-index: 10; padding: 20px 16px; animation: fadeUp 0.5s ease; }
   .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
   .header-left h2 { font-size: 20px; font-weight: 800; color: #fff; }
@@ -137,7 +186,7 @@
   .earn-card-icon { width: 52px; height: 52px; border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 26px; flex-shrink: 0; box-shadow:0 4px 14px rgba(0,0,0,0.25); }
   .earn-card-icon svg { width:26px; height:26px; }
   .bg-purple { background: linear-gradient(135deg,#4f3ff0,#7c6fff); }
-  .bg-green  { background: linear-gradient(135deg,#059669,#22c55e); }
+  .bg-green  { background: linear-gradient(135deg,#1d4ed8,#3b82f6); }
   .bg-orange { background: linear-gradient(135deg,#ea6c00,#f97316); }
   .bg-blue   { background: linear-gradient(135deg,#1d61d6,#3b82f6); }
   .bg-pink   { background: linear-gradient(135deg,#be185d,#ec4899); }
@@ -148,12 +197,12 @@
   .earn-card-info p { font-size: 12px; color: rgba(255,255,255,0.4); margin-top: 3px; }
   .earn-card-reward { background: linear-gradient(135deg, #16a34a, #22c55e); border-radius: 50px; padding: 8px 14px; font-size: 12px; font-weight: 800; color: #fff; white-space: nowrap; flex-shrink: 0; box-shadow:0 3px 10px rgba(34,197,94,0.35); }
   .earn-card-reward.coming { background: rgba(234,179,8,0.15); border: 1px solid rgba(234,179,8,0.3); color: #eab308; font-size: 11px; }
-  .invite-banner { background: linear-gradient(135deg, rgba(22,163,74,0.2), rgba(5,150,105,0.15)); border: 1px solid rgba(34,197,94,0.3); border-radius: 20px; padding: 20px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+  .invite-banner { background: linear-gradient(135deg, rgba(37,99,235,0.12), rgba(59,130,246,0.08)); border: 1px solid rgba(37,99,235,0.25); border-radius: 20px; padding: 20px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
   .invite-text h3 { font-size: 16px; font-weight: 700; color: #fff; }
-  .invite-text h3 span { color: #22c55e; }
+  .invite-text h3 span { color: #2563eb; }
   .invite-text p { font-size: 12px; color: rgba(255,255,255,0.4); margin: 6px 0 14px; }
-  .invite-text p strong { color: #22c55e; }
-  .invite-btn { background: linear-gradient(135deg, #16a34a, #22c55e); border: none; padding: 10px 20px; border-radius: 50px; color: #fff; font-size: 13px; font-weight: 700; cursor: pointer; font-family: 'Segoe UI', sans-serif; box-shadow:0 3px 12px rgba(34,197,94,0.4); }
+  .invite-text p strong { color: #2563eb; }
+  .invite-btn { background: linear-gradient(135deg, #2563eb, #3b82f6); border: none; padding: 10px 20px; border-radius: 50px; color: #fff; font-size: 13px; font-weight: 700; cursor: pointer; font-family: 'Segoe UI', sans-serif; box-shadow:0 3px 12px rgba(37,99,235,0.4); }
   .invite-emoji { font-size: 60px; }
   .activity-item { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.07); border-radius: 16px; padding: 14px 16px; display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
   .activity-icon { width: 44px; height: 44px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
@@ -166,8 +215,8 @@
   .nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; padding: 4px 16px; }
   .nav-item span { font-size: 20px; }
   .nav-item p { font-size: 10px; color: rgba(255,255,255,0.3); font-weight: 500; }
-  .nav-item.active p { color: #22c55e; }
-  .nav-center { width: 52px; height: 52px; background: linear-gradient(135deg, #16a34a, #22c55e); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 22px; margin-top: -20px; box-shadow: 0 4px 20px rgba(34,197,94,0.4); cursor: pointer; }
+  .nav-item.active p { color: #2563eb; }
+  .nav-center { width: 52px; height: 52px; background: linear-gradient(135deg, #2563eb, #3b82f6); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 22px; margin-top: -20px; box-shadow: 0 4px 20px rgba(37,99,235,0.4); cursor: pointer; }
   .toast { position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%); padding: 12px 24px; border-radius: 50px; font-size: 13px; font-weight: 600; z-index: 200; display: none; white-space: nowrap; }
   .toast.success { background: rgba(34,197,94,0.2); border: 1px solid rgba(34,197,94,0.4); color: #22c55e; }
   .toast.error { background: rgba(239,68,68,0.2); border: 1px solid rgba(239,68,68,0.4); color: #ef4444; }
@@ -296,7 +345,7 @@
       <div id="headerBalancePill" style="display:flex;align-items:center;gap:10px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:16px;padding:12px 14px;transition:transform 0.15s, background 0.15s;flex:1;min-width:0;">
         <span style="font-size:24px;flex-shrink:0;">🪙</span>
         <div style="min-width:0;overflow:hidden;">
-          <div style="font-size:9px;color:rgba(255,255,255,0.4);font-weight:700;text-transform:uppercase;letter-spacing:0.6px;margin-bottom:3px;">Your Balance</div>
+          <div style="font-size:9px;color:rgba(26,26,46,0.45);font-weight:700;text-transform:uppercase;letter-spacing:0.6px;margin-bottom:3px;">Your Balance</div>
           <div id="headerCoins" style="font-size:18px;font-weight:900;color:#facc15;line-height:1;white-space:nowrap;">0 Coins</div>
         </div>
       </div>
@@ -492,7 +541,7 @@
   </div>
   <div class="bottom-nav">
     <div class="nav-item active" onclick="window.location.href='tasknova_login-1.html'">
-      <span>🏠</span><p style="color:#22c55e;font-weight:700;">Home</p>
+      <span>🏠</span><p style="color:#2563eb;font-weight:700;">Home</p>
     </div>
     <div class="nav-item" onclick="window.location.href='tasknova_tasks.html'">
       <span>📋</span><p>Tasks</p>
