@@ -291,18 +291,18 @@
 <!-- HOME SECTION -->
 <div id="homeSection">
   <div class="content">
-    <div class="header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+    <div class="header" style="display:flex;justify-content:space-between;align-items:stretch;gap:10px;margin-bottom:16px;">
       <!-- Left: Balance -->
-      <div id="headerBalancePill" style="display:flex;align-items:center;gap:10px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);border-radius:16px;padding:10px 16px;transition:transform 0.15s, background 0.15s;flex:1;">
-        <span style="font-size:26px;">🪙</span>
-        <div>
-          <div id="headerBalance" style="font-size:16px;font-weight:900;color:#fff;line-height:1;">₹0.00</div>
-          <div id="headerCoins" style="font-size:11px;color:#facc15;font-weight:700;margin-top:2px;">0 Coins</div>
-          <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-top:1px;">My Balance</div>
+      <div id="headerBalancePill" style="display:flex;align-items:center;gap:10px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:16px;padding:12px 14px;transition:transform 0.15s, background 0.15s;flex:1;min-width:0;">
+        <span style="font-size:24px;flex-shrink:0;">🪙</span>
+        <div style="min-width:0;overflow:hidden;">
+          <div style="font-size:9px;color:rgba(255,255,255,0.4);font-weight:700;text-transform:uppercase;letter-spacing:0.6px;margin-bottom:3px;">Your Balance</div>
+          <div id="headerBalance" style="font-size:18px;font-weight:900;color:#fff;line-height:1;white-space:nowrap;">₹0.00</div>
+          <div id="headerCoins" style="font-size:11px;color:#facc15;font-weight:700;margin-top:3px;white-space:nowrap;">0 Coins</div>
         </div>
       </div>
       <!-- Right: Daily Check-In -->
-      <button id="dailyCheckinBtn" onclick="window.location.href='tasknova_checkin.html'" style="display:flex;align-items:center;gap:8px;background:linear-gradient(135deg,#7c3aed,#4f46e5);border:none;border-radius:16px;padding:10px 16px;cursor:pointer;box-shadow:0 4px 14px rgba(124,58,237,0.4);transition:transform 0.15s, box-shadow 0.15s;flex:1;justify-content:center;">
+      <button id="dailyCheckinBtn" onclick="window.location.href='tasknova_checkin.html'" style="display:flex;align-items:center;gap:8px;background:linear-gradient(135deg,#7c3aed,#4f46e5);border:none;border-radius:16px;padding:12px 16px;cursor:pointer;box-shadow:0 4px 14px rgba(124,58,237,0.4);transition:transform 0.15s, box-shadow 0.15s;flex-shrink:0;justify-content:center;">
         <span style="font-size:18px;">📅</span>
         <div style="text-align:left;">
           <div style="font-size:13px;font-weight:800;color:#fff;line-height:1;">Daily</div>
