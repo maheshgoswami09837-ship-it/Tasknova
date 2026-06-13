@@ -81,11 +81,17 @@
   </div>
 
   <div class="streak-scroll">
-    <div class="streak-row" id="streakRow"></div>
+    <div class="streak-row" id="streakRow">
+      <div class="day-item future" style="opacity:0.5;">
+        <div class="coin-wrap future"><span class="coin-emoji">🪙</span></div>
+        <div class="day-label">...</div>
+        <div class="reward-badge">🪙 --</div>
+      </div>
+    </div>
   </div>
 
-  <div class="streak-info" id="streakInfo"></div>
-  <button class="claim-btn" id="claimBtn" onclick="claimToday()">Claim</button>
+  <div class="streak-info" id="streakInfo">Loading...</div>
+  <button class="claim-btn" id="claimBtn" onclick="claimToday()" disabled>Loading...</button>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -229,6 +235,7 @@
 
       const claimedToday = (data.dailyTasks && data.dailyTasks[todayKey] && data.dailyTasks[todayKey].checkin) || (lastDate === todayKey);
 
+      _lastDateFromDB = lastDate;
       currentStreak  = streak;
       currentClaimed = !!claimedToday;
       render();
@@ -340,7 +347,7 @@
     return new Promise((resolve) => {
       let waited = 0;
       const interval = setInterval(() => {
-        if (window._getAuthToken || waited > 4000) {
+        if (window._getAuthToken || waited > 1500) {
           clearInterval(interval);
           resolve(window._getAuthToken || (async () => null));
         }
@@ -349,19 +356,8 @@
     });
   }
 
-  // Initial load — also capture lastDate for streak continuation check
-  (async function init() {
-    uid = localStorage.getItem('tasknova_uid');
-    if (uid && uid !== 'null') {
-      const getToken = await waitForAuthToken();
-      const token = await getToken();
-      const authParam = token ? '?auth=' + token : '';
-      try {
-        const res  = await fetch(DB_URL + '/users/' + uid + '.json' + authParam);
-        const data = await res.json() || {};
-        _lastDateFromDB = data.checkinLastDate || '';
-      } catch (e) { console.log(e); }
-    }
+  // Initial load
+  (function init() {
     loadState();
   })();
 </script>
