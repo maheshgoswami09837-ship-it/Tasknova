@@ -209,7 +209,8 @@
       return;
     }
 
-    const token = await window._getAuthToken();
+    const getToken1 = await waitForAuthToken();
+    const token = await getToken1();
     const authParam = token ? '?auth=' + token : '';
 
     try {
@@ -265,7 +266,8 @@
     }
 
     try {
-      const token = await window._getAuthToken();
+      const getToken2 = await waitForAuthToken();
+      const token = await getToken2();
       const authParam = token ? '?auth=' + token : '';
 
       // Read fresh data to avoid race conditions
@@ -333,11 +335,26 @@
     setTimeout(() => t.classList.remove('show'), 3000);
   }
 
+  // Wait until the module script defines window._getAuthToken
+  function waitForAuthToken() {
+    return new Promise((resolve) => {
+      let waited = 0;
+      const interval = setInterval(() => {
+        if (window._getAuthToken || waited > 4000) {
+          clearInterval(interval);
+          resolve(window._getAuthToken || (async () => null));
+        }
+        waited += 50;
+      }, 50);
+    });
+  }
+
   // Initial load — also capture lastDate for streak continuation check
   (async function init() {
     uid = localStorage.getItem('tasknova_uid');
     if (uid && uid !== 'null') {
-      const token = await window._getAuthToken();
+      const getToken = await waitForAuthToken();
+      const token = await getToken();
       const authParam = token ? '?auth=' + token : '';
       try {
         const res  = await fetch(DB_URL + '/users/' + uid + '.json' + authParam);
