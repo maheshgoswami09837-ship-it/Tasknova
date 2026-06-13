@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Daily Check-In</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; outline:none; }
+  body { font-family:'Segoe UI',sans-serif; background:#eeeeff; min-height:100vh; padding:20px 16px 40px; }
+
+  .back-btn { display:inline-flex; align-items:center; gap:6px; background:none; border:none; color:#6c3aff; font-size:15px; font-weight:700; cursor:pointer; margin-bottom:16px; padding:0; }
+
+  .card { background:#fff; border-radius:24px; padding:24px 20px 32px; width:100%; box-shadow:0 8px 32px rgba(108,99,255,0.12); }
+
+  .card-header { display:flex; align-items:center; gap:12px; margin-bottom:24px; padding-bottom:16px; border-bottom:1px solid #f0f0f0; }
+  .card-header .icon { width:44px; height:44px; background:#ede9fe; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:22px; }
+  .card-header h2 { font-size:20px; font-weight:800; color:#111; }
+
+  .streak-scroll { overflow-x:auto; overflow-y:visible; -webkit-overflow-scrolling:touch; padding:20px 4px 12px; scrollbar-width:none; }
+  .streak-scroll::-webkit-scrollbar { display:none; }
+
+  .streak-row { display:flex; align-items:flex-start; width:max-content; padding:8px 8px 4px; gap:0; position:relative; }
+
+  .day-item { display:flex; flex-direction:column; align-items:center; gap:10px; position:relative; width:86px; }
+
+  /* connecting line */
+  .day-item:not(:last-child)::after { content:''; position:absolute; top:36px; left:calc(50% + 26px); width:calc(86px - 52px); height:3px; background:#6c3aff; z-index:0; }
+  .day-item.future:not(:last-child)::after { background:#ddd; }
+
+  /* coin circle */
+  .coin-wrap { width:60px; height:60px; border-radius:50%; display:flex; align-items:center; justify-content:center; position:relative; z-index:1; flex-shrink:0; transition:all 0.3s; }
+
+  /* states */
+  .coin-wrap.claimed  { background:#f0f0f0; border:2.5px solid #6c3aff; }
+  .coin-wrap.active   { background:#fff8e1; border:3px solid #6c3aff; box-shadow:0 0 0 5px rgba(108,58,255,0.13); width:66px; height:66px; }
+  .coin-wrap.future   { background:#f5f5f5; border:2.5px solid #e0e0e0; }
+
+  /* pointer */
+  .pointer { position:absolute; top:-18px; left:50%; transform:translateX(-50%); width:0; height:0; border-left:8px solid transparent; border-right:8px solid transparent; border-top:12px solid #6c3aff; }
+
+  /* coin emoji sizes */
+  .coin-wrap.claimed .coin-emoji { font-size:28px; opacity:0.45; filter:grayscale(0.6); }
+  .coin-wrap.active  .coin-emoji { font-size:34px; filter:drop-shadow(0 2px 6px rgba(245,166,35,0.7)); }
+  .coin-wrap.future  .coin-emoji { font-size:26px; opacity:0.25; filter:grayscale(1); }
+
+  /* coin pop */
+  @keyframes coinPop { 0%{transform:translateY(0) scale(0);opacity:0} 50%{transform:translateY(-28px) scale(1.3);opacity:1} 100%{transform:translateY(-48px) scale(1);opacity:0} }
+  @keyframes pulse { 0%,100%{box-shadow:0 0 0 5px rgba(108,58,255,0.13)} 50%{box-shadow:0 0 0 8px rgba(108,58,255,0.22)} }
+  .coin-wrap.active { animation:pulse 1.8s ease-in-out infinite; }
+  .coin-pop { position:absolute; top:0; left:50%; transform:translateX(-50%); font-size:18px; animation:coinPop 0.8s ease forwards; pointer-events:none; z-index:10; }
+
+  .day-label { font-size:11px; font-weight:700; color:#aaa; white-space:nowrap; }
+  .day-label.active  { color:#6c3aff; font-weight:800; }
+  .day-label.claimed { color:#888; }
+
+  .reward-badge { display:inline-flex; align-items:center; gap:3px; background:#f5f5ff; border-radius:8px; padding:4px 9px; font-size:12px; font-weight:700; color:#888; }
+  .reward-badge.active  { background:#ede9fe; color:#6c3aff; }
+  .reward-badge.claimed { background:#f0f0f0; color:#aaa; }
+
+  .streak-info { text-align:center; margin:20px 0 6px; font-size:13px; color:#888; font-weight:600; }
+  .streak-info strong { color:#6c3aff; }
+
+  .claim-btn { width:60%; margin:16px auto 0; padding:14px; background:linear-gradient(135deg,#6c3aff,#4f46e5); border:none; border-radius:50px; color:#fff; font-size:15px; font-weight:800; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; box-shadow:0 6px 18px rgba(108,58,255,0.4); }
+  .claim-btn:active { transform:scale(0.96); }
+  .claim-btn:disabled { background:#ccc; box-shadow:none; cursor:not-allowed; animation:none; }
+
+  .toast { position:fixed; bottom:30px; left:50%; transform:translateX(-50%); background:linear-gradient(135deg,#6c3aff,#4f46e5); color:#fff; padding:12px 28px; border-radius:50px; font-size:15px; font-weight:700; z-index:9999; opacity:0; transition:opacity 0.3s; white-space:nowrap; box-shadow:0 4px 20px rgba(108,58,255,0.4); pointer-events:none; }
+  .toast.show { opacity:1; }
+</style>
+</head>
+<body>
+
+<button class="back-btn" onclick="history.back()">
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#6c3aff" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+  Back
+</button>
+
+<div class="card">
+  <div class="card-header">
+    <h2>Daily Check-In</h2>
+  </div>
+
+  <div class="streak-scroll">
+    <div class="streak-row" id="streakRow"></div>
+  </div>
+
+  <div class="streak-info" id="streakInfo"></div>
+  <button class="claim-btn" id="claimBtn" onclick="claimToday()">Claim</button>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyBbDeBse2WXwzd_X0Mr8VyEzytI8Yya_uc",
+    authDomain: "tasknova-66d0f.firebaseapp.com",
+    databaseURL: "https://tasknova-66d0f-default-rtdb.firebaseio.com",
+    projectId: "tasknova-66d0f",
+    storageBucket: "tasknova-66d0f.firebasestorage.app",
+    messagingSenderId: "135129024485",
+    appId: "1:135129024485:web:232a90fd0752086568510c"
+  };
+  const _app  = initializeApp(firebaseConfig);
+  const _auth = getAuth(_app);
+
+  window._getAuthToken = async function() {
+    return new Promise((resolve) => {
+      const unsub = onAuthStateChanged(_auth, async (user) => {
+        unsub();
+        if (user) {
+          const token = await user.getIdToken(true);
+          resolve(token);
+        } else {
+          resolve(null);
+        }
+      });
+    });
+  };
+</script>
+
+<script>
+  const REWARDS = [10,10,10,10,10,10,50, 10,10,10,10,10,10,50];
+  const DB_URL  = 'https://tasknova-66d0f-default-rtdb.firebaseio.com';
+
+  // ── IST date helper (matches tasks page) ───────────────────────
+  function getTodayIST() {
+    const now = new Date(Date.now() + 5.5*60*60*1000);
+    return now.toISOString().split('T')[0]; // YYYY-MM-DD
+  }
+  function getYesterdayIST() {
+    const now = new Date(Date.now() + 5.5*60*60*1000 - 86400000);
+    return now.toISOString().split('T')[0];
+  }
+
+  let currentStreak  = 0;
+  let currentClaimed = false;
+  let uid = null;
+
+  function render() {
+    const streak  = currentStreak;
+    const claimed = currentClaimed;
+    const activeDay = claimed ? streak - 1 : streak;
+    const row = document.getElementById('streakRow');
+    row.innerHTML = '';
+
+    for (let i = 0; i < 14; i++) {
+      const isClaimed = i < streak;
+      const isActive  = i === activeDay;
+      const isFuture  = !isClaimed && !isActive;
+      const coins     = REWARDS[i];
+
+      const wrapCls  = 'coin-wrap ' + (isClaimed ? 'claimed' : isActive ? 'active' : 'future');
+      const labelCls = 'day-label ' + (isClaimed ? 'claimed' : isActive ? 'active' : '');
+      const badgeCls = 'reward-badge ' + (isClaimed ? 'claimed' : isActive ? 'active' : '');
+      const itemCls  = 'day-item' + (isFuture ? ' future' : '');
+      const pointer  = isActive ? '<div class="pointer"></div>' : '';
+
+      row.innerHTML += `
+        <div class="${itemCls}" id="dayItem${i}">
+          <div class="${wrapCls}" id="coinWrap${i}">
+            ${pointer}
+            <span class="coin-emoji">🪙</span>
+          </div>
+          <div class="${labelCls}">${i+1} Day</div>
+          <div class="${badgeCls}">🪙 ${coins}</div>
+        </div>`;
+    }
+
+    setTimeout(() => {
+      const active = document.querySelector('.coin-wrap.active');
+      if (active) active.scrollIntoView({behavior:'smooth',inline:'center',block:'nearest'});
+    }, 100);
+
+    updateUI(streak, claimed);
+  }
+
+  function updateUI(streak, claimed) {
+    const info = document.getElementById('streakInfo');
+    const btn  = document.getElementById('claimBtn');
+    if (claimed) {
+      const isBonus = (streak === 7 || streak === 14);
+      info.innerHTML = isBonus
+        ? `🎉 Streak: <strong>Day ${streak}</strong> Complete! Bonus <strong>+50 Coins</strong> milgaye!`
+        : `Aaj ka check-in ho chuka! Streak: <strong>Day ${streak}</strong>`;
+      btn.disabled = true;
+      btn.textContent = 'Already Claimed';
+    } else {
+      const coins = REWARDS[Math.min(streak, 13)];
+      info.innerHTML = `Aaj claim karo: <strong>+${coins} Coins</strong> | Streak: <strong>Day ${streak+1}</strong>`;
+      btn.disabled = false;
+      btn.textContent = `Claim +${coins} Coins`;
+    }
+  }
+
+  // ── Load current state from Firebase ────────────────────────────
+  async function loadState() {
+    uid = localStorage.getItem('tasknova_uid');
+    if (!uid || uid === 'null') {
+      // Not logged in — fallback to a disabled state
+      currentStreak = 0;
+      currentClaimed = false;
+      render();
+      const btn = document.getElementById('claimBtn');
+      btn.disabled = true;
+      btn.textContent = 'Login required';
+      return;
+    }
+
+    const token = await window._getAuthToken();
+    const authParam = token ? '?auth=' + token : '';
+
+    try {
+      const res  = await fetch(DB_URL + '/users/' + uid + '.json' + authParam);
+      const data = await res.json() || {};
+
+      const todayKey     = getTodayIST();
+      const yesterdayKey = getYesterdayIST();
+      let streak   = data.checkinStreak || 0;
+      const lastDate = data.checkinLastDate || '';
+
+      // Reset streak if user missed a day (lastDate not today/yesterday)
+      if (lastDate !== todayKey && lastDate !== yesterdayKey && lastDate !== '') {
+        streak = 0;
+      }
+
+      const claimedToday = (data.dailyTasks && data.dailyTasks[todayKey] && data.dailyTasks[todayKey].checkin) || (lastDate === todayKey);
+
+      currentStreak  = streak;
+      currentClaimed = !!claimedToday;
+      render();
+    } catch (e) {
+      console.log(e);
+      render();
+    }
+  }
+
+  async function claimToday() {
+    if (currentClaimed) return;
+    if (!uid || uid === 'null') return;
+
+    const btn = document.getElementById('claimBtn');
+    btn.disabled = true;
+    btn.textContent = 'Claiming...';
+
+    const todayKey     = getTodayIST();
+    const yesterdayKey = getYesterdayIST();
+
+    let streak = currentStreak;
+    streak = (streak > 0 && (currentLastDateMatches(yesterdayKey))) ? Math.min(streak+1, 14) : 1;
+    if (streak > 14) streak = 1;
+
+    const coins    = REWARDS[streak-1];
+    const dayIndex = streak-1;
+
+    const wrap = document.getElementById('coinWrap'+dayIndex);
+    if (wrap) {
+      const pop = document.createElement('span');
+      pop.className = 'coin-pop';
+      pop.textContent = '🪙';
+      wrap.appendChild(pop);
+      setTimeout(() => pop.remove(), 800);
+    }
+
+    try {
+      const token = await window._getAuthToken();
+      const authParam = token ? '?auth=' + token : '';
+
+      // Read fresh data to avoid race conditions
+      const res  = await fetch(DB_URL + '/users/' + uid + '.json' + authParam);
+      const data = await res.json() || {};
+
+      // Double-check not already claimed today (server-side guard)
+      const alreadyClaimed = (data.dailyTasks && data.dailyTasks[todayKey] && data.dailyTasks[todayKey].checkin) || (data.checkinLastDate === todayKey);
+      if (alreadyClaimed) {
+        currentClaimed = true;
+        currentStreak  = data.checkinStreak || streak;
+        render();
+        return;
+      }
+
+      const newCoins   = (data.coins || 0) + coins;
+      const newBalance = parseFloat((newCoins / 100).toFixed(2));
+
+      const patch = {
+        coins: newCoins,
+        balance: newBalance,
+        totalEarned: newBalance,
+        checkinStreak: streak,
+        checkinLastDate: todayKey
+      };
+      patch['dailyTasks/' + todayKey + '/checkin'] = true;
+
+      await fetch(DB_URL + '/users/' + uid + '.json' + authParam, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(patch)
+      });
+
+      // Update top-level balance display if present
+      const balEl  = document.getElementById('balanceDisplay');
+      const coinEl = document.getElementById('coinsDisplay');
+      if (balEl)  balEl.innerHTML   = '₹' + newBalance.toFixed(2);
+      if (coinEl) coinEl.textContent = newCoins.toLocaleString('en-IN') + ' Coins';
+
+      currentStreak  = streak;
+      currentClaimed = true;
+
+      setTimeout(() => {
+        showToast(`+${coins} Coins! Day ${streak} Complete`);
+        render();
+      }, 500);
+    } catch (e) {
+      console.log(e);
+      btn.disabled = false;
+      btn.textContent = `Claim +${coins} Coins`;
+      showToast('Kuch error hua, dobara try karo');
+    }
+  }
+
+  // helper: was last claim yesterday (IST)?
+  let _lastDateFromDB = '';
+  function currentLastDateMatches(yesterdayKey) {
+    return _lastDateFromDB === yesterdayKey;
+  }
+
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 3000);
+  }
+
+  // Initial load — also capture lastDate for streak continuation check
+  (async function init() {
+    uid = localStorage.getItem('tasknova_uid');
+    if (uid && uid !== 'null') {
+      const token = await window._getAuthToken();
+      const authParam = token ? '?auth=' + token : '';
+      try {
+        const res  = await fetch(DB_URL + '/users/' + uid + '.json' + authParam);
+        const data = await res.json() || {};
+        _lastDateFromDB = data.checkinLastDate || '';
+      } catch (e) { console.log(e); }
+    }
+    loadState();
+  })();
+</script>
+</body>
+</html>
