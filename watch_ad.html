@@ -418,21 +418,25 @@
 
 <script>
 // ═══════════════════════════════════════════════════════
-//  Simple Ad Timer — 45 sec total
-//  15 sec baad Proceed button show ho
+//  Simple Ad Timer — No SDK needed
+//  45 sec total: 15 sec baad Next Page button show ho
 // ═══════════════════════════════════════════════════════
 window.TNTracker = (function() {
   var _timer       = null;
   var _elapsed     = 0;
   var _required    = 45;
   var _onComplete  = null;
+  var _onFraud     = null;
   var _running     = false;
+  var _adClicked   = false;
 
   return {
     start: function(config) {
       _onComplete = config.onComplete || null;
-      _required   = config.requiredSec || 30;
+      _onFraud    = config.onFraud    || null;
+      _required   = config.requiredSec || 45;
       _running    = true;
+      _adClicked  = false;
       _elapsed    = 0;
       clearInterval(_timer);
 
@@ -454,15 +458,21 @@ window.TNTracker = (function() {
       }, 1000);
     },
 
-    stop: function() {
-      clearInterval(_timer);
-      _running = false;
-      _elapsed = 0;
+    getElapsed: function() { return _elapsed; },
+
+    markAdClicked: function() {
+      _adClicked = true;
     },
 
-    getElapsed: function() { return _elapsed; },
-    markAdClicked: function() {},
-    checkOnReturn: function() {},
+    checkOnReturn: function() { /* unused */ },
+
+    stop: function() {
+      clearInterval(_timer);
+      _running    = false;
+      _adClicked  = false;
+      _elapsed    = 0;
+    },
+
     isValid: function() { return false; },
     isFraud: function() { return false; },
   };
@@ -542,9 +552,18 @@ window.TNTracker = (function() {
 
         <!-- TOP BANNER AD — Adsterra #1 -->
         <div class="ad-box" id="s1-ad-top" style="min-height:55px;overflow:visible;">
-          <script type="application/javascript" src="https://a.magsrv.com/ad-provider.js"></script>
-          <ins class="eas6a97888e2" data-zoneid="5944310"></ins>
-          <script>(AdProvider = window.AdProvider || []).push({"serve": {}});</script>
+          <script>
+(function(svpif){
+var d = document,
+    s = d.createElement('script'),
+    l = d.scripts[d.scripts.length - 1];
+s.settings = svpif || {};
+s.src = "\/\/quarrelsomebitter.com\/b.XQVss\/dhGClB0EYHWEcA\/Te\/mD9IukZEUSlQkQPlTjcIxXMkjwMX4MMlDuEUtKN\/zbETyZMQzPgUw\/NrQ_";
+s.async = true;
+s.referrerPolicy = 'no-referrer-when-downgrade';
+l.parentNode.insertBefore(s, l);
+})({})
+</script>
         </div>
 
         <!-- Fake Article -->
@@ -689,7 +708,7 @@ window.TNTracker = (function() {
 
       <!-- Title only — no icon -->
       <div class="adwatch-title" style="margin-top:4px;">Watch Ad to Unlock</div>
-      <div class="adwatch-sub">Ad dekho aur next page unlock karo</div>
+      <div class="adwatch-sub">Watch an ad for 45 seconds to unlock the next page.</div>
 
       <!-- Card 1: Ad not loaded -->
       <div class="adwatch-card" id="adNotLoadedCard">
@@ -730,13 +749,15 @@ window.TNTracker = (function() {
         </div>
       </div>
 
-      <!-- Watch Ad button — Popunder trigger -->
-      <button class="adwatch-watch-btn" id="adWatchWatchBtn" onclick="startAdWatch()">▶ Watch Ad</button>
+      <!-- Watch Ad button — Platform rotates per visit -->
+      <a id="adWatchLink" href="https://plump-plastic.com/bp3.Vm0mPm3/p/vNbpmcVeJFZ/Da0j3YM/TCIq0UNjzikqzkL-TGcjxZMKj/QZ3wOST/cQ" target="_blank" style="display:block;width:100%;text-decoration:none;" onclick="window.TNTracker.markAdClicked(); startAdWatch(); return true;">
+        <button class="adwatch-watch-btn" id="adWatchWatchBtn">▶ Watch Ad</button>
+      </a>
 
       <!-- Dynamic ad container — used by non-direct-link platforms -->
       <div id="dynamicAdContainer" style="display:none;width:100%;margin-top:10px;"></div>
 
-      <!-- Proceed button -->
+      <!-- Proceed button — 15 sec baad show hoga -->
       <button class="adwatch-proceed-btn" id="adWatchProceedBtn" onclick="onProceedClicked()">
         ✅ Verified — Next Page Kholo
       </button>
@@ -770,9 +791,18 @@ window.TNTracker = (function() {
 
         <!-- TOP BANNER AD — sabse upar, Step 1 jaisa -->
         <div class="ad-box" id="s2-ad-top" style="min-height:65px;overflow:visible;">
-          <script type="application/javascript" src="https://a.magsrv.com/ad-provider.js"></script>
-          <ins class="eas6a97888e2" data-zoneid="5944312"></ins>
-          <script>(AdProvider = window.AdProvider || []).push({"serve": {}});</script>
+          <script>
+(function(svpif){
+var d = document,
+    s = d.createElement('script'),
+    l = d.scripts[d.scripts.length - 1];
+s.settings = svpif || {};
+s.src = "\/\/quarrelsomebitter.com\/b\/XMV.sFdfGDlI0SYpW\/cW\/renmi9cuXZnU_lYkvPRTicexJMsjtM\/4qMGzGM\/tXNZzAELy\/MezXgUzwNmwq";
+s.async = true;
+s.referrerPolicy = 'no-referrer-when-downgrade';
+l.parentNode.insertBefore(s, l);
+})({})
+</script>
         </div>
 
         <!-- Hero Image — banner ke niche -->
@@ -846,6 +876,21 @@ window.TNTracker = (function() {
           <div class="quote-block">"I cancelled 4 subscriptions I'd forgotten about. That freed ₹1,200/month which I now put into a liquid fund. It's my emergency starter fund." — Priya K., Hyderabad</div></p>
         </div>
 
+        <!-- Mid Banner Ad -->
+        <div class="ad-box" style="margin:8px 0;min-height:65px;overflow:visible;">
+          <script>
+(function(svpif){
+var d = document,
+    s = d.createElement('script'),
+    l = d.scripts[d.scripts.length - 1];
+s.settings = svpif || {};
+s.src = "\/\/quarrelsomebitter.com\/b\/XMV.sFdfGDlI0SYpW\/cW\/renmi9cuXZnU_lYkvPRTicexJMsjtM\/4qMGzGM\/tXNZzAELy\/MezXgUzwNmwq";
+s.async = true;
+s.referrerPolicy = 'no-referrer-when-downgrade';
+l.parentNode.insertBefore(s, l);
+})({})
+</script>
+        </div>
 
         <div class="article-body">
           <h3>3. Maximise Your UPI Cashback</h3>
@@ -1075,8 +1120,20 @@ window.TNTracker = (function() {
     startStepTimer(1);
   }
 
-  /* ── Ad Watch Popup System ────────────────────────────────── */
-  var _awCompleted = false;
+  /* ── Step 2 load ─────────────────────────────────────── */
+  // ── Ad Watch Popup System ────────────────────────────────
+  var _awTimer      = null;
+  var _awSeconds    = 45;
+  var _awStartTime  = 0;
+  var _awCompleted  = false;
+  var _awTabHidden  = 0;  // kitni baar tab hide hua
+  var _awSkipTries  = 0;  // kitni baar cheat ki
+
+  // ── Hard Anti-Cheat Variables ──
+  var _awTabLeft     = false;   // user ne tab chhoda
+  var _awTabLeftTime = 0;       // kab chhoda
+  var _awTimeOnAd    = 0;       // actual time jo ad pe bitayi
+  var _awWatchStarted = false;  // watch shuru hua
 
   function _awBlockBack(e) {
     history.pushState(null, null, location.href);
@@ -1084,65 +1141,196 @@ window.TNTracker = (function() {
     if(warn) warn.textContent = '⚠️ Pehle task pura karo!';
   }
 
+
+
+
+  // ── AD PLATFORM ROTATION SYSTEM ─────────────────────────────────
+  // Har visit pe next platform ka ad chalta hai — circular rotation
+  // localStorage mein current index save hota hai
+
+  var AD_PLATFORMS = [
+    {
+      name: 'adsterra',
+      type: 'direct_link',
+      url:  'https://plump-plastic.com/bp3.Vm0mPm3/p/vNbpmcVeJFZ/Da0j3YM/TCIq0UNjzikqzkL-TGcjxZMKj/QZ3wOST/cQ'
+    },
+    {
+      name: 'pemsrv',
+      type: 'script',
+      inject: function(container) {
+        var ins = document.createElement('ins');
+        ins.className = 'eas6a97888e33';
+        ins.setAttribute('data-zoneid', '5946220');
+        container.appendChild(ins);
+        var s = document.createElement('script');
+        s.async = true; s.type = 'application/javascript';
+        s.src = 'https://a.pemsrv.com/ad-provider.js';
+        s.onload = function() {
+          try { (window.AdProvider = window.AdProvider || []).push({"serve":{}}); } catch(e) {}
+        };
+        document.head.appendChild(s);
+      }
+    },
+    // Platform 3 — baad mein add karo
+    // { name: 'platform3', type: 'direct_link', url: 'https://...' },
+    // Platform 4 — baad mein add karo
+    // { name: 'platform4', type: 'script', inject: function(c) { ... } },
+    // Platform 5 — baad mein add karo
+    // { name: 'platform5', type: 'direct_link', url: 'https://...' },
+  ];
+
+  var ROTATION_KEY = 'tn_ad_platform_index';
+
+  function getCurrentPlatform() {
+    var idx = parseInt(localStorage.getItem(ROTATION_KEY) || '0');
+    if (isNaN(idx) || idx >= AD_PLATFORMS.length) idx = 0;
+    return { platform: AD_PLATFORMS[idx], index: idx };
+  }
+
+  function advanceRotation() {
+    var current = parseInt(localStorage.getItem(ROTATION_KEY) || '0');
+    var next = (current + 1) % AD_PLATFORMS.length;
+    localStorage.setItem(ROTATION_KEY, next);
+  }
+
+  function setupWatchAdButton() {
+    var result   = getCurrentPlatform();
+    var platform = result.platform;
+    var link     = document.getElementById('adWatchLink');
+    var container = document.getElementById('dynamicAdContainer');
+
+    if (platform.type === 'direct_link') {
+      // Direct link — <a> tag ka href update karo
+      if (link) {
+        link.href = platform.url;
+        link.onclick = function() {
+          window.TNTracker.markAdClicked(); // PEHLE mark karo
+          startAdWatch();
+          return true; // href follow karne do
+        };
+      }
+      if (container) container.style.display = 'none';
+    } else if (platform.type === 'script') {
+      // Script-based ad — link hide karo, container mein inject karo
+      if (link) {
+        // Override click to inject script instead of opening URL
+        link.removeAttribute('href');
+        link.onclick = function(e) {
+          e.preventDefault();
+          startAdWatch();
+          if (!window._dynAdLoaded) {
+            window._dynAdLoaded = true;
+            container.style.display = 'block';
+            platform.inject(container);
+          }
+        };
+      }
+    }
+    console.log('[AdRotation] Platform:', platform.name, '| Next index:', (result.index + 1) % AD_PLATFORMS.length);
+  }
+
+  // Setup button when popup opens — showAdWatchPopup ke baad call hoga
+  var _origShowPopup = window.showAdWatchPopup;
+  window.showAdWatchPopup = function() {
+    setupWatchAdButton();
+    if (typeof _origShowPopup === 'function') _origShowPopup();
+    else document.getElementById('adWatchPopup').classList.add('show');
+  };
+
+  var _returnHandled = false; // Race condition fix — sirf ek baar fire ho
+
+  function _onAdReturn() {
+    if (_returnHandled) return;
+    _returnHandled = true;
+    window.removeEventListener('focus', _onAdReturn);
+    document.removeEventListener('visibilitychange', _onAdReturnVis);
+    // Small delay — focus aur visibilitychange dono settle ho jayein
+    setTimeout(function() {
+      window.TNTracker.checkOnReturn();
+      // NOTE: _returnHandled reset mat karo — TNTracker._resultFired handle karega
+      // Next watch cycle mein startAdWatch() -> TNTracker.start() se sab fresh hoga
+    }, 200);
+  }
+
+  function _onAdReturnVis() {
+    if (!document.hidden) {
+      if (_returnHandled) return;
+      _returnHandled = true;
+      window.removeEventListener('focus', _onAdReturn);
+      document.removeEventListener('visibilitychange', _onAdReturnVis);
+      setTimeout(function() {
+        window.TNTracker.checkOnReturn();
+        // NOTE: same as above — reset nahi karna
+      }, 200);
+    }
+  }
+
   function startAdWatch() {
     var warn = document.getElementById('adWatchWarn');
     if(window._awWatching) return;
     window._awWatching = true;
     _awCompleted = false;
+
     if(warn) warn.textContent = '';
 
-    // ExoClick popunder manually fire karo
-    try {
-      if(typeof popMagic !== 'undefined' && popMagic.url && popMagic.browser) {
-        var method = popMagic.getPopMethod(popMagic.browser);
-        if(typeof method === 'function') {
-          var fakeEvent = { isTrusted: true, screenX: 1, screenY: 1, target: document.getElementById('adWatchWatchBtn'), srcElement: document.getElementById('adWatchWatchBtn'), preventDefault: function(){}, stopPropagation: function(){} };
-          method(fakeEvent);
-        }
-      }
-    } catch(e) { console.log('Popunder fire error:', e); }
+    // Watch button bilkul enable rahe — kuch mat karo usse
+    // Timer pill bilkul mat dikhao
 
     window.TNTracker.start({
-      requiredSec: 30,
+      requiredSec: 45,
+
       onComplete: function(data) {
         _awCompleted = true;
+        var txt  = document.getElementById('adWatchVerifyText');
+        var sub  = document.getElementById('adWatchStatusSub');
+        var w    = document.getElementById('adWatchWarn');
+        if(txt)  txt.textContent  = 'Verification Complete! ✅';
+        if(sub)  sub.textContent  = 'Ad dekh liya — proceed karo!';
+        if(w)    w.textContent    = '';
         window._awWatching = false;
-        var warn = document.getElementById('adWatchWarn');
-        if(warn) {
-          warn.textContent = '✅ Ad successfully dekh liya! Ab next page par ja sakte ho.';
-          warn.style.color = '#16a34a';
-        }
       }
     });
   }
 
-  // Green button click — 15 sec baad show hota hai, 45 sec pe _awCompleted true hota hai
+  // Green button click — 45 sec se pehle warning, baad mein proceed
   function onProceedClicked() {
     var warn = document.getElementById('adWatchWarn');
+
     if (!_awCompleted) {
-      if(warn) { warn.textContent = '⚠️ 30 second genuinely ads dekho tabhi next page par ja paoge'; warn.style.color = '#e94560'; }
+      if(warn) warn.textContent = '⚠️ 30 second genuinely watch karo';
       return;
     }
-    if(warn) { warn.textContent = ''; warn.style.color = ''; }
+
+    if(warn) warn.textContent = '';
     proceedToStep2();
   }
 
   function showAdWatchPopup() {
+    // Reset state
+    _awSeconds   = 45;
     _awCompleted = false;
-    window._awWatching = false;
-    window.TNTracker.stop();
+    _awTabHidden = 0;
+    _awSkipTries = 0;
 
     var procBtn = document.getElementById('adWatchProceedBtn');
     var warn    = document.getElementById('adWatchWarn');
     var btn     = document.getElementById('adWatchWatchBtn');
     var txt     = document.getElementById('adWatchVerifyText');
     var sub     = document.getElementById('adWatchStatusSub');
+    var icon    = document.getElementById('adWatchIcon');
+    var nb      = document.getElementById('awNextPageBtn');
+
+    // Full reset
+    _awCompleted = false;
+    window._awWatching = false;
+    window.TNTracker.stop();
 
     if(procBtn) procBtn.style.display = 'none';
     if(warn)    warn.textContent = '';
     if(btn)   { btn.disabled = false; btn.textContent = '▶ Watch Ad'; btn.style.background = ''; }
     if(txt)     txt.textContent = 'Verification Pending';
     if(sub)     sub.textContent = 'Watch Ad button dabao';
+    if(icon)    icon.textContent = '🔒';
 
     document.getElementById('adWatchPopup').classList.add('show');
     history.pushState(null, null, location.href);
@@ -1151,9 +1339,16 @@ window.TNTracker = (function() {
 
   function proceedToStep2() {
     window.TNTracker.stop();
+    advanceRotation();
     document.getElementById('adWatchPopup').classList.remove('show');
     goToStep2();
   }
+
+  // ─────────────────────────────────────────────────────────
+
+  // ── Ad Watch Popup System (TNTracker handles everything above) ──
+
+
 
   function goToStep2() {
     const s1 = document.getElementById('step1');
@@ -1350,29 +1545,5 @@ window.TNTracker = (function() {
   function goBack() { window.location.href = 'tasknova_tasks.html'; }
 </script>
 
-
-<!-- ExoClick Popunder — Watch Ad button pe trigger hoga -->
-<script type="application/javascript">
-(function() {
-    var adConfig = {
-    "ads_host": "a.pemsrv.com",
-    "syndication_host": "s.pemsrv.com",
-    "idzone": 5944304,
-    "popup_fallback": false,
-    "popup_force": false,
-    "chrome_enabled": true,
-    "new_tab": false,
-    "frequency_period": 720,
-    "frequency_count": 1,
-    "trigger_method": 3,
-    "trigger_class": "",
-    "trigger_delay": 0,
-    "capping_enabled": true,
-    "tcf_enabled": true,
-    "only_inline": false
-};
-window.document.querySelectorAll||(document.querySelectorAll=document.body.querySelectorAll=Object.querySelectorAll=function(e,o,t,i,n){var r=document,a=r.createStyleSheet();for(n=r.all,o=[],t=(e=e.replace(/\[for\b/gi,"[htmlFor").split(",")).length;t--;){for(a.addRule(e[t],"k:v"),i=n.length;i--;)n[i].currentStyle.k&&o.push(n[i]);a.removeRule(0)}return o});var popMagic={version:9,cookie_name:"",url:"",config:{},open_count:0,top:null,browser:null,venor_loaded:!1,venor:!1,tcfData:null,remoteLicensedDomains:["exdynsrv.com","exosrv.com","exoclick.com","opoxv.com","exacdn.com","pemsrv.com"],configTpl:{ads_host:"",syndication_host:"",idzone:"",frequency_period:720,frequency_count:1,trigger_method:1,trigger_class:"",popup_force:!1,popup_fallback:!1,chrome_enabled:!0,new_tab:!1,cat:"",tags:"",el:"",sub:"",sub2:"",sub3:"",block_ad_types:"",only_inline:!1,trigger_delay:0,capping_enabled:!0,tcf_enabled:!1,cookieconsent:!0,should_fire:function(){return!0},on_redirect:null},isAdsDomainLicensed:function(){for(var e=this.config.ads_host,o=this.remoteLicensedDomains.concat([".local","localhost","127.0.0.1"]),t=0;t<o.length;t++){var i=o[t];if("string"==typeof i)if("."===i.charAt(0)){var n=i,r=i.substring(1);if(e.slice(-n.length)===n||e===r)return!0}else{var a=e===i,c="."+i,p=e.slice(-c.length)===c;if(a||p)return!0}}return!1},init:function(e){if(void 0!==e.idzone&&e.idzone){void 0===e.customTargeting&&(e.customTargeting=[]),window.customTargeting=e.customTargeting||null;var o=Object.keys(e.customTargeting).filter(function(e){return e.search("ex_")>=0});for(var t in o.length&&o.forEach(function(e){return this.configTpl[e]=null}.bind(this)),this.configTpl)Object.prototype.hasOwnProperty.call(this.configTpl,t)&&(void 0!==e[t]?this.config[t]=e[t]:this.config[t]=this.configTpl[t]);if(void 0!==this.config.idzone&&""!==this.config.idzone){!0!==this.config.only_inline&&this.isAdsDomainLicensed()&&this.loadHosted();var i=this;this.checkTCFConsent(function(){"complete"===document.readyState?i.preparePopWait():i.addEventToElement(window,"load",i.preparePop)})}}},getCountFromCookie:function(){if(!this.config.cookieconsent)return 0;var e=popMagic.getCookie(popMagic.cookie_name),o=void 0===e?0:parseInt(e);return isNaN(o)&&(o=0),o},getLastOpenedTimeFromCookie:function(){var e=popMagic.getCookie(popMagic.cookie_name),o=null;if(void 0!==e){var t=e.split(";")[1];o=t>0?parseInt(t):0}return isNaN(o)&&(o=null),o},shouldShow:function(e){if(e=e||!1,!popMagic.config.capping_enabled){var o=!0,t=popMagic.config.should_fire;try{e||"function"!=typeof t||(o=Boolean(t()))}catch(e){console.error("Error executing should fire callback function:",e)}return o&&0===popMagic.open_count}if(popMagic.open_count>=popMagic.config.frequency_count)return!1;var i=popMagic.getCountFromCookie(),n=popMagic.getLastOpenedTimeFromCookie(),r=Math.floor(Date.now()/1e3),a=n+popMagic.config.trigger_delay;return!(n&&a>r)&&(popMagic.open_count=i,!(i>=popMagic.config.frequency_count))},venorShouldShow:function(){return popMagic.venor_loaded&&"0"===popMagic.venor},setAsOpened:function(e){var o=e?e.target||e.srcElement:null,t={id:"",tagName:"",classes:"",text:"",href:"",elm:""};void 0!==o&&null!=o&&(t={id:void 0!==o.id&&null!=o.id?o.id:"",tagName:void 0!==o.tagName&&null!=o.tagName?o.tagName:"",classes:void 0!==o.classList&&null!=o.classList?o.classList:"",text:void 0!==o.outerText&&null!=o.outerText?o.outerText:"",href:void 0!==o.href&&null!=o.href?o.href:"",elm:o});var i=new CustomEvent("creativeDisplayed-"+popMagic.config.idzone,{detail:t});if(document.dispatchEvent(i),popMagic.config.capping_enabled){var n=1;n=0!==popMagic.open_count?popMagic.open_count+1:popMagic.getCountFromCookie()+1;var r=Math.floor(Date.now()/1e3);popMagic.config.cookieconsent&&popMagic.setCookie(popMagic.cookie_name,n+";"+r,popMagic.config.frequency_period)}else++popMagic.open_count},loadHosted:function(){var e=document.createElement("script");for(var o in e.type="application/javascript",e.async=!0,e.src="//"+this.config.ads_host+"/popunder1000.js",e.id="popmagicldr",this.config)Object.prototype.hasOwnProperty.call(this.config,o)&&"ads_host"!==o&&"syndication_host"!==o&&e.setAttribute("data-exo-"+o,this.config[o]);var t=document.getElementsByTagName("body").item(0);t.firstChild?t.insertBefore(e,t.firstChild):t.appendChild(e)},preparePopWait:function(){setTimeout(popMagic.preparePop,400)},preparePop:function(){if("object"!=typeof exoJsPop101||!Object.prototype.hasOwnProperty.call(exoJsPop101,"add")){if(popMagic.top=self,popMagic.top!==self)try{top.document.location.toString()&&(popMagic.top=top)}catch(e){}if(popMagic.cookie_name="zone-cap-"+popMagic.config.idzone,popMagic.config.capping_enabled||(document.cookie=popMagic.cookie_name+"=;expires=Thu, 01 Jan 1970 00:00:01 GMT; path=/"),popMagic.shouldShow(!0)){var e=new XMLHttpRequest;e.onreadystatechange=function(){e.readyState==XMLHttpRequest.DONE&&(popMagic.venor_loaded=!0,200==e.status?popMagic.venor=e.responseText:popMagic.venor="0")};var o="https:"!==document.location.protocol&&"http:"!==document.location.protocol?"https:":document.location.protocol;e.open("GET",o+"//"+popMagic.config.syndication_host+"/venor.php",!0);try{e.send()}catch(e){popMagic.venor_loaded=!0}}if(popMagic.buildUrl(),popMagic.browser=popMagic.browserDetector.getBrowserInfo(),popMagic.config.chrome_enabled||!popMagic.browser.isChrome){var t=popMagic.getPopMethod(popMagic.browser);popMagic.addEvent("click",t)}}},getPopMethod:function(e){return popMagic.config.popup_force||popMagic.config.popup_fallback&&e.isChrome&&e.version>=68&&!e.isMobile?popMagic.methods.popup:e.isMobile?popMagic.methods.default:e.isChrome?popMagic.methods.chromeTab:popMagic.methods.default},checkTCFConsent:function(e){if(this.config.tcf_enabled&&"function"==typeof window.__tcfapi){var o=this;window.__tcfapi("addEventListener",2,function(t,i){i&&(o.tcfData=t,"tcloaded"!==t.eventStatus&&"useractioncomplete"!==t.eventStatus||(window.__tcfapi("removeEventListener",2,function(){},t.listenerId),e()))})}else e()},buildUrl:function(){var e,o="https:"!==document.location.protocol&&"http:"!==document.location.protocol?"https:":document.location.protocol,t=top===self?document.URL:document.referrer,i={type:"inline",name:"popMagic",ver:this.version},n="";customTargeting&&Object.keys(customTargeting).length&&("object"==typeof customTargeting?Object.keys(customTargeting):customTargeting).forEach(function(o){"object"==typeof customTargeting?e=customTargeting[o]:Array.isArray(customTargeting)&&(e=scriptEl.getAttribute(o));var t=o.replace("data-exo-","");n+="&"+t+"="+e});var r=this.tcfData&&this.tcfData.gdprApplies&&!0===this.tcfData.gdprApplies?1:0;this.url=o+"//"+this.config.syndication_host+"/v1/link.php?cat="+this.config.cat+"&idzone="+this.config.idzone+"&type=8&p="+encodeURIComponent(t)+"&sub="+this.config.sub+(""!==this.config.sub2?"&sub2="+this.config.sub2:"")+(""!==this.config.sub3?"&sub3="+this.config.sub3:"")+"&block=1&el="+this.config.el+"&tags="+this.config.tags+(""!==this.config.block_ad_types?"&block_ad_types="+this.config.block_ad_types:"")+"&scr_info="+function(e){var o=e.type+"|"+e.name+"|"+e.ver;return encodeURIComponent(btoa(o))}(i)+n+"&gdpr="+r+"&cb="+Math.floor(1e9*Math.random()),this.tcfData&&this.tcfData.tcString?this.url+="&gdpr_consent="+encodeURIComponent(this.tcfData.tcString):this.url+="&cookieconsent="+this.config.cookieconsent},addSuvtValueToUrl:function(e){var o=popMagic.getCookie("__suvt");if(o){var t=-1!==e.indexOf("?")?"&":"?";return e+t+"suvt="+o}return e},isAgegoAvailable:function(){return"undefined"!=typeof Promise&&void 0!==window.AGEGO},addAgeGoToken:function(e){return popMagic.isAgegoAvailable()?Promise.race([window.AGEGO("getVerificationToken"),new Promise(function(e){o=setTimeout(function(){e(null)},500)})]).then(function(t){if(clearTimeout(o),t&&t.token){var i=-1===e.indexOf("?")?"?":"&";return e+i+"ag_token="+encodeURIComponent(t.token)}return e}).catch(function(){return clearTimeout(o),e}):Promise.resolve(e);var o},addEventToElement:function(e,o,t){e.addEventListener?e.addEventListener(o,t,!1):e.attachEvent?(e["e"+o+t]=t,e[o+t]=function(){e["e"+o+t](window.event)},e.attachEvent("on"+o,e[o+t])):e["on"+o]=e["e"+o+t]},getTriggerClasses:function(){var e,o=[];-1===popMagic.config.trigger_class.indexOf(",")?e=popMagic.config.trigger_class.split(" "):e=popMagic.config.trigger_class.replace(/\s/g,"").split(",");for(var t=0;t<e.length;t++)""!==e[t]&&o.push("."+e[t]);return o},addEvent:function(e,o){var t;if("3"!=popMagic.config.trigger_method)if("2"!=popMagic.config.trigger_method||""==popMagic.config.trigger_class)if("4"!=popMagic.config.trigger_method||""==popMagic.config.trigger_class)if("5"!=popMagic.config.trigger_method||""==popMagic.config.trigger_class)popMagic.addEventToElement(document,e,o);else{var i="a"+popMagic.getTriggerClasses().map(function(e){return":not("+e+")"}).join("");t=document.querySelectorAll(i);for(var n=0;n<t.length;n++)popMagic.addEventToElement(t[n],e,o)}else{var r=popMagic.getTriggerClasses();popMagic.addEventToElement(document,e,function(e){r.some(function(o){return null!==e.target.closest(o)})||o.call(e.target,e)})}else{var a=popMagic.getTriggerClasses();for(t=document.querySelectorAll(a.join(", ")),n=0;n<t.length;n++)popMagic.addEventToElement(t[n],e,o)}else for(t=document.querySelectorAll("a"),n=0;n<t.length;n++)popMagic.addEventToElement(t[n],e,o)},setCookie:function(e,o,t){if(!this.config.cookieconsent)return!1;t=parseInt(t,10);var i=new Date;i.setMinutes(i.getMinutes()+parseInt(t));var n=encodeURIComponent(o)+"; expires="+i.toUTCString()+"; path=/";document.cookie=e+"="+n},getCookie:function(e){if(!this.config.cookieconsent)return!1;var o,t,i,n=document.cookie.split(";");for(o=0;o<n.length;o++)if(t=n[o].substr(0,n[o].indexOf("=")),i=n[o].substr(n[o].indexOf("=")+1),(t=t.replace(/^\s+|\s+$/g,""))===e)return decodeURIComponent(i)},randStr:function(e,o){for(var t="",i=o||"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789",n=0;n<e;n++)t+=i.charAt(Math.floor(Math.random()*i.length));return t},isValidUserEvent:function(e){return!(!("isTrusted"in e)||!e.isTrusted||"ie"===popMagic.browser.name||"safari"===popMagic.browser.name)||0!=e.screenX&&0!=e.screenY},isValidHref:function(e){if(void 0===e||""==e)return!1;return!/\s?javascript\s?:/i.test(e)},findLinkToOpen:function(e){var o=e,t=!1;try{for(var i=0;i<20&&!o.getAttribute("href")&&o!==document&&"html"!==o.nodeName.toLowerCase();)o=o.parentNode,i++;var n=o.getAttribute("target");n&&-1!==n.indexOf("_blank")||(t=o.getAttribute("href"))}catch(e){}return popMagic.isValidHref(t)||(t=!1),t||window.location.href},getPuId:function(){return"ok_"+Math.floor(89999999*Math.random()+1e7)},executeOnRedirect:function(){try{popMagic.config.capping_enabled||"function"!=typeof popMagic.config.on_redirect||popMagic.config.on_redirect()}catch(e){console.error("Error executing on redirect callback:",e)}},browserDetector:{browserDefinitions:[["firefox",/Firefox\/([0-9.]+)(?:\s|$)/],["opera",/Opera\/([0-9.]+)(?:\s|$)/],["opera",/OPR\/([0-9.]+)(:?\s|$)$/],["edge",/Edg(?:e|)\/([0-9._]+)/],["ie",/Trident\/7\.0.*rv:([0-9.]+)\).*Gecko$/],["ie",/MSIE\s([0-9.]+);.*Trident\/[4-7].0/],["ie",/MSIE\s(7\.0)/],["safari",/Version\/([0-9._]+).*Safari/],["chrome",/(?!Chrom.*Edg(?:e|))Chrom(?:e|ium)\/([0-9.]+)(:?\s|$)/],["chrome",/(?!Chrom.*OPR)Chrom(?:e|ium)\/([0-9.]+)(:?\s|$)/],["bb10",/BB10;\sTouch.*Version\/([0-9.]+)/],["android",/Android\s([0-9.]+)/],["ios",/Version\/([0-9._]+).*Mobile.*Safari.*/],["yandexbrowser",/YaBrowser\/([0-9._]+)/],["crios",/CriOS\/([0-9.]+)(:?\s|$)/]],isChromeOrChromium:function(){var e=window.navigator,o=(e.userAgent||"").toLowerCase(),t=e.vendor||"";if(-1!==o.indexOf("crios"))return!0;if(e.userAgentData&&Array.isArray(e.userAgentData.brands)&&e.userAgentData.brands.length>0){var i=e.userAgentData.brands,n=i.some(function(e){return"Google Chrome"===e.brand}),r=i.some(function(e){return"Chromium"===e.brand})&&2===i.length;return n||r}var a=!!window.chrome,c=-1!==o.indexOf("edg"),p=!!window.opr||-1!==o.indexOf("opr"),s=!(!e.brave||!e.brave.isBrave),g=-1!==o.indexOf("vivaldi"),l=-1!==o.indexOf("yabrowser"),d=-1!==o.indexOf("samsungbrowser"),u=-1!==o.indexOf("ucbrowser");return a&&"Google Inc."===t&&!c&&!p&&!s&&!g&&!l&&!d&&!u},getBrowserInfo:function(){var e=window.navigator.userAgent,o={name:"other",version:"1.0",versionNumber:1,isChrome:this.isChromeOrChromium(),isMobile:!!e.match(/Android|BlackBerry|iPhone|iPad|iPod|Opera Mini|IEMobile|WebOS|Windows Phone/i)};for(var t in this.browserDefinitions){var i=this.browserDefinitions[t];if(i[1].test(e)){var n=i[1].exec(e),r=n&&n[1].split(/[._]/).slice(0,3),a=Array.prototype.slice.call(r,1).join("")||"0";r&&r.length<3&&Array.prototype.push.apply(r,1===r.length?[0,0]:[0]),o.name=i[0],o.version=r.join("."),o.versionNumber=parseFloat(r[0]+"."+a);break}}return o}},methods:{default:function(e){if(!popMagic.shouldShow()||!popMagic.venorShouldShow()||!popMagic.isValidUserEvent(e))return!0;var o=e.target||e.srcElement,t=popMagic.findLinkToOpen(o),i=popMagic.addSuvtValueToUrl(popMagic.url);return window.open(t,"_blank"),popMagic.setAsOpened(e),popMagic.executeOnRedirect(),popMagic.isAgegoAvailable()?popMagic.addAgeGoToken(i).then(function(e){popMagic.top.document.location=e}):popMagic.top.document.location=i,void 0!==e.preventDefault&&(e.preventDefault(),e.stopPropagation()),!0},chromeTab:function(e){if(!popMagic.shouldShow()||!popMagic.venorShouldShow()||!popMagic.isValidUserEvent(e))return!0;if(void 0===e.preventDefault)return!0;e.preventDefault(),e.stopPropagation();var o=popMagic.addSuvtValueToUrl(popMagic.url),t=top.window.document.createElement("a"),i=e.target||e.srcElement;t.href=popMagic.findLinkToOpen(i),document.getElementsByTagName("body")[0].appendChild(t);var n=new MouseEvent("click",{bubbles:!0,cancelable:!0,view:window,screenX:0,screenY:0,clientX:0,clientY:0,ctrlKey:!0,altKey:!1,shiftKey:!1,metaKey:!0,button:0});n.preventDefault=void 0,t.dispatchEvent(n),t.parentNode.removeChild(t),popMagic.executeOnRedirect(),popMagic.isAgegoAvailable()?popMagic.addAgeGoToken(o).then(function(e){window.open(e,"_self")}):window.open(o,"_self"),popMagic.setAsOpened(e)},popup:function(e){if(!popMagic.shouldShow()||!popMagic.venorShouldShow()||!popMagic.isValidUserEvent(e))return!0;var o="";if(popMagic.config.popup_fallback&&!popMagic.config.popup_force){var t=Math.max(Math.round(.8*window.innerHeight),300);o="menubar=1,resizable=1,width="+Math.max(Math.round(.7*window.innerWidth),300)+",height="+t+",top="+(window.screenY+100)+",left="+(window.screenX+100)}var i=document.location.href,n=window.open(i,popMagic.getPuId(),o);popMagic.setAsOpened(e),setTimeout(function(){popMagic.isAgegoAvailable()?popMagic.addAgeGoToken(popMagic.url).then(function(e){n.location.href=e,popMagic.executeOnRedirect()}):(n.location.href=popMagic.url,popMagic.executeOnRedirect())},200),void 0!==e.preventDefault&&(e.preventDefault(),e.stopPropagation())}}};    popMagic.init(adConfig);
-})();
-</script>
 </body>
 </html>
