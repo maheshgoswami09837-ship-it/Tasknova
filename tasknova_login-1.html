@@ -7,9 +7,8 @@
 <title>TaskNova</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-  body { font-family: 'Segoe UI', sans-serif; background: #05051a; min-height: 100vh; overflow-x: hidden; }
+  body { font-family: 'Segoe UI', sans-serif; background: #f5f6fa; min-height: 100vh; overflow-x: hidden; }
   .glow-circle { display:none; }
-  body { background: #000; }  @keyframes twinkle { 0%, 100% { opacity: 0.2; } 50% { opacity: 1; } }
   .glow-circle { position: fixed; border-radius: 50%; filter: blur(80px); z-index: 0; pointer-events: none; }
   .glow-1 { width: 300px; height: 300px; background: rgba(108,99,255,0.25); top: -100px; left: -100px; }
   .glow-2 { width: 250px; height: 250px; background: rgba(59,130,246,0.2); bottom: -80px; right: -80px; }
@@ -86,7 +85,63 @@
   .rules-close-btn { width: 100%; padding: 14px; background: linear-gradient(135deg, #6c63ff, #3b82f6); border: none; border-radius: 12px; color: #fff; font-size: 14px; font-weight: 700; cursor: pointer; font-family: 'Segoe UI', sans-serif; margin-top: 8px; }
 
   /* HOME */
-  #homeSection { display: none; padding-bottom: 80px; }
+  #homeSection { display: none; padding-bottom: 80px; background: #f5f6fa; min-height: 100vh; position: relative; z-index: 20; }
+
+  /* ── White theme overrides for Login Section ───────────────── */
+  .logo-name { color: #1a1a2e; }
+  .logo-sub { color: #5a5a7a; }
+  .tabs { background: rgba(0,0,0,0.06); }
+  .tab { color: #5a5a7a; font-weight: 700; }
+  .tab.active { color: #fff; }
+  .form, .register-form { background: #fff; border: 1px solid rgba(0,0,0,0.08); border-radius: 18px; padding: 18px; box-shadow: 0 4px 20px rgba(0,0,0,0.06); }
+  input { background: #f5f6fa; border: 1.5px solid rgba(0,0,0,0.12); color: #1a1a2e; }
+  input::placeholder { color: #8888a8; }
+  input:focus { border-color: #6c63ff; background: rgba(108,99,255,0.06); }
+  .input-icon { color: #6666aa; }
+  .eye-icon { color: #6666aa; }
+  .forgot { background: rgba(108,99,255,0.08); border: 1.5px solid rgba(108,99,255,0.3); color: #5b52d6; font-weight: 700; }
+  .forgot:active { background: rgba(108,99,255,0.15); }
+
+  /* OTP / RULES MODALS */
+  .modal-overlay, .rules-modal { background: rgba(0,0,0,0.5); }
+  .modal-box, .rules-box { background: #fff; border: 1px solid rgba(0,0,0,0.06); box-shadow: 0 20px 60px rgba(0,0,0,0.15); }
+  .modal-title, .rules-box h2 { color: #1a1a2e; }
+  .modal-sub { color: #5a5a7a; }
+  .otp-box { background: #f5f6fa; border: 2px solid rgba(108,99,255,0.3); color: #1a1a2e !important; -webkit-text-fill-color: #1a1a2e !important; border-bottom: 2px solid rgba(108,99,255,0.3) !important; }
+  .otp-box:focus { background: rgba(108,99,255,0.06); }
+  .resend-otp { color: #5a5a7a; }
+  .otp-cancel-btn { color: #5a5a7a; border-color: rgba(0,0,0,0.12); }
+  .rule-item { background: #f8f9fc; border: 1px solid rgba(0,0,0,0.07); }
+  .rule-text { color: #3a3a5a; }
+  .rule-text strong { color: #1a1a2e; }
+
+  /* ── White theme overrides for Home Section ────────────────── */
+  #homeSection .glow-circle { display: none; }
+  #homeSection .header-left h2 { color: #1a1a2e; }
+  #homeSection .header-left p { color: rgba(26,26,46,0.5); }
+  #homeSection .notif-btn { background: #fff; border-color: rgba(0,0,0,0.08); box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+  #homeSection #headerBalancePill { background: #fff; border-color: #e0e0e0; box-shadow: 0 4px 16px rgba(0,0,0,0.10); border-width: 1.5px; }
+  #homeSection .milestone-card { background: #fff; border-color: rgba(0,0,0,0.06); box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+  #homeSection .milestone-title { color: #1a1a2e; }
+  #homeSection .milestone-circle { background: #f5f4ff; border-color: #d4d0ff; }
+  #homeSection .milestone-item.done .milestone-circle { border: 2.5px solid #6c63ff; background: #ece9ff; box-shadow: 0 0 0 5px rgba(108,99,255,0.13), 0 2px 10px rgba(108,99,255,0.25); }
+  #homeSection .milestone-item.next-up .milestone-circle { border: 2px solid #c4b5fd; background: #f5f4ff; box-shadow: 0 0 0 4px rgba(108,99,255,0.08); }
+  #homeSection .milestone-item.done:not(:last-child)::after { background: #6c63ff; }
+  #homeSection .milestone-label { color: rgba(26,26,46,0.55); }
+  #homeSection .milestone-item:not(:last-child)::after { background: #dde0ea; }
+  #homeSection .section-title { color: #1a1a2e; }
+  #homeSection .view-all { color: #2563eb; }
+  #homeSection .earn-card { background: #fff; border-color: rgba(0,0,0,0.06); box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+  #homeSection .earn-card:active { background: rgba(37,99,235,0.06); }
+  #homeSection .earn-card-info h3 { color: #1a1a2e; }
+  #homeSection .earn-card-info p { color: rgba(26,26,46,0.45); }
+  #homeSection .earn-card-reward { background: linear-gradient(135deg, #2563eb, #3b82f6); box-shadow: 0 3px 10px rgba(37,99,235,0.35); }
+  #homeSection .bottom-nav { background: #fff; border-top-color: rgba(0,0,0,0.06); }
+  #homeSection .nav-item p { color: #b0b8cc; }
+  #homeSection .nav-item.active svg { stroke: #2563eb; }
+  #homeSection .nav-item.active p { color: #2563eb; }
+  #homeSection .invite-text h3 { color: #1a1a2e; }
+  #homeSection .invite-text p { color: rgba(26,26,46,0.5); }
   .content { position: relative; z-index: 10; padding: 20px 16px; animation: fadeUp 0.5s ease; }
   .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
   .header-left h2 { font-size: 20px; font-weight: 800; color: #fff; }
@@ -120,11 +175,13 @@
   .milestone-scroll::-webkit-scrollbar { display: none; }
   .milestone-row { display: flex; align-items: flex-start; width: max-content; gap: 0; position: relative; }
   .milestone-item { display: flex; flex-direction: column; align-items: center; gap: 8px; position: relative; width: 80px; }
-  .milestone-item:not(:last-child)::after { content:''; position:absolute; top:26px; left:calc(50% + 22px); width:calc(80px - 44px); height:2.5px; background: rgba(108,99,255,0.4); z-index:0; }
-  .milestone-circle { width: 52px; height: 52px; border-radius: 50%; background: rgba(108,99,255,0.1); border: 2px solid rgba(108,99,255,0.35); display: flex; align-items: center; justify-content: center; font-size: 22px; position: relative; z-index: 1; }
-  .milestone-item.reached .milestone-circle { border-color: #6c63ff; background: rgba(108,99,255,0.2); box-shadow: 0 0 0 4px rgba(108,99,255,0.15); }
-  .milestone-label { font-size: 11px; font-weight: 700; color: rgba(255,255,255,0.6); white-space: nowrap; }
-  .milestone-reward { font-size: 11px; font-weight: 700; color: #facc15; display:flex; align-items:center; gap:3px; }
+  .milestone-item:not(:last-child)::after { content:''; position:absolute; top:26px; left:calc(50% + 27px); width:calc(80px - 54px); height:2px; background: #dde0ea; z-index:0; }
+  .milestone-circle { width: 52px; height: 52px; border-radius: 50%; background: #f5f4ff; border: 2px solid #d4d0ff; display: flex; align-items: center; justify-content: center; font-size: 22px; position: relative; z-index: 1; transition: all 0.3s; box-shadow: 0 2px 8px rgba(108,99,255,0.08); }
+  .milestone-item.done .milestone-circle { border: 2.5px solid #6c63ff; background: #ece9ff; box-shadow: 0 0 0 5px rgba(108,99,255,0.13), 0 2px 10px rgba(108,99,255,0.25); }
+  .milestone-item.next-up .milestone-circle { border: 2px solid #c4b5fd; background: #f5f4ff; box-shadow: 0 0 0 4px rgba(108,99,255,0.08); }
+  .milestone-item.done:not(:last-child)::after { background: #6c63ff; }
+  .milestone-label { font-size: 11px; font-weight: 700; color: #555; white-space: nowrap; }
+  .milestone-reward { font-size: 11px; font-weight: 800; color: #1a1a2e; display:flex; align-items:center; gap:3px; }
 
   .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
   .section-title { font-size: 16px; font-weight: 800; color: #fff; }
@@ -137,7 +194,7 @@
   .earn-card-icon { width: 52px; height: 52px; border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 26px; flex-shrink: 0; box-shadow:0 4px 14px rgba(0,0,0,0.25); }
   .earn-card-icon svg { width:26px; height:26px; }
   .bg-purple { background: linear-gradient(135deg,#4f3ff0,#7c6fff); }
-  .bg-green  { background: linear-gradient(135deg,#059669,#22c55e); }
+  .bg-green  { background: linear-gradient(135deg,#1d4ed8,#3b82f6); }
   .bg-orange { background: linear-gradient(135deg,#ea6c00,#f97316); }
   .bg-blue   { background: linear-gradient(135deg,#1d61d6,#3b82f6); }
   .bg-pink   { background: linear-gradient(135deg,#be185d,#ec4899); }
@@ -148,12 +205,12 @@
   .earn-card-info p { font-size: 12px; color: rgba(255,255,255,0.4); margin-top: 3px; }
   .earn-card-reward { background: linear-gradient(135deg, #16a34a, #22c55e); border-radius: 50px; padding: 8px 14px; font-size: 12px; font-weight: 800; color: #fff; white-space: nowrap; flex-shrink: 0; box-shadow:0 3px 10px rgba(34,197,94,0.35); }
   .earn-card-reward.coming { background: rgba(234,179,8,0.15); border: 1px solid rgba(234,179,8,0.3); color: #eab308; font-size: 11px; }
-  .invite-banner { background: linear-gradient(135deg, rgba(22,163,74,0.2), rgba(5,150,105,0.15)); border: 1px solid rgba(34,197,94,0.3); border-radius: 20px; padding: 20px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+  .invite-banner { background: linear-gradient(135deg, rgba(37,99,235,0.12), rgba(59,130,246,0.08)); border: 1px solid rgba(37,99,235,0.25); border-radius: 20px; padding: 20px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
   .invite-text h3 { font-size: 16px; font-weight: 700; color: #fff; }
-  .invite-text h3 span { color: #22c55e; }
+  .invite-text h3 span { color: #2563eb; }
   .invite-text p { font-size: 12px; color: rgba(255,255,255,0.4); margin: 6px 0 14px; }
-  .invite-text p strong { color: #22c55e; }
-  .invite-btn { background: linear-gradient(135deg, #16a34a, #22c55e); border: none; padding: 10px 20px; border-radius: 50px; color: #fff; font-size: 13px; font-weight: 700; cursor: pointer; font-family: 'Segoe UI', sans-serif; box-shadow:0 3px 12px rgba(34,197,94,0.4); }
+  .invite-text p strong { color: #2563eb; }
+  .invite-btn { background: linear-gradient(135deg, #2563eb, #3b82f6); border: none; padding: 10px 20px; border-radius: 50px; color: #fff; font-size: 13px; font-weight: 700; cursor: pointer; font-family: 'Segoe UI', sans-serif; box-shadow:0 3px 12px rgba(37,99,235,0.4); }
   .invite-emoji { font-size: 60px; }
   .activity-item { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.07); border-radius: 16px; padding: 14px 16px; display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
   .activity-icon { width: 44px; height: 44px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
@@ -162,12 +219,18 @@
   .activity-info p { font-size: 11px; color: #6c63ff; font-weight: 500; margin-top: 2px; }
   .activity-amount h4 { font-size: 14px; font-weight: 700; color: #22c55e; text-align: right; }
   .activity-amount p { font-size: 11px; color: rgba(255,255,255,0.3); text-align: right; margin-top: 2px; }
-  .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: rgba(5,5,26,0.95); backdrop-filter: blur(20px); border-top: 1px solid rgba(255,255,255,0.08); display: flex; justify-content: space-around; align-items: center; padding: 10px 0 20px; z-index: 100; }
-  .nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; padding: 4px 16px; }
-  .nav-item span { font-size: 20px; }
-  .nav-item p { font-size: 10px; color: rgba(255,255,255,0.3); font-weight: 500; }
-  .nav-item.active p { color: #22c55e; }
-  .nav-center { width: 52px; height: 52px; background: linear-gradient(135deg, #16a34a, #22c55e); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 22px; margin-top: -20px; box-shadow: 0 4px 20px rgba(34,197,94,0.4); cursor: pointer; }
+  .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: #fff; border-top: 1px solid #eef0f4; display: flex; justify-content: space-around; align-items: center; padding: 10px 0 22px; z-index: 100; box-shadow: 0 -2px 16px rgba(0,0,0,0.06); }
+  .nav-item { display: flex; flex-direction: column; align-items: center; gap: 5px; cursor: pointer; padding: 6px 12px; min-width: 56px; -webkit-tap-highlight-color: transparent; user-select: none; border-radius: 14px; transition: background 0.15s; }
+  .nav-item:active { background: rgba(37,99,235,0.1); }
+  .nav-item svg { width: 24px; height: 24px; stroke: #b0b8cc; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; transition: stroke 0.2s; }
+  .nav-item p { font-size: 11px; color: #b0b8cc; font-weight: 600; transition: color 0.2s; }
+  .nav-item.active svg { stroke: #2563eb; }
+  .nav-item.active p { color: #2563eb; }
+  .nav-center-wrap { display: flex; flex-direction: column; align-items: center; gap: 5px; margin-top: -22px; cursor: pointer; -webkit-tap-highlight-color: transparent; user-select: none; }
+  .nav-center { width: 52px; height: 52px; background: #2563eb; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 18px rgba(37,99,235,0.35), 0 0 0 4px rgba(37,99,235,0.12); }
+  .nav-center:active { opacity: 0.85; transform: scale(0.95); }
+  .nav-center svg { width: 24px; height: 24px; stroke: #fff; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+  .nav-center-label { font-size: 11px; color: #b0b8cc; font-weight: 600; }
   .toast { position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%); padding: 12px 24px; border-radius: 50px; font-size: 13px; font-weight: 600; z-index: 200; display: none; white-space: nowrap; }
   .toast.success { background: rgba(34,197,94,0.2); border: 1px solid rgba(34,197,94,0.4); color: #22c55e; }
   .toast.error { background: rgba(239,68,68,0.2); border: 1px solid rgba(239,68,68,0.4); color: #ef4444; }
@@ -245,7 +308,14 @@
 <div id="loginSection">
   <div class="card">
     <div class="logo-section">
-      <div class="logo-icon">🚀</div>
+      <div class="logo-icon">
+        <svg width="38" height="38" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 2C12 2 17 5 17 11C17 13.5 15.5 15.5 14 17L12 22L10 17C8.5 15.5 7 13.5 7 11C7 5 12 2 12 2Z" fill="white" fill-opacity="0.95"/>
+          <circle cx="12" cy="10" r="2.2" fill="#6c63ff"/>
+          <path d="M9 17.5L7 20.5L10 19" fill="white" fill-opacity="0.6"/>
+          <path d="M15 17.5L17 20.5L14 19" fill="white" fill-opacity="0.6"/>
+        </svg>
+      </div>
       <div class="logo-name">Task<span>nova</span></div>
       <div class="logo-sub">Earn While You Explore</div>
     </div>
@@ -255,31 +325,50 @@
     </div>
     <div class="form" id="loginForm">
       <div class="input-wrap">
-        <span class="input-icon">📧</span>
+        <span class="input-icon" style="display:flex;align-items:center;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+        </span>
         <input type="email" id="loginEmail" placeholder="Enter your email">
       </div>
       <div class="input-wrap">
-        <span class="input-icon">🔒</span>
+        <span class="input-icon" style="display:flex;align-items:center;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        </span>
         <input type="password" id="loginPassword" placeholder="Enter your password">
-        <span class="eye-icon" onclick="togglePass('loginPassword', this)">👁️</span>
+        <span class="eye-icon" onclick="togglePass('loginPassword', this)" style="display:flex;align-items:center;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+        </span>
       </div>
-      <span class="forgot" onclick="forgotPassword()">🔐 Forgot Password?</span>
+      <div style="text-align:right; margin-top:-6px; margin-bottom:2px;">
+        <span onclick="forgotPassword()" style="display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:700;color:#5b52d6;cursor:pointer;padding:4px 2px;">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          Forgot Password?
+        </span>
+      </div>
       <button class="btn-main" id="loginBtn" onclick="loginUser()">LOGIN</button>
     </div>
-    <!-- REGISTER FORM — Refer field nahi hai -->
+    <!-- REGISTER FORM -->
     <div class="register-form" id="registerForm">
       <div class="input-wrap">
-        <span class="input-icon">👤</span>
+        <span class="input-icon" style="display:flex;align-items:center;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        </span>
         <input type="text" id="regName" placeholder="Full Name">
       </div>
       <div class="input-wrap">
-        <span class="input-icon">📧</span>
+        <span class="input-icon" style="display:flex;align-items:center;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+        </span>
         <input type="email" id="regEmail" placeholder="Enter your email">
       </div>
       <div class="input-wrap">
-        <span class="input-icon">🔒</span>
+        <span class="input-icon" style="display:flex;align-items:center;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        </span>
         <input type="password" id="regPassword" placeholder="Create password (min 6 chars)">
-        <span class="eye-icon" onclick="togglePass('regPassword', this)">👁️</span>
+        <span class="eye-icon" onclick="togglePass('regPassword', this)" style="display:flex;align-items:center;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+        </span>
       </div>
       <!-- Referral field hidden, auto-fill hoga URL se -->
       <input type="hidden" id="regReferral">
@@ -291,18 +380,18 @@
 <!-- HOME SECTION -->
 <div id="homeSection">
   <div class="content">
-    <div class="header" style="display:flex;justify-content:space-between;align-items:stretch;gap:16px;margin-bottom:16px;">
-      <!-- Left: Balance -->
-      <div id="headerBalancePill" style="display:flex;align-items:center;gap:10px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:16px;padding:12px 14px;transition:transform 0.15s, background 0.15s;flex:1;min-width:0;">
+    <div class="header" style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:16px;">
+      <!-- Left: Balance (fit content) -->
+      <div id="headerBalancePill" onclick="window.location.href='tasknova_withdraw.html'" style="display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:16px;padding:10px 12px;transition:transform 0.15s,background 0.15s;flex-shrink:0;max-width:160px;cursor:pointer;">
         <span style="font-size:24px;flex-shrink:0;">🪙</span>
-        <div style="min-width:0;overflow:hidden;">
-          <div style="font-size:9px;color:rgba(255,255,255,0.4);font-weight:700;text-transform:uppercase;letter-spacing:0.6px;margin-bottom:3px;">Your Balance</div>
-          <div id="headerCoins" style="font-size:18px;font-weight:900;color:#facc15;line-height:1;white-space:nowrap;">0 Coins</div>
+        <div style="min-width:0;">
+          <div style="font-size:10px;color:#999;font-weight:600;margin-bottom:2px;">My Balance</div>
+          <div id="headerCoins" style="font-size:16px;font-weight:900;color:#1a1a2e;line-height:1;letter-spacing:-0.3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">0</div>
         </div>
       </div>
       <!-- Right: Daily Check-In -->
-      <button id="dailyCheckinBtn" onclick="window.location.href='tasknova_checkin.html'" style="display:flex;align-items:center;gap:10px;background:linear-gradient(135deg,#7c3aed,#4f46e5);border:none;border-radius:16px;padding:12px 16px;cursor:pointer;box-shadow:0 4px 14px rgba(124,58,237,0.4);transition:transform 0.15s, box-shadow 0.15s;flex-shrink:0;justify-content:center;max-width:135px;">
-        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;">
+      <button id="dailyCheckinBtn" onclick="window.location.href='tasknova_checkin.html'" style="display:flex;align-items:center;gap:10px;background:linear-gradient(135deg,#7c3aed,#4f46e5);border:none;border-radius:16px;padding:12px 16px;cursor:pointer;box-shadow:0 4px 14px rgba(124,58,237,0.4);transition:transform 0.15s,box-shadow 0.15s;flex-shrink:0;">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;">
           <rect x="3" y="4" width="18" height="18" rx="2"/>
           <line x1="3" y1="9" x2="21" y2="9"/>
           <line x1="8" y1="2" x2="8" y2="5"/>
@@ -311,7 +400,7 @@
         </svg>
         <div style="text-align:left;">
           <div style="font-size:13px;font-weight:800;color:#fff;line-height:1;">Daily</div>
-          <div style="font-size:11px;color:rgba(255,255,255,0.85);line-height:1.3;">Check In →</div>
+          <div style="font-size:11px;color:rgba(255,255,255,0.85);line-height:1.4;">Check In →</div>
         </div>
       </button>
     </div>
@@ -324,7 +413,11 @@
             <p>Do tasks and win exciting rewards</p>
             <button class="promo-btn" onclick="window.location.href='tasknova_tasks.html'">Start Earning →</button>
           </div>
-          <div class="promo-emoji">🎁</div>
+          <div class="promo-emoji" style="font-size:0;">
+            <div style="width:90px;height:90px;background:rgba(255,255,255,0.15);border-radius:26px;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 28px rgba(0,0,0,0.25);backdrop-filter:blur(6px);">
+              <svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg>
+            </div>
+          </div>
         </div>
         <div class="promo-slide slide-2">
           <div class="promo-text">
@@ -332,7 +425,11 @@
             <p>Watch short ads aur turant coins kamao</p>
             <button class="promo-btn" onclick="window.location.href='tasknova_tasks.html'">Watch Now →</button>
           </div>
-          <div class="promo-emoji">📺</div>
+          <div class="promo-emoji" style="font-size:0;">
+            <div style="width:90px;height:90px;background:rgba(255,255,255,0.15);border-radius:26px;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 28px rgba(0,0,0,0.25);backdrop-filter:blur(6px);">
+              <svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/></svg>
+            </div>
+          </div>
         </div>
         <div class="promo-slide slide-3">
           <div class="promo-text">
@@ -340,7 +437,11 @@
             <p>Apne friends ko invite karo aur extra coins paao</p>
             <button class="promo-btn" onclick="window.location.href='tasknova_refer.html'">Invite Now →</button>
           </div>
-          <div class="promo-emoji">🤝</div>
+          <div class="promo-emoji" style="font-size:0;">
+            <div style="width:90px;height:90px;background:rgba(255,255,255,0.15);border-radius:26px;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 28px rgba(0,0,0,0.25);backdrop-filter:blur(6px);">
+              <svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/><path d="M21 21v-2a4 4 0 0 0-3-3.87"/></svg>
+            </div>
+          </div>
         </div>
       </div>
       <div class="promo-dots" id="promoDots">
@@ -358,30 +459,40 @@
       </div>
       <div class="milestone-scroll">
         <div class="milestone-row" id="milestoneRow">
-          <div class="milestone-item" data-refers="1">
+          <div class="milestone-item next-up" data-refers="1">
             <div class="milestone-circle">🎁</div>
             <div class="milestone-label">1 Refer</div>
-            <div class="milestone-reward">🪙 1000</div>
+            <div class="milestone-reward"><span style="font-size:13px;"><svg width="14" height="14" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><circle cx="10" cy="10" r="9" fill="#f5a700"/><circle cx="10" cy="10" r="7" fill="#ffd600" opacity="0.5"/><text x="10" y="14" text-anchor="middle" font-size="9" font-weight="900" fill="#7a4200" font-family="Arial">₹</text></svg></span>1,000</div>
           </div>
           <div class="milestone-item" data-refers="5">
             <div class="milestone-circle">🎁</div>
             <div class="milestone-label">5 Refer</div>
-            <div class="milestone-reward">🪙 5000</div>
+            <div class="milestone-reward"><span style="font-size:13px;"><svg width="14" height="14" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><circle cx="10" cy="10" r="9" fill="#f5a700"/><circle cx="10" cy="10" r="7" fill="#ffd600" opacity="0.5"/><text x="10" y="14" text-anchor="middle" font-size="9" font-weight="900" fill="#7a4200" font-family="Arial">₹</text></svg></span>5,000</div>
           </div>
           <div class="milestone-item" data-refers="10">
             <div class="milestone-circle">🎁</div>
             <div class="milestone-label">10 Refer</div>
-            <div class="milestone-reward">🪙 10000</div>
-          </div>
-          <div class="milestone-item" data-refers="20">
-            <div class="milestone-circle">🎁</div>
-            <div class="milestone-label">20 Refer</div>
-            <div class="milestone-reward">🪙 20000</div>
+            <div class="milestone-reward"><span style="font-size:13px;"><svg width="14" height="14" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><circle cx="10" cy="10" r="9" fill="#f5a700"/><circle cx="10" cy="10" r="7" fill="#ffd600" opacity="0.5"/><text x="10" y="14" text-anchor="middle" font-size="9" font-weight="900" fill="#7a4200" font-family="Arial">₹</text></svg></span>10,000</div>
           </div>
           <div class="milestone-item" data-refers="50">
             <div class="milestone-circle">🎁</div>
             <div class="milestone-label">50 Refer</div>
-            <div class="milestone-reward">🪙 50000</div>
+            <div class="milestone-reward"><span style="font-size:13px;"><svg width="14" height="14" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><circle cx="10" cy="10" r="9" fill="#f5a700"/><circle cx="10" cy="10" r="7" fill="#ffd600" opacity="0.5"/><text x="10" y="14" text-anchor="middle" font-size="9" font-weight="900" fill="#7a4200" font-family="Arial">₹</text></svg></span>50,000</div>
+          </div>
+          <div class="milestone-item" data-refers="100">
+            <div class="milestone-circle">🎁</div>
+            <div class="milestone-label">100 Refer</div>
+            <div class="milestone-reward"><span style="font-size:13px;"><svg width="14" height="14" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><circle cx="10" cy="10" r="9" fill="#f5a700"/><circle cx="10" cy="10" r="7" fill="#ffd600" opacity="0.5"/><text x="10" y="14" text-anchor="middle" font-size="9" font-weight="900" fill="#7a4200" font-family="Arial">₹</text></svg></span>1,00,000</div>
+          </div>
+          <div class="milestone-item" data-refers="500">
+            <div class="milestone-circle">🎁</div>
+            <div class="milestone-label">500 Refer</div>
+            <div class="milestone-reward"><span style="font-size:13px;"><svg width="14" height="14" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><circle cx="10" cy="10" r="9" fill="#f5a700"/><circle cx="10" cy="10" r="7" fill="#ffd600" opacity="0.5"/><text x="10" y="14" text-anchor="middle" font-size="9" font-weight="900" fill="#7a4200" font-family="Arial">₹</text></svg></span>5,00,000</div>
+          </div>
+          <div class="milestone-item" data-refers="1000">
+            <div class="milestone-circle">🎁</div>
+            <div class="milestone-label">1000 Refer</div>
+            <div class="milestone-reward"><span style="font-size:13px;"><svg width="14" height="14" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><circle cx="10" cy="10" r="9" fill="#f5a700"/><circle cx="10" cy="10" r="7" fill="#ffd600" opacity="0.5"/><text x="10" y="14" text-anchor="middle" font-size="9" font-weight="900" fill="#7a4200" font-family="Arial">₹</text></svg></span>10,00,000</div>
           </div>
         </div>
       </div>
@@ -391,11 +502,11 @@
       <div class="section-title">Earning Options</div>
       <div class="view-all" onclick="window.location.href='tasknova_tasks.html'">View All</div>
     </div>
-    <div class="earn-cards">
+    <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:20px;">
 
       <!-- 1. Offerwall Tasks -->
       <div class="earn-card" onclick="window.location.href='tasknova_tasks.html'"
-        style="background:linear-gradient(135deg,rgba(108,99,255,0.18),rgba(59,130,246,0.12));border-color:rgba(108,99,255,0.35);">
+        style="background:linear-gradient(135deg,rgba(108,99,255,0.1),rgba(59,130,246,0.07));border-color:rgba(108,99,255,0.25);">
         <div class="earn-card-icon bg-purple">
           <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg>
         </div>
@@ -413,67 +524,34 @@
         </div>
         <div class="earn-card-info">
           <h3>Complete Survey</h3>
-          <p>Answer questions from brands & earn coins · 5-10 min</p>
+          <p>Questions answer karo & earn karo · 5-10 min</p>
         </div>
         <div class="earn-card-reward">+2000 🪙</div>
       </div>
 
-      <!-- 3. Shortlink Task -->
-      <div class="earn-card" onclick="window.location.href='tasknova_tasks.html'">
-        <div class="earn-card-icon bg-teal">
-          <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+      <!-- 3. Special Tasks -->
+      <div class="earn-card" onclick="window.location.href='tasknova_tasks.html'"
+        style="background:linear-gradient(135deg,rgba(249,115,22,0.1),rgba(239,68,68,0.07));border-color:rgba(249,115,22,0.25);">
+        <div class="earn-card-icon" style="background:linear-gradient(135deg,#f97316,#ef4444);">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" fill="#fff" stroke="none"/>
+          </svg>
         </div>
         <div class="earn-card-info">
-          <h3>Shortlink Task</h3>
-          <p>Link visit karo aur coins pao · 2/day</p>
+          <h3>Special Tasks ⚡</h3>
+          <p>Shortlink & Watch Ads — dono karo · Daily</p>
         </div>
-        <div class="earn-card-reward">+20 🪙</div>
+        <div class="earn-card-reward">+1000 🪙</div>
       </div>
 
-      <!-- 4. Watch Video Ad -->
-      <div class="earn-card" onclick="window.location.href='tasknova_tasks.html'">
-        <div class="earn-card-icon bg-purple">
-          <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="15" rx="2" ry="2"/><polyline points="17 2 12 7 7 2"/><polygon points="10 11 10 18 17 14.5" fill="#fff" stroke="none"/></svg>
-        </div>
-        <div class="earn-card-info">
-          <h3>Watch Video Ad</h3>
-          <p>Watch a short video ad & earn coins · 15 sec</p>
-        </div>
-        <div class="earn-card-reward">+10 🪙</div>
-      </div>
-
-      <!-- 5. Spin & Win -->
-      <div class="earn-card" onclick="window.location.href='tasknova_tasks.html'">
-        <div class="earn-card-icon bg-orange">
-          <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M3 22v-6h6"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/></svg>
-        </div>
-        <div class="earn-card-info">
-          <h3>Spin & Win</h3>
-          <p>Wheel spin karo aur coins jeeto · 6/day</p>
-        </div>
-        <div class="earn-card-reward">+20 🪙</div>
-      </div>
-
-      <!-- 6. Daily Check-In -->
-      <div class="earn-card" onclick="window.location.href='tasknova_checkin.html'">
-        <div class="earn-card-icon bg-green">
-          <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01" stroke-width="2.5" stroke-linecap="round"/></svg>
-        </div>
-        <div class="earn-card-info">
-          <h3>Daily Check-In</h3>
-          <p>Har roz ek baar claim karo · 1/day</p>
-        </div>
-        <div class="earn-card-reward">+20 🪙</div>
-      </div>
-
-      <!-- 7. Instagram Post -->
-      <div class="earn-card" onclick="window.location.href='tasknova_tasks.html'">
+      <!-- 4. Instagram Post (Coming Soon) -->
+      <div class="earn-card" style="opacity:0.6;pointer-events:none;">
         <div class="earn-card-icon bg-pink">
           <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5" stroke-width="3"/></svg>
         </div>
         <div class="earn-card-info">
           <h3>Instagram Post</h3>
-          <p>Share TaskNova & earn ₹5</p>
+          <p>Share TaskNova on Instagram · 2 min</p>
         </div>
         <div class="earn-card-reward coming">🔒 Soon</div>
       </div>
@@ -492,17 +570,26 @@
   </div>
   <div class="bottom-nav">
     <div class="nav-item active" onclick="window.location.href='tasknova_login-1.html'">
-      <span>🏠</span><p style="color:#22c55e;font-weight:700;">Home</p>
+      <svg viewBox="0 0 24 24"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 01-1 1H4a1 1 0 01-1-1V9.5z"/><path d="M9 21V12h6v9"/></svg>
+      <p>Home</p>
     </div>
     <div class="nav-item" onclick="window.location.href='tasknova_tasks.html'">
-      <span>📋</span><p>Tasks</p>
+      <svg viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="2"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="12" y2="16"/></svg>
+      <p>Tasks</p>
     </div>
-    <div class="nav-center" onclick="window.location.href='tasknova_withdraw.html'">💰</div>
+    <div class="nav-center-wrap" onclick="window.location.href='tasknova_withdraw.html'">
+      <div class="nav-center">
+        <svg viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+      </div>
+      <p class="nav-center-label">Withdraw</p>
+    </div>
     <div class="nav-item" onclick="window.location.href='tasknova_refer.html'">
-      <span>👥</span><p>Refer</p>
+      <svg viewBox="0 0 24 24"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 014-4h4a4 4 0 014 4v2"/><path d="M16 3.13a4 4 0 010 7.75"/><path d="M21 21v-2a4 4 0 00-3-3.87"/></svg>
+      <p>Refer</p>
     </div>
     <div class="nav-item" onclick="window.location.href='tasknova_profile.html'">
-      <span>👤</span><p>Profile</p>
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+      <p>Profile</p>
     </div>
   </div>
 </div>
@@ -571,7 +658,7 @@
         const headerBalEl = document.getElementById('headerBalance');
         if (headerBalEl) headerBalEl.textContent = '₹' + calculatedBalance.toFixed(2);
         const headerCoinsEl = document.getElementById('headerCoins');
-        if (headerCoinsEl) headerCoinsEl.textContent = totalCoins.toLocaleString('en-IN') + ' Coins';
+        if (headerCoinsEl) headerCoinsEl.textContent = totalCoins.toLocaleString('en-IN');
         document.querySelectorAll('.user-coins').forEach(el => el.textContent = totalCoins + ' Coins');
         document.querySelectorAll('.user-total-earned').forEach(el => el.textContent = '₹' + (data.totalEarned || 0));
         document.querySelectorAll('.user-tasks').forEach(el => el.textContent = data.tasksDone || 0);
@@ -875,8 +962,10 @@
 <script>
   function togglePass(id, el) {
     const input = document.getElementById(id);
-    if (input.type === 'password') { input.type = 'text'; el.textContent = '🙈'; }
-    else { input.type = 'password'; el.textContent = '👁️'; }
+    const eyeOpen = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>`;
+    const eyeOff  = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>`;
+    if (input.type === 'password') { input.type = 'text'; el.innerHTML = eyeOff; }
+    else { input.type = 'password'; el.innerHTML = eyeOpen; }
   }
 
   // ── FORGOT PASSWORD — Clean Firebase Reset Email ─────────────
@@ -985,14 +1074,13 @@
   })();
 
   // ── Refer milestone highlighting ─────────────────────────────
+  const _homeMilestones = [1, 5, 10, 50, 100, 500, 1000];
   function updateMilestones(referralCount) {
-    document.querySelectorAll('#milestoneRow .milestone-item').forEach(item => {
-      const needed = parseInt(item.dataset.refers, 10);
-      if (referralCount >= needed) {
-        item.classList.add('reached');
-      } else {
-        item.classList.remove('reached');
-      }
+    document.querySelectorAll('#milestoneRow .milestone-item').forEach((el, i) => {
+      const needed = parseInt(el.dataset.refers, 10);
+      const done = referralCount >= needed;
+      const isNext = !done && (i === 0 || referralCount >= _homeMilestones[i - 1]);
+      el.className = 'milestone-item' + (done ? ' done' : (isNext ? ' next-up' : ''));
     });
   }
 </script>
