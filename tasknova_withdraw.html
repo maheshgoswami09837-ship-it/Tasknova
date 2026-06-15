@@ -5,198 +5,217 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>TaskNova Withdraw</title>
 <style>
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { font-family: 'Segoe UI', sans-serif; background: #0a0a0a; min-height: 100vh; overflow-x: hidden; padding-bottom: 80px; opacity: 0; transition: opacity 0.2s; }
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent !important; }
+  *, *:focus { outline: none !important; -webkit-tap-highlight-color: transparent !important; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; background: #f2f4f7; min-height: 100vh; overflow-x: hidden; padding-bottom: 86px; color: #1a1a2e; opacity: 0; transition: opacity 0.2s; }
   body.loaded { opacity: 1; }
   .content { position: relative; z-index: 10; padding: 20px 16px; animation: fadeUpContent 0.4s ease both; }
   @keyframes fadeUpContent { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
 
   .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-  .header h1 { font-size: 22px; font-weight: 800; color: #fff; }
-  .header p { font-size: 12px; color: rgba(255,255,255,0.4); margin-top: 2px; }
+  .header h1 { font-size: 22px; font-weight: 800; color: #1a1a2e; }
+  .header p { font-size: 12px; color: #888; margin-top: 2px; }
 
+  /* ── Balance Card — tasks.html style (blue gradient) ── */
   .balance-card {
-    background: linear-gradient(135deg, #0d7a4e, #1a9e64);
-    border-radius: 16px; padding: 14px 16px; margin-bottom: 16px;
-    box-shadow: 0 6px 20px rgba(22,163,74,0.3);
+    background: linear-gradient(135deg, #2563eb 0%, #3b82f6 50%, #60a5fa 100%);
+    border-radius: 20px; padding: 20px 20px 18px; margin-bottom: 14px;
+    box-shadow: 0 8px 28px rgba(37,99,235,0.35), 0 2px 8px rgba(0,0,0,0.1);
     position: relative; overflow: hidden;
     display: flex; align-items: center; justify-content: space-between;
   }
-  .balance-card-left { flex: 1; }
-  .balance-card .label { font-size: 11px; color: rgba(255,255,255,0.65); text-transform: uppercase; letter-spacing: 0.5px; }
-  .balance-card .amount { font-size: 26px; font-weight: 800; color: #fff; margin: 3px 0 1px; }
-  .balance-card .coins-info { font-size: 11px; color: rgba(255,255,255,0.55); }
-  .balance-card-right { font-size: 36px; opacity: 0.35; margin-left: 12px; }
-  .min-note { background: rgba(255,255,255,0.15); border-radius: 8px; padding: 4px 10px; font-size: 10px; color: #fff; display: inline-block; margin-top: 8px; }
+  .balance-card::before {
+    content: ''; position: absolute; top: -30px; right: -30px;
+    width: 120px; height: 120px;
+    background: radial-gradient(circle, rgba(255,255,255,0.12) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .balance-card::after {
+    content: ''; position: absolute; bottom: -20px; left: 20px;
+    width: 80px; height: 80px;
+    background: radial-gradient(circle, rgba(255,255,255,0.07) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .balance-card-left { flex: 1; position: relative; z-index: 1; }
+  .balance-card .label { font-size: 11px; color: rgba(255,255,255,0.75); font-weight: 600; letter-spacing: 0.8px; text-transform: uppercase; }
+  .balance-card .amount { font-size: 32px; font-weight: 900; color: #fff; margin: 4px 0 4px; letter-spacing: -1px; text-shadow: 0 2px 8px rgba(0,0,0,0.2); }
+  .balance-card .coins-info { font-size: 13px; font-weight: 700; color: rgba(255,255,255,0.85); }
+  .balance-card-right { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+  .balance-coin-icon { font-size: 44px; filter: drop-shadow(0 4px 10px rgba(0,0,0,0.3)); }
+  .min-note { background: rgba(255,255,255,0.18); border-radius: 50px; padding: 4px 12px; font-size: 10px; font-weight: 700; color: #fff; display: inline-block; margin-top: 6px; }
 
-  .section-title { font-size: 13px; font-weight: 800; color: rgba(255,255,255,0.55); margin-bottom: 12px; text-transform: uppercase; letter-spacing: 1px; }
+  .section-title { font-size: 13px; font-weight: 800; color: #777; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 1px; }
 
   /* Pending Withdraw Card */
   .pending-card {
     background: rgba(245,158,11,0.08);
-    border: 1px solid rgba(245,158,11,0.25);
+    border: 1.5px solid rgba(245,158,11,0.3);
     border-radius: 16px; padding: 14px 16px;
     margin-bottom: 16px; display: none;
   }
   .pending-card.show { display: block; }
   .pending-top { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
   .pending-label { font-size:12px; font-weight:800; color:#f59e0b; text-transform:uppercase; letter-spacing:0.5px; }
-  .pending-amount { font-size:18px; font-weight:900; color:#fff; }
+  .pending-amount { font-size:18px; font-weight:900; color:#1a1a2e; }
   .pending-timer { font-size:13px; font-weight:700; color:#f59e0b; margin-top:4px; }
-  .pending-status { font-size:11px; color:rgba(255,255,255,0.4); margin-top:2px; }
+  .pending-status { font-size:11px; color:#888; margin-top:2px; }
 
   /* History button */
   .history-btn {
     display:flex; align-items:center; justify-content:center; gap:8px;
-    width:100%; padding:12px; margin-bottom:16px;
-    background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.09);
-    border-radius:14px; color:rgba(255,255,255,0.7); font-size:13px;
+    width:100%; padding:13px; margin-bottom:16px;
+    background:#fff; border:1.5px solid #e8eaef;
+    border-radius:14px; color:#1a1a2e; font-size:13px;
     font-weight:700; cursor:pointer; font-family:'Segoe UI',sans-serif;
-    transition: all 0.2s;
+    transition: all 0.2s; box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    -webkit-tap-highlight-color: transparent;
   }
-  .history-btn:active { background:rgba(255,255,255,0.08); }
+  .history-btn:active { background:#f5f7fa; transform: scale(0.98); }
 
   /* History Page */
   #historyPage {
     display:none; position:fixed; top:0; left:0; width:100%; height:100%;
-    background:#0a0a0a; z-index:500; overflow-y:auto;
+    background:#f2f4f7; z-index:500; overflow-y:auto;
     padding:20px 16px 80px;
   }
   .hist-header { display:flex; align-items:center; gap:12px; margin-bottom:20px; }
-  .hist-back { width:44px; height:44px; background:rgba(255,255,255,0.1); border:1.5px solid rgba(255,255,255,0.2); border-radius:14px; display:flex; align-items:center; justify-content:center; font-size:22px; cursor:pointer; flex-shrink:0; color:#fff; font-weight:700; }
-  .hist-item { background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.07); border-radius:14px; padding:14px; margin-bottom:8px; }
+  .hist-back { width:44px; height:44px; background:#fff; border:1.5px solid #e8eaef; border-radius:14px; display:flex; align-items:center; justify-content:center; font-size:22px; cursor:pointer; flex-shrink:0; color:#1a1a2e; font-weight:700; box-shadow:0 2px 8px rgba(0,0,0,0.06); }
+  .hist-item { background:#fff; border:1.5px solid #e8eaef; border-radius:14px; padding:14px; margin-bottom:8px; box-shadow:0 2px 8px rgba(0,0,0,0.04); }
   .hist-item-top { display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; }
-  .hist-txn { font-size:11px; color:rgba(255,255,255,0.3); }
-  .hist-amount { font-size:16px; font-weight:800; color:#fff; }
-  .hist-method { font-size:11px; color:rgba(255,255,255,0.4); margin-top:2px; }
+  .hist-txn { font-size:11px; color:#aaa; }
+  .hist-amount { font-size:16px; font-weight:800; color:#1a1a2e; }
+  .hist-method { font-size:11px; color:#aaa; margin-top:2px; }
   .hist-status { font-size:11px; font-weight:700; padding:3px 10px; border-radius:50px; }
-  .hist-status.pending  { background:rgba(245,158,11,0.15); color:#f59e0b; }
-  .hist-status.approved { background:rgba(34,197,94,0.15);  color:#22c55e; }
-  .hist-status.rejected { background:rgba(239,68,68,0.15);  color:#ef4444; }
-  .hist-skeleton { background:rgba(255,255,255,0.06); border-radius:14px; height:72px; margin-bottom:8px; animation:shimmer 1.4s infinite; }
-  @keyframes shimmer { 0%,100%{opacity:0.4} 50%{opacity:0.8} }
+  .hist-status.pending  { background:rgba(245,158,11,0.12); color:#f59e0b; }
+  .hist-status.approved { background:rgba(34,197,94,0.12);  color:#16a34a; }
+  .hist-status.rejected { background:rgba(239,68,68,0.12);  color:#ef4444; }
+  .hist-skeleton { background:#e8eaef; border-radius:14px; height:72px; margin-bottom:8px; animation:shimmer 1.4s infinite; }
+  @keyframes shimmer { 0%,100%{opacity:0.5} 50%{opacity:1} }
 
   /* ── Method Selector ── */
   .method-grid { display: flex; gap: 10px; margin-bottom: 20px; }
   .method-card {
     flex: 1; cursor: pointer; transition: all 0.2s;
     border-radius: 16px; padding: 16px 12px;
-    background: rgba(255,255,255,0.04);
-    border: 1.5px solid rgba(255,255,255,0.09);
+    background: #fff;
+    border: 1.5px solid #e8eaef;
     display: flex; align-items: center; gap: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    -webkit-tap-highlight-color: transparent;
   }
   .method-card:active { transform: scale(0.97); }
   .method-card.active {
-    border-color: #22c55e;
-    background: rgba(34,197,94,0.08);
-    box-shadow: 0 0 0 3px rgba(34,197,94,0.12);
+    border-color: #2563eb;
+    background: rgba(37,99,235,0.06);
+    box-shadow: 0 0 0 3px rgba(37,99,235,0.12);
   }
   .method-card .m-icon {
     width: 44px; height: 44px; border-radius: 12px; flex-shrink: 0;
     display: flex; align-items: center; justify-content: center; font-size: 22px;
-    background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
+    background: #f5f7fa; border: 1px solid #e8eaef;
     transition: all 0.2s;
   }
-  .method-card.active .m-icon { background: rgba(34,197,94,0.15); border-color: rgba(34,197,94,0.4); }
+  .method-card.active .m-icon { background: rgba(37,99,235,0.1); border-color: rgba(37,99,235,0.3); }
   .method-card .m-info { flex: 1; }
-  .method-card .m-name { font-size: 15px; font-weight: 800; color: #fff; }
-  .method-card .m-desc { font-size: 11px; color: rgba(255,255,255,0.35); margin-top: 2px; }
+  .method-card .m-name { font-size: 15px; font-weight: 800; color: #1a1a2e; }
+  .method-card .m-desc { font-size: 11px; color: #aaa; margin-top: 2px; }
   .method-card .m-check {
     width: 20px; height: 20px; border-radius: 50%;
-    border: 2px solid rgba(255,255,255,0.15);
+    border: 2px solid #dde0ea;
     display: flex; align-items: center; justify-content: center;
-    font-size: 10px; transition: all 0.2s; flex-shrink: 0;
+    font-size: 10px; transition: all 0.2s; flex-shrink: 0; color: transparent;
   }
-  .method-card.active .m-check { background: #22c55e; border-color: #22c55e; }
+  .method-card.active .m-check { background: #2563eb; border-color: #2563eb; color: #fff; }
 
   /* ── Form Fields ── */
   .form-card {
-    background: rgba(255,255,255,0.04);
-    border: 1px solid rgba(255,255,255,0.09);
+    background: #fff;
+    border: 1.5px solid #e8eaef;
     border-radius: 16px; padding: 16px; margin-bottom: 16px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
   }
-  .input-label { font-size: 11px; color: rgba(255,255,255,0.4); margin-bottom: 6px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; }
+  .input-label { font-size: 11px; color: #888; margin-bottom: 6px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; }
   .input-wrap { position: relative; margin-bottom: 14px; }
   .input-wrap:last-of-type { margin-bottom: 0; }
-  .input-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); font-size: 15px; opacity: 0.5; }
-  input { width: 100%; background: rgba(255,255,255,0.06); border: 1.5px solid rgba(255,255,255,0.09); border-radius: 12px; padding: 13px 14px 13px 42px; color: #fff; font-size: 14px; outline: none; transition: all 0.2s; font-family: 'Segoe UI', sans-serif; }
-  input::placeholder { color: rgba(255,255,255,0.25); }
-  input:focus { border-color: #22c55e; background: rgba(34,197,94,0.06); }
-  input:disabled { opacity: 0.4; cursor: not-allowed; }
+  .input-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); display: flex; align-items: center; justify-content: center; opacity: 0.7; }
+  input { width: 100%; background: #f8f9fb; border: 1.5px solid #e8eaef; border-radius: 12px; padding: 13px 14px 13px 42px; color: #1a1a2e; font-size: 14px; outline: none; transition: all 0.2s; font-family: 'Segoe UI', sans-serif; }
+  input::placeholder { color: #bbb; }
+  input:focus { border-color: #2563eb; background: rgba(37,99,235,0.04); }
+  input:disabled { opacity: 0.5; cursor: not-allowed; }
 
   /* SAVED BADGE */
   .saved-card {
     display: flex; align-items: center; justify-content: space-between;
-    background: rgba(34,197,94,0.08); border: 1px solid rgba(34,197,94,0.2);
+    background: rgba(37,99,235,0.06); border: 1.5px solid rgba(37,99,235,0.2);
     border-radius: 14px; padding: 14px 16px; margin-bottom: 16px;
   }
   .saved-card-left { display: flex; align-items: center; gap: 10px; }
-  .saved-card-icon { font-size: 20px; }
-  .saved-card-label { font-size: 11px; color: rgba(255,255,255,0.4); font-weight: 600; }
-  .saved-card-value { font-size: 14px; color: #fff; font-weight: 700; margin-top: 1px; }
-  .saved-card-badge { font-size: 10px; font-weight: 700; color: #22c55e; background: rgba(34,197,94,0.12); border: 1px solid rgba(34,197,94,0.25); padding: 3px 10px; border-radius: 50px; }
-  .change-link { font-size: 12px; color: #22c55e; font-weight: 700; cursor: pointer; margin-top: 6px; display: inline-block; }
+  .saved-card-icon { display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; background: rgba(37,99,235,0.1); border-radius: 10px; flex-shrink: 0; }
+  .saved-card-label { font-size: 11px; color: #888; font-weight: 600; }
+  .saved-card-value { font-size: 14px; color: #1a1a2e; font-weight: 700; margin-top: 1px; }
+  .saved-card-badge { font-size: 10px; font-weight: 700; color: #2563eb; background: rgba(37,99,235,0.1); border: 1px solid rgba(37,99,235,0.25); padding: 3px 10px; border-radius: 50px; }
+  .change-link { font-size: 12px; color: #2563eb; font-weight: 700; cursor: pointer; margin-top: 6px; display: inline-block; }
 
   /* OTP MODAL */
-  .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(5,5,26,0.85); backdrop-filter: blur(8px); z-index: 999; display: none; justify-content: center; align-items: center; }
+  .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.45); backdrop-filter: blur(8px); z-index: 999; display: none; justify-content: center; align-items: center; }
   .modal-overlay.show { display: flex; }
-  .modal-box { background: linear-gradient(145deg, #0a0a1a, #0f0f28); border: 1px solid rgba(34,197,94,0.25); border-radius: 24px; padding: 28px 24px; width: 90%; max-width: 360px; box-shadow: 0 20px 60px rgba(0,0,0,0.6); animation: modalIn 0.3s ease; }
+  .modal-box { background: #fff; border: 1.5px solid #e8eaef; border-radius: 24px; padding: 28px 24px; width: 90%; max-width: 360px; box-shadow: 0 20px 60px rgba(0,0,0,0.15); animation: modalIn 0.3s ease; }
   @keyframes modalIn { from { opacity: 0; transform: scale(0.9) translateY(20px); } to { opacity: 1; transform: scale(1) translateY(0); } }
-  .modal-title { font-size: 18px; font-weight: 800; color: #fff; margin-bottom: 6px; }
-  .modal-sub { font-size: 12px; color: rgba(255,255,255,0.4); margin-bottom: 20px; line-height: 1.5; }
-  .modal-sub span { color: #22c55e; font-weight: 600; }
+  .modal-title { font-size: 18px; font-weight: 800; color: #1a1a2e; margin-bottom: 6px; }
+  .modal-sub { font-size: 12px; color: #888; margin-bottom: 20px; line-height: 1.5; }
+  .modal-sub span { color: #2563eb; font-weight: 600; }
   .otp-input-wrap { display: flex; gap: 10px; margin-bottom: 16px; justify-content: center; align-items: center; }
-  .otp-box { background: rgba(255,255,255,0.07); border: 1.5px solid rgba(255,255,255,0.12); border-radius: 12px; padding: 14px 0; color: #fff; font-size: 22px; font-weight: 800; text-align: center; outline: none; font-family: 'Segoe UI', sans-serif; transition: all 0.2s; width: 44px; height: 54px; flex-shrink: 0; }
-  .otp-box:focus { border-color: #22c55e; background: rgba(34,197,94,0.08); }
-  .otp-verify-btn { width: 100%; padding: 14px; background: linear-gradient(135deg, #16a34a, #22c55e); border: none; border-radius: 12px; color: #fff; font-size: 14px; font-weight: 700; cursor: pointer; font-family: 'Segoe UI', sans-serif; margin-bottom: 12px; transition: all 0.2s; }
+  .otp-box { background: #f8f9fb; border: 1.5px solid #e8eaef; border-radius: 12px; padding: 14px 0; color: #1a1a2e; font-size: 22px; font-weight: 800; text-align: center; outline: none; font-family: 'Segoe UI', sans-serif; transition: all 0.2s; width: 44px; height: 54px; flex-shrink: 0; }
+  .otp-box:focus { border-color: #2563eb; background: rgba(37,99,235,0.05); }
+  .otp-verify-btn { width: 100%; padding: 14px; background: linear-gradient(135deg, #2563eb, #3b82f6); border: none; border-radius: 12px; color: #fff; font-size: 14px; font-weight: 700; cursor: pointer; font-family: 'Segoe UI', sans-serif; margin-bottom: 12px; transition: all 0.2s; }
   .otp-verify-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-  .otp-cancel-btn { width: 100%; padding: 12px; background: transparent; border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; color: rgba(255,255,255,0.5); font-size: 13px; cursor: pointer; font-family: 'Segoe UI', sans-serif; }
-  .resend-otp { font-size: 12px; color: rgba(255,255,255,0.4); text-align: center; margin-bottom: 14px; }
-  .resend-otp span { color: #22c55e; cursor: pointer; font-weight: 600; }
-  .otp-loader { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: spin 0.7s linear infinite; vertical-align: middle; margin-right: 6px; }
+  .otp-cancel-btn { width: 100%; padding: 12px; background: transparent; border: 1.5px solid #e8eaef; border-radius: 12px; color: #888; font-size: 13px; cursor: pointer; font-family: 'Segoe UI', sans-serif; }
+  .resend-otp { font-size: 12px; color: #aaa; text-align: center; margin-bottom: 14px; }
+  .resend-otp span { color: #2563eb; cursor: pointer; font-weight: 600; }
+  .otp-loader { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.4); border-top-color: #fff; border-radius: 50%; animation: spin 0.7s linear infinite; vertical-align: middle; margin-right: 6px; }
   @keyframes spin { to { transform: rotate(360deg); } }
 
   /* BIND BUTTON */
-  .bind-btn { width: 100%; padding: 13px; background: rgba(34,197,94,0.1); border: 1.5px solid rgba(34,197,94,0.35); border-radius: 12px; color: #4ade80; font-size: 13px; font-weight: 700; cursor: pointer; font-family: 'Segoe UI', sans-serif; margin-bottom: 16px; transition: all 0.2s; }
-  .bind-btn:hover { background: rgba(34,197,94,0.18); }
+  .bind-btn { width: 100%; padding: 13px; background: rgba(37,99,235,0.08); border: 1.5px solid rgba(37,99,235,0.3); border-radius: 12px; color: #2563eb; font-size: 13px; font-weight: 700; cursor: pointer; font-family: 'Segoe UI', sans-serif; margin-bottom: 16px; transition: all 0.2s; -webkit-tap-highlight-color: transparent; }
+  .bind-btn:active { background: rgba(37,99,235,0.14); }
 
   /* Amount input */
   .amount-input-wrap { position: relative; margin-bottom: 6px; }
-  .amount-prefix { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); font-size: 20px; font-weight: 800; color: rgba(255,255,255,0.6); pointer-events: none; }
-  .amount-field { width: 100%; background: rgba(255,255,255,0.07); border: 1.5px solid rgba(255,255,255,0.12); border-radius: 14px; padding: 16px 16px 16px 40px; color: #fff; font-size: 22px; font-weight: 800; outline: none; font-family: 'Segoe UI', sans-serif; transition: all 0.2s; letter-spacing: 0.5px; }
-  .amount-field::placeholder { color: rgba(255,255,255,0.2); font-size: 16px; font-weight: 500; }
-  .amount-field:focus { border-color: #22c55e; background: rgba(34,197,94,0.07); }
-  .amount-field.error { border-color: #ef4444; background: rgba(239,68,68,0.07); }
-  .amount-hint { font-size: 11px; color: rgba(255,255,255,0.3); margin-bottom: 14px; padding-left: 4px; }
+  .amount-prefix { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); font-size: 20px; font-weight: 800; color: #555; pointer-events: none; }
+  .amount-field { width: 100%; background: #fff; border: 1.5px solid #e8eaef; border-radius: 14px; padding: 16px 16px 16px 40px; color: #1a1a2e; font-size: 22px; font-weight: 800; outline: none; font-family: 'Segoe UI', sans-serif; transition: all 0.2s; letter-spacing: 0.5px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
+  .amount-field::placeholder { color: #ccc; font-size: 16px; font-weight: 500; }
+  .amount-field:focus { border-color: #2563eb; background: rgba(37,99,235,0.04); }
+  .amount-field.error { border-color: #ef4444; background: rgba(239,68,68,0.04); }
+  .amount-hint { font-size: 11px; color: #aaa; margin-bottom: 14px; padding-left: 4px; }
   .amount-hint.err { color: #ef4444; }
 
-  .warning { background: rgba(234,179,8,0.1); border: 1px solid rgba(234,179,8,0.2); border-radius: 12px; padding: 12px 16px; font-size: 12px; color: rgba(234,179,8,0.8); margin-bottom: 16px; display: flex; gap: 8px; align-items: flex-start; }
+  .warning { background: rgba(234,179,8,0.08); border: 1px solid rgba(234,179,8,0.25); border-radius: 12px; padding: 12px 16px; font-size: 12px; color: #b45309; margin-bottom: 16px; display: flex; gap: 8px; align-items: flex-start; }
 
-  .fee-info { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.07); border-radius: 12px; padding: 14px 16px; margin-bottom: 16px; }
+  .fee-info { background: #fff; border: 1.5px solid #e8eaef; border-radius: 12px; padding: 14px 16px; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
   .fee-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-size: 13px; }
-  .fee-row:last-child { margin-bottom: 0; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 8px; font-weight: 700; }
-  .fee-label { color: rgba(255,255,255,0.5); }
-  .fee-value { color: #fff; }
-  .fee-value.green { color: #22c55e; }
+  .fee-row:last-child { margin-bottom: 0; border-top: 1px solid #f0f2f5; padding-top: 8px; font-weight: 700; }
+  .fee-label { color: #888; }
+  .fee-value { color: #1a1a2e; }
+  .fee-value.green { color: #16a34a; }
   .fee-value.red { color: #ef4444; }
 
-  .withdraw-btn { width: 100%; padding: 17px; background: linear-gradient(135deg, #16a34a, #22c55e); border: none; border-radius: 16px; color: #fff; font-size: 16px; font-weight: 800; cursor: pointer; letter-spacing: 0.5px; box-shadow: 0 6px 25px rgba(34,197,94,0.4); font-family: 'Segoe UI', sans-serif; margin-bottom: 20px; transition: all 0.2s; }
-  .withdraw-btn:active { transform: scale(0.98); }
+  .withdraw-btn { width: 100%; padding: 17px; background: linear-gradient(135deg, #2563eb, #3b82f6); border: none; border-radius: 16px; color: #fff; font-size: 16px; font-weight: 800; cursor: pointer; letter-spacing: 0.5px; box-shadow: 0 6px 25px rgba(37,99,235,0.35); font-family: 'Segoe UI', sans-serif; margin-bottom: 20px; transition: all 0.2s; -webkit-tap-highlight-color: transparent; }
+  .withdraw-btn:active { transform: scale(0.98); box-shadow: 0 3px 12px rgba(37,99,235,0.3); }
   .withdraw-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
-  /* ══ Transaction Card — Compact ══════════════════════════════ */
+  /* ══ Transaction Card ══ */
   .history-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 8px; }
 
   .tx-card {
     width: 100%; border-radius: 16px; overflow: hidden;
-    background: rgba(255,255,255,0.05);
-    border: 1px solid rgba(255,255,255,0.09);
+    background: #fff;
+    border: 1.5px solid #e8eaef;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
   }
-  .tx-card.done     { border-color: rgba(34,197,94,0.2); }
-  .tx-card.pending  { border-color: rgba(245,158,11,0.2); }
-  .tx-card.rejected { border-color: rgba(239,68,68,0.2); }
+  .tx-card.done     { border-color: rgba(22,163,74,0.3); }
+  .tx-card.pending  { border-color: rgba(245,158,11,0.3); }
+  .tx-card.rejected { border-color: rgba(239,68,68,0.3); }
 
-  /* Single row layout */
   .tx-row {
     display: flex; align-items: center;
     padding: 12px 14px; gap: 12px;
@@ -205,65 +224,71 @@
     width: 38px; height: 38px; border-radius: 10px; flex-shrink: 0;
     display: flex; align-items: center; justify-content: center; font-size: 18px;
   }
-  .tx-card.done     .tx-icon { background: rgba(34,197,94,0.12); }
-  .tx-card.pending  .tx-icon { background: rgba(245,158,11,0.12); }
-  .tx-card.rejected .tx-icon { background: rgba(239,68,68,0.12); }
+  .tx-card.done     .tx-icon { background: rgba(22,163,74,0.1); }
+  .tx-card.pending  .tx-icon { background: rgba(245,158,11,0.1); }
+  .tx-card.rejected .tx-icon { background: rgba(239,68,68,0.1); }
 
   .tx-mid { flex: 1; min-width: 0; }
-  .tx-title { font-size: 13px; font-weight: 700; color: #fff; }
-  .tx-sub   { font-size: 10px; color: rgba(255,255,255,0.35); margin-top: 2px;
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .tx-title { font-size: 13px; font-weight: 700; color: #1a1a2e; }
+  .tx-sub   { font-size: 10px; color: #aaa; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .tx-right { text-align: right; flex-shrink: 0; }
-  .tx-amount { font-size: 16px; font-weight: 800; color: #fff; }
+  .tx-amount { font-size: 16px; font-weight: 800; color: #1a1a2e; }
   .tx-badge {
     font-size: 10px; font-weight: 700; padding: 3px 8px;
     border-radius: 50px; white-space: nowrap; margin-top: 4px; display: inline-block;
   }
-  .tx-card.done     .tx-badge { background: rgba(34,197,94,0.15);  color: #34d399; }
-  .tx-card.pending  .tx-badge { background: rgba(245,158,11,0.15); color: #fcd34d; }
-  .tx-card.rejected .tx-badge { background: rgba(239,68,68,0.15);  color: #f87171; }
+  .tx-card.done     .tx-badge { background: rgba(22,163,74,0.12);  color: #16a34a; }
+  .tx-card.pending  .tx-badge { background: rgba(245,158,11,0.12); color: #d97706; }
+  .tx-card.rejected .tx-badge { background: rgba(239,68,68,0.12);  color: #ef4444; }
 
-  /* Reject reason row */
   .tx-reject-reason {
     margin: 0 12px 10px; padding: 8px 12px;
-    background: rgba(239,68,68,0.07); border: 1px solid rgba(239,68,68,0.2);
-    border-radius: 10px; font-size: 11px; color: rgba(255,255,255,0.5); line-height: 1.5;
+    background: rgba(239,68,68,0.05); border: 1px solid rgba(239,68,68,0.2);
+    border-radius: 10px; font-size: 11px; color: #666; line-height: 1.5;
   }
-  .tx-reject-reason strong { color: #f87171; display: block; margin-bottom: 2px; font-size: 10px; text-transform: uppercase; }
+  .tx-reject-reason strong { color: #ef4444; display: block; margin-bottom: 2px; font-size: 10px; text-transform: uppercase; }
 
-  /* TxnID strip */
   .tx-txnid-strip {
     margin: 0 12px 10px;
-    background: rgba(34,197,94,0.06); border: 1px solid rgba(34,197,94,0.18);
+    background: rgba(37,99,235,0.05); border: 1px solid rgba(37,99,235,0.15);
     border-radius: 10px; padding: 8px 12px;
     display: flex; align-items: center; justify-content: space-between;
     cursor: pointer;
   }
-  .tx-txnid-tag  { font-size: 9px; font-weight: 700; color: rgba(255,255,255,0.3); text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 1px; }
-  .tx-txnid-code { font-size: 12px; font-weight: 800; color: #4ade80; font-family: 'Courier New', monospace; letter-spacing: 1px; }
-  .tx-copy-btn   { font-size: 16px; opacity: 0.5; }
+  .tx-txnid-tag  { font-size: 9px; font-weight: 700; color: #aaa; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 1px; }
+  .tx-txnid-code { font-size: 12px; font-weight: 800; color: #2563eb; font-family: 'Courier New', monospace; letter-spacing: 1px; }
+  .tx-copy-btn   { font-size: 16px; opacity: 0.4; }
 
   .empty-history {
     text-align: center; padding: 40px 20px;
-    color: rgba(255,255,255,0.25); font-size: 13px;
-    background: rgba(255,255,255,0.02);
-    border: 1px dashed rgba(255,255,255,0.08);
+    color: #aaa; font-size: 13px;
+    background: #fff;
+    border: 1.5px solid #e8eaef;
     border-radius: 20px; line-height: 1.6;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
   }
   .empty-history div { font-size: 36px; margin-bottom: 10px; }
 
-  .toast { position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%); background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2); color: #fff; padding: 12px 24px; border-radius: 50px; font-size: 13px; font-weight: 600; z-index: 200; display: none; white-space: nowrap; }
-  .toast.success { background: rgba(34,197,94,0.2); border-color: rgba(34,197,94,0.4); color: #22c55e; }
-  .toast.error { background: rgba(239,68,68,0.2); border-color: rgba(239,68,68,0.4); color: #ef4444; }
+  /* TOAST */
+  .toast { position: fixed; bottom: 96px; left: 50%; transform: translateX(-50%); background: #f0fdf4; border: 1.5px solid #bbf7d0; color: #16a34a; padding: 11px 24px; border-radius: 50px; font-size: 13px; font-weight: 700; z-index: 200; display: none; white-space: nowrap; box-shadow: 0 4px 16px rgba(22,163,74,0.15); }
+  .toast.success { background: #f0fdf4; border-color: #bbf7d0; color: #16a34a; }
+  .toast.error { background: #fef2f2; border-color: #fecaca; color: #ef4444; }
   .toast.show { display: block; animation: toastIn 0.3s ease; }
   @keyframes toastIn { from { opacity: 0; transform: translateX(-50%) translateY(10px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
 
-  .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.97); backdrop-filter: blur(20px); border-top: 1px solid rgba(255,255,255,0.07); display: flex; justify-content: space-around; align-items: center; padding: 10px 0 20px; z-index: 100; }
-  .nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; padding: 4px 16px; }
-  .nav-item span { font-size: 20px; }
-  .nav-item p { font-size: 10px; color: rgba(255,255,255,0.3); font-weight: 500; }
-  .nav-item.active p { color: #22c55e; }
-  .nav-center { width: 56px; height: 56px; background: linear-gradient(135deg, #16a34a, #22c55e); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; margin-top: -24px; box-shadow: 0 4px 24px rgba(34,197,94,0.5); cursor: pointer; border: 3px solid #0a0a0a; }
+  /* Bottom Nav — refer.html style */
+  .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: #fff; border-top: 1px solid #eef0f4; display: flex; justify-content: space-around; align-items: center; padding: 10px 0 22px; z-index: 100; box-shadow: 0 -2px 16px rgba(0,0,0,0.06); }
+  .nav-item { display: flex; flex-direction: column; align-items: center; gap: 5px; cursor: pointer; padding: 6px 12px; min-width: 56px; -webkit-tap-highlight-color: transparent; user-select: none; border-radius: 14px; transition: background 0.15s; }
+  .nav-item:active { background: rgba(37,99,235,0.08); }
+  .nav-item svg { width: 24px; height: 24px; stroke: #b0b8cc; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; transition: stroke 0.2s; }
+  .nav-item p { font-size: 11px; color: #b0b8cc; font-weight: 600; transition: color 0.2s; }
+  .nav-item.active svg { stroke: #2563eb; }
+  .nav-item.active p { color: #2563eb; }
+  .nav-center-wrap { display: flex; flex-direction: column; align-items: center; gap: 5px; margin-top: -22px; cursor: pointer; -webkit-tap-highlight-color: transparent; user-select: none; }
+  .nav-center-wrap:active { opacity: 0.85; transform: scale(0.95); }
+  .nav-center { width: 52px; height: 52px; background: #2563eb; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 18px rgba(37,99,235,0.35), 0 0 0 4px rgba(37,99,235,0.12); }
+  .nav-center svg { width: 24px; height: 24px; stroke: #fff; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+  .nav-center-label { font-size: 11px; color: #2563eb; font-weight: 700; }
 </style>
 </head>
 <body>
@@ -273,7 +298,7 @@
 <!-- OTP MODAL -->
 <div class="modal-overlay" id="otpModal">
   <div class="modal-box">
-    <div class="modal-title">🔐 Verify Your Email</div>
+    <div class="modal-title">Verify Your Email</div>
     <div class="modal-sub">OTP bheja gaya hai <span id="otpEmailDisplay"></span> par. Payment details save karne ke liye verify karein.</div>
     <div class="otp-input-wrap" id="otpBoxes">
       <input class="otp-box" maxlength="1" type="tel" oninput="otpInput(this,0)" onkeydown="otpBack(event,0)">
@@ -284,7 +309,7 @@
       <input class="otp-box" maxlength="1" type="tel" oninput="otpInput(this,5)" onkeydown="otpBack(event,5)">
     </div>
     <div class="resend-otp" id="resendSection">OTP nahi aaya? <span onclick="resendOTP()">Resend OTP</span></div>
-    <button class="otp-verify-btn" id="verifyBtn" onclick="verifyOTP()">✅ Verify & Save Details</button>
+    <button class="otp-verify-btn" id="verifyBtn" onclick="verifyOTP()">Verify & Save Details</button>
     <button class="otp-cancel-btn" onclick="closeOTPModal()">Cancel</button>
   </div>
 </div>
@@ -292,43 +317,51 @@
 <div class="content">
   <div class="header">
     <div>
-      <h1 style="font-size:24px;font-weight:800;color:#fff;">Withdraw 💸</h1>
-      <p style="font-size:12px;color:rgba(255,255,255,0.4);margin-top:3px;">Transfer your earnings</p>
+      <h1 style="font-size:24px;font-weight:800;color:#1a1a2e;">Withdraw</h1>
+      <p style="font-size:13px;color:#6b7280;margin-top:3px;">Transfer your earnings to bank</p>
     </div>
   </div>
 
-  <!-- BALANCE CARD — compact -->
+  <!-- BALANCE CARD -->
   <div class="balance-card">
     <div class="balance-card-left">
-      <div class="label">💸 AVAILABLE BALANCE</div>
+      <div class="label">AVAILABLE BALANCE</div>
       <div class="user-balance amount">₹0.00</div>
       <div class="user-coins coins-info">0 Coins</div>
-      <div class="min-note">⚠️ Min Withdraw: ₹100</div>
+      <div class="min-note">Min Withdraw: ₹100</div>
     </div>
-    <div class="balance-card-right">💰</div>
+    <div class="balance-card-right">
+      <span style="font-size:48px;filter:drop-shadow(0 4px 10px rgba(0,0,0,0.25));">🪙</span>
+      <div style="font-size:10px;font-weight:800;color:#2563eb;background:#fff;padding:3px 12px;border-radius:50px;letter-spacing:0.5px;">EARN MORE</div>
+    </div>
   </div>
 
   <!-- pendingCard removed — sirf niche historyContainer mein dikhega -->
 
   <!-- HISTORY BUTTON -->
   <button class="history-btn" onclick="openHistoryPage()">
-    📋 Transaction History
-    <span style="margin-left:auto;font-size:16px;opacity:0.5;">›</span>
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3" width="14" height="18" rx="2"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="12" y2="16"/></svg>
+    Transaction History
+    <span style="margin-left:auto;font-size:18px;color:#b0b8cc;">›</span>
   </button>
 
   <!-- METHOD -->
   <div class="section-title">Payment Method</div>
   <div class="method-grid">
     <div class="method-card active" id="methodUPI" onclick="selectMethod('upi', this)">
-      <div class="m-icon">📱</div>
+      <div class="m-icon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+      </div>
       <div class="m-info">
         <div class="m-name">UPI</div>
-        <div class="m-desc">Instant • Free</div>
+        <div class="m-desc">Instant · Free</div>
       </div>
       <div class="m-check" id="checkUPI">✓</div>
     </div>
     <div class="method-card" id="methodBank" onclick="selectMethod('bank', this)">
-      <div class="m-icon">🏦</div>
+      <div class="m-icon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="10" width="18" height="11" rx="1"/><path d="M12 2L2 7h20L12 2z"/><line x1="7" y1="10" x2="7" y2="21"/><line x1="12" y1="10" x2="12" y2="21"/><line x1="17" y1="10" x2="17" y2="21"/></svg>
+      </div>
       <div class="m-info">
         <div class="m-name">Bank</div>
         <div class="m-desc">1–2 business days</div>
@@ -342,30 +375,36 @@
     <div id="savedUpiSection" style="display:none;">
       <div class="saved-card">
         <div class="saved-card-left">
-          <div class="saved-card-icon">📱</div>
+          <div class="saved-card-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+          </div>
           <div>
             <div class="saved-card-label">UPI ID Saved</div>
             <div class="saved-card-value" id="savedUpiDisplay">—</div>
-            <span class="change-link" onclick="changePayment('upi')">✏️ Change</span>
+            <span class="change-link" onclick="changePayment('upi')">Change Details</span>
           </div>
         </div>
-        <div class="saved-card-badge">✅ Verified</div>
+        <div class="saved-card-badge">Verified</div>
       </div>
     </div>
     <div id="upiInputSection">
       <div class="form-card">
         <div class="input-label">Account Holder Name</div>
         <div class="input-wrap">
-          <span class="input-icon">👤</span>
+          <span class="input-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+          </span>
           <input type="text" id="upiName" placeholder="Apna poora naam likhein">
         </div>
         <div class="input-label">UPI ID</div>
         <div class="input-wrap" style="margin-bottom:0">
-          <span class="input-icon">📱</span>
-          <input type="text" id="upiId" placeholder="yourname@upi / @paytm / @gpay">
+          <span class="input-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+          </span>
+          <input type="text" id="upiId" placeholder="yourname@paytm / @gpay / @upi">
         </div>
       </div>
-      <button class="bind-btn" onclick="bindPayment('upi')">🔐 Save & Verify UPI</button>
+      <button class="bind-btn" onclick="bindPayment('upi')">Save & Verify UPI</button>
     </div>
   </div>
 
@@ -374,40 +413,50 @@
     <div id="savedBankSection" style="display:none;">
       <div class="saved-card">
         <div class="saved-card-left">
-          <div class="saved-card-icon">🏦</div>
+          <div class="saved-card-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="10" width="18" height="11" rx="1"/><path d="M12 2L2 7h20L12 2z"/></svg>
+          </div>
           <div>
             <div class="saved-card-label">Bank Account Saved</div>
             <div class="saved-card-value" id="savedBankDisplay">—</div>
-            <span class="change-link" onclick="changePayment('bank')">✏️ Change</span>
+            <span class="change-link" onclick="changePayment('bank')">Change Details</span>
           </div>
         </div>
-        <div class="saved-card-badge">✅ Verified</div>
+        <div class="saved-card-badge">Verified</div>
       </div>
     </div>
     <div id="bankInputSection">
       <div class="form-card">
         <div class="input-label">Account Holder Name</div>
         <div class="input-wrap">
-          <span class="input-icon">👤</span>
+          <span class="input-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+          </span>
           <input type="text" id="accName" placeholder="Name as per bank records">
         </div>
         <div class="input-label">Bank Name</div>
         <div class="input-wrap">
-          <span class="input-icon">🏛️</span>
+          <span class="input-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="10" width="18" height="11" rx="1"/><path d="M12 2L2 7h20L12 2z"/></svg>
+          </span>
           <input type="text" id="bankName" placeholder="e.g. SBI, HDFC, ICICI, PNB">
         </div>
         <div class="input-label">Account Number</div>
         <div class="input-wrap">
-          <span class="input-icon">🔢</span>
+          <span class="input-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+          </span>
           <input type="number" id="accNumber" placeholder="Enter account number">
         </div>
         <div class="input-label">IFSC Code</div>
         <div class="input-wrap" style="margin-bottom:0">
-          <span class="input-icon">🔤</span>
+          <span class="input-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M4 12h10M4 17h6"/></svg>
+          </span>
           <input type="text" id="ifscCode" placeholder="e.g. SBIN0001234" style="text-transform:uppercase">
         </div>
       </div>
-      <button class="bind-btn" onclick="bindPayment('bank')">🔐 Save & Verify Bank</button>
+      <button class="bind-btn" onclick="bindPayment('bank')">Save & Verify Bank Account</button>
     </div>
   </div>
 
@@ -433,11 +482,28 @@
 </div>
 
 <div class="bottom-nav">
-  <div class="nav-item" onclick="window.location.href='tasknova_login-1.html'"><span>🏠</span><p>Home</p></div>
-  <div class="nav-item" onclick="window.location.href='tasknova_tasks.html'"><span>📋</span><p>Tasks</p></div>
-  <div class="nav-center active">💰</div>
-  <div class="nav-item" onclick="window.location.href='tasknova_refer.html'"><span>👥</span><p>Refer</p></div>
-  <div class="nav-item" onclick="window.location.href='tasknova_profile.html'"><span>👤</span><p>Profile</p></div>
+  <div class="nav-item" onclick="window.location.href='tasknova_login-1.html'">
+    <svg viewBox="0 0 24 24"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 01-1 1H4a1 1 0 01-1-1V9.5z"/><path d="M9 21V12h6v9"/></svg>
+    <p>Home</p>
+  </div>
+  <div class="nav-item" onclick="window.location.href='tasknova_tasks.html'">
+    <svg viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="2"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="12" y2="16"/></svg>
+    <p>Tasks</p>
+  </div>
+  <div class="nav-center-wrap active" onclick="window.location.href='tasknova_withdraw.html'">
+    <div class="nav-center">
+      <svg viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+    </div>
+    <p class="nav-center-label">Withdraw</p>
+  </div>
+  <div class="nav-item" onclick="window.location.href='tasknova_refer.html'">
+    <svg viewBox="0 0 24 24"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 014-4h4a4 4 0 014 4v2"/><path d="M16 3.13a4 4 0 010 7.75"/><path d="M21 21v-2a4 4 0 00-3-3.87"/></svg>
+    <p>Refer</p>
+  </div>
+  <div class="nav-item" onclick="window.location.href='tasknova_profile.html'">
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+    <p>Profile</p>
+  </div>
 </div>
 
 <script type="module">
@@ -500,12 +566,24 @@
       document.querySelector('.user-coins').textContent   = cachedCoins + ' Coins';
     }
 
+    // ── INSTANT: saved payment details cache se dikhao ────────
+    try {
+      const cachedPay = localStorage.getItem('tasknova_savedPayments');
+      if (cachedPay) {
+        savedPayments = JSON.parse(cachedPay);
+        renderSavedDetails();
+      }
+      const cachedEmail = localStorage.getItem('tasknova_email');
+      if (cachedEmail) userEmail = cachedEmail;
+    } catch(e) {}
+
     // ── Firebase: background mein fresh data load karo ────────
+    // Fast retry — 50ms interval, max 3s wait
     const tryFetch = (attempt) => {
       if (window._getAuthToken) {
         fetchUserData(uid);
-      } else if (attempt < 40) {
-        setTimeout(() => tryFetch(attempt + 1), 150);
+      } else if (attempt < 60) {
+        setTimeout(() => tryFetch(attempt + 1), 50);
       }
     };
     tryFetch(0);
@@ -549,9 +627,12 @@
 
         // Cache karo taaki next load instant ho
         localStorage.setItem('tasknova_coins', String(totalCoins));
+        if (data.email) localStorage.setItem('tasknova_email', data.email);
 
         if (data.savedPayments) {
           savedPayments = data.savedPayments;
+          // Cache savedPayments bhi — next load instant dikhega
+          localStorage.setItem('tasknova_savedPayments', JSON.stringify(data.savedPayments));
           renderSavedDetails();
         }
         renderHistory(wdData);
@@ -566,8 +647,8 @@
     if (savedPayments.upi) {
       const u = savedPayments.upi;
       document.getElementById('savedUpiDisplay').innerHTML =
-        (u.upiName ? '<span style="display:block;font-size:13px;color:rgba(255,255,255,0.5);margin-bottom:2px;">' + u.upiName + '</span>' : '') +
-        u.upiId;
+        (u.upiName ? '<span style="display:block;font-size:13px;color:#6b7280;margin-bottom:2px;">' + u.upiName + '</span>' : '') +
+        '<span style="color:#1a1a2e;font-weight:700;">' + u.upiId + '</span>';
       document.getElementById('savedUpiSection').style.display  = 'block';
       document.getElementById('upiInputSection').style.display  = 'none';
     } else {
@@ -578,9 +659,9 @@
     if (savedPayments.bank) {
       const b = savedPayments.bank;
       document.getElementById('savedBankDisplay').innerHTML =
-        (b.bankName ? '<span style="display:block;font-size:11px;color:rgba(255,255,255,0.4);margin-bottom:2px;">' + b.bankName + '</span>' : '') +
-        (b.accName  ? '<span style="display:block;font-size:13px;font-weight:700;margin-bottom:2px;">' + b.accName + '</span>' : '') +
-        '••••' + String(b.accNumber).slice(-4) + ' &nbsp;·&nbsp; ' + b.ifscCode;
+        (b.bankName ? '<span style="display:block;font-size:11px;color:#6b7280;margin-bottom:2px;">' + b.bankName + '</span>' : '') +
+        (b.accName  ? '<span style="display:block;font-size:13px;font-weight:700;color:#1a1a2e;margin-bottom:2px;">' + b.accName + '</span>' : '') +
+        '<span style="color:#6b7280;">••••' + String(b.accNumber).slice(-4) + ' &nbsp;·&nbsp; ' + b.ifscCode + '</span>';
       document.getElementById('savedBankSection').style.display  = 'block';
       document.getElementById('bankInputSection').style.display  = 'none';
     } else {
@@ -745,6 +826,8 @@
         body  : JSON.stringify(data)
       });
       savedPayments[method] = data;
+      // Cache update karo
+      localStorage.setItem('tasknova_savedPayments', JSON.stringify(savedPayments));
       renderSavedDetails();
       closeOTPModal();
       showToast('Details save ho gayi! ✅', 'success');
@@ -1007,9 +1090,9 @@
     // Reject reason
     const reason    = item.rejectReason || item.reason || item.note || '';
     const rejectBox = isRejected
-      ? '<div style="background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2);border-radius:10px;padding:10px 14px;margin-top:10px;">' +
-          '<div style="font-size:10px;color:#f87171;font-weight:800;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px;">⚠️ Rejection Reason</div>' +
-          '<div style="font-size:13px;color:rgba(255,255,255,0.7);">' + (reason || 'Galat details ya suspicious activity detected.') + '</div>' +
+      ? '<div style="background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.2);border-radius:10px;padding:10px 14px;margin-top:10px;">' +
+          '<div style="font-size:10px;color:#ef4444;font-weight:800;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px;">⚠️ Rejection Reason</div>' +
+          '<div style="font-size:13px;color:#555;">' + (reason || 'Galat details ya suspicious activity detected.') + '</div>' +
         '</div>'
       : '';
 
@@ -1054,8 +1137,8 @@
   <div class="hist-header">
     <div class="hist-back" onclick="closeHistoryPage()">‹</div>
     <div>
-      <div style="font-size:18px;font-weight:800;color:#fff;">📋 Transaction History</div>
-      <div style="font-size:12px;color:rgba(255,255,255,0.35);margin-top:2px;">Sabhi withdrawals ka record</div>
+      <div style="font-size:18px;font-weight:800;color:#1a1a2e;">Transaction History</div>
+      <div style="font-size:12px;color:#888;margin-top:2px;">Sabhi withdrawals ka record</div>
     </div>
   </div>
   <div id="histPageList">
@@ -1116,7 +1199,7 @@ function renderHistoryPage() {
       .then(function(r) { return r.json(); })
       .then(function(data) {
         if (!data || Object.keys(data).length === 0) {
-          list.innerHTML = '<div style="text-align:center;padding:40px 0;"><div style="font-size:40px;margin-bottom:12px;">📭</div><div style="color:rgba(255,255,255,0.25);font-size:13px;">Koi withdrawal nahi hui abhi tak</div></div>';
+          list.innerHTML = '<div style="text-align:center;padding:40px 0;"><div style="font-size:40px;margin-bottom:12px;">📭</div><div style="color:#aaa;font-size:13px;">Koi withdrawal nahi hui abhi tak</div></div>';
           return;
         }
         // ALL withdrawals — pending + approved + rejected sab
@@ -1127,7 +1210,7 @@ function renderHistoryPage() {
         list.innerHTML = '<div class="history-list" style="padding:0;">' + items.map(buildTxCard).join('') + '</div>';
       })
       .catch(function() {
-        list.innerHTML = '<div style="text-align:center;padding:30px;color:rgba(239,68,68,0.6);">Load nahi hua — retry karo</div>';
+        list.innerHTML = '<div style="text-align:center;padding:30px;color:#ef4444;">Load nahi hua — retry karo</div>';
       });
   });
 }
