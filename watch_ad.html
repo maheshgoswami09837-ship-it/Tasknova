@@ -26,8 +26,8 @@
   .blog-tag  { font-size:10px; background:#f1f5f9; color:#64748b; padding:3px 10px; border-radius:50px; border:1px solid #e2e8f0; }
 
   .ad-box {
-    width:100%; background:#fff; border-radius:0; overflow:hidden; margin:0;
-    min-height:0; display:block; text-align:center; border-bottom:1px solid #f1f5f9;
+    width:100%; background:#fff; border-radius:0; overflow:visible; margin:0;
+    min-height:0; display:flex; justify-content:center; align-items:center; text-align:center; border-bottom:1px solid #f1f5f9;
   }
   .ad-box iframe { display:block; margin:0 auto; max-width:100% !important; }
 
@@ -661,11 +661,15 @@ function makeIframeAd(src, containerId) {
   iframe.scrolling = 'no';
   iframe.frameBorder = '0';
   iframe.style.cssText = 'width:100%;min-height:60px;border:none;display:block;';
+  container.style.textAlign = 'center';
+  container.style.display = 'flex';
+  container.style.justifyContent = 'center';
+  container.style.alignItems = 'center';
   container.innerHTML = '';
   container.appendChild(iframe);
   var doc = iframe.contentDocument || iframe.contentWindow.document;
   doc.open();
-  doc.write('<html><body style="margin:0;padding:0;">'
+  doc.write('<html><body style="margin:0;padding:0;display:flex;justify-content:center;align-items:center;text-align:center;">'
     + '<script>(function(svpif){'
     + 'var d=document,s=d.createElement("script"),l=d.scripts[d.scripts.length-1];'
     + 's.settings=svpif||{};'
@@ -1067,12 +1071,7 @@ function claimCoins() {
   safeSet(KEY_COOLDOWN_UNTIL, String(cooldownUntil));
 
   setTimeout(function(){
-    if(doneRounds >= MAX_ROUNDS_PER_DAY){
-      // 10/10 done — tasks page pe wapas, wahan Claim button show hoga
-      window.location.href = 'tasknova_tasks.html';
-    } else {
-      showCooldownOverlay(cooldownUntil, doneRounds);
-    }
+    window.location.href = 'tasknova_tasks.html';
   }, 1200);
 }
 
