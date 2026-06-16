@@ -209,22 +209,26 @@
   /* Cooldown overlay (between rounds) */
   #cooldownOverlay {
     display:none; position:fixed; top:0; left:0; width:100%; height:100%;
-    background:linear-gradient(160deg,#0a0a1a,#0f172a);
+    background:linear-gradient(160deg,#060612 0%,#0d1225 50%,#060612 100%);
     z-index:99998; flex-direction:column; align-items:center;
     justify-content:center; padding:32px; text-align:center;
-    font-family:'Segoe UI',sans-serif;
+    font-family:'Segoe UI',sans-serif; overflow:hidden;
   }
   #cooldownOverlay.show { display:flex; }
-  #cdRoundText { font-size:13px; color:rgba(255,255,255,0.4); margin-bottom:8px; }
-  #cdTitle { font-size:22px; font-weight:900; color:#fff; margin-bottom:6px; }
-  #cdSub   { font-size:13px; color:rgba(255,255,255,0.5); margin-bottom:28px; line-height:1.5; }
-  #cdTimerBox {
-    background:rgba(255,255,255,0.05); border:1.5px solid rgba(255,255,255,0.1);
-    border-radius:20px; padding:16px 48px; margin-bottom:28px;
-  }
-  #cdTimerLabel { font-size:11px; color:rgba(255,255,255,0.35); margin-bottom:6px; letter-spacing:1px; text-transform:uppercase; }
-  #cdTimer { font-size:44px; font-weight:900; color:#f59e0b; letter-spacing:2px; }
-  #cdNextRoundInfo { font-size:13px; color:rgba(255,255,255,0.3); margin-top:8px; }
+  .cd-glow1 { position:absolute;top:-100px;left:-100px;width:400px;height:400px;background:radial-gradient(circle,rgba(99,102,241,0.12) 0%,transparent 70%);pointer-events:none; }
+  .cd-glow2 { position:absolute;bottom:-100px;right:-100px;width:400px;height:400px;background:radial-gradient(circle,rgba(245,158,11,0.08) 0%,transparent 70%);pointer-events:none; }
+  .cd-badge { display:inline-flex;align-items:center;gap:6px;background:rgba(34,197,94,0.12);border:1px solid rgba(34,197,94,0.3);border-radius:50px;padding:6px 18px;margin-bottom:20px; }
+  .cd-badge-dot { width:7px;height:7px;border-radius:50%;background:#22c55e;box-shadow:0 0 8px #22c55e;animation:cdPulse 1.5s infinite; }
+  .cd-badge-txt { font-size:12px;font-weight:700;color:#22c55e;letter-spacing:0.5px; }
+  @keyframes cdPulse { 0%,100%{opacity:1;} 50%{opacity:0.4;} }
+  #cdRoundText { font-size:11px;color:rgba(255,255,255,0.35);margin-bottom:10px;letter-spacing:1.5px;text-transform:uppercase; }
+  #cdTitle { font-size:24px;font-weight:900;color:#fff;margin-bottom:8px;line-height:1.3; }
+  #cdSub   { font-size:13px;color:rgba(255,255,255,0.4);margin-bottom:32px;line-height:1.6; }
+  #cdTimerBox { position:relative;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:24px;padding:24px 56px;margin-bottom:28px;box-shadow:0 0 40px rgba(245,158,11,0.08); }
+  #cdTimerLabel { font-size:10px;color:rgba(255,255,255,0.3);margin-bottom:10px;letter-spacing:2px;text-transform:uppercase; }
+  #cdTimer { font-size:52px;font-weight:900;color:#f59e0b;letter-spacing:3px;font-variant-numeric:tabular-nums; }
+  #cdNextRoundInfo { font-size:12px;color:rgba(255,255,255,0.25);letter-spacing:0.3px; }
+  .cd-back-btn { margin-top:36px;display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:50px;padding:12px 28px;color:rgba(255,255,255,0.5);font-size:13px;font-weight:700;cursor:pointer;font-family:'Segoe UI',sans-serif;letter-spacing:0.3px; }
 
   /* All done overlay */
   #allDoneOverlay {
@@ -286,7 +290,9 @@ window.TNTracker = (function() {
 
 <!-- ══ COOLDOWN OVERLAY (between rounds) ══ -->
 <div id="cooldownOverlay">
-  <div style="font-size:48px;margin-bottom:16px;">⏳</div>
+  <div class="cd-glow1"></div>
+  <div class="cd-glow2"></div>
+  <div class="cd-badge"><div class="cd-badge-dot"></div><span class="cd-badge-txt">ROUND COMPLETE</span></div>
   <div id="cdRoundText">Round complete!</div>
   <div id="cdTitle">Next Ad Loading...</div>
   <div id="cdSub">1 minute mein next company ke ads aayenge</div>
@@ -295,7 +301,11 @@ window.TNTracker = (function() {
     <div id="cdTimer">1:00</div>
   </div>
   <div id="cdNextRoundInfo"></div>
-  <div style="margin-top:24px;font-size:11px;color:rgba(255,255,255,0.2);">TaskNova • Watch & Earn</div>
+  <button class="cd-back-btn" onclick="goBack()">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
+    Tasks Pe Wapas Jao
+  </button>
+  <div style="margin-top:24px;font-size:11px;color:rgba(255,255,255,0.15);letter-spacing:0.5px;">TaskNova • Watch & Earn</div>
 </div>
 
 <!-- ══ ALL DONE OVERLAY (10/10 complete) ══ -->
@@ -330,10 +340,10 @@ window.TNTracker = (function() {
         </div>
       </div>
 
-      <div class="article-wrap">
+      <!-- AD SLOT — Company A ya B inject hoga JS se -->
+      <div class="ad-box" id="s1-ad-top" style="min-height:55px;overflow:visible;"></div>
 
-        <!-- AD SLOT — Company A ya B inject hoga JS se -->
-        <div class="ad-box" id="s1-ad-top" style="min-height:55px;overflow:visible;"></div>
+      <div class="article-wrap">
 
         <div style="width:100%;height:200px;border-radius:12px;margin-bottom:14px;overflow:hidden;background:#e0e7ff;">
           <img src="https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?w=700&q=80"
@@ -580,24 +590,9 @@ const DAILY_DATA_KEY     = 'tasknova_daily';
 
 /* ── Company A ke Ad Scripts (File 1) ── */
 const ADS_COMPANY_A = {
-  s1_top: `<script>
-(function(svpif){
-var d=document,s=d.createElement('script'),l=d.scripts[d.scripts.length-1];
-s.settings=svpif||{};
-s.src="//quarrelsomebitter.com/b/XMV.sFdfGDlI0SYpW/cW/renmi9cuXZnU_lYkvPRTicexJMsjtM/4qMGzGM/tXNZzAELy/MezXgUzwNmwq";
-s.async=true;s.referrerPolicy='no-referrer-when-downgrade';
-l.parentNode.insertBefore(s,l);
-})({})
-<\/script>`,
-  s2_top: `<script>
-(function(svpif){
-var d=document,s=d.createElement('script'),l=d.scripts[d.scripts.length-1];
-s.settings=svpif||{};
-s.src="//quarrelsomebitter.com/b.XQVss/dhGClB0EYHWEcA/Te/mD9IukZEUSlQkQPlTjcIxXMkjwMX4MMlDuEUtKN/zbETyZMQzPgUw/NrQ_";
-s.async=true;s.referrerPolicy='no-referrer-when-downgrade';
-l.parentNode.insertBefore(s,l);
-})({})
-<\/script>`,
+  s1_src: '//quarrelsomebitter.com/b/XMV.sFdfGDlI0SYpW/cW/renmi9cuXZnU_lYkvPRTicexJMsjtM/4qMGzGM/tXNZzAELy/MezXgUzwNmwq',
+  s2_src: '//quarrelsomebitter.com/b.XQVss/dhGClB0EYHWEcA/Te/mD9IukZEUSlQkQPlTjcIxXMkjwMX4MMlDuEUtKN/zbETyZMQzPgUw/NrQ_',
+  useIframe: true,
   watchLink: 'https://plump-plastic.com/b/3.Vf0gPF3dpIvPbsmzVlJHZBDH0j3/MkTKI/0ZN/zlkPzgL_TbcFx/MPjVQB3kOOT/cS',
   popunder: true,  // Hilltop popunder file 1 mein hai
   name: 'Company A'
@@ -659,17 +654,51 @@ function updateRoundUI(roundNum) {
 }
 
 /* ══ Inject ads dynamically ══ */
-function injectAds(company) {
-  // Step 1 top ad
-  const s1 = document.getElementById('s1-ad-top');
-  if(s1) { s1.innerHTML = company.s1_top; rerunScripts(s1); }
+function makeIframeAd(src, containerId) {
+  var container = document.getElementById(containerId);
+  if(!container) return;
+  var iframe = document.createElement('iframe');
+  iframe.scrolling = 'no';
+  iframe.frameBorder = '0';
+  iframe.style.cssText = 'width:100%;min-height:60px;border:none;display:block;';
+  container.innerHTML = '';
+  container.appendChild(iframe);
+  var doc = iframe.contentDocument || iframe.contentWindow.document;
+  doc.open();
+  doc.write('<html><body style="margin:0;padding:0;">'
+    + '<script>(function(svpif){'
+    + 'var d=document,s=d.createElement("script"),l=d.scripts[d.scripts.length-1];'
+    + 's.settings=svpif||{};'
+    + 's.src="' + src + '";'
+    + 's.async=true;s.referrerPolicy="no-referrer-when-downgrade";'
+    + 'l.parentNode.insertBefore(s,l);'
+    + '})({})<\/script>'
+    + '</body></html>');
+  doc.close();
+  setTimeout(function(){
+    try {
+      var h = (iframe.contentDocument||iframe.contentWindow.document).body.scrollHeight;
+      if(h > 10) iframe.style.height = h + 'px';
+    } catch(e){}
+  }, 3000);
+}
 
-  // Step 2 top ad (step 2 mein inject hoga goToStep2 pe)
+function injectAds(company) {
+  if(company.useIframe) {
+    makeIframeAd(company.s1_src, 's1-ad-top');
+  } else {
+    var s1 = document.getElementById('s1-ad-top');
+    if(s1) { s1.innerHTML = company.s1_top; rerunScripts(s1); }
+  }
 }
 
 function injectStep2Ad(company) {
-  const s2 = document.getElementById('s2-ad-top');
-  if(s2) { s2.innerHTML = company.s2_top; rerunScripts(s2); }
+  if(company.useIframe) {
+    makeIframeAd(company.s2_src, 's2-ad-top');
+  } else {
+    var s2 = document.getElementById('s2-ad-top');
+    if(s2) { s2.innerHTML = company.s2_top; rerunScripts(s2); }
+  }
 }
 
 // innerHTML se scripts execute nahi hote, ye fix karta hai
@@ -1027,6 +1056,10 @@ function claimCoins() {
   // Sirf round count save karo localStorage mein
   incrementWatchRounds();
   const doneRounds = getWatchRounds();
+
+  // Tasks page ko batao ki ek round complete hua
+  const pending = parseInt(safeGet('tn_watch_pending_rounds')||'0');
+  safeSet('tn_watch_pending_rounds', String(pending + 1));
 
   if(btn){ btn.textContent='✅ Round '+doneRounds+'/10 Complete!'; btn.style.background='linear-gradient(135deg,#22c55e,#16a34a)'; }
 
