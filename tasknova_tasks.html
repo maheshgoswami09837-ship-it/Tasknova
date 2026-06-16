@@ -84,19 +84,12 @@
     gap: 14px;
     cursor: pointer;
     position: relative;
-    transition: background 0.15s ease;
+    transition: none;
+    will-change: auto;
     box-shadow: 0 4px 18px rgba(0,0,0,0.25), 0 1px 4px rgba(0,0,0,0.15);
-    will-change: transform;
    -webkit-tap-highlight-color: transparent; }
-  .task-card:hover {
-    transform: scale(1.025);
-    box-shadow: 0 8px 32px rgba(108,99,255,0.22), 0 2px 8px rgba(0,0,0,0.2);
-    background: rgba(108,99,255,0.09);
-  }
   .task-card:active {
-    transform: scale(0.97);
-    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-    background: rgba(108,99,255,0.13);
+    background: rgba(255,255,255,0.09);
   }
 .task-card.tapped {}
   .task-card.disabled { opacity: 0.55; pointer-events: none; }
@@ -4299,7 +4292,7 @@
     <div class="wa-logo">⚡ TASKNOVA</div>
     <div class="wa-reward"><span style="font-size:20px;">🪙</span> +20 Coins</div>
     <p class="wa-sub">Ad dekho aur coins kamao!</p>
-    <button class="wa-btn" onclick="window.location.href='watch_ad_093803.html'">📺 Watch Ad &amp; Earn</button>
+    <button class="wa-btn" onclick="location.assign('watch_ad.html')">📺 Watch Ad &amp; Earn</button>
   </div>
 </div></div>
 
