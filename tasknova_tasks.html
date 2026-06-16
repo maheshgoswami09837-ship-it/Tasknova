@@ -4223,10 +4223,10 @@
 <!-- ═══════════════════════════════════════════════
      SPECIAL TASKS OVERLAY
 ═══════════════════════════════════════════════ -->
-<div id="specialTasksOverlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#f5f6fa; z-index:9999; overflow-y:auto; padding-bottom:80px;">
+<div id="specialTasksOverlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#f5f6fa; z-index:9999; overflow:hidden;">
 
-  <!-- Header -->
-  <div style="display:flex; align-items:center; gap:14px; padding:20px 16px 10px;">
+  <!-- Fixed Header -->
+  <div style="position:sticky; top:0; background:#f5f6fa; z-index:10; display:flex; align-items:center; gap:14px; padding:20px 16px 10px;">
     <button onclick="closeSpecialTasks()" style="width:38px; height:38px; background:#fff; border:1px solid rgba(0,0,0,0.08); border-radius:12px; color:#1a1a2e; font-size:22px; cursor:pointer; display:flex; align-items:center; justify-content:center; box-shadow:0 2px 8px rgba(0,0,0,0.04);">&#8249;</button>
     <div>
       <div style="font-size:20px; font-weight:800; color:#1a1a2e;">Special Tasks ⚡</div>
@@ -4234,7 +4234,8 @@
     </div>
   </div>
 
-
+  <!-- Scrollable Inner -->
+  <div style="height:calc(100% - 80px); overflow-y:scroll; -webkit-overflow-scrolling:touch; overscroll-behavior:contain; padding-bottom:40px;">
 
   <!-- Section Title -->
   <div style="padding:18px 16px 10px; font-size:13px; font-weight:700; color:rgba(26,26,46,0.45); text-transform:uppercase; letter-spacing:1px;">Available Tasks</div>
@@ -4306,15 +4307,33 @@
       </div>
     </div>
 
-  </div>
-</div>
+  </div><!-- tasks flex end -->
+  </div><!-- scrollable inner end -->
+</div><!-- specialTasksOverlay end -->
 
 <script>
   // Special Tasks — shortlink + watch ads counter & collect logic
-  var _slSpecialCount = 0;
-  var _waSpecialCount = 0;
   var _slSpecialMax   = 2;
   var _waSpecialMax   = 10;
+
+  // ── Daily-reset localStorage helpers ──
+  function _getTodayKey() {
+    var d = new Date();
+    return d.getFullYear() + '-' + (d.getMonth()+1) + '-' + d.getDate();
+  }
+  function _loadSpecialCount(key, max) {
+    try {
+      var saved = JSON.parse(localStorage.getItem('tn_special_' + key) || 'null');
+      if (saved && saved.date === _getTodayKey()) return Math.min(saved.count, max);
+    } catch(e) {}
+    return 0;
+  }
+  function _saveSpecialCount(key, count) {
+    try { localStorage.setItem('tn_special_' + key, JSON.stringify({ date: _getTodayKey(), count: count })); } catch(e) {}
+  }
+
+  var _slSpecialCount = _loadSpecialCount('sl', _slSpecialMax);
+  var _waSpecialCount = _loadSpecialCount('wa', _waSpecialMax);
 
   function handleSlSpecialClick() {
     var btn   = document.getElementById('slSpecialBtn');
@@ -4354,6 +4373,7 @@
           .catch(function() { if (typeof showToast === 'function') showToast('Error! Dobara try karo.', '#ef4444'); });
       });
       _slSpecialCount = 0;
+      _saveSpecialCount('sl', 0);
       if (badge) badge.textContent = '0/' + _slSpecialMax;
       btn.textContent = 'Visit';
       btn.style.background = 'linear-gradient(135deg,#6c63ff,#3b82f6)';
@@ -4374,6 +4394,7 @@
       if (typeof addCoins === 'function') addCoins(coins);
       if (typeof showToast === 'function') showToast('+' + coins + ' Coins Collected! 🎉', 'linear-gradient(135deg,#22c55e,#16a34a)');
       _waSpecialCount = 0;
+      _saveSpecialCount('wa', 0);
       badge.textContent = '0/' + _waSpecialMax;
       btn.textContent = 'Watch';
       btn.style.background = 'linear-gradient(135deg,#6c63ff,#3b82f6)';
@@ -4385,6 +4406,7 @@
   // Shortlink complete hone pe call karo
   function onSlSpecialComplete() {
     _slSpecialCount = Math.min(_slSpecialCount + 1, _slSpecialMax);
+    _saveSpecialCount('sl', _slSpecialCount);
     var badge = document.getElementById('slSpecialBadge');
     var btn   = document.getElementById('slSpecialBtn');
     if (badge) badge.textContent = _slSpecialCount + '/' + _slSpecialMax;
@@ -4410,9 +4432,8 @@
 
   // Watch Ad complete hone pe call karo
   function onWaSpecialComplete() {
-    // Real count se sync karo
-    var realCount = (typeof getAdBatchCount === 'function') ? getAdBatchCount() : _waSpecialCount + 1;
-    _waSpecialCount = Math.min(realCount, _waSpecialMax);
+    // Real count seedha getAdBatchCount se lo
+    _waSpecialCount = Math.min((typeof getAdBatchCount === 'function') ? getAdBatchCount() : _waSpecialCount + 1, _waSpecialMax);
     var badge = document.getElementById('waSpecialBadge');
     var btn   = document.getElementById('waSpecialBtn');
     if (badge) badge.textContent = _waSpecialCount + '/' + _waSpecialMax;
@@ -4425,9 +4446,26 @@
   function openSpecialTasks() {
     document.getElementById('specialTasksOverlay').style.display = 'block';
     document.body.style.overflow = 'hidden';
-    // Real ad count sync karo
-    var realCount = (typeof getAdBatchCount === 'function') ? getAdBatchCount() : 0;
-    _waSpecialCount = Math.min(realCount, _waSpecialMax);
+    // Saved counts restore karo
+    _slSpecialCount = _loadSpecialCount('sl', _slSpecialMax);
+    var slBadge = document.getElementById('slSpecialBadge');
+    var slBtn   = document.getElementById('slSpecialBtn');
+    if (slBadge) slBadge.textContent = _slSpecialCount + '/' + _slSpecialMax;
+    if (slBtn) {
+      if (_slSpecialCount >= _slSpecialMax) {
+        slBtn.textContent = 'Collect';
+        slBtn.style.background = 'linear-gradient(135deg,#16a34a,#22c55e)';
+      } else {
+        slBtn.textContent = 'Visit';
+        slBtn.style.background = 'linear-gradient(135deg,#2563eb,#3b82f6)';
+      }
+    }
+    // Spin count bhi restore karo
+    var d = (typeof getDailyData === 'function') ? getDailyData() : null;
+    var spCountEl = document.getElementById('spSpecialCount');
+    if (spCountEl && d) spCountEl.textContent = Math.min(d.spins || 0, 6) + '/6';
+    // Real ad count sync karo — seedha getAdBatchCount se
+    _waSpecialCount = (typeof getAdBatchCount === 'function') ? Math.min(getAdBatchCount(), _waSpecialMax) : _loadSpecialCount('wa', _waSpecialMax);
     var badge = document.getElementById('waSpecialBadge');
     var btn   = document.getElementById('waSpecialBtn');
     if (badge) badge.textContent = _waSpecialCount + '/' + _waSpecialMax;
@@ -4527,11 +4565,27 @@
   // Watch ad rounds sync — jab bhi tasks page pe wapas aao
   window.addEventListener('pageshow', function() {
     try {
+      // Pehle pending rounds process karo
       var pending = parseInt(localStorage.getItem('tn_watch_pending_rounds') || '0');
       if (pending > 0) {
         localStorage.removeItem('tn_watch_pending_rounds');
         for (var i = 0; i < pending; i++) {
           onWaSpecialComplete();
+        }
+      }
+      // Har baar page aane par badge seedha real count se update karo
+      var realCount = (typeof getAdBatchCount === 'function') ? Math.min(getAdBatchCount(), _waSpecialMax) : _waSpecialCount;
+      _waSpecialCount = realCount;
+      var badge = document.getElementById('waSpecialBadge');
+      var btn   = document.getElementById('waSpecialBtn');
+      if (badge) badge.textContent = realCount + '/' + _waSpecialMax;
+      if (btn) {
+        if (realCount >= _waSpecialMax) {
+          btn.textContent = 'Collect';
+          btn.style.background = 'linear-gradient(135deg,#16a34a,#22c55e)';
+        } else {
+          btn.textContent = 'Watch';
+          btn.style.background = 'linear-gradient(135deg,#2563eb,#3b82f6)';
         }
       }
     } catch(e) {}
