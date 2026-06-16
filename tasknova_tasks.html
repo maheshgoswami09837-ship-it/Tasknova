@@ -3895,37 +3895,22 @@
     // Firebase mein coins update karo
     window._getAuthToken && window._getAuthToken().then(token => {
       const ap = token ? '?auth=' + token : '';
-      fetch(DB_URL + '/users/' + uid + '.json' + ap)
-        .then(r => r.json())
-        .then(userData => {
-          const newCoins   = (userData.coins || 0) + SL_COINS;
-          const newBalance = parseFloat((newCoins / 100).toFixed(2));
-          const newTasks   = (userData.tasksDone || 0) + 1;
-          return fetch(DB_URL + '/users/' + uid + '.json' + ap, {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ coins: newCoins, balance: newBalance, tasksDone: newTasks, totalEarned: newBalance })
-          }).then(() => {
-            // UI update
-            const coinsEl = document.querySelector('.user-coins');
-            const balEl   = document.querySelector('.user-balance');
-            if (coinsEl) coinsEl.textContent = newCoins + ' Coins';
-            if (balEl)   balEl.textContent   = '₹' + newBalance.toFixed(2);
 
-            // Local data update
+            // Sirf count badhao — coins Collect pe milenge
             d.done++;
             saveSlData(d);
             slVisited = false;
 
-            showToast('+20 Coins! Shortlink task complete! 🔗', 'linear-gradient(135deg,#6c63ff,#3b82f6)');
+            showToast('✅ 1/2 Complete! Ek aur karo Collect ke liye 🔗', 'linear-gradient(135deg,#6c63ff,#3b82f6)');
 
-            // ── Log Shortlink Success ──────────────────────────
+            // Special Tasks badge update
+            if (typeof onSlSpecialComplete === 'function') onSlSpecialComplete();
+
             logTaskActivity({
               uid, taskType:'Shortlink', taskName:'🔗 Shortlink Task',
-              coins: SL_COINS, status:'Success',
+              coins: 0, status:'Pending',
               extraData:{ claimedAt:Date.now() }
             });
-            // ─────────────────────────────────────────────────
 
             updateSlUI();
 
@@ -3954,13 +3939,8 @@
               vBtn3.style.color = '#fff';
               vBtn3.style.cursor = 'pointer';
             }
-          });
-        })
-        .catch(err => {
-          showToast('Error: ' + err.message, '#ef4444');
-          claimBtn.disabled = false;
-          claimBtn.textContent = '🎁 Claim 20 Coins';
-        });
+
+            claimBtn.disabled = false;
     });
   }
   // ── SHORTLINK TASK END ────────────────────────────────────────
@@ -4061,6 +4041,11 @@
     document.body.style.position = '';
     document.body.style.width = '';
     updateDailyLimitUI();
+    // Agar Special Tasks se aaya tha toh wapas kholo
+    if (window._fromSpecialTasks) {
+      window._fromSpecialTasks = false;
+      openSpecialTasks();
+    }
   }
 </script>
   <script src="offerwall_conditions.js"></script>
@@ -4088,7 +4073,7 @@
   <div style="display:flex; flex-direction:column; gap:12px; padding:0 16px;">
 
     <!-- Spin & Win Task -->
-    <div onclick="closeSpecialTasks(); openSpinModal();" style="background:#fff; border:1px solid rgba(0,0,0,0.06); border-radius:18px; padding:16px; display:flex; align-items:center; gap:14px; cursor:pointer; box-shadow:0 2px 12px rgba(0,0,0,0.05);">
+    <div onclick="window._fromSpecialTasks=true; closeSpecialTasks(); openSpinModal();" style="background:#fff; border:1px solid rgba(0,0,0,0.06); border-radius:18px; padding:16px; display:flex; align-items:center; gap:14px; cursor:pointer; box-shadow:0 2px 12px rgba(0,0,0,0.05);">
       <div style="width:52px; height:52px; border-radius:16px; background:linear-gradient(135deg,#ea6c00,#f97316); display:flex; align-items:center; justify-content:center; flex-shrink:0; box-shadow:0 4px 14px rgba(0,0,0,0.25);">
         <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M3 22v-6h6"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/></svg>
       </div>
@@ -4103,7 +4088,7 @@
       <div style="text-align:right; flex-shrink:0; min-width:82px;">
         <div style="font-size:18px; font-weight:900; color:#f59e0b; text-shadow:0 0 12px rgba(245,158,11,0.3);">+60</div>
         <div style="font-size:10px; color:rgba(26,26,46,0.4); margin-top:1px;">🪙 6 spins</div>
-        <button id="spSpecialBtn" style="margin-top:6px; width:72px; height:32px; border:none; border-radius:8px; color:#fff; font-size:12px; font-weight:700; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; background:linear-gradient(135deg,#2563eb,#3b82f6);" onclick="event.stopPropagation(); closeSpecialTasks(); openSpinModal();">Spin</button>
+        <button id="spSpecialBtn" style="margin-top:6px; width:72px; height:32px; border:none; border-radius:8px; color:#fff; font-size:12px; font-weight:700; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; background:linear-gradient(135deg,#2563eb,#3b82f6);" onclick="event.stopPropagation(); window._fromSpecialTasks=true; closeSpecialTasks(); openSpinModal();">Spin</button>
       </div>
     </div>
 
@@ -4163,15 +4148,43 @@
     if (!btn) return;
 
     if (btn.textContent.trim() === 'Collect') {
-      // Coins collect
-      var coins = _slSpecialCount * 50;
-      if (typeof addCoins === 'function') addCoins(coins);
-      if (typeof showToast === 'function') showToast('+' + coins + ' Coins Collected! 🎉', 'linear-gradient(135deg,#22c55e,#16a34a)');
+      // 2 shortlink × 25 coins = 50 coins ek saath
+      var totalCoins = 50;
+      var uid = localStorage.getItem('tasknova_uid');
+      if (!uid || uid === 'null') { if (typeof showToast === 'function') showToast('Pehle login karo!', '#ef4444'); return; }
+      window._getAuthToken && window._getAuthToken().then(function(token) {
+        var ap = token ? '?auth=' + token : '';
+        fetch(DB_URL + '/users/' + uid + '.json' + ap)
+          .then(function(r) { return r.json(); })
+          .then(function(userData) {
+            var newCoins   = (userData.coins || 0) + totalCoins;
+            var newBalance = parseFloat((newCoins / 100).toFixed(2));
+            var newTasks   = (userData.tasksDone || 0) + 1;
+            return fetch(DB_URL + '/users/' + uid + '.json' + ap, {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ coins: newCoins, balance: newBalance, tasksDone: newTasks, totalEarned: newBalance })
+            }).then(function() {
+              var coinsEl = document.querySelector('.user-coins');
+              var balEl   = document.querySelector('.user-balance');
+              if (coinsEl) coinsEl.textContent = newCoins + ' Coins';
+              if (balEl)   balEl.textContent   = '₹' + newBalance.toFixed(2);
+              if (typeof showToast === 'function') showToast('+50 Coins Collected! 🎉', 'linear-gradient(135deg,#22c55e,#16a34a)');
+              if (typeof logTaskActivity === 'function') logTaskActivity({
+                uid: uid, taskType:'Shortlink', taskName:'🔗 Shortlink Task',
+                coins: totalCoins, status:'Success',
+                extraData:{ claimedAt: Date.now() }
+              });
+            });
+          })
+          .catch(function() { if (typeof showToast === 'function') showToast('Error! Dobara try karo.', '#ef4444'); });
+      });
       _slSpecialCount = 0;
-      badge.textContent = '0/' + _slSpecialMax;
+      if (badge) badge.textContent = '0/' + _slSpecialMax;
       btn.textContent = 'Visit';
       btn.style.background = 'linear-gradient(135deg,#6c63ff,#3b82f6)';
     } else {
+      window._fromSpecialTasks = true;
       closeSpecialTasks();
       openShortlinkModal();
     }
@@ -4191,7 +4204,7 @@
       btn.textContent = 'Watch';
       btn.style.background = 'linear-gradient(135deg,#6c63ff,#3b82f6)';
     } else {
-      openWatchAdIntermediate();
+      location.assign('watch_ad.html');
     }
   }
 
@@ -4201,9 +4214,23 @@
     var badge = document.getElementById('slSpecialBadge');
     var btn   = document.getElementById('slSpecialBtn');
     if (badge) badge.textContent = _slSpecialCount + '/' + _slSpecialMax;
-    if (_slSpecialCount >= _slSpecialMax && btn) {
-      btn.textContent = 'Collect';
-      btn.style.background = 'linear-gradient(135deg,#16a34a,#22c55e)';
+    if (_slSpecialCount >= _slSpecialMax) {
+      // Shortlink modal ka Visit button Collect mein badlo
+      var visitBtn = document.getElementById('slVisitBtn');
+      if (visitBtn) {
+        visitBtn.textContent = '🎉 Collect 50 Coins';
+        visitBtn.disabled = false;
+        visitBtn.style.background = 'linear-gradient(135deg,#16a34a,#22c55e)';
+        visitBtn.style.cursor = 'pointer';
+        visitBtn.onclick = function() { handleSlSpecialClick(); };
+      }
+      // Code area hide karo
+      var lbl = document.getElementById('slCodeLabel');
+      var inp = document.getElementById('slCodeInput');
+      var clm = document.getElementById('slClaimBtn');
+      if (lbl) lbl.style.display = 'none';
+      if (inp) { inp.style.display = 'none'; inp.value = ''; }
+      if (clm) clm.style.display = 'none';
     }
   }
 
@@ -4306,6 +4333,19 @@
     document.getElementById('watchAdIntermediateOverlay').style.display = 'none';
     openSpecialTasks();
   }
+
+  // Watch ad rounds sync — jab bhi tasks page pe wapas aao
+  window.addEventListener('pageshow', function() {
+    try {
+      var pending = parseInt(localStorage.getItem('tn_watch_pending_rounds') || '0');
+      if (pending > 0) {
+        localStorage.removeItem('tn_watch_pending_rounds');
+        for (var i = 0; i < pending; i++) {
+          onWaSpecialComplete();
+        }
+      }
+    } catch(e) {}
+  });
 </script>
 </body>
 </html>
