@@ -663,21 +663,9 @@
     <div class="modal-title" style="color:#fff;">Spin &amp; Win</div>
   </div>
 
-  <!-- Stats row -->
-  <div style="display:flex;gap:10px;width:100%;margin-bottom:24px;">
-    <div style="flex:1;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:16px;padding:12px;text-align:center;">
-      <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:4px;letter-spacing:1px;text-transform:uppercase;">Spins</div>
-      <div style="font-size:22px;font-weight:900;color:#fff;line-height:1;"><span id="spinCountText">0</span><span style="color:rgba(255,255,255,0.3);font-size:13px;">/6</span></div>
-    </div>
-    <div style="flex:1;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:16px;padding:12px;text-align:center;">
-      <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:4px;letter-spacing:1px;text-transform:uppercase;">Reward</div>
-      <div style="font-size:22px;font-weight:900;color:#fbbf24;line-height:1;">+60 <span style="font-size:12px;">Coins</span></div>
-    </div>
-    <div style="flex:1;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:16px;padding:12px;text-align:center;">
-      <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:4px;letter-spacing:1px;text-transform:uppercase;">Status</div>
-      <div id="spinCooldownText" style="font-size:13px;font-weight:800;color:#22c55e;">Ready!</div>
-    </div>
-  </div>
+  <!-- Hidden elements to keep JS working -->
+  <span id="spinCountText" style="display:none;">0</span>
+  <span id="spinCooldownText" style="display:none;">Ready!</span>
 
   <!-- Wheel -->
   <div class="wheel-wrap" style="position:relative;width:290px;height:290px;margin:0 auto 6px;">
@@ -696,21 +684,29 @@
   </div>
 
   <!-- Glow -->
-  <div style="width:220px;height:14px;background:radial-gradient(ellipse,rgba(124,58,237,0.6),transparent);border-radius:50%;margin:0 auto 20px;filter:blur(8px);"></div>
+  <div style="width:320px;height:14px;background:radial-gradient(ellipse,rgba(124,58,237,0.6),transparent);border-radius:50%;margin:0 auto 20px;filter:blur(8px);"></div>
 
   <!-- Result box -->
-  <div id="spinResultBox" style="width:100%;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:18px;padding:14px;text-align:center;margin-bottom:16px;min-height:52px;display:flex;align-items:center;justify-content:center;">
-    <div id="spinResult" style="font-size:16px;font-weight:800;color:rgba(255,255,255,0.6);">Spin karo aur coins jeeto!</div>
+  <div id="spinResultBox" style="width:auto;max-width:260px;margin:0 auto 16px;background:rgba(108,99,255,0.12);border:1.5px solid rgba(108,99,255,0.35);border-radius:50px;padding:12px 24px;text-align:center;display:flex;align-items:center;justify-content:center;">
+    <div id="spinResult" style="font-size:15px;font-weight:900;color:#fff;letter-spacing:0.3px;font-family:'Segoe UI',sans-serif;">🎡 Spin karo aur jeeto!</div>
   </div>
 
   <!-- Collect button — 6/6 ke baad dikhega -->
   <div id="spinCollectWrap" style="display:none;width:100%;margin-bottom:12px;">
     <button onclick="collectSpinReward()" style="width:100%;padding:16px;background:linear-gradient(135deg,#16a34a,#22c55e);border:none;border-radius:16px;color:#fff;font-size:16px;font-weight:900;cursor:pointer;box-shadow:0 8px 24px rgba(34,197,94,0.4);letter-spacing:0.3px;">
-      Collect +60 Coins
+      🎉 Collect Coins
     </button>
   </div>
 
-  <button class="spin-btn-main" id="spinBtnMain" onclick="doSpin()" style="background:linear-gradient(135deg,#7c3aed,#3b82f6);box-shadow:0 8px 28px rgba(124,58,237,0.45);">Spin Now!</button>
+  <button class="spin-btn-main" id="spinBtnMain" onclick="doSpin()" style="width:auto;max-width:220px;padding:14px 40px;border-radius:50px;background:linear-gradient(135deg,#7c3aed,#3b82f6);box-shadow:0 8px 28px rgba(124,58,237,0.45);font-size:17px;">🎡 Spin Now!</button>
+
+  <!-- Watch Ads & Claim Coin button — spin ke baad dikhega -->
+  <div id="spinWatchAdWrap" style="display:none;width:100%;max-width:280px;margin-top:14px;">
+    <button id="spinWatchAdBtn" onclick="doSpinWatchAd()"
+      style="width:100%;padding:16px;background:linear-gradient(135deg,#f59e0b,#ef4444);border:none;border-radius:16px;color:#fff;font-size:15px;font-weight:900;cursor:pointer;box-shadow:0 8px 24px rgba(245,158,11,0.45);letter-spacing:0.3px;font-family:'Segoe UI',sans-serif;">
+      📺 Watch Ads &amp; Claim Coin
+    </button>
+  </div>
 
   <div class="modal-bottom-banner" id="spinBottomBanner"></div>
 </div>
@@ -2071,7 +2067,7 @@
       const sb  = document.getElementById('spinCountBadge');
       const scb = document.getElementById('scratchCountBadge');
       const qb  = document.getElementById('quizCountBadge');
-      if (sb)  sb.textContent  = '0/6';
+      if (sb)  sb.textContent  = '0/3';
       if (scb) scb.textContent = '0/15';
       if (qb)  qb.textContent  = '0/15';
 
@@ -2169,13 +2165,13 @@
           // ── Spin — DB se today count ──────────────────────────
           const spinBadge = document.getElementById('spinCountBadge');
           const spinsDB = (data.spinsToday || 0);
-          if (spinBadge) spinBadge.textContent = spinsDB + '/6';
+          if (spinBadge) spinBadge.textContent = spinsDB + '/3';
           const spinCountText = document.getElementById('spinCountText');
           if (spinCountText) spinCountText.textContent = spinsDB;
           // Sync to localStorage
           const _ld = getDailyData();
           if (_ld.spins !== spinsDB) { _ld.spins = spinsDB; saveDailyData(_ld); }
-          if (spinsDB >= 6) {
+          if (spinsDB >= 3) {
             const spinBtn = document.getElementById('spinTaskBtn');
             if (spinBtn) { spinBtn.textContent = '✅ Done'; spinBtn.disabled = true; }
           }
@@ -2248,7 +2244,7 @@
     const sb = document.getElementById('spinCountBadge');
     const scb = document.getElementById('scratchCountBadge');
     const qb = document.getElementById('quizCountBadge');
-    if (sb) sb.textContent = d.spins + '/6';
+    if (sb) sb.textContent = d.spins + '/3';
     if (scb) scb.textContent = d.scratches + '/5';
     if (qb) qb.textContent = d.quizzes + '/5';
 
@@ -2500,7 +2496,7 @@
               const scratchBadge = document.getElementById('scratchCountBadge');
               const quizBadge    = document.getElementById('quizCountBadge');
               const adBadge      = document.getElementById('adCounter');
-              if (spinBadge)    spinBadge.textContent    = d.spins    + '/6';
+              if (spinBadge)    spinBadge.textContent    = d.spins    + '/3';
               if (scratchBadge) scratchBadge.textContent = d.scratches + '/15';
               if (quizBadge)    quizBadge.textContent    = d.quizzes  + '/15';
               if (adBadge)      adBadge.textContent      = getAdBatchCount() + '/20';
@@ -2640,19 +2636,23 @@
   }
 
   // ── SPIN WHEEL ────────────────────────────────────────────────
-  // Wheel display segments (visual) — 8 slots, all real prizes
-  const SPIN_PRIZES = [5, 10, 5, 15, 5, 10, 5, 20];
+  // Wheel segments — 5 slots
+  // 10000 = jackpot (never lands, weight=0, sirf dikhne ke liye)
+  // 8 segments: 10x2, 50x2, 100x2, Thanks!x1, 10000x1
+  const SPIN_PRIZES = [10, 50, 100, 10000, 10, 50, 100, 0];
+  const SPIN_LABELS = ['10', '50', '100', '10,000', '10', '50', '100', 'Thanks!'];
   const SPIN_COLORS = [
-    '#7c3aed','#2563eb','#7c3aed','#0891b2',
-    '#7c3aed','#2563eb','#7c3aed','#d97706'
+    '#2563eb', '#7c3aed', '#0891b2', '#d97706',
+    '#1d4ed8', '#6d28d9', '#0e7490', '#374151'
   ];
 
-  // Weighted prize table
+  // Weighted prize table — 10000 ka weight=0 (kabhi nahi milega)
   const PRIZE_WEIGHTS = [
-    { prize: 5,  weight: 50 },
-    { prize: 10, weight: 30 },
-    { prize: 15, weight: 13 },
-    { prize: 20, weight: 7  }
+    { prize: 0,     weight: 8  },
+    { prize: 10,    weight: 44 },
+    { prize: 50,    weight: 30 },
+    { prize: 100,   weight: 18 },
+    { prize: 10000, weight: 0  }
   ];
 
   function getWeightedPrize() {
@@ -2662,11 +2662,10 @@
       rand -= p.weight;
       if (rand <= 0) return p.prize;
     }
-    return 5;
+    return 10;
   }
 
-  // ✅ Fix: map prize to a SPECIFIC index that matches the prize value
-  // Wheel has multiple 5s and 10s — pick one index randomly among matches
+  // Map prize to one of its matching indices randomly (skip 10000 index=3)
   function getPrizeIndex(prize) {
     const indices = [];
     SPIN_PRIZES.forEach((p, i) => { if (p === prize) indices.push(i); });
@@ -2693,82 +2692,100 @@
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.save();
     ctx.scale(dpr, dpr);
-    drawWheelAt(ctx);
+    drawWheelAt(ctx, 0);
     ctx.restore();
   }
 
-  function drawWheelAt(ctx) {
+  function drawWheelAt(ctx, rotationRad) {
     const SIZE = 290;
-    const cx = SIZE / 2, cy = SIZE / 2, r = 130;
+    const cx = SIZE / 2, cy = SIZE / 2, r = SIZE / 2 - 8;
     const slices = SPIN_PRIZES.length;
-    const angle  = (2 * Math.PI) / slices;
+    const sliceAngle = (2 * Math.PI) / slices;
+    const rot = rotationRad !== undefined ? rotationRad : -Math.PI / 2;
+
+    // ── Draw segments (rotated) ──
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(rot);
+    ctx.translate(-cx, -cy);
 
     for (let i = 0; i < slices; i++) {
-      const startA = i * angle;
-      const endA   = (i + 1) * angle;
-
-      // Segment
+      const startA = i * sliceAngle;
+      const endA   = startA + sliceAngle;
       ctx.beginPath();
       ctx.moveTo(cx, cy);
       ctx.arc(cx, cy, r, startA, endA);
       ctx.fillStyle = SPIN_COLORS[i];
       ctx.fill();
-      // Divider lines
-      ctx.strokeStyle = 'rgba(255,255,255,0.35)';
-      ctx.lineWidth = 2.5;
+      ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+      ctx.lineWidth = 2;
       ctx.stroke();
+    }
+    ctx.restore();
 
-      // Text in slice
+    // ── Draw text upright (not rotated) ──
+    for (let i = 0; i < slices; i++) {
+      const midAngle = rot + i * sliceAngle + sliceAngle / 2;
+      const dist = r * 0.63;
+      const tx = cx + Math.cos(midAngle) * dist;
+      const ty = cy + Math.sin(midAngle) * dist;
+
       ctx.save();
-      ctx.translate(cx, cy);
-      ctx.rotate(startA + angle / 2);
+      ctx.translate(tx, ty);
       ctx.textAlign    = 'center';
       ctx.textBaseline = 'middle';
 
-      const prize = SPIN_PRIZES[i];
-      const dist  = r * 0.65;
-
-      // Prize number — large crisp
+      const label = SPIN_LABELS[i];
       ctx.fillStyle = '#fff';
-      ctx.shadowColor = 'rgba(0,0,0,0.5)';
-      ctx.shadowBlur = 4;
-      ctx.font = 'bold 18px Arial';
-      ctx.fillText(prize, dist, -4);
+      ctx.shadowColor = 'rgba(0,0,0,0.7)';
+      ctx.shadowBlur = 5;
 
-      // coins label
-      ctx.shadowBlur = 0;
-      ctx.fillStyle = 'rgba(255,255,255,0.8)';
-      ctx.font = 'bold 9px Arial';
-      ctx.fillText('coins', dist, 8);
-
+      if (label === '10,000') {
+        ctx.font = 'bold 13px Arial';
+        ctx.fillText('10,000', 0, -5);
+        ctx.shadowBlur = 0;
+        ctx.fillStyle = 'rgba(255,255,255,0.75)';
+        ctx.font = 'bold 9px Arial';
+        ctx.fillText('coins', 0, 9);
+      } else if (label === 'Thanks!') {
+        ctx.font = 'bold 14px Arial';
+        ctx.fillText('Thanks!', 0, 0);
+      } else {
+        ctx.font = 'bold 22px Arial';
+        ctx.fillText(label, 0, -6);
+        ctx.shadowBlur = 0;
+        ctx.fillStyle = 'rgba(255,255,255,0.75)';
+        ctx.font = 'bold 10px Arial';
+        ctx.fillText('coins', 0, 10);
+      }
       ctx.restore();
     }
 
-    // Outer ring
+    // ── Outer ring ──
     ctx.beginPath();
     ctx.arc(cx, cy, r, 0, 2 * Math.PI);
     ctx.strokeStyle = 'rgba(255,255,255,0.4)';
     ctx.lineWidth = 3;
     ctx.stroke();
 
-    // Center hub
-    const hubGrad = ctx.createRadialGradient(cx, cy, 2, cx, cy, 26);
+    // ── Center hub ──
+    const hubGrad = ctx.createRadialGradient(cx, cy, 2, cx, cy, 28);
     hubGrad.addColorStop(0, '#fde68a');
     hubGrad.addColorStop(1, '#d97706');
     ctx.beginPath();
-    ctx.arc(cx, cy, 26, 0, 2 * Math.PI);
+    ctx.arc(cx, cy, 28, 0, 2 * Math.PI);
     ctx.fillStyle = hubGrad;
     ctx.fill();
-    ctx.strokeStyle = 'rgba(255,255,255,0.7)';
+    ctx.strokeStyle = 'rgba(255,255,255,0.8)';
     ctx.lineWidth = 2.5;
     ctx.stroke();
 
-    // Star
+    // ── Star ──
     ctx.fillStyle = '#fff';
-    ctx.font = 'bold 20px Arial';
+    ctx.font = 'bold 22px Arial';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.shadowColor = 'rgba(0,0,0,0.3)';
+    ctx.shadowColor = 'rgba(0,0,0,0.4)';
     ctx.shadowBlur = 3;
     ctx.fillText('★', cx, cy + 1);
     ctx.shadowBlur = 0;
@@ -2787,35 +2804,54 @@
     // Adsterra banner removed — Monetag popunder fires on spin tap
   }
 
+  const SPIN_5HR_KEY = 'tn_spin_5hr_until';
+  const SPIN_SESSION1_MAX = 3;  // pehle 3 spin
+  const SPIN_TOTAL_MAX    = 6;  // total 6 spin
+  const SPIN_5HR_SECS     = 18000; // 5 ghante
+
+  function getSpin5HrUntil() { return parseInt(localStorage.getItem(SPIN_5HR_KEY) || '0'); }
+  function setSpin5HrUntil(v) { localStorage.setItem(SPIN_5HR_KEY, String(v)); }
+
   function updateSpinUI() {
-    const d = getDailyData();
-    const ct = document.getElementById('spinCountText');
-    const cd = document.getElementById('spinCooldownText');
+    const d   = getDailyData();
+    const ct  = document.getElementById('spinCountText');
+    const cd  = document.getElementById('spinCooldownText');
     const btn = document.getElementById('spinBtnMain');
+    const watchAdWrap = document.getElementById('spinWatchAdWrap');
     if (ct) ct.textContent = d.spins;
-    const cooldown = getCooldownRemaining(d.lastSpin);
-    if (d.spins >= 6) {
-      if (btn) { btn.disabled = true; btn.textContent = '✅ Aaj ke spins khatam!'; btn.style.background = 'rgba(255,255,255,0.1)'; btn.style.color = 'rgba(255,255,255,0.4)'; }
-    } else if (cooldown > 0) {
-      const secsLeft = Math.ceil(cooldown / 1000);
-      if (btn) {
-        btn.disabled = true;
-        btn.textContent = '⏳ Next spin in ' + secsLeft + 's...';
-        btn.style.background = 'rgba(255,165,0,0.2)';
-        btn.style.color = '#ffa500';
-        btn.onclick = null;
-      }
+
+    const fiveHrUntil = getSpin5HrUntil();
+    const fiveHrLeft  = Math.max(0, fiveHrUntil - Date.now());
+
+    // Sab spins done
+    if (d.spins >= SPIN_TOTAL_MAX) {
+      if (btn) { btn.style.display = ''; btn.disabled = true; btn.textContent = '✅ Aaj ke 6 spins khatam!'; btn.style.background = 'rgba(255,255,255,0.1)'; btn.style.color = 'rgba(255,255,255,0.4)'; }
+      if (watchAdWrap) watchAdWrap.style.display = 'none';
+      if (cd) cd.textContent = 'Done!';
+    }
+    // Pehle 3 done — 5hr lock chal raha hai
+    else if (d.spins >= SPIN_SESSION1_MAX && fiveHrLeft > 0) {
+      const hrs  = Math.floor(fiveHrLeft / 3600000);
+      const mins = Math.floor((fiveHrLeft % 3600000) / 60000);
+      const secs = Math.floor((fiveHrLeft % 60000) / 1000);
+      const timeStr = hrs + ':' + String(mins).padStart(2,'0') + ':' + String(secs).padStart(2,'0');
+      if (btn) { btn.style.display = ''; btn.disabled = true; btn.textContent = '⏳ ' + timeStr + ' mein unlock'; btn.style.background = 'rgba(255,165,0,0.2)'; btn.style.color = '#ffa500'; btn.onclick = null; }
+      if (watchAdWrap) watchAdWrap.style.display = 'none';
+      if (cd) cd.textContent = timeStr;
       setTimeout(updateSpinUI, 1000);
-    } else {
+    }
+    // Ready to spin
+    else {
       if (btn) {
+        btn.style.display = '';
         btn.disabled = false;
         btn.textContent = '🎡 Spin Now!';
         btn.style.background = '';
         btn.style.color = '';
         btn.onclick = doSpin;
       }
+      if (cd) cd.textContent = 'Ready!';
     }
-    if (cd) cd.textContent = cooldown > 0 ? Math.ceil(cooldown/1000) + 's' : 'Ready!';
   }
 
   function doSpin() {
@@ -2838,8 +2874,13 @@
           }).catch(() => {});
       });
     }
-    if (d.spins >= 6) { showToast('Aaj ke spins khatam!', '#f59e0b'); return; }
-    if (getCooldownRemaining(d.lastSpin) > 0) { showToast('30 second wait karo!', '#f59e0b'); return; }
+    // 5hr lock check — pehle 3 ke baad
+    const _5hrUntil = getSpin5HrUntil();
+    if (d.spins >= SPIN_SESSION1_MAX && Date.now() < _5hrUntil) {
+      const rem = Math.ceil((_5hrUntil - Date.now()) / 60000);
+      showToast('⏳ ' + rem + ' min baad next 3 spins unlock honge!', '#f59e0b'); return;
+    }
+    if (d.spins >= SPIN_TOTAL_MAX) { showToast('Aaj ke 6 spins khatam!', '#f59e0b'); return; }
     if (isGlobalLocked()) return;
     if (!checkDailyLimit()) return;
     if (isSpinning) return;
@@ -2850,63 +2891,76 @@
     const N        = SPIN_PRIZES.length;
     const sliceDeg = 360 / N;
 
-    // Pointer is at TOP (12 o'clock = -90°).
-    // Slice i starts at i*sliceDeg (measured from 3 o'clock, canvas default).
-    // Centre of slice i (in canvas-angle degrees) = i*sliceDeg + sliceDeg/2
-    // We want that centre to land under the pointer (i.e. at -90° = 270°).
-    // So we need to rotate the wheel so that:
-    //   (centre_of_slice + totalRotation) mod 360 = 270
-    //   totalRotation = (270 - centre_of_slice + 360*5) mod 360  + 360*5
+    // Pointer is at TOP. Wheel already starts with -90deg offset in drawWheel.
+    // Slice i centre (in original coords) = i*sliceDeg + sliceDeg/2
+    // After -90 offset, slice i centre on screen = i*sliceDeg + sliceDeg/2 - 90
+    // We want pointer (top = 0 after offset) to point at slice centre.
+    // So animate rotation needed = -(i*sliceDeg + sliceDeg/2) + 360*n
     const sliceCentre  = prizeIdx * sliceDeg + sliceDeg / 2;
-    const extraSpins   = 360 * 5;                         // 5 full rotations for effect
-    const targetAngle  = extraSpins + ((270 - sliceCentre % 360) + 360) % 360;
+    const extraSpins   = 360 * 5;
+    const targetAngle  = extraSpins + ((360 - sliceCentre % 360) % 360);
 
     const canvas   = document.getElementById('wheelCanvas');
     const dpr      = window.devicePixelRatio || 1;
     const SIZE     = 290;
     let start      = null;
-    const duration = 4000;
-    const startAngle = currentSpinAngle;
+    const duration = 6000;
+    currentSpinAngle = 0; // reset every spin for clean animation
 
     function animate(ts) {
       if (!start) start = ts;
       const progress = Math.min((ts - start) / duration, 1);
-      // Ease-out cubic
-      const eased = 1 - Math.pow(1 - progress, 3);
-      const angle = startAngle + targetAngle * eased;
+      // Ease-out quintic — smooth stop
+      const eased = 1 - Math.pow(1 - progress, 5);
+      const angle = targetAngle * eased;
 
       const ctx = canvas.getContext('2d');
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.save();
       ctx.scale(dpr, dpr);
-      ctx.translate(SIZE / 2, SIZE / 2);
-      ctx.rotate((angle * Math.PI) / 180);
-      ctx.translate(-SIZE / 2, -SIZE / 2);
-      drawWheelAt(ctx);
+      drawWheelAt(ctx, (angle * Math.PI) / 180 - Math.PI / 2);
       ctx.restore();
 
       if (progress < 1) {
         requestAnimationFrame(animate);
       } else {
-        currentSpinAngle = angle % 360;
+        currentSpinAngle = 0; // reset for next spin
         isSpinning = false;
 
         const spinBtn    = document.getElementById('spinBtnMain');
         const spinResult = document.getElementById('spinResult');
-        if (spinResult) spinResult.textContent = 'Aapne jeeta: +' + prize + ' Coins!';
-        // Check if 6/6 complete
-        var d2 = getDailyData();
-        if (d2.spins >= 6) {
-          var wrap = document.getElementById('spinCollectWrap');
-          if (wrap) wrap.style.display = 'block';
-          if (spinBtn) { spinBtn.disabled = true; spinBtn.textContent = 'All Spins Done!'; }
-        } else {
+        if (spinResult) {
+          if (prize === 0) {
+            spinResult.textContent = 'Oops! Better luck next time!';
+          } else {
+            spinResult.textContent = '🎉 Aapne jeeta: +' + prize + ' Coins!';
+          }
+        }
+        // Pending prize store karo collect ke liye
+        window._pendingSpinPrize = (window._pendingSpinPrize || 0) + prize;
+        // Spin ke baad Watch Ads button ke liye pending prize save karo
+        window._latestSpinPrize = prize;
+        try { localStorage.setItem('tn_spin_pending_prize', JSON.stringify({prize: prize, ts: Date.now()})); } catch(e) {}
+
+        // Prize 0 ho toh seedha next spin button dikhao, Watch Ads button mat dikhao
+        var watchAdWrap = document.getElementById('spinWatchAdWrap');
+        var watchAdBtn = document.getElementById('spinWatchAdBtn');
+        if (prize === 0) {
+          // Thanks! — koi ad nahi, seedha next spin
+          if (watchAdWrap) watchAdWrap.style.display = 'none';
           if (spinBtn) {
             spinBtn.disabled = false;
-            spinBtn.textContent = 'Spin Now!';
+            spinBtn.style.display = '';
+            spinBtn.textContent = '🎡 Spin Now!';
             spinBtn.style.background = 'linear-gradient(135deg,#7c3aed,#3b82f6)';
+            spinBtn.style.color = '';
             spinBtn.onclick = doSpin;
           }
+        } else {
+          // Coins mile — Watch Ads & Claim button dikhao
+          if (spinBtn) spinBtn.style.display = 'none';
+          if (watchAdBtn) watchAdBtn.textContent = '📺 Watch Ads & Claim +' + prize + ' Coin';
+          if (watchAdWrap) watchAdWrap.style.display = 'block';
         }
       }
     }
@@ -2917,12 +2971,128 @@
   function collectSpinReward() {
     var wrap = document.getElementById('spinCollectWrap');
     var btn  = document.getElementById('spinBtnMain');
-    if (typeof addCoins === 'function') addCoins(60);
-    if (typeof showToast === 'function') showToast('+60 Coins Collected!', 'linear-gradient(135deg,#22c55e,#16a34a)');
+    var totalPrize = window._pendingSpinPrize || 0;
+    window._pendingSpinPrize = 0;
+    if (typeof addCoins === 'function') addCoins(totalPrize);
+    if (typeof showToast === 'function') showToast('+' + totalPrize + ' Coins Collected! 🎉', 'linear-gradient(135deg,#22c55e,#16a34a)');
     if (wrap) wrap.style.display = 'none';
-    if (btn) { btn.disabled = false; btn.textContent = 'Spin Now!'; btn.style.background = 'linear-gradient(135deg,#7c3aed,#3b82f6)'; btn.onclick = doSpin; }
-    // Special task badge update
+    if (btn) { btn.disabled = true; btn.textContent = '✅ Aaj ke spins khatam!'; btn.style.background = 'rgba(255,255,255,0.1)'; btn.style.color = 'rgba(255,255,255,0.4)'; btn.onclick = null; }
     if (typeof onSpSpecialComplete === 'function') onSpSpecialComplete();
+  }
+
+  // ── SPIN WATCH AD ─────────────────────────────────────────────
+  function doSpinWatchAd() {
+    var prize = window._latestSpinPrize || 0;
+    try { 
+      localStorage.setItem('tn_spin_pending_prize', JSON.stringify({prize: prize, ts: Date.now()}));
+      // Flag set karo — spin_ad.html se wapas aa rahe hain
+      sessionStorage.setItem('tn_coming_from_spin_ad', '1');
+    } catch(e) {}
+    location.assign('spin_ad.html');
+  }
+
+  // Spin Watch Ad return handler — pageshow pe check karo
+  // Pehle page load pe clear karo taaki stale data trigger na ho
+  try { 
+    var _staleCheck = localStorage.getItem('tn_spin_pending_prize');
+    if (_staleCheck) {
+      var _staleData = JSON.parse(_staleCheck);
+      // Agar spin_ad.html se redirect nahi hua (flag nahi hai) toh clear karo
+      if (!sessionStorage.getItem('tn_coming_from_spin_ad')) {
+        localStorage.removeItem('tn_spin_pending_prize');
+      }
+    }
+  } catch(e) {}
+
+  (function() {
+    var _origPageShow = null;
+    window.addEventListener('pageshow', function(ev) {
+      // Sirf tab fire karo jab spin_ad.html se wapas aaye
+      if (!sessionStorage.getItem('tn_coming_from_spin_ad')) return;
+      sessionStorage.removeItem('tn_coming_from_spin_ad');
+      try {
+        var raw = localStorage.getItem('tn_spin_pending_prize');
+        if (!raw) return;
+        var data = JSON.parse(raw);
+        // Sirf 5 min ke andar valid
+        if (!data || Date.now() - data.ts > 5 * 60 * 1000) { localStorage.removeItem('tn_spin_pending_prize'); return; }
+        localStorage.removeItem('tn_spin_pending_prize');
+
+        var prize = data.prize || 0;
+        // Coin credit karo — 0 prize pe bhi spin count increment hoga
+        if (prize > 0) {
+          creditCoins(prize, 'spin').then(function(earned) {
+            if (earned > 0) showToast('+' + earned + ' Coins! Spin reward collect! 🎉', 'linear-gradient(135deg,#22c55e,#16a34a)');
+          });
+        } else {
+          // 0 coins — sirf spin count badhao (creditCoins se nahi, manually)
+          var dd = getDailyData();
+          dd.spins = (dd.spins || 0) + 1;
+          dd.lastSpin = Date.now();
+          saveDailyData(dd);
+          var spinBadge = document.getElementById('spinCountBadge');
+          if (spinBadge) spinBadge.textContent = dd.spins + '/3';
+          showToast('Better luck next time! Spin count ho gaya 🎡', '#f59e0b');
+        }
+
+        // Watch ad wrap hide karo, spin button restore karo
+        var watchAdWrap = document.getElementById('spinWatchAdWrap');
+        if (watchAdWrap) watchAdWrap.style.display = 'none';
+        var spinBtn = document.getElementById('spinBtnMain');
+        var d2 = getDailyData();
+
+        // Pehle 3 complete? 5hr lock lagao
+        if (d2.spins >= SPIN_SESSION1_MAX && getSpin5HrUntil() <= Date.now()) {
+          setSpin5HrUntil(Date.now() + SPIN_5HR_SECS * 1000);
+          showToast('🕐 Pehle 3 spins done! 5 ghante baad 3 aur spins unlock honge.', '#f59e0b');
+        }
+
+        // Spin button update
+        if (d2.spins < SPIN_TOTAL_MAX) {
+          updateSpinUI();
+        } else {
+          if (spinBtn) { spinBtn.style.display = ''; spinBtn.disabled = true; spinBtn.textContent = '✅ Aaj ke 6 spins khatam!'; spinBtn.style.background = 'rgba(255,255,255,0.1)'; spinBtn.style.color = 'rgba(255,255,255,0.4)'; }
+          if (watchAdWrap) watchAdWrap.style.display = 'none';
+        }
+
+        // Special Tasks card pe badge update + 1 min cooldown timer start karo
+        var d3 = getDailyData();
+        var spCountEl = document.getElementById('spSpecialCount');
+        if (spCountEl) spCountEl.textContent = Math.min(d3.spins, 6) + '/6';
+
+        // 1 min cooldown — Spin button chupa ke timer dikhao
+        startSpSpecialCooldown();
+      } catch(e) {}
+    });
+  })();
+
+  // ── SP SPECIAL COOLDOWN (1 min) ────────────────────────────────
+  var _spCooldownInterval = null;
+  function startSpSpecialCooldown() {
+    var btn   = document.getElementById('spSpecialBtn');
+    var timer = document.getElementById('spCooldownTimer');
+    var numEl = document.getElementById('spCooldownNum');
+    if (!btn || !timer) return;
+
+    btn.style.display   = 'none';
+    timer.style.display = 'inline-flex';
+
+    var secsLeft = 60;
+    if (numEl) numEl.textContent = '1:00';
+
+    if (_spCooldownInterval) clearInterval(_spCooldownInterval);
+    _spCooldownInterval = setInterval(function() {
+      secsLeft--;
+      var m = Math.floor(secsLeft / 60);
+      var s = secsLeft % 60;
+      if (numEl) numEl.textContent = m + ':' + String(s).padStart(2, '0');
+
+      if (secsLeft <= 0) {
+        clearInterval(_spCooldownInterval);
+        timer.style.display = 'none';
+        btn.style.display   = 'inline-flex';
+      }
+    }, 1000);
   }
 
   // ── SCRATCH CARD ──────────────────────────────────────────────
@@ -4082,13 +4252,17 @@
         <div style="font-size:12px; color:rgba(26,26,46,0.45);">Wheel spin karo aur coins jeeto</div>
         <div style="margin-top:6px; display:flex; align-items:center; gap:6px;">
           <span style="font-size:10px; color:rgba(26,26,46,0.4); background:rgba(0,0,0,0.04); padding:3px 8px; border-radius:50px;">⏱ 6/day</span>
-          <span style="font-size:11px; font-weight:700; color:#2563eb; background:rgba(37,99,235,0.1); padding:3px 9px; border-radius:50px;">0/6</span>
+          <span id="spSpecialCount" style="font-size:11px; font-weight:700; color:#2563eb; background:rgba(37,99,235,0.1); padding:3px 9px; border-radius:50px;">0/6</span>
         </div>
       </div>
       <div style="text-align:right; flex-shrink:0; min-width:82px;">
         <div style="font-size:18px; font-weight:900; color:#f59e0b; text-shadow:0 0 12px rgba(245,158,11,0.3);">+60</div>
         <div style="font-size:10px; color:rgba(26,26,46,0.4); margin-top:1px;">🪙 6 spins</div>
         <button id="spSpecialBtn" style="margin-top:6px; width:72px; height:32px; border:none; border-radius:8px; color:#fff; font-size:12px; font-weight:700; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; background:linear-gradient(135deg,#2563eb,#3b82f6);" onclick="event.stopPropagation(); window._fromSpecialTasks=true; closeSpecialTasks(); openSpinModal();">Spin</button>
+        <div id="spCooldownTimer" style="display:none; margin-top:6px; width:72px; height:32px; border-radius:8px; background:rgba(245,158,11,0.15); border:1px solid rgba(245,158,11,0.4); align-items:center; justify-content:center; flex-direction:column;">
+          <div id="spCooldownNum" style="font-size:13px; font-weight:900; color:#f59e0b; line-height:1;">1:00</div>
+          <div style="font-size:8px; color:rgba(245,158,11,0.7); font-weight:600;">wait</div>
+        </div>
       </div>
     </div>
 
@@ -4236,7 +4410,9 @@
 
   // Watch Ad complete hone pe call karo
   function onWaSpecialComplete() {
-    _waSpecialCount = Math.min(_waSpecialCount + 1, _waSpecialMax);
+    // Real count se sync karo
+    var realCount = (typeof getAdBatchCount === 'function') ? getAdBatchCount() : _waSpecialCount + 1;
+    _waSpecialCount = Math.min(realCount, _waSpecialMax);
     var badge = document.getElementById('waSpecialBadge');
     var btn   = document.getElementById('waSpecialBtn');
     if (badge) badge.textContent = _waSpecialCount + '/' + _waSpecialMax;
@@ -4249,14 +4425,28 @@
   function openSpecialTasks() {
     document.getElementById('specialTasksOverlay').style.display = 'block';
     document.body.style.overflow = 'hidden';
-    history.pushState({overlay: 'special'}, '', location.href);
+    // Real ad count sync karo
+    var realCount = (typeof getAdBatchCount === 'function') ? getAdBatchCount() : 0;
+    _waSpecialCount = Math.min(realCount, _waSpecialMax);
+    var badge = document.getElementById('waSpecialBadge');
+    var btn   = document.getElementById('waSpecialBtn');
+    if (badge) badge.textContent = _waSpecialCount + '/' + _waSpecialMax;
+    if (_waSpecialCount >= _waSpecialMax && btn) {
+      btn.textContent = 'Collect';
+      btn.style.background = 'linear-gradient(135deg,#16a34a,#22c55e)';
+    } else if (btn) {
+      btn.textContent = 'Watch';
+      btn.style.background = 'linear-gradient(135deg,#2563eb,#3b82f6)';
+    }
   }
   function closeSpecialTasks() {
     document.getElementById('specialTasksOverlay').style.display = 'none';
     document.body.style.overflow = '';
   }
+  // Back button se special tasks band ho
   window.addEventListener('popstate', function(e) {
-    if (document.getElementById('specialTasksOverlay').style.display === 'block') {
+    var overlay = document.getElementById('specialTasksOverlay');
+    if (overlay && overlay.style.display === 'block') {
       closeSpecialTasks();
     }
   });
