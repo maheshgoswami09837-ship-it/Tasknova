@@ -2945,25 +2945,48 @@
             spinResult.textContent = '🎉 Aapne jeeta: +' + prize + ' Coins!';
           }
         }
-        // Pending prize store karo collect ke liye
+        // Pending prize store karo collect ke liye (sirf coins mile tab)
         window._pendingSpinPrize = (window._pendingSpinPrize || 0) + prize;
-        // Spin ke baad Watch Ads button ke liye pending prize save karo
         window._latestSpinPrize = prize;
-        try { localStorage.setItem('tn_spin_pending_prize', JSON.stringify({prize: prize, ts: Date.now()})); } catch(e) {}
+        if (prize > 0) {
+          try { localStorage.setItem('tn_spin_pending_prize', JSON.stringify({prize: prize, ts: Date.now()})); } catch(e) {}
+        } else {
+          try { localStorage.removeItem('tn_spin_pending_prize'); } catch(e) {}
+        }
 
         // Prize 0 ho toh seedha next spin button dikhao, Watch Ads button mat dikhao
         var watchAdWrap = document.getElementById('spinWatchAdWrap');
         var watchAdBtn = document.getElementById('spinWatchAdBtn');
         if (prize === 0) {
-          // Thanks! — koi ad nahi, seedha next spin
+          // Thanks! — spin count abhi badhao
+          var dd0 = getDailyData();
+          dd0.spins = (dd0.spins || 0) + 1;
+          dd0.lastSpin = Date.now();
+          saveDailyData(dd0);
+          var spCountEl0 = document.getElementById('spSpecialCount');
+          if (spCountEl0) spCountEl0.textContent = Math.min(dd0.spins, 6) + '/6';
+          var spinBadge0 = document.getElementById('spinCountBadge');
+          if (spinBadge0) spinBadge0.textContent = dd0.spins + '/6';
+          // Pehle 3 complete? 5hr lock
+          if (dd0.spins >= SPIN_SESSION1_MAX && getSpin5HrUntil() <= Date.now()) {
+            setSpin5HrUntil(Date.now() + SPIN_5HR_SECS * 1000);
+          }
+          // koi ad nahi, seedha next spin
           if (watchAdWrap) watchAdWrap.style.display = 'none';
           if (spinBtn) {
-            spinBtn.disabled = false;
-            spinBtn.style.display = '';
-            spinBtn.textContent = '🎡 Spin Now!';
-            spinBtn.style.background = 'linear-gradient(135deg,#7c3aed,#3b82f6)';
-            spinBtn.style.color = '';
-            spinBtn.onclick = doSpin;
+            if (dd0.spins >= SPIN_TOTAL_MAX) {
+              spinBtn.disabled = true;
+              spinBtn.textContent = '✅ Aaj ke 6 spins khatam!';
+              spinBtn.style.background = 'rgba(255,255,255,0.1)';
+              spinBtn.style.color = 'rgba(255,255,255,0.4)';
+            } else {
+              spinBtn.disabled = false;
+              spinBtn.style.display = '';
+              spinBtn.textContent = '🎡 Spin Now!';
+              spinBtn.style.background = 'linear-gradient(135deg,#7c3aed,#3b82f6)';
+              spinBtn.style.color = '';
+              spinBtn.onclick = doSpin;
+            }
           }
         } else {
           // Coins mile — Watch Ads & Claim button dikhao
@@ -4266,8 +4289,8 @@
         </div>
       </div>
       <div style="text-align:right; flex-shrink:0; min-width:82px;">
-        <div style="font-size:18px; font-weight:900; color:#f59e0b; text-shadow:0 0 12px rgba(245,158,11,0.3);">+60</div>
-        <div style="font-size:10px; color:rgba(26,26,46,0.4); margin-top:1px;">🪙 6 spins</div>
+        <div style="font-size:18px; font-weight:900; color:#f59e0b; text-shadow:0 0 12px rgba(245,158,11,0.3);">🎰 Spin</div>
+        <div style="font-size:10px; color:rgba(26,26,46,0.4); margin-top:1px;">🪙 Try luck</div>
         <button id="spSpecialBtn" style="margin-top:6px; width:72px; height:32px; border:none; border-radius:8px; color:#fff; font-size:12px; font-weight:700; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; background:linear-gradient(135deg,#2563eb,#3b82f6);" onclick="event.stopPropagation(); window._fromSpecialTasks=true; closeSpecialTasks(); openSpinModal();">Spin</button>
         <div id="spCooldownTimer" style="display:none; margin-top:6px; width:72px; height:32px; border-radius:8px; background:rgba(245,158,11,0.15); border:1px solid rgba(245,158,11,0.4); align-items:center; justify-content:center; flex-direction:column;">
           <div id="spCooldownNum" style="font-size:13px; font-weight:900; color:#f59e0b; line-height:1;">1:00</div>
