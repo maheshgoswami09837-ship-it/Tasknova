@@ -2353,7 +2353,8 @@
 
   // Task type ke liye readable names
   const TASK_NAMES = {
-    'watchAd':   '📺 Video Watch Task',
+    'watchAd':        '📺 Video Watch Task',
+    'watchAdSpecial': '⚡ Special Watch Ad Task',
     'spin':      '🎡 Spin the Wheel',
     'scratch':   '🎴 Scratch Card',
     'quiz':      '🧠 Quiz Task',
@@ -2475,7 +2476,7 @@
               patch[dailyPath + 'checkin'] = true;
               patch[dailyPath + 'earned'] = d.earned;
             }
-            if (type === 'watchAd') {
+            if (type === 'watchAd' || type === 'watchAdSpecial') {
               patch.adsWatchedToday = getAdBatchCount();
               patch[dailyPath + 'adsWatched'] = getAdBatchCount();
               patch[dailyPath + 'earned'] = d.earned;
@@ -2512,7 +2513,7 @@
 
               // ── Task log ─────────────────────────────────────
               const typeMap = {
-                watchAd:'Ad', spin:'Spin', scratch:'Scratch', quiz:'Quiz',
+                watchAd:'Ad', watchAdSpecial:'Ad', spin:'Spin', scratch:'Scratch', quiz:'Quiz',
                 checkin:'Checkin', bonus:'Bonus', survey:'Survey',
                 offerwall:'Offerwall', shortlink:'Shortlink'
               };
@@ -2838,17 +2839,6 @@
       if (watchAdWrap) watchAdWrap.style.display = 'none';
       if (cd) cd.textContent = 'Done!';
     }
-    // Pehle 3 done — 5hr lock chal raha hai
-    else if (d.spins >= SPIN_SESSION1_MAX && fiveHrLeft > 0) {
-      const hrs  = Math.floor(fiveHrLeft / 3600000);
-      const mins = Math.floor((fiveHrLeft % 3600000) / 60000);
-      const secs = Math.floor((fiveHrLeft % 60000) / 1000);
-      const timeStr = hrs + ':' + String(mins).padStart(2,'0') + ':' + String(secs).padStart(2,'0');
-      if (btn) { btn.style.display = ''; btn.disabled = true; btn.textContent = '⏳ ' + timeStr + ' mein unlock'; btn.style.background = 'rgba(255,165,0,0.2)'; btn.style.color = '#ffa500'; btn.onclick = null; }
-      if (watchAdWrap) watchAdWrap.style.display = 'none';
-      if (cd) cd.textContent = timeStr;
-      setTimeout(updateSpinUI, 1000);
-    }
     // Ready to spin
     else {
       if (btn) {
@@ -2882,12 +2872,6 @@
             }
           }).catch(() => {});
       });
-    }
-    // 5hr lock check — pehle 3 ke baad
-    const _5hrUntil = getSpin5HrUntil();
-    if (d.spins >= SPIN_SESSION1_MAX && Date.now() < _5hrUntil) {
-      const rem = Math.ceil((_5hrUntil - Date.now()) / 60000);
-      showToast('⏳ ' + rem + ' min baad next 3 spins unlock honge!', '#f59e0b'); return;
     }
     if (d.spins >= SPIN_TOTAL_MAX) { showToast('Aaj ke 6 spins khatam!', '#f59e0b'); return; }
     if (isGlobalLocked()) return;
@@ -2967,10 +2951,6 @@
           if (spCountEl0) spCountEl0.textContent = Math.min(dd0.spins, 6) + '/6';
           var spinBadge0 = document.getElementById('spinCountBadge');
           if (spinBadge0) spinBadge0.textContent = dd0.spins + '/6';
-          // Pehle 3 complete? 5hr lock
-          if (dd0.spins >= SPIN_SESSION1_MAX && getSpin5HrUntil() <= Date.now()) {
-            setSpin5HrUntil(Date.now() + SPIN_5HR_SECS * 1000);
-          }
           // koi ad nahi, seedha next spin
           if (watchAdWrap) watchAdWrap.style.display = 'none';
           if (spinBtn) {
@@ -3072,12 +3052,6 @@
         if (watchAdWrap) watchAdWrap.style.display = 'none';
         var spinBtn = document.getElementById('spinBtnMain');
         var d2 = getDailyData();
-
-        // Pehle 3 complete? 5hr lock lagao
-        if (d2.spins >= SPIN_SESSION1_MAX && getSpin5HrUntil() <= Date.now()) {
-          setSpin5HrUntil(Date.now() + SPIN_5HR_SECS * 1000);
-          showToast('🕐 Pehle 3 spins done! 5 ghante baad 3 aur spins unlock honge.', '#f59e0b');
-        }
 
         // Spin button update
         if (d2.spins < SPIN_TOTAL_MAX) {
@@ -4098,51 +4072,105 @@
     window._getAuthToken && window._getAuthToken().then(token => {
       const ap = token ? '?auth=' + token : '';
 
-            // Sirf count badhao — coins Collect pe milenge
+            // Count badhao
             d.done++;
             saveSlData(d);
             slVisited = false;
 
-            showToast('✅ 1/2 Complete! Ek aur karo Collect ke liye 🔗', 'linear-gradient(135deg,#6c63ff,#3b82f6)');
-
             // Special Tasks badge update
             if (typeof onSlSpecialComplete === 'function') onSlSpecialComplete();
-
-            logTaskActivity({
-              uid, taskType:'Shortlink', taskName:'🔗 Shortlink Task',
-              coins: 0, status:'Pending',
-              extraData:{ claimedAt:Date.now() }
-            });
-
-            updateSlUI();
-
-            // Visit button reset for next task
-            const visitBtn = document.getElementById('slVisitBtn');
-            if (visitBtn && d.done < SL_LIMIT) {
-              visitBtn.textContent = '🔗 Visit Link';
-              visitBtn.disabled = false;
-              visitBtn.style.background = 'linear-gradient(135deg,#6c63ff,#3b82f6)';
-              visitBtn.style.color = '#fff';
-              visitBtn.style.cursor = 'pointer';
-            }
 
             // Code area hide karo aur reset karo
             const lbl3 = document.getElementById('slCodeLabel');
             const inp3 = document.getElementById('slCodeInput');
             const clm3 = document.getElementById('slClaimBtn');
-            const vBtn3 = document.getElementById('slVisitBtn');
             if (lbl3) lbl3.style.display = 'none';
             if (inp3) { inp3.style.display = 'none'; inp3.value = ''; }
             if (clm3) clm3.style.display = 'none';
-            if (vBtn3) {
-              vBtn3.textContent = '🔗 Visit Link';
-              vBtn3.disabled = false;
-              vBtn3.style.background = 'linear-gradient(135deg,#6c63ff,#3b82f6)';
-              vBtn3.style.color = '#fff';
-              vBtn3.style.cursor = 'pointer';
-            }
 
-            claimBtn.disabled = false;
+            if (d.done >= SL_LIMIT) {
+              // ── 2/2 Complete: Coins credit karo ──
+              const totalCoins = SL_LIMIT * SL_COINS; // 2 × 20 = 40 coins
+              fetch(DB_URL + '/users/' + uid + '.json' + ap)
+                .then(r => r.json())
+                .then(userData => {
+                  const newCoins   = (userData.coins || 0) + totalCoins;
+                  const newBalance = parseFloat((newCoins / 100).toFixed(2));
+                  const newTasks   = (userData.tasksDone || 0) + 1;
+                  return fetch(DB_URL + '/users/' + uid + '.json' + ap, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ coins: newCoins, balance: newBalance, tasksDone: newTasks, totalEarned: newBalance })
+                  }).then(() => {
+                    // UI update
+                    const coinsEl = document.querySelector('.user-coins');
+                    const balEl   = document.querySelector('.user-balance');
+                    if (coinsEl) coinsEl.textContent = newCoins + ' Coins';
+                    if (balEl)   balEl.textContent   = '₹' + newBalance.toFixed(2);
+
+                    // Toast
+                    showToast('🎉 +' + totalCoins + ' Coins Credited! Shortlink task complete!', 'linear-gradient(135deg,#22c55e,#16a34a)');
+
+                    // Mark today collected (duplicate se bachao)
+                    if (typeof _markSlCollectedToday === 'function') _markSlCollectedToday();
+
+                    // Task history mein Success save karo
+                    logTaskActivity({
+                      uid, taskType:'Shortlink', taskName:'🔗 Shortlink Task',
+                      coins: totalCoins, status:'Success',
+                      extraData:{ claimedAt: Date.now() }
+                    });
+
+                    // Visit button — Done state
+                    const visitBtn = document.getElementById('slVisitBtn');
+                    if (visitBtn) {
+                      visitBtn.textContent = '✅ Aaj ke sab tasks complete!';
+                      visitBtn.disabled = true;
+                      visitBtn.style.background = 'rgba(255,255,255,0.08)';
+                      visitBtn.style.color = 'rgba(255,255,255,0.35)';
+                      visitBtn.style.cursor = 'not-allowed';
+                      visitBtn.onclick = null;
+                    }
+
+                    // Special Tasks Collect button bhi Done karo
+                    const slSpecialBtn = document.getElementById('slSpecialBtn');
+                    if (slSpecialBtn) {
+                      slSpecialBtn.textContent = 'Done ✓';
+                      slSpecialBtn.style.background = 'rgba(255,255,255,0.1)';
+                      slSpecialBtn.style.color = 'rgba(255,255,255,0.35)';
+                      slSpecialBtn.disabled = true;
+                    }
+
+                    updateSlUI();
+                  });
+                })
+                .catch(() => showToast('Error! Dobara try karo.', '#ef4444'));
+
+              claimBtn.disabled = true;
+              claimBtn.textContent = '✅ Done';
+            } else {
+              // 1/2 Complete — next task ke liye reset
+              showToast('✅ 1/2 Complete! Ek aur karo Collect ke liye 🔗', 'linear-gradient(135deg,#6c63ff,#3b82f6)');
+
+              logTaskActivity({
+                uid, taskType:'Shortlink', taskName:'🔗 Shortlink Task',
+                coins: 0, status:'Pending',
+                extraData:{ claimedAt: Date.now() }
+              });
+
+              const visitBtn2 = document.getElementById('slVisitBtn');
+              if (visitBtn2) {
+                visitBtn2.textContent = '🔗 Visit Link';
+                visitBtn2.disabled = false;
+                visitBtn2.style.background = 'linear-gradient(135deg,#6c63ff,#3b82f6)';
+                visitBtn2.style.color = '#fff';
+                visitBtn2.style.cursor = 'pointer';
+                visitBtn2.onclick = function() { doShortlinkTask(); };
+              }
+
+              updateSlUI();
+              claimBtn.disabled = false;
+            }
     });
   }
   // ── SHORTLINK TASK END ────────────────────────────────────────
@@ -4367,53 +4395,49 @@
   var _slSpecialCount = _loadSpecialCount('sl', _slSpecialMax);
   var _waSpecialCount = _loadSpecialCount('wa', _waSpecialMax);
 
+  function _isSlCollectedToday() {
+    try {
+      var saved = JSON.parse(localStorage.getItem('tn_special_sl_collected') || 'null');
+      return saved && saved.date === _getTodayKey();
+    } catch(e) { return false; }
+  }
+  function _markSlCollectedToday() {
+    try { localStorage.setItem('tn_special_sl_collected', JSON.stringify({ date: _getTodayKey() })); } catch(e) {}
+  }
+
   function handleSlSpecialClick() {
     var btn   = document.getElementById('slSpecialBtn');
     var badge = document.getElementById('slSpecialBadge');
     if (!btn) return;
 
+    // Already collected today — kuch mat karo
+    if (_isSlCollectedToday()) {
+      if (typeof showToast === 'function') showToast('Aaj ke shortlink tasks already complete! Kal aao 🎉', '#22c55e');
+      return;
+    }
+
     if (btn.textContent.trim() === 'Collect') {
-      // 2 shortlink × 25 coins = 50 coins ek saath
-      var totalCoins = 50;
-      var uid = localStorage.getItem('tasknova_uid');
-      if (!uid || uid === 'null') { if (typeof showToast === 'function') showToast('Pehle login karo!', '#ef4444'); return; }
-      window._getAuthToken && window._getAuthToken().then(function(token) {
-        var ap = token ? '?auth=' + token : '';
-        fetch(DB_URL + '/users/' + uid + '.json' + ap)
-          .then(function(r) { return r.json(); })
-          .then(function(userData) {
-            var newCoins   = (userData.coins || 0) + totalCoins;
-            var newBalance = parseFloat((newCoins / 100).toFixed(2));
-            var newTasks   = (userData.tasksDone || 0) + 1;
-            return fetch(DB_URL + '/users/' + uid + '.json' + ap, {
-              method: 'PATCH',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ coins: newCoins, balance: newBalance, tasksDone: newTasks, totalEarned: newBalance })
-            }).then(function() {
-              var coinsEl = document.querySelector('.user-coins');
-              var balEl   = document.querySelector('.user-balance');
-              if (coinsEl) coinsEl.textContent = newCoins + ' Coins';
-              if (balEl)   balEl.textContent   = '₹' + newBalance.toFixed(2);
-              if (typeof showToast === 'function') showToast('+50 Coins Collected! 🎉', 'linear-gradient(135deg,#22c55e,#16a34a)');
-              if (typeof logTaskActivity === 'function') logTaskActivity({
-                uid: uid, taskType:'Shortlink', taskName:'🔗 Shortlink Task',
-                coins: totalCoins, status:'Success',
-                extraData:{ claimedAt: Date.now() }
-              });
-            });
-          })
-          .catch(function() { if (typeof showToast === 'function') showToast('Error! Dobara try karo.', '#ef4444'); });
-      });
-      _slSpecialCount = 0;
-      _saveSpecialCount('sl', 0);
-      if (badge) badge.textContent = '0/' + _slSpecialMax;
-      btn.textContent = 'Visit';
-      btn.style.background = 'linear-gradient(135deg,#6c63ff,#3b82f6)';
+      // Safety guard — yahan aana nahi chahiye (coins already claimShortlink ne credit kiye)
+      // Phir bhi agar aaye to Done state show karo
+      btn.textContent = 'Done ✓';
+      btn.style.background = 'rgba(255,255,255,0.1)';
+      btn.style.color = 'rgba(255,255,255,0.35)';
+      btn.disabled = true;
     } else {
       window._fromSpecialTasks = true;
       closeSpecialTasks();
       openShortlinkModal();
     }
+  }
+
+  function _isWaCollectedToday() {
+    try {
+      var saved = JSON.parse(localStorage.getItem('tn_special_wa_collected') || 'null');
+      return saved && saved.date === _getTodayKey();
+    } catch(e) { return false; }
+  }
+  function _markWaCollectedToday() {
+    try { localStorage.setItem('tn_special_wa_collected', JSON.stringify({ date: _getTodayKey() })); } catch(e) {}
   }
 
   function handleWaSpecialClick() {
@@ -4422,15 +4446,23 @@
     if (!btn) return;
 
     if (btn.textContent.trim() === 'Collect') {
-      var coins = _waSpecialCount * 200;
-      if (typeof addCoins === 'function') addCoins(coins);
+      var coins = _waSpecialMax * 20; // 10 ads × 20 coins = 200
+      if (typeof creditCoins === 'function') {
+        creditCoins(coins, 'watchAdSpecial');
+      } else if (typeof addCoins === 'function') {
+        addCoins(coins);
+      }
       if (typeof showToast === 'function') showToast('+' + coins + ' Coins Collected! 🎉', 'linear-gradient(135deg,#22c55e,#16a34a)');
-      _waSpecialCount = 0;
-      _saveSpecialCount('wa', 0);
-      badge.textContent = '0/' + _waSpecialMax;
-      btn.textContent = 'Watch';
-      btn.style.background = 'linear-gradient(135deg,#6c63ff,#3b82f6)';
+      _markWaCollectedToday();
+      _waSpecialCount = _waSpecialMax; // badge 10/10 rahega
+      _saveSpecialCount('wa', _waSpecialMax);
+      badge.textContent = _waSpecialMax + '/' + _waSpecialMax;
+      btn.textContent = 'Done ✓';
+      btn.style.background = 'rgba(255,255,255,0.1)';
+      btn.style.color = 'rgba(255,255,255,0.35)';
+      btn.disabled = true;
     } else {
+      localStorage.setItem('tn_reopen_special', '1');
       location.assign('watch_ad.html');
     }
   }
@@ -4443,14 +4475,13 @@
     var btn   = document.getElementById('slSpecialBtn');
     if (badge) badge.textContent = _slSpecialCount + '/' + _slSpecialMax;
     if (_slSpecialCount >= _slSpecialMax) {
-      // Shortlink modal ka Visit button Collect mein badlo
-      var visitBtn = document.getElementById('slVisitBtn');
-      if (visitBtn) {
-        visitBtn.textContent = '🎉 Collect 50 Coins';
-        visitBtn.disabled = false;
-        visitBtn.style.background = 'linear-gradient(135deg,#16a34a,#22c55e)';
-        visitBtn.style.cursor = 'pointer';
-        visitBtn.onclick = function() { handleSlSpecialClick(); };
+      // 2/2 complete — coins claimShortlink ne already credit kar diye
+      // Special Tasks btn Done state
+      if (btn) {
+        btn.textContent = 'Done ✓';
+        btn.style.background = 'rgba(255,255,255,0.1)';
+        btn.style.color = 'rgba(255,255,255,0.35)';
+        btn.disabled = true;
       }
       // Code area hide karo
       var lbl = document.getElementById('slCodeLabel');
@@ -4484,12 +4515,16 @@
     var slBtn   = document.getElementById('slSpecialBtn');
     if (slBadge) slBadge.textContent = _slSpecialCount + '/' + _slSpecialMax;
     if (slBtn) {
-      if (_slSpecialCount >= _slSpecialMax) {
-        slBtn.textContent = 'Collect';
-        slBtn.style.background = 'linear-gradient(135deg,#16a34a,#22c55e)';
+      if (_isSlCollectedToday()) {
+        slBtn.textContent = 'Done ✓';
+        slBtn.style.background = 'rgba(255,255,255,0.1)';
+        slBtn.style.color = 'rgba(255,255,255,0.35)';
+        slBtn.disabled = true;
       } else {
         slBtn.textContent = 'Visit';
         slBtn.style.background = 'linear-gradient(135deg,#2563eb,#3b82f6)';
+        slBtn.style.color = '#fff';
+        slBtn.disabled = false;
       }
     }
     // Spin count bhi restore karo
@@ -4501,12 +4536,12 @@
     var badge = document.getElementById('waSpecialBadge');
     var btn   = document.getElementById('waSpecialBtn');
     if (badge) badge.textContent = _waSpecialCount + '/' + _waSpecialMax;
-    if (_waSpecialCount >= _waSpecialMax && btn) {
-      btn.textContent = 'Collect';
-      btn.style.background = 'linear-gradient(135deg,#16a34a,#22c55e)';
+    if (_isWaCollectedToday()) {
+      if (btn) { btn.textContent = 'Done ✓'; btn.style.background = 'rgba(255,255,255,0.1)'; btn.style.color = 'rgba(255,255,255,0.35)'; btn.disabled = true; }
+    } else if (_waSpecialCount >= _waSpecialMax && btn) {
+      btn.textContent = 'Collect'; btn.style.background = 'linear-gradient(135deg,#16a34a,#22c55e)'; btn.style.color = '#fff'; btn.disabled = false;
     } else if (btn) {
-      btn.textContent = 'Watch';
-      btn.style.background = 'linear-gradient(135deg,#2563eb,#3b82f6)';
+      btn.textContent = 'Watch'; btn.style.background = 'linear-gradient(135deg,#2563eb,#3b82f6)'; btn.style.color = '#fff'; btn.disabled = false;
     }
   }
   function closeSpecialTasks() {
@@ -4579,7 +4614,7 @@
     <div class="wa-logo">⚡ TASKNOVA</div>
     <div class="wa-reward"><span style="font-size:20px;">🪙</span> +20 Coins</div>
     <p class="wa-sub">Ad dekho aur coins kamao!</p>
-    <button class="wa-btn" onclick="location.assign('watch_ad.html')">📺 Watch Ad &amp; Earn</button>
+    <button class="wa-btn" onclick="localStorage.setItem('tn_reopen_special','1'); location.assign('watch_ad.html')">📺 Watch Ad &amp; Earn</button>
   </div>
 </div></div>
 
@@ -4597,6 +4632,12 @@
   // Watch ad rounds sync — jab bhi tasks page pe wapas aao
   window.addEventListener('pageshow', function() {
     try {
+      // Special Tasks se watch_ad gaye the? Wapas aane pe overlay reopen karo
+      if (localStorage.getItem('tn_reopen_special') === '1') {
+        localStorage.removeItem('tn_reopen_special');
+        setTimeout(function() { openSpecialTasks(); }, 200);
+      }
+
       // Pehle pending rounds process karo
       var pending = parseInt(localStorage.getItem('tn_watch_pending_rounds') || '0');
       if (pending > 0) {
@@ -4612,12 +4653,12 @@
       var btn   = document.getElementById('waSpecialBtn');
       if (badge) badge.textContent = realCount + '/' + _waSpecialMax;
       if (btn) {
-        if (realCount >= _waSpecialMax) {
-          btn.textContent = 'Collect';
-          btn.style.background = 'linear-gradient(135deg,#16a34a,#22c55e)';
+        if (_isWaCollectedToday()) {
+          btn.textContent = 'Done ✓'; btn.style.background = 'rgba(255,255,255,0.1)'; btn.style.color = 'rgba(255,255,255,0.35)'; btn.disabled = true;
+        } else if (realCount >= _waSpecialMax) {
+          btn.textContent = 'Collect'; btn.style.background = 'linear-gradient(135deg,#16a34a,#22c55e)'; btn.style.color = '#fff'; btn.disabled = false;
         } else {
-          btn.textContent = 'Watch';
-          btn.style.background = 'linear-gradient(135deg,#2563eb,#3b82f6)';
+          btn.textContent = 'Watch'; btn.style.background = 'linear-gradient(135deg,#2563eb,#3b82f6)'; btn.style.color = '#fff'; btn.disabled = false;
         }
       }
     } catch(e) {}
