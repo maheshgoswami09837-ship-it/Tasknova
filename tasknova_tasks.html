@@ -967,6 +967,15 @@
 
   // ── AD TIMER HELPERS (Persistent localStorage) ───────────────────
   function getAdBatchCount() {
+    // watch_ad.html 'tasknova_daily' key mein watchRounds save karta hai
+    try {
+      const daily = JSON.parse(localStorage.getItem('tasknova_daily') || '{}');
+      const todayStr = new Date().toISOString().slice(0,10);
+      if (daily.date === todayStr && daily.watchRounds) {
+        return daily.watchRounds;
+      }
+    } catch(e) {}
+    // Fallback: purana tn_ad_count
     const raw = parseInt(localStorage.getItem(AD_COUNT_KEY) || '0');
     return isNaN(raw) ? 0 : raw;
   }
@@ -2648,11 +2657,11 @@
 
   // Weighted prize table — 10000 ka weight=0 (kabhi nahi milega)
   const PRIZE_WEIGHTS = [
-    { prize: 0,     weight: 8  },
-    { prize: 10,    weight: 44 },
-    { prize: 50,    weight: 30 },
-    { prize: 100,   weight: 18 },
-    { prize: 10000, weight: 0  }
+    { prize: 0,     weight: 50 },   // Thanks! — zyada baar
+    { prize: 10,    weight: 38 },   // 10 coins — thoda milega
+    { prize: 50,    weight: 10 },   // 50 coins — mushkil
+    { prize: 100,   weight: 2  },   // 100 coins — bahut mushkil
+    { prize: 10000, weight: 0  }    // Jackpot — kabhi nahi
   ];
 
   function getWeightedPrize() {
