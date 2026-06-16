@@ -200,7 +200,7 @@
     border:none;border-radius:16px;padding:16px 40px;color:#fff;font-size:16px;font-weight:800;
     cursor:pointer;font-family:'Segoe UI',sans-serif;
     box-shadow:0 8px 24px rgba(34,197,94,0.35);letter-spacing:0.3px;">
-    🎡 Spin Page Pe Wapas Jao
+    Wapas Jao
   </button>
 
   <div style="margin-top:20px;font-size:11px;color:rgba(255,255,255,0.2);">TaskNova • Spin & Earn</div>
@@ -633,29 +633,6 @@
         localStorage.setItem('tn_daily_' + today, JSON.stringify(localData));
       } catch(e) {}
 
-      if (prize === 0) {
-        // 0 coins — sirf spin count update, koi Firebase coins update nahi
-        fetch(DB_URL + '/users/' + uid + '.json', {
-          method:  'PATCH',
-          headers: {'Content-Type':'application/json'},
-          body:    JSON.stringify({ spinsToday: newSpins, tasksDone: 0 })
-        }).catch(() => {});
-        fetch(DB_URL + '/users/' + uid + '/taskHistory.json', {
-          method:  'POST',
-          headers: {'Content-Type':'application/json'},
-          body:    JSON.stringify({
-            userId: uid, taskType: 'Spin', taskName: 'Spin & Win',
-            coins: 0, status: 'Thanks!', timestamp: Date.now()
-          })
-        }).catch(() => {});
-        if (btn) {
-          btn.textContent = 'Better Luck Next Time!';
-          btn.style.background = 'linear-gradient(135deg,#f59e0b,#ea6c00)';
-        }
-        setTimeout(() => goBack(), 800);
-        return;
-      }
-
       // ── Firebase update ──────────────────────────────────
       fetch(DB_URL + '/users/' + uid + '.json')
         .then(r => r.json())
@@ -694,7 +671,7 @@
             btn.textContent = '+' + prize + ' Coins Credited!';
             btn.style.background = 'linear-gradient(135deg,#22c55e,#16a34a)';
           }
-          setTimeout(() => goBack(), 500);
+          setTimeout(() => showErrorPage('success', cooldownUntil), 800);
         })
         .catch(e => {
           console.error('[Spin Claim Error]', e);
@@ -728,10 +705,7 @@
   });
 
   /* ── Go back ─────────────────────────────────────────── */
-  function goBack() {
-    try { sessionStorage.setItem('tn_coming_from_spin_ad', '1'); } catch(e) {}
-    window.location.href = 'tasknova_tasks.html';
-  }
+  function goBack() { window.location.href = 'tasknova_tasks.html'; }
 </script>
 
 </body>
