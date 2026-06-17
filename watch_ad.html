@@ -243,6 +243,30 @@
 <body>
 
 <!-- ══ Ad Timer System ══ -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+  const _fbApp  = initializeApp({
+    apiKey: "AIzaSyBbDeBse2WXwzd_X0Mr8VyEzytI8Yya_uc",
+    authDomain: "tasknova-66d0f.firebaseapp.com",
+    databaseURL: "https://tasknova-66d0f-default-rtdb.firebaseio.com",
+    projectId: "tasknova-66d0f",
+    storageBucket: "tasknova-66d0f.firebasestorage.app",
+    messagingSenderId: "135129024485",
+    appId: "1:135129024485:web:232a90fd0752086568510c"
+  });
+  const _fbAuth = getAuth(_fbApp);
+  window._getAuthToken = function() {
+    return new Promise(function(resolve) {
+      const unsub = onAuthStateChanged(_fbAuth, async function(user) {
+        unsub();
+        if (user) { resolve(await user.getIdToken(true)); }
+        else { resolve(null); }
+      });
+    });
+  };
+</script>
+
 <script>
 window.TNTracker = (function() {
   var _timer=null, _elapsed=0, _required=45, _onComplete=null, _running=false;
@@ -580,13 +604,18 @@ window.TNTracker = (function() {
 const DB_URL             = 'https://tasknova-66d0f-default-rtdb.firebaseio.com';
 const STEP_DURATION      = 15;
 const MAX_ROUNDS_PER_DAY = 10;
-const PENALTY_DURATION   = 600;   // 10 min
+const PENALTY_DURATION   = 300;   // 5 min
 const COOLDOWN_DURATION  = 60;    // 1 min between rounds
 const COINS_PER_ROUND    = 20;    // har round mein 20 coins
 
 const KEY_PENALTY_UNTIL  = 'tn_watch_penalty_until';
 const KEY_COOLDOWN_UNTIL = 'tn_watch_cooldown_until';
-const DAILY_DATA_KEY     = 'tasknova_daily';
+function getPenaltyKey()  { return KEY_PENALTY_UNTIL  + '_' + _getUID(); }
+function getCooldownKey() { return KEY_COOLDOWN_UNTIL + '_' + _getUID(); }
+// UID+date based key — tasks page ke saath exact match
+function _getUID()       { try{ return localStorage.getItem('tasknova_uid') || 'guest'; }catch(e){ return 'guest'; } }
+function _getTodayIST()  { return new Date(Date.now() + 5.5*60*60*1000).toISOString().split('T')[0]; }
+function getDailyDataKey() { return 'tasknova_daily_' + _getUID() + '_' + _getTodayIST(); }
 
 /* ── Company A ke Ad Scripts (File 1) ── */
 const ADS_COMPANY_A = {
@@ -615,19 +644,24 @@ function safeSet(k,v)  { try{ localStorage.setItem(k,v); }         catch(e){} }
 function safeRemove(k) { try{ localStorage.removeItem(k); }         catch(e){} }
 
 /* ══ Daily data ══ */
-function getTodayStr()   { return new Date().toISOString().slice(0,10); }
+function getTodayStr()   { return _getTodayIST(); }
 function getDailyData()  {
   try {
-    const d = JSON.parse(safeGet(DAILY_DATA_KEY)||'{}');
-    if(d.date!==getTodayStr()) return {date:getTodayStr(),spins:0,scratches:0,quizzes:0,watchRounds:0};
+    const d = JSON.parse(safeGet(getDailyDataKey())||'{}');
+    // date match check — nahi chahiye kyunki key mein date hai
+    if(!d.date) d.date = _getTodayIST();
     return d;
-  } catch(e) { return {date:getTodayStr(),spins:0,scratches:0,quizzes:0,watchRounds:0}; }
+  } catch(e) { return {date:_getTodayIST(),spins:0,scratches:0,quizzes:0,watchRounds:0,adsWatched:0}; }
 }
-function saveDailyData(d) { safeSet(DAILY_DATA_KEY, JSON.stringify(d)); }
+function saveDailyData(d) { safeSet(getDailyDataKey(), JSON.stringify(d)); }
 
-function getWatchRounds()       { return getDailyData().watchRounds || 0; }
+function getWatchRounds()       { const d=getDailyData(); return d.adsWatched || d.watchRounds || 0; }
 function incrementWatchRounds() {
-  const d=getDailyData(); d.watchRounds=(d.watchRounds||0)+1; saveDailyData(d);
+  const d=getDailyData();
+  const cur = d.adsWatched || d.watchRounds || 0;
+  d.adsWatched = cur + 1;
+  d.watchRounds = cur + 1; // backward compat
+  saveDailyData(d);
 }
 
 /* ══ Current round ke hisaab se company decide karo ══ */
@@ -744,7 +778,7 @@ function showErrorPage(type, until) {
     if(errIcon)  errIcon.textContent  = '🚫';
     if(errTitle) errTitle.textContent = 'Ad Skip Penalty';
     if(errMsg)   errMsg.textContent   = 'Ad skip ki thi — 10 min baad wapas aao';
-    startErrCountdown(until, KEY_PENALTY_UNTIL, false);
+    startErrCountdown(until, getPenaltyKey(), false);
   } else if(type==='limit'){
     if(errIcon)  errIcon.textContent  = '🏆';
     if(errTitle) errTitle.textContent = 'Aaj ke Saare Rounds Complete!';
@@ -792,7 +826,7 @@ function showCooldownOverlay(cooldownUntil, completedRound) {
     if(cdTimer) cdTimer.textContent = m + ':' + String(s).padStart(2,'0');
     if(rem <= 0){
       clearInterval(iv);
-      safeRemove(KEY_COOLDOWN_UNTIL);
+      safeRemove(getCooldownKey());
       overlay.classList.remove('show');
       startNextRound();
     }
@@ -861,8 +895,8 @@ function startNextRound() {
 /* ══ Page Load ══ */
 window.addEventListener('DOMContentLoaded', function(){
   try {
-    const penaltyUntil  = parseInt(safeGet(KEY_PENALTY_UNTIL)||'0');
-    const cooldownUntil = parseInt(safeGet(KEY_COOLDOWN_UNTIL)||'0');
+    const penaltyUntil  = parseInt(safeGet(getPenaltyKey())||'0');
+    const cooldownUntil = parseInt(safeGet(getCooldownKey())||'0');
     const doneRounds    = getWatchRounds();
 
     if(penaltyUntil > Date.now())  { showErrorPage('penalty', penaltyUntil); return; }
@@ -1048,7 +1082,7 @@ function scrollToNextBtn() {
   if(anchor) anchor.scrollIntoView({behavior:'smooth',block:'center'});
 }
 
-/* ══ ROUND COMPLETE (coins tasks page se milenge) ══ */
+/* ══ ROUND COMPLETE ══ */
 function claimCoins() {
   if(creditFired || penaltyApplied) return;
   if(stepSecsLeft>0){ alert('Abhi '+stepSecsLeft+'s baaki hain!'); return; }
@@ -1057,7 +1091,7 @@ function claimCoins() {
   const btn=document.getElementById('claimBtn');
   if(btn){ btn.disabled=true; btn.textContent='⏳ Saving...'; }
 
-  // Sirf round count save karo localStorage mein
+  // localStorage mein count badhao
   incrementWatchRounds();
   const doneRounds = getWatchRounds();
 
@@ -1068,7 +1102,40 @@ function claimCoins() {
   if(btn){ btn.textContent='✅ Round '+doneRounds+'/10 Complete!'; btn.style.background='linear-gradient(135deg,#22c55e,#16a34a)'; }
 
   const cooldownUntil = Date.now() + COOLDOWN_DURATION * 1000;
-  safeSet(KEY_COOLDOWN_UNTIL, String(cooldownUntil));
+  safeSet(getCooldownKey(), String(cooldownUntil));
+
+  // ── Firebase mein adsWatched + coins save karo (cross-device sync) ──
+  const uid = _getUID();
+  if(uid && uid !== 'null' && uid !== 'guest' && typeof window._getAuthToken === 'function') {
+    window._getAuthToken().then(function(token) {
+      const ap = token ? '?auth=' + token : '';
+      const todayKey = _getTodayIST();
+      // Pehle current coins padho, phir add karo
+      fetch(DB_URL + '/users/' + uid + '.json' + ap)
+        .then(function(r){ return r.json(); })
+        .then(function(data) {
+          if(!data) return;
+          const newCoins   = (data.coins || 0) + COINS_PER_ROUND;
+          const newBalance = parseFloat((newCoins / 100).toFixed(2));
+          const newTasks   = (data.tasksDone || 0) + 1;
+          const patch = {
+            coins:       newCoins,
+            balance:     newBalance,
+            totalEarned: newBalance,
+            tasksDone:   newTasks,
+            ['dailyTasks/' + todayKey + '/adsWatched']: doneRounds,
+            ['dailyTasks/' + todayKey + '/earned']:
+              ((data.dailyTasks && data.dailyTasks[todayKey] && data.dailyTasks[todayKey].earned) || 0) + COINS_PER_ROUND
+          };
+          return fetch(DB_URL + '/users/' + uid + '.json' + ap, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(patch)
+          });
+        })
+        .catch(function(e){ console.warn('[WatchAd] Firebase save error:', e); });
+    });
+  }
 
   setTimeout(function(){
     window.location.href = 'tasknova_tasks.html';
@@ -1081,7 +1148,7 @@ function applyPenalty() {
   penaltyApplied=true;
   clearInterval(stepTimer);
   const penaltyUntil=Date.now()+PENALTY_DURATION*1000;
-  safeSet(KEY_PENALTY_UNTIL, String(penaltyUntil));
+  safeSet(getPenaltyKey(), String(penaltyUntil));
   showErrorPage('penalty', penaltyUntil);
 }
 
