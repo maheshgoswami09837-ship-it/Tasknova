@@ -2999,6 +2999,37 @@
       } catch(e) {}
     }
 
+    // Cooldown chal raha hai? Spin button block karo, timer dikhao
+    try {
+      var _cdUntil = parseInt(localStorage.getItem('tn_spin_cooldown_until') || '0');
+      if (_cdUntil && _cdUntil > Date.now()) {
+        var _spinBtnCD = document.getElementById('spinBtnMain');
+        if (_spinBtnCD) {
+          _spinBtnCD.style.display = '';
+          _spinBtnCD.disabled = true;
+          _spinBtnCD.onclick = null;
+          // Countdown in-modal dikhao
+          (function spinModalCooldown() {
+            var secsLeft = Math.ceil((_cdUntil - Date.now()) / 1000);
+            if (secsLeft <= 0) {
+              try { localStorage.removeItem('tn_spin_cooldown_until'); } catch(e) {}
+              updateSpinUI();
+              return;
+            }
+            var m = Math.floor(secsLeft / 60);
+            var s = secsLeft % 60;
+            _spinBtnCD.textContent = '⏳ ' + m + ':' + String(s).padStart(2,'0');
+            _spinBtnCD.style.background = 'rgba(245,158,11,0.2)';
+            _spinBtnCD.style.color = '#f59e0b';
+            _spinBtnCD.style.boxShadow = 'none';
+            _spinBtnCD.style.cursor = 'not-allowed';
+            setTimeout(spinModalCooldown, 500);
+          })();
+        }
+        return;
+      }
+    } catch(e) {}
+
     updateSpinUI();
     // Adsterra banner removed — Monetag popunder fires on spin tap
   }
@@ -3302,7 +3333,16 @@
     }
   }
 
+  var SPIN_COOLDOWN_KEY = 'tn_spin_cooldown_until';
+
   function startSpSpecialCooldown() {
+    // End time localStorage mein save karo (60 sec)
+    var until = Date.now() + 60 * 1000;
+    try { localStorage.setItem(SPIN_COOLDOWN_KEY, String(until)); } catch(e) {}
+    _runSpCooldownUI(until);
+  }
+
+  function _runSpCooldownUI(until) {
     var btn   = document.getElementById('spSpecialBtn');
     var timer = document.getElementById('spCooldownTimer');
     var numEl = document.getElementById('spCooldownNum');
@@ -3311,23 +3351,34 @@
     btn.style.display   = 'none';
     timer.style.display = 'inline-flex';
 
-    var secsLeft = 60;
-    if (numEl) numEl.textContent = '1:00';
-
     if (_spCooldownInterval) clearInterval(_spCooldownInterval);
     _spCooldownInterval = setInterval(function() {
-      secsLeft--;
+      var secsLeft = Math.ceil((until - Date.now()) / 1000);
+      if (secsLeft <= 0) {
+        clearInterval(_spCooldownInterval);
+        try { localStorage.removeItem(SPIN_COOLDOWN_KEY); } catch(e) {}
+        timer.style.display = 'none';
+        _updateSpSpecialBtn();
+        return;
+      }
       var m = Math.floor(secsLeft / 60);
       var s = secsLeft % 60;
       if (numEl) numEl.textContent = m + ':' + String(s).padStart(2, '0');
-
-      if (secsLeft <= 0) {
-        clearInterval(_spCooldownInterval);
-        timer.style.display = 'none';
-        _updateSpSpecialBtn();
-      }
-    }, 1000);
+    }, 500);
   }
+
+  // Page load pe check karo — agar cooldown chal raha tha toh resume karo
+  // DOMContentLoaded pe run karo taaki elements mil jayein
+  document.addEventListener('DOMContentLoaded', function() {
+    try {
+      var _cdUntil = parseInt(localStorage.getItem(SPIN_COOLDOWN_KEY) || '0');
+      if (_cdUntil && _cdUntil > Date.now()) {
+        _runSpCooldownUI(_cdUntil);
+      } else if (_cdUntil) {
+        localStorage.removeItem(SPIN_COOLDOWN_KEY);
+      }
+    } catch(e) {}
+  });
 
   // ── SPIN HISTORY ────────────────────────────────────────────────
   function openSpinHistory() {
@@ -4860,7 +4911,18 @@
     var d = (typeof getDailyData === 'function') ? getDailyData() : null;
     var spCountEl = document.getElementById('spSpecialCount');
     if (spCountEl && d) spCountEl.textContent = Math.min(d.spins || 0, 6) + '/6';
-    if (typeof _updateSpSpecialBtn === 'function') _updateSpSpecialBtn();
+    // Cooldown check — agar chal raha hai toh button hide karo, timer dikhao
+    try {
+      var _cdNow = parseInt(localStorage.getItem('tn_spin_cooldown_until') || '0');
+      if (_cdNow && _cdNow > Date.now()) {
+        if (typeof _runSpCooldownUI === 'function') _runSpCooldownUI(_cdNow);
+      } else {
+        if (_cdNow) { try { localStorage.removeItem('tn_spin_cooldown_until'); } catch(e) {} }
+        if (typeof _updateSpSpecialBtn === 'function') _updateSpSpecialBtn();
+      }
+    } catch(e) {
+      if (typeof _updateSpSpecialBtn === 'function') _updateSpSpecialBtn();
+    }
     // Real ad count sync karo — seedha getAdBatchCount se
     _waSpecialCount = (typeof getAdBatchCount === 'function') ? Math.min(getAdBatchCount(), _waSpecialMax) : _loadSpecialCount('wa', _waSpecialMax);
     var badge = document.getElementById('waSpecialBadge');
