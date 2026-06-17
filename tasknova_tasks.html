@@ -965,7 +965,111 @@
     return new Date(lastReset).getTime() < midnightUTC;
   }
 
-  // ── AD TIMER HELPERS (Persistent localStorage) ───────────────────
+  // ── INDEPENDENT MIDNIGHT RESET TIMER ─────────────────────────
+  // Yeh timer chahe user ne check-in kiya ho ya nahi — hamesha chalega
+  function scheduleMidnightReset() {
+    const istOffset = 5.5 * 60 * 60 * 1000;
+    const now = new Date();
+    const nowIST = new Date(now.getTime() + istOffset);
+
+    // Next midnight IST calculate karo
+    const nextMidnightIST = new Date(nowIST);
+    nextMidnightIST.setHours(24, 0, 0, 0);
+    const msUntilMidnight = nextMidnightIST.getTime() - nowIST.getTime();
+
+    setTimeout(function() {
+      // Midnight aa gaya — poora reset karo
+      performFullReset();
+      // Agle din ke liye schedule karo
+      scheduleMidnightReset();
+    }, msUntilMidnight);
+  }
+
+  function performFullReset() {
+    // LocalStorage reset
+    localStorage.setItem('adsWatchedToday', '0');
+    localStorage.setItem('adLastReset', new Date().toISOString());
+    setAdBatchCount(0);
+    clearAdTimers();
+    localStorage.removeItem(GLOBAL_LOCK_KEY);
+    adsWatchedToday = 0;
+
+    // Shortlink reset
+    const istOffset2 = 5.5 * 60 * 60 * 1000;
+    const todayIST2 = new Date(Date.now() + istOffset2).toISOString().split('T')[0];
+    const slFresh = { date: todayIST2, done: 0 };
+    localStorage.setItem('sl_data', JSON.stringify(slFresh));
+    const uid = localStorage.getItem('tasknova_uid');
+    if (uid && uid !== 'null') {
+      window._getAuthToken && window._getAuthToken().then(token => {
+        const ap = token ? '?auth=' + token : '';
+        fetch(DB_URL + '/users/' + uid + '/slData.json' + ap, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(slFresh)
+        }).catch(e => console.log('Midnight SL reset error:', e));
+      });
+    }
+
+    // UI reset — badges
+    const sb  = document.getElementById('spinCountBadge');
+    const scb = document.getElementById('scratchCountBadge');
+    const qb  = document.getElementById('quizCountBadge');
+    const slBadge = document.getElementById('shortlinkCountBadge');
+    if (sb)  sb.textContent  = '0/6';
+    if (scb) scb.textContent = '0/5';
+    if (qb)  qb.textContent  = '0/15';
+    if (slBadge) slBadge.textContent = '0/2';
+
+    // Spin button reset
+    const spinBtn = document.getElementById('spinBtnMain');
+    const watchAdWrap = document.getElementById('spinWatchAdWrap');
+    if (spinBtn) {
+      spinBtn.disabled = false;
+      spinBtn.textContent = '🎡 Spin Now!';
+      spinBtn.style.background = '';
+      spinBtn.style.color = '';
+      spinBtn.style.cursor = '';
+      spinBtn.style.boxShadow = '';
+      spinBtn.onclick = doSpin;
+    }
+    if (watchAdWrap) watchAdWrap.style.display = 'none';
+
+    // Shortlink button reset
+    const slVisitBtn = document.getElementById('slVisitBtn');
+    const slClaimBtn = document.getElementById('slClaimBtn');
+    if (slVisitBtn) {
+      slVisitBtn.disabled = false;
+      slVisitBtn.textContent = '🔗 Visit Link';
+      slVisitBtn.style.background = 'linear-gradient(135deg,#6c63ff,#3b82f6)';
+      slVisitBtn.style.color = '#fff';
+      slVisitBtn.style.cursor = 'pointer';
+    }
+    if (slClaimBtn) {
+      slClaimBtn.disabled = false;
+      slClaimBtn.textContent = '✅ Claim Coins';
+    }
+
+    // Check-in reset
+    const cbtn = document.getElementById('checkinBtn');
+    const cb   = document.getElementById('checkinBadge');
+    const wrap = document.getElementById('checkinCountdownWrap');
+    if (cbtn) { cbtn.style.display = ''; cbtn.textContent = 'Claim'; cbtn.disabled = false; }
+    if (cb)   cb.style.display = 'none';
+    if (wrap) wrap.style.display = 'none';
+
+    // Daily limit UI reset
+    updateAdButtonUI && updateAdButtonUI();
+    updateDailyLimitUI && updateDailyLimitUI();
+    updateSlUI && updateSlUI();
+    updateSpinUI && updateSpinUI();
+
+    showToast && showToast('🔄 Naya din! Saare tasks reset ho gaye!', 'linear-gradient(135deg,#6c63ff,#3b82f6)');
+  }
+
+  // App load hote hi schedule karo
+  scheduleMidnightReset();
+  // ─────────────────────────────────────────────────────────────
   function getAdBatchCount() {
     // watch_ad.html 'tasknova_daily' key mein watchRounds save karta hai
     try {
@@ -2070,6 +2174,20 @@
       localStorage.removeItem(GLOBAL_LOCK_KEY);
       adsWatchedToday = 0;
 
+      // ── Shortlink reset ──────────────────────────────────────
+      const slFresh = { date: new Date().toDateString(), done: 0 };
+      localStorage.setItem('sl_data', JSON.stringify(slFresh));
+      const uidReset = localStorage.getItem('tasknova_uid');
+      if (uidReset && uidReset !== 'null') {
+        window._getAuthToken && window._getAuthToken().then(token => {
+          const ap = token ? '?auth=' + token : '';
+          fetch(DB_URL + '/users/' + uidReset + '/slData.json' + ap, {
+            method: 'PUT', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(slFresh)
+          }).catch(e => console.log('SL midnight reset error:', e));
+        });
+      }
+
       // ── Saare task counters reset ────────────────────────────
       // DailyData (spin/scratch/quiz/checkin/earned) — new key banate hi auto reset
       // Badges update
@@ -2178,7 +2296,9 @@
 
           // ── Spin — DB se today count ──────────────────────────
           const spinBadge = document.getElementById('spinCountBadge');
-          const spinsDB = (data.spinsToday || 0);
+          const spinsDB = (data.dailyTasks && data.dailyTasks[todayKey] && data.dailyTasks[todayKey].spins != null)
+            ? data.dailyTasks[todayKey].spins
+            : 0;
           if (spinBadge) spinBadge.textContent = spinsDB + '/6';
           const spinCountText = document.getElementById('spinCountText');
           if (spinCountText) spinCountText.textContent = spinsDB;
@@ -3845,13 +3965,32 @@
 
   // LocalStorage as cache + Firebase as source of truth
   function getSlData() {
-    const today = new Date().toDateString();
-    const raw   = localStorage.getItem('sl_data');
+    // IST date use karo consistent comparison ke liye
+    const istOffset = 5.5 * 60 * 60 * 1000;
+    const todayIST = new Date(Date.now() + istOffset).toISOString().split('T')[0];
+    const raw = localStorage.getItem('sl_data');
     if (raw) {
-      const d = JSON.parse(raw);
-      if (d.date === today) return d;
+      try {
+        const d = JSON.parse(raw);
+        if (d.date === todayIST) return d;
+        // Naya din — Firebase bhi reset karo
+        const fresh = { date: todayIST, done: 0 };
+        localStorage.setItem('sl_data', JSON.stringify(fresh));
+        const uid = localStorage.getItem('tasknova_uid');
+        if (uid && uid !== 'null') {
+          window._getAuthToken && window._getAuthToken().then(token => {
+            const ap = token ? '?auth=' + token : '';
+            fetch(DB_URL + '/users/' + uid + '/slData.json' + ap, {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(fresh)
+            }).catch(e => console.log('SL reset error:', e));
+          });
+        }
+        return fresh;
+      } catch(e) {}
     }
-    const fresh = { date: today, done: 0 };
+    const fresh = { date: todayIST, done: 0 };
     localStorage.setItem('sl_data', JSON.stringify(fresh));
     return fresh;
   }
@@ -3875,17 +4014,29 @@
   function loadSlDataFromFirebase() {
     const uid = localStorage.getItem('tasknova_uid');
     if (!uid || uid === 'null') return;
-    const today = new Date().toDateString();
+    const istOffset = 5.5 * 60 * 60 * 1000;
+    const todayIST = new Date(Date.now() + istOffset).toISOString().split('T')[0];
     window._getAuthToken && window._getAuthToken().then(token => {
       const ap = token ? '?auth=' + token : '';
       fetch(DB_URL + '/users/' + uid + '/slData.json' + ap)
         .then(r => r.json())
         .then(data => {
-          if (data && data.date === today) {
+          if (data && data.date === todayIST) {
             // Firebase data aaj ka hai — localStorage update karo
             localStorage.setItem('sl_data', JSON.stringify(data));
             const badge = document.getElementById('shortlinkCountBadge');
             if (badge) badge.textContent = data.done + '/' + SL_LIMIT;
+            updateSlUI();
+          } else {
+            // Naya din ya purana data — reset karo
+            const fresh = { date: todayIST, done: 0 };
+            localStorage.setItem('sl_data', JSON.stringify(fresh));
+            fetch(DB_URL + '/users/' + uid + '/slData.json' + ap, {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(fresh)
+            }).catch(e => console.log('SL day-reset error:', e));
+            updateSlUI();
           }
         })
         .catch(e => console.log('SL load error:', e));
