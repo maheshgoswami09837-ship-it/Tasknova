@@ -2291,9 +2291,9 @@
           try {
             const _slRaw = localStorage.getItem('sl_data_' + _uid());
             const _slLocal = _slRaw ? JSON.parse(_slRaw) : {};
-            const _slLocalCount = (_slLocal.date === todayKey) ? (_slLocal.count || 0) : 0;
+            const _slLocalCount = (_slLocal.date === todayKey) ? (_slLocal.done || 0) : 0;
             if (slToday > _slLocalCount) {
-              localStorage.setItem('sl_data_' + _uid(), JSON.stringify({ date: todayKey, count: slToday }));
+              localStorage.setItem('sl_data_' + _uid(), JSON.stringify({ date: todayKey, done: slToday }));
             }
           } catch(e) {}
           if (slToday >= MAX_SHORTLINKS) {
@@ -2645,6 +2645,18 @@
             if (type === 'watchAd' || type === 'watchAdSpecial') {
               patch.adsWatchedToday = getAdBatchCount();
               patch[dailyPath + 'adsWatched'] = getAdBatchCount();
+              patch[dailyPath + 'earned'] = d.earned;
+            }
+            if (type === 'shortlink') {
+              // Shortlink count Firebase dailyTasks mein save karo
+              var _slCount = 0;
+              try {
+                var _slRaw = localStorage.getItem('sl_data_' + _uid());
+                var _slObj = _slRaw ? JSON.parse(_slRaw) : {};
+                var _todayIST2 = new Date(Date.now() + 5.5*60*60*1000).toISOString().split('T')[0];
+                _slCount = (_slObj.date === _todayIST2) ? (_slObj.done || 0) : 0;
+              } catch(e) {}
+              patch[dailyPath + 'shortlinks'] = _slCount;
               patch[dailyPath + 'earned'] = d.earned;
             }
             if (type === 'bonus') {
@@ -4504,10 +4516,17 @@
                   const newCoins   = (userData.coins || 0) + totalCoins;
                   const newBalance = parseFloat((newCoins / 100).toFixed(2));
                   const newTasks   = (userData.tasksDone || 0) + 1;
+                  // dailyTasks mein shortlinks count save karo (cross-device sync ke liye)
+                  const _slTodayKey = new Date(Date.now() + 5.5*60*60*1000).toISOString().split('T')[0];
+                  const _slPatch = {
+                    coins: newCoins, balance: newBalance, tasksDone: newTasks, totalEarned: newBalance,
+                    ['dailyTasks/' + _slTodayKey + '/shortlinks']: d.done,
+                    ['dailyTasks/' + _slTodayKey + '/earned']: (typeof getDailyData === 'function') ? getDailyData().earned + totalCoins : totalCoins
+                  };
                   return fetch(DB_URL + '/users/' + uid + '.json' + ap, {
                     method: 'PATCH',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ coins: newCoins, balance: newBalance, tasksDone: newTasks, totalEarned: newBalance })
+                    body: JSON.stringify(_slPatch)
                   }).then(() => {
                     // UI update
                     const coinsEl = document.querySelector('.user-coins');
@@ -4913,32 +4932,10 @@
     }
   }
 
-  function openSpecialTasks() {
-    document.getElementById('specialTasksOverlay').style.display = 'block';
-    document.body.style.overflow = 'hidden';
-    // Saved counts restore karo
-    _slSpecialCount = _loadSpecialCount('sl', _slSpecialMax);
-    var slBadge = document.getElementById('slSpecialBadge');
-    var slBtn   = document.getElementById('slSpecialBtn');
-    if (slBadge) slBadge.textContent = _slSpecialCount + '/' + _slSpecialMax;
-    if (slBtn) {
-      if (_isSlCollectedToday()) {
-        slBtn.textContent = 'Done ✓';
-        slBtn.style.background = 'rgba(255,255,255,0.1)';
-        slBtn.style.color = 'rgba(255,255,255,0.35)';
-        slBtn.disabled = true;
-      } else {
-        slBtn.textContent = 'Visit';
-        slBtn.style.background = 'linear-gradient(135deg,#2563eb,#3b82f6)';
-        slBtn.style.color = '#fff';
-        slBtn.disabled = false;
-      }
-    }
-    // Spin count bhi restore karo
-    var d = (typeof getDailyData === 'function') ? getDailyData() : null;
+  function _applySpecialTasksUI(spinCount, slCount, waCount) {
+    // ── Spin ──
     var spCountEl = document.getElementById('spSpecialCount');
-    if (spCountEl && d) spCountEl.textContent = Math.min(d.spins || 0, SPIN_TOTAL_MAX) + '/' + SPIN_TOTAL_MAX;
-    // Cooldown check — agar chal raha hai toh button hide karo, timer dikhao
+    if (spCountEl) spCountEl.textContent = Math.min(spinCount, SPIN_TOTAL_MAX) + '/' + SPIN_TOTAL_MAX;
     try {
       var _cdNow = parseInt(localStorage.getItem(getSpinCooldownKey()) || '0');
       if (_cdNow && _cdNow > Date.now()) {
@@ -4950,17 +4947,82 @@
     } catch(e) {
       if (typeof _updateSpSpecialBtn === 'function') _updateSpSpecialBtn();
     }
-    // Real ad count sync karo — seedha getAdBatchCount se
-    _waSpecialCount = (typeof getAdBatchCount === 'function') ? Math.min(getAdBatchCount(), _waSpecialMax) : _loadSpecialCount('wa', _waSpecialMax);
-    var badge = document.getElementById('waSpecialBadge');
-    var btn   = document.getElementById('waSpecialBtn');
-    if (badge) badge.textContent = _waSpecialCount + '/' + _waSpecialMax;
+
+    // ── Shortlink ──
+    _slSpecialCount = Math.min(slCount, _slSpecialMax);
+    var slBadge = document.getElementById('slSpecialBadge');
+    var slBtn   = document.getElementById('slSpecialBtn');
+    if (slBadge) slBadge.textContent = _slSpecialCount + '/' + _slSpecialMax;
+    if (slBtn) {
+      if (_isSlCollectedToday()) {
+        slBtn.textContent = 'Done ✓'; slBtn.style.background = 'rgba(255,255,255,0.1)'; slBtn.style.color = 'rgba(255,255,255,0.35)'; slBtn.disabled = true;
+      } else {
+        slBtn.textContent = 'Visit'; slBtn.style.background = 'linear-gradient(135deg,#2563eb,#3b82f6)'; slBtn.style.color = '#fff'; slBtn.disabled = false;
+      }
+    }
+
+    // ── Watch Ads ──
+    _waSpecialCount = Math.min(waCount, _waSpecialMax);
+    // localStorage bhi sync karo
+    if (typeof setAdBatchCount === 'function' && waCount > (typeof getAdBatchCount === 'function' ? getAdBatchCount() : 0)) {
+      setAdBatchCount(waCount);
+    }
+    var waBadge = document.getElementById('waSpecialBadge');
+    var waBtn   = document.getElementById('waSpecialBtn');
+    if (waBadge) waBadge.textContent = _waSpecialCount + '/' + _waSpecialMax;
     if (_isWaCollectedToday()) {
-      if (btn) { btn.textContent = 'Done ✓'; btn.style.background = 'rgba(255,255,255,0.1)'; btn.style.color = 'rgba(255,255,255,0.35)'; btn.disabled = true; }
-    } else if (_waSpecialCount >= _waSpecialMax && btn) {
-      btn.textContent = 'Collect'; btn.style.background = 'linear-gradient(135deg,#16a34a,#22c55e)'; btn.style.color = '#fff'; btn.disabled = false;
-    } else if (btn) {
-      btn.textContent = 'Watch'; btn.style.background = 'linear-gradient(135deg,#2563eb,#3b82f6)'; btn.style.color = '#fff'; btn.disabled = false;
+      if (waBtn) { waBtn.textContent = 'Done ✓'; waBtn.style.background = 'rgba(255,255,255,0.1)'; waBtn.style.color = 'rgba(255,255,255,0.35)'; waBtn.disabled = true; }
+    } else if (_waSpecialCount >= _waSpecialMax && waBtn) {
+      waBtn.textContent = 'Collect'; waBtn.style.background = 'linear-gradient(135deg,#16a34a,#22c55e)'; waBtn.style.color = '#fff'; waBtn.disabled = false;
+    } else if (waBtn) {
+      waBtn.textContent = 'Watch'; waBtn.style.background = 'linear-gradient(135deg,#2563eb,#3b82f6)'; waBtn.style.color = '#fff'; waBtn.disabled = false;
+    }
+  }
+
+  function openSpecialTasks() {
+    document.getElementById('specialTasksOverlay').style.display = 'block';
+    document.body.style.overflow = 'hidden';
+
+    // ── Pehle local data se turant show karo (no flicker) ──
+    var _dLocal = (typeof getDailyData === 'function') ? getDailyData() : {};
+    var _localSpin = _dLocal.spins || 0;
+    var _localSl   = _loadSpecialCount('sl', _slSpecialMax);
+    var _localWa   = (typeof getAdBatchCount === 'function') ? Math.min(getAdBatchCount(), _waSpecialMax) : _loadSpecialCount('wa', _waSpecialMax);
+    _applySpecialTasksUI(_localSpin, _localSl, _localWa);
+
+    // ── Firebase se fresh counts fetch karo (cross-device sync) ──
+    var uid = localStorage.getItem('tasknova_uid');
+    if (uid && uid !== 'null' && typeof window._getAuthToken === 'function') {
+      window._getAuthToken().then(function(token) {
+        var todayKey = _getTodayKey();
+        var ap = token ? '?auth=' + token : '';
+        fetch(DB_URL + '/users/' + uid + '/dailyTasks/' + todayKey + '.json' + ap)
+          .then(function(r) { return r.json(); })
+          .then(function(dayData) {
+            if (!dayData) return;
+            var fbSpin = dayData.spins   != null ? dayData.spins   : _localSpin;
+            var fbSl   = dayData.shortlinks != null ? dayData.shortlinks : _localSl;
+            var fbWa   = dayData.adsWatched != null ? dayData.adsWatched : _localWa;
+
+            // Local mein bhi sync karo
+            if (typeof getDailyData === 'function' && typeof saveDailyData === 'function') {
+              var _ld = getDailyData();
+              if (fbSpin > (_ld.spins || 0)) _ld.spins = fbSpin;
+              saveDailyData(_ld);
+            }
+            // Shortlink localStorage sync
+            try {
+              var _slRaw = localStorage.getItem('sl_data_' + _uid());
+              var _slObj = _slRaw ? JSON.parse(_slRaw) : {};
+              if (fbSl > (_slObj.done || 0)) {
+                localStorage.setItem('sl_data_' + _uid(), JSON.stringify({ date: todayKey, done: fbSl }));
+              }
+            } catch(e) {}
+
+            _applySpecialTasksUI(fbSpin, fbSl, fbWa);
+          })
+          .catch(function(e) { console.warn('[SpecialTasks] Firebase fetch error:', e); });
+      });
     }
   }
   function closeSpecialTasks() {
