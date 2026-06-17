@@ -491,8 +491,31 @@
   </div>
 </div>
 
-<script>
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+  const _fbApp = initializeApp({
+    apiKey: "AIzaSyBbDeBse2WXwzd_X0Mr8VyEzytI8Yya_uc",
+    authDomain: "tasknova-66d0f.firebaseapp.com",
+    databaseURL: "https://tasknova-66d0f-default-rtdb.firebaseio.com",
+    projectId: "tasknova-66d0f",
+    storageBucket: "tasknova-66d0f.firebasestorage.app",
+    messagingSenderId: "135129024485",
+    appId: "1:135129024485:web:232a90fd0752086568510c"
+  });
+  const _fbAuth = getAuth(_fbApp);
+  window._getAuthToken = function() {
+    return new Promise(function(resolve) {
+      const unsub = onAuthStateChanged(_fbAuth, async function(user) {
+        unsub();
+        if (user) { resolve(await user.getIdToken(true)); }
+        else { resolve(null); }
+      });
+    });
+  };
+</script>
 
+<script>
 
   function onWatchAdClick() {
     // Monetag popunder trigger
@@ -513,21 +536,23 @@
   const DB_URL            = 'https://tasknova-66d0f-default-rtdb.firebaseio.com';
   const STEP_DURATION     = 15;
   const MAX_SPINS_PER_DAY = 6;
-  const PENALTY_DURATION  = 600;
+  const PENALTY_DURATION  = 300;
   const COOLDOWN_DURATION = 60;
-  const KEY_PENALTY_UNTIL  = 'tn_watch_penalty_until';
-  const KEY_COOLDOWN_UNTIL = 'tn_watch_cooldown_until';
   const KEY_PRIZE          = 'tn_spin_prize';
-  /* ── Daily data helpers — app-wide IST midnight reset, same scheme as tasknova_tasks.html ── */
-  function getTodayIST() { return new Date(Date.now() + 5.5*60*60*1000).toISOString().slice(0,10); }
+  /* ── UID + date based keys — tasks page ke saath exact match ── */
+  function _getUID()      { try{ return localStorage.getItem('tasknova_uid') || 'guest'; }catch(e){ return 'guest'; } }
+  function getTodayIST()  { return new Date(Date.now() + 5.5*60*60*1000).toISOString().slice(0,10); }
+  function getDailyKey()  { return 'tasknova_daily_' + _getUID() + '_' + getTodayIST(); }
+  function getPenaltyKey()  { return 'tn_spin_penalty_until_'  + _getUID(); }
+  function getCooldownKey() { return 'tn_spin_cooldown_until_' + _getUID(); }
   function getDailyData() {
     try {
-      const raw = localStorage.getItem('tasknova_daily_' + getTodayIST());
+      const raw = localStorage.getItem(getDailyKey());
       if (raw) return JSON.parse(raw);
     } catch(e) {}
     return { earned:0, checkin:false, spins:0, scratches:0, quizzes:0, lastSpin:0, lastScratch:0, lastQuiz:0 };
   }
-  function saveDailyData(d) { localStorage.setItem('tasknova_daily_' + getTodayIST(), JSON.stringify(d)); }
+  function saveDailyData(d) { localStorage.setItem(getDailyKey(), JSON.stringify(d)); }
   function getWatchCount()  { return getDailyData().spins || 0; }
   function incrementWatchCount() {
     const d = getDailyData(); d.spins = (d.spins||0)+1; d.lastSpin = Date.now(); saveDailyData(d);
@@ -610,19 +635,19 @@
       if (errIcon)  errIcon.textContent  = '';
       if (errTitle) errTitle.textContent = 'Ad Skip Penalty';
       if (errMsg)   errMsg.textContent   = 'Ad skip ki thi — 10 min baad wapas aao';
-      startErrCountdown(until, KEY_PENALTY_UNTIL);
+      startErrCountdown(until, getPenaltyKey());
     } else if (type === 'cooldown') {
       if (errIcon)  errIcon.textContent  = '';
       if (errTitle) errTitle.textContent = 'Next Spin ka Wait Karo';
       if (errMsg)   errMsg.textContent   = 'Thoda sa aur wait karo';
-      startErrCountdown(until, KEY_COOLDOWN_UNTIL);
+      startErrCountdown(until, getCooldownKey());
     } else if (type === 'success') {
       if (errIcon)  errIcon.textContent  = '';
       if (errTitle) errTitle.textContent = 'Coins Credited!';
       if (errMsg)   errMsg.textContent   = 'Aapke wallet mein add ho gaye\nNext spin ke liye wait karo';
       if (errBadge) errBadge.style.display = 'block';
       if (errCoin)  errCoin.textContent    = '+' + prize + ' Coins';
-      startErrCountdown(until, KEY_COOLDOWN_UNTIL, true);
+      startErrCountdown(until, getCooldownKey(), true);
     } else {
       if (errIcon)  errIcon.textContent  = '';
       if (errTitle) errTitle.textContent = 'Aaj ki Limit Khatam!';
@@ -647,8 +672,8 @@
 
   /* ── Page load — auto start ──────────────────────────── */
   window.addEventListener('DOMContentLoaded', function() {
-    const penaltyUntil  = parseInt(localStorage.getItem(KEY_PENALTY_UNTIL)  || '0');
-    const cooldownUntil = parseInt(localStorage.getItem(KEY_COOLDOWN_UNTIL) || '0');
+    const penaltyUntil  = parseInt(localStorage.getItem(getPenaltyKey())  || '0');
+    const cooldownUntil = parseInt(localStorage.getItem(getCooldownKey()) || '0');
     if (penaltyUntil  > Date.now()) { showErrorPage('penalty',  penaltyUntil);  return; }
     if (cooldownUntil > Date.now()) { showErrorPage('cooldown', cooldownUntil); return; }
     if (getWatchCount() >= MAX_SPINS_PER_DAY) { showErrorPage('limit', 0); return; }
@@ -794,7 +819,7 @@
     }
   }
 
-  /* ── Claim coins — NO ad fire here ──────────────────── */
+  /* ── Claim coins ──────────────────────────────────── */
   function claimCoins() {
     if (creditFired || penaltyApplied) return;
     if (stepSecsLeft > 0) { alert('Abhi ' + stepSecsLeft + 's baaki hain!'); return; }
@@ -805,90 +830,83 @@
 
     incrementWatchCount();
     const cooldownUntil = Date.now() + COOLDOWN_DURATION * 1000;
-    localStorage.setItem(KEY_COOLDOWN_UNTIL, String(cooldownUntil));
-    // Pending prize clear karo claim ke baad
+    localStorage.setItem(getCooldownKey(), String(cooldownUntil));
     try { localStorage.removeItem('tn_spin_pending_prize'); } catch(e) {}
 
-    if (uid && uid !== 'null') {
-      // incrementWatchCount() upar already +1 kar chuka hai (same tasknova_daily_<date> key) — bas value padho
-      const newSpins  = getDailyData().spins || 1;
-      const todayIST  = getTodayIST();
+    const newSpins = getDailyData().spins || 1;
+    const todayIST = getTodayIST();
+    const currentUid = _getUID();
 
-      if (prize === 0) {
-        // 0 coins — sirf spin count update, koi Firebase coins update nahi
-        const zeroPatch = { spinsToday: newSpins };
-        if (todayIST) zeroPatch['dailyTasks/' + todayIST + '/spins'] = newSpins;
-        fetch(DB_URL + '/users/' + uid + '.json', {
-          method:  'PATCH',
-          headers: {'Content-Type':'application/json'},
-          body:    JSON.stringify(zeroPatch)
-        }).catch(() => {});
-        fetch(DB_URL + '/users/' + uid + '/taskHistory.json', {
-          method:  'POST',
-          headers: {'Content-Type':'application/json'},
-          body:    JSON.stringify({
-            userId: uid, taskType: 'Spin', taskName: 'Spin & Win',
-            coins: 0, status: 'Thanks!', timestamp: Date.now()
-          })
-        }).catch(() => {});
-        if (btn) {
-          btn.textContent = 'Better Luck Next Time!';
-          btn.style.background = 'linear-gradient(135deg,#f59e0b,#ea6c00)';
-        }
-        setTimeout(() => goBack(), 800);
-        return;
-      }
-
-      // ── Firebase update ──────────────────────────────────
-      fetch(DB_URL + '/users/' + uid + '.json')
-        .then(r => r.json())
-        .then(data => {
-          if (!data) throw new Error('No user data');
-          const newCoins   = (data.coins   || 0) + prize;
-          const newBalance = parseFloat((newCoins / 100).toFixed(2));
-
-          // Main coins update + taskHistory — parallel, don't wait for history
-          const winPatch = {
-            coins:      newCoins,
-            balance:    newBalance,
-            tasksDone:  (data.tasksDone || 0) + 1,
-            spinsToday: newSpins
+    if (currentUid && currentUid !== 'null' && currentUid !== 'guest') {
+      const doFirebase = function(token) {
+        const ap = token ? '?auth=' + token : '';
+        if (prize === 0) {
+          // 0 coins — sirf spin count update
+          const zeroPatch = {
+            spinsToday: newSpins,
+            ['dailyTasks/' + todayIST + '/spins']: newSpins
           };
-          if (todayIST) winPatch['dailyTasks/' + todayIST + '/spins'] = newSpins;
-          const mainUpdate = fetch(DB_URL + '/users/' + uid + '.json', {
-            method:  'PATCH',
-            headers: {'Content-Type':'application/json'},
-            body:    JSON.stringify(winPatch)
+          fetch(DB_URL + '/users/' + currentUid + '.json' + ap, {
+            method: 'PATCH', headers: {'Content-Type':'application/json'},
+            body: JSON.stringify(zeroPatch)
+          }).catch(() => {});
+          fetch(DB_URL + '/users/' + currentUid + '/taskHistory.json' + ap, {
+            method: 'POST', headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({ userId: currentUid, taskType: 'Spin', taskName: 'Spin & Win', coins: 0, status: 'Thanks!', timestamp: Date.now() })
+          }).catch(() => {});
+          if (btn) { btn.textContent = 'Better Luck Next Time!'; btn.style.background = 'linear-gradient(135deg,#f59e0b,#ea6c00)'; }
+          setTimeout(() => goBack(), 800);
+          return;
+        }
+
+        // Coins wala spin — Firebase se current coins padho
+        fetch(DB_URL + '/users/' + currentUid + '.json' + ap)
+          .then(r => r.json())
+          .then(data => {
+            if (!data) throw new Error('No user data');
+            const newCoins   = (data.coins   || 0) + prize;
+            const newBalance = parseFloat((newCoins / 100).toFixed(2));
+            const prevEarned = (data.dailyTasks && data.dailyTasks[todayIST] && data.dailyTasks[todayIST].earned) || 0;
+            const winPatch = {
+              coins:      newCoins,
+              balance:    newBalance,
+              tasksDone:  (data.tasksDone || 0) + 1,
+              spinsToday: newSpins,
+              ['dailyTasks/' + todayIST + '/spins']:  newSpins,
+              ['dailyTasks/' + todayIST + '/earned']: prevEarned + prize
+            };
+            const mainUpdate = fetch(DB_URL + '/users/' + currentUid + '.json' + ap, {
+              method: 'PATCH', headers: {'Content-Type':'application/json'},
+              body: JSON.stringify(winPatch)
+            });
+            fetch(DB_URL + '/users/' + currentUid + '/taskHistory.json' + ap, {
+              method: 'POST', headers: {'Content-Type':'application/json'},
+              body: JSON.stringify({ userId: currentUid, taskType: 'Spin', taskName: 'Spin & Win', coins: prize, status: 'Success', timestamp: Date.now() })
+            }).catch(() => {});
+            return mainUpdate;
+          })
+          .then(() => {
+            if (btn) { btn.textContent = '+' + prize + ' Coins Credited!'; btn.style.background = 'linear-gradient(135deg,#22c55e,#16a34a)'; }
+            setTimeout(() => goBack(), 500);
+          })
+          .catch(e => {
+            console.error('[Spin Claim Error]', e);
+            if (btn) { btn.disabled = false; btn.textContent = 'Claim Coins'; }
+            creditFired = false;
           });
+      };
 
-          // taskHistory — fire and forget, don't block claim
-          fetch(DB_URL + '/users/' + uid + '/taskHistory.json', {
-            method:  'POST',
-            headers: {'Content-Type':'application/json'},
-            body:    JSON.stringify({
-              userId: uid, taskType: 'Spin', taskName: 'Spin & Win',
-              coins: prize, status: 'Success', timestamp: Date.now()
-            })
-          }).catch(() => {}); // silently ignore if fails
-
-          return mainUpdate;
-        })
-        .then(() => {
-          // ── Success — smoothly show result screen ────────
-          if (btn) {
-            btn.textContent = '+' + prize + ' Coins Credited!';
-            btn.style.background = 'linear-gradient(135deg,#22c55e,#16a34a)';
-          }
-          setTimeout(() => goBack(), 500);
-        })
-        .catch(e => {
-          console.error('[Spin Claim Error]', e);
-          if (btn) {
-            btn.disabled    = false;
-            btn.textContent = 'Claim Coins';
-          }
-          creditFired = false;
-        });
+      // Auth token ke saath call karo
+      if (typeof window._getAuthToken === 'function') {
+        window._getAuthToken().then(doFirebase).catch(() => doFirebase(null));
+      } else {
+        // Module load nahi hua — bina token ke try karo
+        setTimeout(function() {
+          if (typeof window._getAuthToken === 'function') {
+            window._getAuthToken().then(doFirebase).catch(() => doFirebase(null));
+          } else { doFirebase(null); }
+        }, 1000);
+      }
     } else {
       if (btn) btn.textContent = 'Login karo pehle!';
     }
@@ -900,7 +918,7 @@
     penaltyApplied = true;
     clearInterval(stepTimer);
     const penaltyUntil = Date.now() + PENALTY_DURATION * 1000;
-    localStorage.setItem(KEY_PENALTY_UNTIL, String(penaltyUntil));
+    localStorage.setItem(getPenaltyKey(), String(penaltyUntil));
     showErrorPage('penalty', penaltyUntil);
   }
 
