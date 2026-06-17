@@ -490,7 +490,7 @@
 
 
     <!-- Special Tasks -->
-    <div class="task-card" data-order="0" data-category="watchads" id="specialTaskCard" onclick="openSpecialTasks()">
+    <div class="task-card" data-order="0" data-category="watchads" id="specialTaskCard" onclick="if(typeof openSpecialTasks==='function'){openSpecialTasks();}else{setTimeout(openSpecialTasks,300);}">
       <div class="task-icon" style="background:linear-gradient(135deg,#f97316,#ef4444);">
         <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" fill="#fff" stroke="none"/>
@@ -2076,7 +2076,7 @@
       const sb  = document.getElementById('spinCountBadge');
       const scb = document.getElementById('scratchCountBadge');
       const qb  = document.getElementById('quizCountBadge');
-      if (sb)  sb.textContent  = '0/3';
+      if (sb)  sb.textContent  = '0/6';
       if (scb) scb.textContent = '0/15';
       if (qb)  qb.textContent  = '0/15';
 
@@ -2089,6 +2089,11 @@
       if (cb)   cb.style.display = 'none';
       if (wrap) wrap.style.display = 'none';
       if (card) card.style.pointerEvents = '';
+      // Spin button reset on midnight
+      var spinBtnReset = document.getElementById('spinBtnMain');
+      var watchAdWrapReset = document.getElementById('spinWatchAdWrap');
+      if (spinBtnReset) { spinBtnReset.disabled = false; spinBtnReset.textContent = '🎡 Spin Now!'; spinBtnReset.style.background = ''; spinBtnReset.style.color = ''; spinBtnReset.style.display = ''; spinBtnReset.style.boxShadow = ''; spinBtnReset.style.cursor = ''; spinBtnReset.onclick = doSpin; }
+      if (watchAdWrapReset) watchAdWrapReset.style.display = 'none';
       // ─────────────────────────────────────────────────────────
     } else {
       adsWatchedToday = getAdBatchCount();
@@ -2102,7 +2107,7 @@
     updateAdButtonUI();
     updateDailyBonusUI(); // initialize Daily Bonus button state
     // Clean stale/corrupted localStorage values — but NOT global lock key (it must survive refresh)
-    ['tn_ad_1min_until','tn_ad_5hr_until','tn_backbtn_penalty'].forEach(function(k) {
+    ['tn_ad_1min_until','tn_ad_5hr_until','tn_backbtn_penalty','tn_spin_5hr_until'].forEach(function(k) {
       const v = parseInt(localStorage.getItem(k));
       if (localStorage.getItem(k) !== null && (!v || isNaN(v) || v <= Date.now())) {
         localStorage.removeItem(k);
@@ -2174,7 +2179,7 @@
           // ── Spin — DB se today count ──────────────────────────
           const spinBadge = document.getElementById('spinCountBadge');
           const spinsDB = (data.spinsToday || 0);
-          if (spinBadge) spinBadge.textContent = spinsDB + '/3';
+          if (spinBadge) spinBadge.textContent = spinsDB + '/6';
           const spinCountText = document.getElementById('spinCountText');
           if (spinCountText) spinCountText.textContent = spinsDB;
           // Sync to localStorage
@@ -2223,9 +2228,7 @@
   function getTodayKey() {
     // Raat 12 baje IST (midnight) ko naya din maano
     const istOffset = 5.5 * 60 * 60 * 1000;
-    const now = new Date();
-    const nowIST = new Date(now.getTime() + istOffset - (now.getTimezoneOffset() * 60 * 1000));
-    // Key = YYYY-MM-DD in IST (midnight boundary)
+    const nowIST = new Date(Date.now() + istOffset);
     return nowIST.toISOString().split('T')[0];
   }
 
@@ -2253,7 +2256,7 @@
     const sb = document.getElementById('spinCountBadge');
     const scb = document.getElementById('scratchCountBadge');
     const qb = document.getElementById('quizCountBadge');
-    if (sb) sb.textContent = d.spins + '/3';
+    if (sb) sb.textContent = d.spins + '/6';
     if (scb) scb.textContent = d.scratches + '/5';
     if (qb) qb.textContent = d.quizzes + '/5';
 
@@ -2324,6 +2327,12 @@
         if (sb2)  sb2.textContent  = '0/6';
         if (scb2) scb2.textContent = '0/15';
         if (qb2)  qb2.textContent  = '0/15';
+
+        // Spin button reset at midnight
+        var spinBtnMid = document.getElementById('spinBtnMain');
+        var watchAdWrapMid = document.getElementById('spinWatchAdWrap');
+        if (spinBtnMid) { spinBtnMid.disabled = false; spinBtnMid.textContent = '🎡 Spin Now!'; spinBtnMid.style.background = ''; spinBtnMid.style.color = ''; spinBtnMid.style.display = ''; spinBtnMid.style.boxShadow = ''; spinBtnMid.style.cursor = ''; spinBtnMid.onclick = doSpin; }
+        if (watchAdWrapMid) watchAdWrapMid.style.display = 'none';
 
         // Watch Ads counter reset
         setAdBatchCount(0);
@@ -2506,7 +2515,7 @@
               const scratchBadge = document.getElementById('scratchCountBadge');
               const quizBadge    = document.getElementById('quizCountBadge');
               const adBadge      = document.getElementById('adCounter');
-              if (spinBadge)    spinBadge.textContent    = d.spins    + '/3';
+              if (spinBadge)    spinBadge.textContent    = d.spins    + '/6';
               if (scratchBadge) scratchBadge.textContent = d.scratches + '/15';
               if (quizBadge)    quizBadge.textContent    = d.quizzes  + '/15';
               if (adBadge)      adBadge.textContent      = getAdBatchCount() + '/20';
@@ -2815,12 +2824,12 @@
   }
 
   const SPIN_5HR_KEY = 'tn_spin_5hr_until';
-  const SPIN_SESSION1_MAX = 3;  // pehle 3 spin
+  const SPIN_SESSION1_MAX = 6;  // No session lock — seedha 6 spins
   const SPIN_TOTAL_MAX    = 6;  // total 6 spin
-  const SPIN_5HR_SECS     = 18000; // 5 ghante
+  const SPIN_5HR_SECS     = 0;  // Timer removed
 
-  function getSpin5HrUntil() { return parseInt(localStorage.getItem(SPIN_5HR_KEY) || '0'); }
-  function setSpin5HrUntil(v) { localStorage.setItem(SPIN_5HR_KEY, String(v)); }
+  function getSpin5HrUntil() { return 0; } // Always unlocked
+  function setSpin5HrUntil(v) { /* Timer disabled */ }
 
   function updateSpinUI() {
     const d   = getDailyData();
@@ -2830,12 +2839,9 @@
     const watchAdWrap = document.getElementById('spinWatchAdWrap');
     if (ct) ct.textContent = d.spins;
 
-    const fiveHrUntil = getSpin5HrUntil();
-    const fiveHrLeft  = Math.max(0, fiveHrUntil - Date.now());
-
     // Sab spins done
     if (d.spins >= SPIN_TOTAL_MAX) {
-      if (btn) { btn.style.display = ''; btn.disabled = true; btn.textContent = '✅ Aaj ke 6 spins khatam!'; btn.style.background = 'rgba(255,255,255,0.1)'; btn.style.color = 'rgba(255,255,255,0.4)'; }
+      if (btn) { btn.style.display = ''; btn.disabled = true; btn.textContent = '✅ Done'; btn.style.background = 'rgba(255,255,255,0.1)'; btn.style.color = 'rgba(255,255,255,0.35)'; btn.style.boxShadow = 'none'; btn.style.cursor = 'not-allowed'; }
       if (watchAdWrap) watchAdWrap.style.display = 'none';
       if (cd) cd.textContent = 'Done!';
     }
@@ -2956,9 +2962,11 @@
           if (spinBtn) {
             if (dd0.spins >= SPIN_TOTAL_MAX) {
               spinBtn.disabled = true;
-              spinBtn.textContent = '✅ Aaj ke 6 spins khatam!';
+              spinBtn.textContent = '✅ Done';
               spinBtn.style.background = 'rgba(255,255,255,0.1)';
-              spinBtn.style.color = 'rgba(255,255,255,0.4)';
+              spinBtn.style.color = 'rgba(255,255,255,0.35)';
+              spinBtn.style.boxShadow = 'none';
+              spinBtn.style.cursor = 'not-allowed';
             } else {
               spinBtn.disabled = false;
               spinBtn.style.display = '';
@@ -2988,7 +2996,7 @@
     if (typeof addCoins === 'function') addCoins(totalPrize);
     if (typeof showToast === 'function') showToast('+' + totalPrize + ' Coins Collected! 🎉', 'linear-gradient(135deg,#22c55e,#16a34a)');
     if (wrap) wrap.style.display = 'none';
-    if (btn) { btn.disabled = true; btn.textContent = '✅ Aaj ke spins khatam!'; btn.style.background = 'rgba(255,255,255,0.1)'; btn.style.color = 'rgba(255,255,255,0.4)'; btn.onclick = null; }
+    if (btn) { btn.disabled = true; btn.textContent = '✅ Done'; btn.style.background = 'rgba(255,255,255,0.1)'; btn.style.color = 'rgba(255,255,255,0.35)'; btn.style.boxShadow = 'none'; btn.style.cursor = 'not-allowed'; btn.onclick = null; }
     if (typeof onSpSpecialComplete === 'function') onSpSpecialComplete();
   }
 
@@ -3043,7 +3051,7 @@
           dd.lastSpin = Date.now();
           saveDailyData(dd);
           var spinBadge = document.getElementById('spinCountBadge');
-          if (spinBadge) spinBadge.textContent = dd.spins + '/3';
+          if (spinBadge) spinBadge.textContent = dd.spins + '/6';
           showToast('Better luck next time! Spin count ho gaya 🎡', '#f59e0b');
         }
 
@@ -3057,17 +3065,19 @@
         if (d2.spins < SPIN_TOTAL_MAX) {
           updateSpinUI();
         } else {
-          if (spinBtn) { spinBtn.style.display = ''; spinBtn.disabled = true; spinBtn.textContent = '✅ Aaj ke 6 spins khatam!'; spinBtn.style.background = 'rgba(255,255,255,0.1)'; spinBtn.style.color = 'rgba(255,255,255,0.4)'; }
+          if (spinBtn) { spinBtn.style.display = ''; spinBtn.disabled = true; spinBtn.textContent = '✅ Done'; spinBtn.style.background = 'rgba(255,255,255,0.1)'; spinBtn.style.color = 'rgba(255,255,255,0.35)'; spinBtn.style.boxShadow = 'none'; spinBtn.style.cursor = 'not-allowed'; }
           if (watchAdWrap) watchAdWrap.style.display = 'none';
         }
 
-        // Special Tasks card pe badge update + 1 min cooldown timer start karo
+        // Special Tasks card pe badge update
         var d3 = getDailyData();
         var spCountEl = document.getElementById('spSpecialCount');
         if (spCountEl) spCountEl.textContent = Math.min(d3.spins, 6) + '/6';
 
-        // 1 min cooldown — Spin button chupa ke timer dikhao
-        startSpSpecialCooldown();
+        // 1 min cooldown — sirf tab jab spins baaki ho
+        if (d3.spins < SPIN_TOTAL_MAX) {
+          startSpSpecialCooldown();
+        }
       } catch(e) {}
     });
   })();
@@ -4378,8 +4388,8 @@
 
   // ── Daily-reset localStorage helpers ──
   function _getTodayKey() {
-    var d = new Date();
-    return d.getFullYear() + '-' + (d.getMonth()+1) + '-' + d.getDate();
+    const istOffset = 5.5 * 60 * 60 * 1000;
+    return new Date(Date.now() + istOffset).toISOString().split('T')[0];
   }
   function _loadSpecialCount(key, max) {
     try {
