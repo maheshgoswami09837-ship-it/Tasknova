@@ -518,21 +518,16 @@
   const KEY_PENALTY_UNTIL  = 'tn_watch_penalty_until';
   const KEY_COOLDOWN_UNTIL = 'tn_watch_cooldown_until';
   const KEY_PRIZE          = 'tn_spin_prize';
-  const DAILY_DATA_KEY     = 'tasknova_daily';
-
-  /* ── Daily data helpers ──────────────────────────────── */
-  function getTodayStr() { return new Date().toISOString().slice(0,10); }
+  /* ── Daily data helpers — app-wide IST midnight reset, same scheme as tasknova_tasks.html ── */
+  function getTodayIST() { return new Date(Date.now() + 5.5*60*60*1000).toISOString().slice(0,10); }
   function getDailyData() {
     try {
-      const d = JSON.parse(localStorage.getItem(DAILY_DATA_KEY) || '{}');
-      if (d.date !== getTodayStr())
-        return {date:getTodayStr(),spins:0,scratches:0,quizzes:0,checkin:false,lastSpin:0};
-      return d;
-    } catch(e) {
-      return {date:getTodayStr(),spins:0,scratches:0,quizzes:0,checkin:false,lastSpin:0};
-    }
+      const raw = localStorage.getItem('tasknova_daily_' + getTodayIST());
+      if (raw) return JSON.parse(raw);
+    } catch(e) {}
+    return { earned:0, checkin:false, spins:0, scratches:0, quizzes:0, lastSpin:0, lastScratch:0, lastQuiz:0 };
   }
-  function saveDailyData(d) { localStorage.setItem(DAILY_DATA_KEY, JSON.stringify(d)); }
+  function saveDailyData(d) { localStorage.setItem('tasknova_daily_' + getTodayIST(), JSON.stringify(d)); }
   function getWatchCount()  { return getDailyData().spins || 0; }
   function incrementWatchCount() {
     const d = getDailyData(); d.spins = (d.spins||0)+1; d.lastSpin = Date.now(); saveDailyData(d);
@@ -815,24 +810,18 @@
     try { localStorage.removeItem('tn_spin_pending_prize'); } catch(e) {}
 
     if (uid && uid !== 'null') {
-      // ── Update localStorage spin count ──────────────────
-      let newSpins = 1;
-      try {
-        const today = new Date().toISOString().split('T')[0];
-        const raw   = localStorage.getItem('tn_daily_' + today);
-        const localData = raw ? JSON.parse(raw) : {};
-        localData.spins    = (localData.spins || 0) + 1;
-        localData.lastSpin = Date.now();
-        newSpins = localData.spins;
-        localStorage.setItem('tn_daily_' + today, JSON.stringify(localData));
-      } catch(e) {}
+      // incrementWatchCount() upar already +1 kar chuka hai (same tasknova_daily_<date> key) — bas value padho
+      const newSpins  = getDailyData().spins || 1;
+      const todayIST  = getTodayIST();
 
       if (prize === 0) {
         // 0 coins — sirf spin count update, koi Firebase coins update nahi
+        const zeroPatch = { spinsToday: newSpins };
+        if (todayIST) zeroPatch['dailyTasks/' + todayIST + '/spins'] = newSpins;
         fetch(DB_URL + '/users/' + uid + '.json', {
           method:  'PATCH',
           headers: {'Content-Type':'application/json'},
-          body:    JSON.stringify({ spinsToday: newSpins, tasksDone: 0 })
+          body:    JSON.stringify(zeroPatch)
         }).catch(() => {});
         fetch(DB_URL + '/users/' + uid + '/taskHistory.json', {
           method:  'POST',
@@ -859,15 +848,17 @@
           const newBalance = parseFloat((newCoins / 100).toFixed(2));
 
           // Main coins update + taskHistory — parallel, don't wait for history
+          const winPatch = {
+            coins:      newCoins,
+            balance:    newBalance,
+            tasksDone:  (data.tasksDone || 0) + 1,
+            spinsToday: newSpins
+          };
+          if (todayIST) winPatch['dailyTasks/' + todayIST + '/spins'] = newSpins;
           const mainUpdate = fetch(DB_URL + '/users/' + uid + '.json', {
             method:  'PATCH',
             headers: {'Content-Type':'application/json'},
-            body:    JSON.stringify({
-              coins:      newCoins,
-              balance:    newBalance,
-              tasksDone:  (data.tasksDone || 0) + 1,
-              spinsToday: newSpins
-            })
+            body:    JSON.stringify(winPatch)
           });
 
           // taskHistory — fire and forget, don't block claim
