@@ -912,11 +912,16 @@
   // ── WATCH AD SYSTEM CONSTANTS ────────────────────────────────────
   const MAX_ADS          = 20;          // 20 ads per day total
   const MAX_ADS_SESSION1 = 10;          // 10 ads → 3hr lock
+  const MAX_SHORTLINKS   = 2;           // 2 shortlinks per day
   const MIN_AD_TIME      = 15;          // 15-second hard lock
   const AD_COOLDOWN_1MIN = 45;          // 45s per-ad cooldown
   const AD_COOLDOWN_3HR  = 10800;       // 3-hour session lock
   const AD_COOLDOWN_5HR  = 86400;       // 24hr daily reset
-  const AD_1MIN_KEY      = 'tn_ad_1min_until';
+  // UID-based keys — runtime mein set hongi (after UID available)
+  function _uid() { return localStorage.getItem('tasknova_uid') || 'guest'; }
+  function getKey(base) { return base + '_' + _uid(); }
+
+  const AD_1MIN_KEY      = 'tn_ad_1min_until';   // getKey() se use karo
   const AD_5HR_KEY       = 'tn_ad_5hr_until';
   const AD_COUNT_KEY     = 'tn_ad_count';
 
@@ -932,7 +937,7 @@
   }
 
   // ── GLOBAL 1-MIN LOCK KEY ───────────────────────────────────────
-  const GLOBAL_LOCK_KEY = 'tn_global_lock_until'; // persists across restarts
+  function getGlobalLockKey() { return 'tn_global_lock_until_' + _uid(); }
 
   // ── WATCH AD STATE ───────────────────────────────────────────────
   let adsWatchedToday  = 0;
@@ -971,7 +976,7 @@
   }
 
   function shouldReset() {
-    const lastReset = localStorage.getItem('adLastReset');
+    const lastReset = localStorage.getItem('adLastReset_' + _uid());
     if (!lastReset) return true;
     const midnightUTC = getMidnightISTTimestamp();
     return new Date(lastReset).getTime() < midnightUTC;
@@ -999,18 +1004,18 @@
 
   function performFullReset() {
     // LocalStorage reset
-    localStorage.setItem('adsWatchedToday', '0');
-    localStorage.setItem('adLastReset', new Date().toISOString());
+    localStorage.setItem('adsWatchedToday_' + _uid(), '0');
+    localStorage.setItem('adLastReset_' + _uid(), new Date().toISOString());
     setAdBatchCount(0);
     clearAdTimers();
-    localStorage.removeItem(GLOBAL_LOCK_KEY);
+    localStorage.removeItem(getGlobalLockKey());
     adsWatchedToday = 0;
 
     // Shortlink reset
     const istOffset2 = 5.5 * 60 * 60 * 1000;
     const todayIST2 = new Date(Date.now() + istOffset2).toISOString().split('T')[0];
     const slFresh = { date: todayIST2, done: 0 };
-    localStorage.setItem('sl_data', JSON.stringify(slFresh));
+    localStorage.setItem('sl_data_' + _uid(), JSON.stringify(slFresh));
     const uid = localStorage.getItem('tasknova_uid');
     if (uid && uid !== 'null') {
       window._getAuthToken && window._getAuthToken().then(token => {
@@ -1028,10 +1033,10 @@
     const scb = document.getElementById('scratchCountBadge');
     const qb  = document.getElementById('quizCountBadge');
     const slBadge = document.getElementById('shortlinkCountBadge');
-    if (sb)  sb.textContent  = '0/6';
+    if (sb)  sb.textContent  = '0/' + SPIN_TOTAL_MAX;
     if (scb) scb.textContent = '0/5';
     if (qb)  qb.textContent  = '0/15';
-    if (slBadge) slBadge.textContent = '0/2';
+    if (slBadge) slBadge.textContent = '0/' + MAX_SHORTLINKS;
 
     // Spin button reset
     const spinBtn = document.getElementById('spinBtnMain');
@@ -1085,23 +1090,23 @@
   function getAdBatchCount() {
     // watch_ad.html 'tasknova_daily' key mein watchRounds save karta hai
     try {
-      const daily = JSON.parse(localStorage.getItem('tasknova_daily') || '{}');
+      const daily = JSON.parse(localStorage.getItem('tasknova_daily_' + _uid()) || '{}');
       const todayStr = new Date().toISOString().slice(0,10);
       if (daily.date === todayStr && daily.watchRounds) {
         return daily.watchRounds;
       }
     } catch(e) {}
     // Fallback: purana tn_ad_count
-    const raw = parseInt(localStorage.getItem(AD_COUNT_KEY) || '0');
+    const raw = parseInt(localStorage.getItem(getKey(AD_COUNT_KEY)) || '0');
     return isNaN(raw) ? 0 : raw;
   }
-  function setAdBatchCount(n) { localStorage.setItem(AD_COUNT_KEY, n); }
+  function setAdBatchCount(n) { localStorage.setItem(getKey(AD_COUNT_KEY), n); }
 
-  function get1MinUntil()   { const v = parseInt(localStorage.getItem(AD_1MIN_KEY)); return (!v || isNaN(v)) ? 0 : v; }
-  function get5HrUntil()    { const v = parseInt(localStorage.getItem(AD_5HR_KEY));  return (!v || isNaN(v)) ? 0 : v; }
-  function set1MinUntil(ts) { localStorage.setItem(AD_1MIN_KEY, ts); }
-  function set5HrUntil(ts)  { localStorage.setItem(AD_5HR_KEY,  ts); }
-  function clearAdTimers()  { localStorage.removeItem(AD_1MIN_KEY); localStorage.removeItem(AD_5HR_KEY); }
+  function get1MinUntil()   { const v = parseInt(localStorage.getItem(getKey(AD_1MIN_KEY))); return (!v || isNaN(v)) ? 0 : v; }
+  function get5HrUntil()    { const v = parseInt(localStorage.getItem(getKey(AD_5HR_KEY)));  return (!v || isNaN(v)) ? 0 : v; }
+  function set1MinUntil(ts) { localStorage.setItem(getKey(AD_1MIN_KEY), ts); }
+  function set5HrUntil(ts)  { localStorage.setItem(getKey(AD_5HR_KEY),  ts); }
+  function clearAdTimers()  { localStorage.removeItem(getKey(AD_1MIN_KEY)); localStorage.removeItem(getKey(AD_5HR_KEY)); }
 
   // Returns {locked, remaining, isMega, isDailyDone}
   function getAdLockState() {
@@ -1159,16 +1164,16 @@
 
   function triggerGlobalLock() {
     const until = Date.now() + 30000; // 30 seconds from now
-    localStorage.setItem(GLOBAL_LOCK_KEY, until.toString());
+    localStorage.setItem(getGlobalLockKey(), until.toString());
     runGlobalLockUI(until);
   }
 
   function getGlobalLockRemaining() {
-    const raw   = localStorage.getItem(GLOBAL_LOCK_KEY);
+    const raw   = localStorage.getItem(getGlobalLockKey());
     const until = raw ? parseInt(raw) : 0;
     // Guard: NaN, 0, or expired → return 0 (unlocked)
     if (!until || isNaN(until) || until <= Date.now()) {
-      if (raw) localStorage.removeItem(GLOBAL_LOCK_KEY); // clean up stale value
+      if (raw) localStorage.removeItem(getGlobalLockKey()); // clean up stale value
       return 0;
     }
     return Math.ceil((until - Date.now()) / 1000);
@@ -1286,7 +1291,7 @@
       if (secsLeft <= 0) {
         clearInterval(globalLockInterval);
         globalLockInterval = null;
-        localStorage.removeItem(GLOBAL_LOCK_KEY);
+        localStorage.removeItem(getGlobalLockKey());
         updateAdButtonUI();
         updateSpinUI();
         updateScratchUI();
@@ -1304,12 +1309,12 @@
 
   // Check on page load if a lock is already active (survived restart/refresh)
   function restoreGlobalLockIfActive() {
-    const raw = localStorage.getItem(GLOBAL_LOCK_KEY);
+    const raw = localStorage.getItem(getGlobalLockKey());
     if (!raw) return;
     const until = parseInt(raw);
-    if (!until || isNaN(until)) { localStorage.removeItem(GLOBAL_LOCK_KEY); return; }
+    if (!until || isNaN(until)) { localStorage.removeItem(getGlobalLockKey()); return; }
     const secsLeft = Math.ceil((until - Date.now()) / 1000);
-    if (secsLeft <= 0) { localStorage.removeItem(GLOBAL_LOCK_KEY); return; }
+    if (secsLeft <= 0) { localStorage.removeItem(getGlobalLockKey()); return; }
     // Valid lock found — resume UI immediately
     console.log('[GlobalLock] Restoring lock on refresh —', secsLeft + 's remaining');
     runGlobalLockUI(until);
@@ -1393,7 +1398,7 @@
       if (secsLeft <= 0) {
         clearInterval(backBtnPenaltyInterval);
         backBtnPenaltyInterval = null;
-        localStorage.removeItem('tn_backbtn_penalty');
+        localStorage.removeItem('tn_backbtn_penalty_' + _uid());
         updateSpinUI();
         updateScratchUI();
         updateQuizUI();
@@ -1406,21 +1411,21 @@
 
   // Restore back-btn penalty on page reload
   function restoreBackBtnPenaltyIfActive() {
-    const until = parseInt(localStorage.getItem('tn_backbtn_penalty') || '0');
+    const until = parseInt(localStorage.getItem('tn_backbtn_penalty_' + _uid()) || '0');
     if (until > Date.now()) applyBackBtnPenalty(until);
   }
 
   // Daily Bonus: midnight 12:00 AM IST reset
-  const DAILY_BONUS_KEY = 'tasknova_dailyBonus';
+  function getDailyBonusKey() { return 'tasknova_dailyBonus_' + _uid(); }
   let dailyBonusCountdownInterval = null;
 
   function getDailyBonusData() {
-    const raw = localStorage.getItem(DAILY_BONUS_KEY);
+    const raw = localStorage.getItem(getDailyBonusKey());
     return raw ? JSON.parse(raw) : { claimed: false, claimedAt: 0 };
   }
 
   function saveDailyBonusData(data) {
-    localStorage.setItem(DAILY_BONUS_KEY, JSON.stringify(data));
+    localStorage.setItem(getDailyBonusKey(), JSON.stringify(data));
   }
 
   function isDailyBonusAvailable() {
@@ -1738,7 +1743,7 @@
     }
 
     // Sirf watch_ad.html pe bhejo — wahan sab handle hoga
-    localStorage.setItem('pendingAdReward', JSON.stringify({
+    localStorage.setItem('pendingAdReward_' + _uid(), JSON.stringify({
       coins: 10, ts: Date.now(), adNum: batchCount + 1
     }));
     window.location.href = 'watch_ad.html';
@@ -1835,7 +1840,7 @@
 
   // ── CPX Research Config ──────────────────────────────────────────
   const CPX_APP_ID = 33101;
-  const SURVEY_COOLDOWN_KEY = 'surveyCooldownUntil'; // only set on success
+  function getSurveyCooldownKey() { return 'surveyCooldownUntil_' + _uid(); }
 
   // Load CPX Script dynamically with correct user params
   function loadCPXScript(uid) {
@@ -1871,7 +1876,7 @@
     }
 
     // Check cooldown (only if user previously completed a survey)
-    const cooldownUntil = localStorage.getItem(SURVEY_COOLDOWN_KEY);
+    const cooldownUntil = localStorage.getItem(getSurveyCooldownKey());
     if (cooldownUntil) {
       const remaining = Math.ceil((parseInt(cooldownUntil) - Date.now()) / 1000);
       if (remaining > 0) {
@@ -1880,7 +1885,7 @@
         alert('Survey cooldown chal raha hai! ' + mins + 'm ' + secs + 's aur ruko.');
         return;
       } else {
-        localStorage.removeItem(SURVEY_COOLDOWN_KEY);
+        localStorage.removeItem(getSurveyCooldownKey());
       }
     }
 
@@ -1929,7 +1934,7 @@
 
   function triggerSurveyCooldown() {
     const cooldownEnd = Date.now() + 30 * 60 * 1000;
-    localStorage.setItem(SURVEY_COOLDOWN_KEY, cooldownEnd.toString());
+    localStorage.setItem(getSurveyCooldownKey(), cooldownEnd.toString());
     startSurveyCooldownUI(cooldownEnd);
   }
 
@@ -1957,7 +1962,7 @@
 
       if (remaining <= 0) {
         clearInterval(surveyCooldownInterval);
-        localStorage.removeItem(SURVEY_COOLDOWN_KEY);
+        localStorage.removeItem(getSurveyCooldownKey());
         // Unlock card
         card.style.opacity = '';
         card.style.pointerEvents = '';
@@ -2102,12 +2107,12 @@
 
     // ── watch_ad.html se wapas aaya ──────────────────────────────
     if (status === 'success' && task === 'video1') {
-      const pending = JSON.parse(localStorage.getItem('pendingAdReward') || 'null');
+      const pending = JSON.parse(localStorage.getItem('pendingAdReward_' + _uid()) || 'null');
       const coins   = (pending && pending.coins) ? pending.coins : 10;
       const age     = pending ? Date.now() - pending.ts : 99999999;
 
       if (age < 5 * 60 * 1000) {
-        localStorage.removeItem('pendingAdReward');
+        localStorage.removeItem('pendingAdReward_' + _uid());
         localStorage.removeItem('currentAdUrl');
 
         const newBatchCount = getAdBatchCount() + 1;
@@ -2179,16 +2184,16 @@
 
     // Check daily reset (midnight 12:00 AM IST)
     if (shouldReset()) {
-      localStorage.setItem('adsWatchedToday', '0');
-      localStorage.setItem('adLastReset', new Date().toISOString());
+      localStorage.setItem('adsWatchedToday_' + _uid(), '0');
+      localStorage.setItem('adLastReset_' + _uid(), new Date().toISOString());
       setAdBatchCount(0);
       clearAdTimers();
-      localStorage.removeItem(GLOBAL_LOCK_KEY);
+      localStorage.removeItem(getGlobalLockKey());
       adsWatchedToday = 0;
 
       // ── Shortlink reset ──────────────────────────────────────
       const slFresh = { date: new Date().toDateString(), done: 0 };
-      localStorage.setItem('sl_data', JSON.stringify(slFresh));
+      localStorage.setItem('sl_data_' + _uid(), JSON.stringify(slFresh));
       const uidReset = localStorage.getItem('tasknova_uid');
       if (uidReset && uidReset !== 'null') {
         window._getAuthToken && window._getAuthToken().then(token => {
@@ -2206,7 +2211,7 @@
       const sb  = document.getElementById('spinCountBadge');
       const scb = document.getElementById('scratchCountBadge');
       const qb  = document.getElementById('quizCountBadge');
-      if (sb)  sb.textContent  = '0/6';
+      if (sb)  sb.textContent  = '0/' + SPIN_TOTAL_MAX;
       if (scb) scb.textContent = '0/15';
       if (qb)  qb.textContent  = '0/15';
 
@@ -2237,7 +2242,10 @@
     updateAdButtonUI();
     updateDailyBonusUI(); // initialize Daily Bonus button state
     // Clean stale/corrupted localStorage values — but NOT global lock key (it must survive refresh)
-    ['tn_ad_1min_until','tn_ad_5hr_until','tn_backbtn_penalty','tn_spin_5hr_until'].forEach(function(k) {
+    // UID-based stale timer cleanup
+    var _staleUid = _uid();
+    ['tn_ad_1min_until','tn_ad_5hr_until','tn_backbtn_penalty','tn_spin_5hr_until'].forEach(function(base) {
+      var k = base + '_' + _staleUid;
       const v = parseInt(localStorage.getItem(k));
       if (localStorage.getItem(k) !== null && (!v || isNaN(v) || v <= Date.now())) {
         localStorage.removeItem(k);
@@ -2278,8 +2286,17 @@
           // ── Shortlink — DB se today count ─────────────────────
           const slBadge = document.getElementById('shortlinkCountBadge');
           const slToday = (data.dailyTasks && data.dailyTasks[todayKey] && data.dailyTasks[todayKey].shortlinks) || data.shortlinkToday || 0;
-          if (slBadge) slBadge.textContent = slToday + '/2';
-          if (slToday >= 2) {
+          if (slBadge) slBadge.textContent = slToday + '/' + MAX_SHORTLINKS;
+          // sl_data localStorage mein sync karo taaki dusre device pe bhi count sahi rahe
+          try {
+            const _slRaw = localStorage.getItem('sl_data_' + _uid());
+            const _slLocal = _slRaw ? JSON.parse(_slRaw) : {};
+            const _slLocalCount = (_slLocal.date === todayKey) ? (_slLocal.count || 0) : 0;
+            if (slToday > _slLocalCount) {
+              localStorage.setItem('sl_data_' + _uid(), JSON.stringify({ date: todayKey, count: slToday }));
+            }
+          } catch(e) {}
+          if (slToday >= MAX_SHORTLINKS) {
             const slBtn = document.getElementById('shortlinkTaskBtn');
             if (slBtn) { slBtn.textContent = '✅ Done'; slBtn.disabled = true; }
             const slCard = document.getElementById('shortlinkTaskCard');
@@ -2289,11 +2306,14 @@
           // ── Watch Ads — DB se today count ─────────────────────
           const adBadge = document.getElementById('adCounter');
           const adsDB = (data.dailyTasks && data.dailyTasks[todayKey] && data.dailyTasks[todayKey].adsWatched) || data.adsWatchedToday || 0;
-          if (adBadge) adBadge.textContent = adsDB + '/20';
-          if (adsDB >= 20) {
+          if (adBadge) adBadge.textContent = adsDB + '/' + MAX_ADS;
+          if (adsDB >= MAX_ADS) {
             const adBtn = document.getElementById('watchAdBtn');
             if (adBtn) { adBtn.textContent = '✅ Done'; adBtn.disabled = true; }
           }
+          // Ad count localStorage mein sync karo taaki dusre device pe bhi block ho
+          const _localAdCount = getAdBatchCount();
+          if (adsDB > _localAdCount) { setAdBatchCount(adsDB); adsWatchedToday = adsDB; }
 
           // ── Check-in — DB se today status ─────────────────────
           const checkinDoneDB = (data.dailyTasks && data.dailyTasks[todayKey] && data.dailyTasks[todayKey].checkin) || data.checkinDoneToday || false;
@@ -2309,47 +2329,46 @@
           // ── Spin — DB se today count ──────────────────────────
           const spinBadge = document.getElementById('spinCountBadge');
           const spinsDB = (data.dailyTasks && data.dailyTasks[todayKey] && data.dailyTasks[todayKey].spins != null)
-            ? data.dailyTasks[todayKey].spins
-            : 0;
-          // Local count kabhi DB se neeche na aaye — zero-prize spins sirf local me track hote hain
-          const _ldSpin = getDailyData();
-          const spinsFinal = Math.max(_ldSpin.spins || 0, spinsDB);
-          if (spinBadge) spinBadge.textContent = spinsFinal + '/6';
+            ? data.dailyTasks[todayKey].spins : 0;
+
+          // ── Scratch — DB se today count ───────────────────────
+          const scratchesDB = (data.dailyTasks && data.dailyTasks[todayKey] && data.dailyTasks[todayKey].scratches != null)
+            ? data.dailyTasks[todayKey].scratches : (data.scratchesToday || 0);
+
+          // ── Quiz — DB se today count ──────────────────────────
+          const quizzesDB = (data.dailyTasks && data.dailyTasks[todayKey] && data.dailyTasks[todayKey].quizzes != null)
+            ? data.dailyTasks[todayKey].quizzes : (data.quizzesToday || 0);
+
+          // ── Daily Earned ──────────────────────────────────────
+          const earnedDB = (data.dailyTasks && data.dailyTasks[todayKey] && data.dailyTasks[todayKey].earned != null)
+            ? data.dailyTasks[todayKey].earned : 0;
+
+          // ── Ek hi baar sab localStorage mein save karo ───────
+          const _ld = getDailyData();
+          const spinsFinal = Math.max(_ld.spins || 0, spinsDB);
+          _ld.spins     = spinsFinal;
+          _ld.scratches = Math.max(_ld.scratches || 0, scratchesDB);
+          _ld.quizzes   = Math.max(_ld.quizzes   || 0, quizzesDB);
+          _ld.earned    = Math.max(_ld.earned     || 0, earnedDB);
+          _ld.checkin   = _ld.checkin || checkinDoneDB;
+          saveDailyData(_ld);
+
+          // Firebase push agar local aage hai
+          if (spinsFinal > spinsDB) syncSpinsToFirebase(spinsFinal);
+
+          // ── UI badges update ──────────────────────────────────
+          if (spinBadge) spinBadge.textContent = spinsFinal + '/' + SPIN_TOTAL_MAX;
           const spinCountText = document.getElementById('spinCountText');
           if (spinCountText) spinCountText.textContent = spinsFinal;
-          // Sync to localStorage
-          if (_ldSpin.spins !== spinsFinal) { _ldSpin.spins = spinsFinal; saveDailyData(_ldSpin); }
-          // Local aage hai Firebase se to wapas push karo
-          if (spinsFinal > spinsDB) syncSpinsToFirebase(spinsFinal);
-          if (spinsFinal >= 3) {
+          if (spinsFinal >= SPIN_TOTAL_MAX) {
             const spinBtn = document.getElementById('spinTaskBtn');
             if (spinBtn) { spinBtn.textContent = '✅ Done'; spinBtn.disabled = true; }
           }
-
-          // ── Scratch — DB se today count ───────────────────────
           const scratchBadge = document.getElementById('scratchCountBadge');
-          const scratchesDB = (data.dailyTasks && data.dailyTasks[todayKey] && data.dailyTasks[todayKey].scratches != null)
-            ? data.dailyTasks[todayKey].scratches
-            : (data.scratchesToday || 0);
-          if (scratchBadge) scratchBadge.textContent = scratchesDB + '/15';
-          const _ld2 = getDailyData();
-          if (_ld2.scratches !== scratchesDB) { _ld2.scratches = scratchesDB; saveDailyData(_ld2); }
-
-          // ── Quiz — DB se today count ──────────────────────────
+          if (scratchBadge) scratchBadge.textContent = _ld.scratches + '/15';
           const quizBadge = document.getElementById('quizCountBadge');
-          const quizzesDB = (data.dailyTasks && data.dailyTasks[todayKey] && data.dailyTasks[todayKey].quizzes != null)
-            ? data.dailyTasks[todayKey].quizzes
-            : (data.quizzesToday || 0);
-          if (quizBadge) quizBadge.textContent = quizzesDB + '/15';
-          const _ld3 = getDailyData();
-          if (_ld3.quizzes !== quizzesDB) { _ld3.quizzes = quizzesDB; saveDailyData(_ld3); }
+          if (quizBadge) quizBadge.textContent = _ld.quizzes + '/15';
 
-          // ── Daily Earned — DB se today total ─────────────────
-          const earnedDB = (data.dailyTasks && data.dailyTasks[todayKey] && data.dailyTasks[todayKey].earned != null)
-            ? data.dailyTasks[todayKey].earned
-            : 0;
-          const _ld4 = getDailyData();
-          if (earnedDB > 0 && _ld4.earned !== earnedDB) { _ld4.earned = earnedDB; saveDailyData(_ld4); }
           updateDailyLimitUI();
         })
         .catch(e => console.log(e));
@@ -2369,14 +2388,16 @@
   }
 
   function getDailyData() {
-    const key = 'tasknova_daily_' + getTodayKey();
+    const uid = localStorage.getItem('tasknova_uid') || 'guest';
+    const key = 'tasknova_daily_' + uid + '_' + getTodayKey();
     const raw = localStorage.getItem(key);
     if (raw) return JSON.parse(raw);
     return { earned: 0, checkin: false, spins: 0, scratches: 0, quizzes: 0, lastSpin: 0, lastScratch: 0, lastQuiz: 0 };
   }
 
   function saveDailyData(data) {
-    const key = 'tasknova_daily_' + getTodayKey();
+    const uid = localStorage.getItem('tasknova_uid') || 'guest';
+    const key = 'tasknova_daily_' + uid + '_' + getTodayKey();
     localStorage.setItem(key, JSON.stringify(data));
   }
 
@@ -2392,7 +2413,7 @@
     const sb = document.getElementById('spinCountBadge');
     const scb = document.getElementById('scratchCountBadge');
     const qb = document.getElementById('quizCountBadge');
-    if (sb) sb.textContent = d.spins + '/6';
+    if (sb) sb.textContent = d.spins + '/' + SPIN_TOTAL_MAX;
     if (scb) scb.textContent = d.scratches + '/5';
     if (qb) qb.textContent = d.quizzes + '/5';
 
@@ -2473,9 +2494,9 @@
         // Watch Ads counter reset
         setAdBatchCount(0);
         clearAdTimers();
-        localStorage.removeItem(GLOBAL_LOCK_KEY);
+        localStorage.removeItem(getGlobalLockKey());
         adsWatchedToday = 0;
-        localStorage.setItem('adLastReset', new Date().toISOString());
+        localStorage.setItem('adLastReset_' + _uid(), new Date().toISOString());
         updateAdButtonUI();
         updateDailyLimitUI();
 
@@ -2651,10 +2672,10 @@
               const scratchBadge = document.getElementById('scratchCountBadge');
               const quizBadge    = document.getElementById('quizCountBadge');
               const adBadge      = document.getElementById('adCounter');
-              if (spinBadge)    spinBadge.textContent    = d.spins    + '/6';
+              if (spinBadge)    spinBadge.textContent    = d.spins    + '/' + SPIN_TOTAL_MAX;
               if (scratchBadge) scratchBadge.textContent = d.scratches + '/15';
               if (quizBadge)    quizBadge.textContent    = d.quizzes  + '/15';
-              if (adBadge)      adBadge.textContent      = getAdBatchCount() + '/20';
+              if (adBadge)      adBadge.textContent      = getAdBatchCount() + '/' + MAX_ADS;
 
               // ── Task log ─────────────────────────────────────
               const typeMap = {
@@ -3001,7 +3022,7 @@
 
     // Cooldown chal raha hai? Spin button block karo, timer dikhao
     try {
-      var _cdUntil = parseInt(localStorage.getItem('tn_spin_cooldown_until') || '0');
+      var _cdUntil = parseInt(localStorage.getItem(getSpinCooldownKey()) || '0');
       if (_cdUntil && _cdUntil > Date.now()) {
         var _spinBtnCD = document.getElementById('spinBtnMain');
         if (_spinBtnCD) {
@@ -3012,7 +3033,7 @@
           (function spinModalCooldown() {
             var secsLeft = Math.ceil((_cdUntil - Date.now()) / 1000);
             if (secsLeft <= 0) {
-              try { localStorage.removeItem('tn_spin_cooldown_until'); } catch(e) {}
+              try { localStorage.removeItem(getSpinCooldownKey()); } catch(e) {}
               updateSpinUI();
               return;
             }
@@ -3085,7 +3106,7 @@
               d.spins = spinsDB;
               saveDailyData(d);
               const spinBadge = document.getElementById('spinCountBadge');
-              if (spinBadge) spinBadge.textContent = spinsDB + '/6';
+              if (spinBadge) spinBadge.textContent = spinsDB + '/' + SPIN_TOTAL_MAX;
             }
           }).catch(() => {});
       });
@@ -3172,10 +3193,10 @@
             }
           })();
           var spCountEl0 = document.getElementById('spSpecialCount');
-          if (spCountEl0) spCountEl0.textContent = Math.min(dd0.spins, 6) + '/6';
+          if (spCountEl0) spCountEl0.textContent = Math.min(dd0.spins, SPIN_TOTAL_MAX) + '/' + SPIN_TOTAL_MAX;
           if (typeof _updateSpSpecialBtn === 'function') _updateSpSpecialBtn();
           var spinBadge0 = document.getElementById('spinCountBadge');
-          if (spinBadge0) spinBadge0.textContent = dd0.spins + '/6';
+          if (spinBadge0) spinBadge0.textContent = dd0.spins + '/' + SPIN_TOTAL_MAX;
           // koi ad nahi, seedha next spin
           if (watchAdWrap) watchAdWrap.style.display = 'none';
           if (spinBtn) {
@@ -3203,9 +3224,9 @@
           saveDailyData(ddCoin);
           syncSpinsToFirebase(ddCoin.spins);
           var spinBadgeCoin = document.getElementById('spinCountBadge');
-          if (spinBadgeCoin) spinBadgeCoin.textContent = ddCoin.spins + '/6';
+          if (spinBadgeCoin) spinBadgeCoin.textContent = ddCoin.spins + '/' + SPIN_TOTAL_MAX;
           var spCountElCoin = document.getElementById('spSpecialCount');
-          if (spCountElCoin) spCountElCoin.textContent = Math.min(ddCoin.spins, 6) + '/6';
+          if (spCountElCoin) spCountElCoin.textContent = Math.min(ddCoin.spins, SPIN_TOTAL_MAX) + '/' + SPIN_TOTAL_MAX;
           if (typeof _updateSpSpecialBtn === 'function') _updateSpSpecialBtn();
           // Watch Ads & Claim button dikhao
           if (spinBtn) spinBtn.style.display = 'none';
@@ -3277,7 +3298,7 @@
           saveDailyData(dd);
           syncSpinsToFirebase(dd.spins);
           var spinBadge = document.getElementById('spinCountBadge');
-          if (spinBadge) spinBadge.textContent = dd.spins + '/6';
+          if (spinBadge) spinBadge.textContent = dd.spins + '/' + SPIN_TOTAL_MAX;
           showToast('Better luck next time! Spin count ho gaya 🎡', '#f59e0b');
         }
 
@@ -3298,7 +3319,7 @@
         // Special Tasks card pe badge update
         var d3 = getDailyData();
         var spCountEl = document.getElementById('spSpecialCount');
-        if (spCountEl) spCountEl.textContent = Math.min(d3.spins, 6) + '/6';
+        if (spCountEl) spCountEl.textContent = Math.min(d3.spins, SPIN_TOTAL_MAX) + '/' + SPIN_TOTAL_MAX;
         _updateSpSpecialBtn();
 
         // 1 min cooldown — sirf tab jab spins baaki ho
@@ -3333,12 +3354,18 @@
     }
   }
 
-  var SPIN_COOLDOWN_KEY = 'tn_spin_cooldown_until';
+  // UID-based cooldown key — har user ka alag cooldown
+  function getSpinCooldownKey() {
+    var uid = localStorage.getItem('tasknova_uid') || 'guest';
+    return 'tn_spin_cooldown_until_' + uid;
+  }
+  // Backward compat alias
+  var SPIN_COOLDOWN_KEY = 'tn_spin_cooldown_until'; // deprecated, ab function use karo
 
   function startSpSpecialCooldown() {
     // End time localStorage mein save karo (60 sec)
     var until = Date.now() + 60 * 1000;
-    try { localStorage.setItem(SPIN_COOLDOWN_KEY, String(until)); } catch(e) {}
+    try { localStorage.setItem(getSpinCooldownKey(), String(until)); } catch(e) {}
     _runSpCooldownUI(until);
   }
 
@@ -3356,7 +3383,7 @@
       var secsLeft = Math.ceil((until - Date.now()) / 1000);
       if (secsLeft <= 0) {
         clearInterval(_spCooldownInterval);
-        try { localStorage.removeItem(SPIN_COOLDOWN_KEY); } catch(e) {}
+        try { localStorage.removeItem(getSpinCooldownKey()); } catch(e) {}
         timer.style.display = 'none';
         _updateSpSpecialBtn();
         return;
@@ -3371,11 +3398,11 @@
   // DOMContentLoaded pe run karo taaki elements mil jayein
   document.addEventListener('DOMContentLoaded', function() {
     try {
-      var _cdUntil = parseInt(localStorage.getItem(SPIN_COOLDOWN_KEY) || '0');
+      var _cdUntil = parseInt(localStorage.getItem(getSpinCooldownKey()) || '0');
       if (_cdUntil && _cdUntil > Date.now()) {
         _runSpCooldownUI(_cdUntil);
       } else if (_cdUntil) {
-        localStorage.removeItem(SPIN_COOLDOWN_KEY);
+        localStorage.removeItem(getSpinCooldownKey());
       }
     } catch(e) {}
   });
@@ -4187,14 +4214,14 @@
     // IST date use karo consistent comparison ke liye
     const istOffset = 5.5 * 60 * 60 * 1000;
     const todayIST = new Date(Date.now() + istOffset).toISOString().split('T')[0];
-    const raw = localStorage.getItem('sl_data');
+    const raw = localStorage.getItem('sl_data_' + _uid());
     if (raw) {
       try {
         const d = JSON.parse(raw);
         if (d.date === todayIST) return d;
         // Naya din — Firebase bhi reset karo
         const fresh = { date: todayIST, done: 0 };
-        localStorage.setItem('sl_data', JSON.stringify(fresh));
+        localStorage.setItem('sl_data_' + _uid(), JSON.stringify(fresh));
         const uid = localStorage.getItem('tasknova_uid');
         if (uid && uid !== 'null') {
           window._getAuthToken && window._getAuthToken().then(token => {
@@ -4210,12 +4237,12 @@
       } catch(e) {}
     }
     const fresh = { date: todayIST, done: 0 };
-    localStorage.setItem('sl_data', JSON.stringify(fresh));
+    localStorage.setItem('sl_data_' + _uid(), JSON.stringify(fresh));
     return fresh;
   }
 
   function saveSlData(d) {
-    localStorage.setItem('sl_data', JSON.stringify(d));
+    localStorage.setItem('sl_data_' + _uid(), JSON.stringify(d));
     // Firebase mein bhi save karo
     const uid = localStorage.getItem('tasknova_uid');
     if (!uid || uid === 'null') return;
@@ -4242,14 +4269,14 @@
         .then(data => {
           if (data && data.date === todayIST) {
             // Firebase data aaj ka hai — localStorage update karo
-            localStorage.setItem('sl_data', JSON.stringify(data));
+            localStorage.setItem('sl_data_' + _uid(), JSON.stringify(data));
             const badge = document.getElementById('shortlinkCountBadge');
             if (badge) badge.textContent = data.done + '/' + SL_LIMIT;
             updateSlUI();
           } else {
             // Naya din ya purana data — reset karo
             const fresh = { date: todayIST, done: 0 };
-            localStorage.setItem('sl_data', JSON.stringify(fresh));
+            localStorage.setItem('sl_data_' + _uid(), JSON.stringify(fresh));
             fetch(DB_URL + '/users/' + uid + '/slData.json' + ap, {
               method: 'PUT',
               headers: { 'Content-Type': 'application/json' },
@@ -4308,7 +4335,7 @@
           .then(r => r.json())
           .then(data => {
             if (data && data.date === today) {
-              localStorage.setItem('sl_data', JSON.stringify(data));
+              localStorage.setItem('sl_data_' + _uid(), JSON.stringify(data));
             }
             updateSlUI();
           })
@@ -4578,12 +4605,12 @@
   }
 
   // ── OFFERWALL ────────────────────────────────────────────────
-  const OFFERWALL_KEY    = 'tn_offerwall_last';
+  function getOfferwallKey() { return 'tn_offerwall_last_' + _uid(); }
   const OFFERWALL_24HR   = 5 * 60 * 60 * 1000;
   let offerwallTimerInt  = null;
 
   function updateOfferwallUI() {
-    const last      = parseInt(localStorage.getItem(OFFERWALL_KEY) || '0');
+    const last      = parseInt(localStorage.getItem(getOfferwallKey()) || '0');
     const badge     = document.getElementById('offerwallCooldownBadge');
     const btn       = document.getElementById('offerwallBtn');
     const card      = document.getElementById('offerwallCard');
@@ -4622,12 +4649,12 @@
   }
 
   async function openOfferwallPage() {
-    const last = parseInt(localStorage.getItem(OFFERWALL_KEY) || '0');
+    const last = parseInt(localStorage.getItem(getOfferwallKey()) || '0');
     if (last && (OFFERWALL_24HR - (Date.now() - last)) > 0) {
       showToast('⏳ 5 ghante baad dobara try karo!', '#f59e0b');
       return;
     }
-    localStorage.setItem(OFFERWALL_KEY, Date.now().toString());
+    localStorage.setItem(getOfferwallKey(), Date.now().toString());
     updateOfferwallUI();
     const uid = localStorage.getItem('tasknova_uid');
     window.location.href = 'cpalead_offerwall.html?uid=' + (uid || '');
@@ -4763,13 +4790,13 @@
   }
   function _loadSpecialCount(key, max) {
     try {
-      var saved = JSON.parse(localStorage.getItem('tn_special_' + key) || 'null');
+      var saved = JSON.parse(localStorage.getItem('tn_special_' + _uid() + '_' + key) || 'null');
       if (saved && saved.date === _getTodayKey()) return Math.min(saved.count, max);
     } catch(e) {}
     return 0;
   }
   function _saveSpecialCount(key, count) {
-    try { localStorage.setItem('tn_special_' + key, JSON.stringify({ date: _getTodayKey(), count: count })); } catch(e) {}
+    try { localStorage.setItem('tn_special_' + _uid() + '_' + key, JSON.stringify({ date: _getTodayKey(), count: count })); } catch(e) {}
   }
 
   var _slSpecialCount = _loadSpecialCount('sl', _slSpecialMax);
@@ -4777,12 +4804,12 @@
 
   function _isSlCollectedToday() {
     try {
-      var saved = JSON.parse(localStorage.getItem('tn_special_sl_collected') || 'null');
+      var saved = JSON.parse(localStorage.getItem('tn_special_sl_collected_' + _uid()) || 'null');
       return saved && saved.date === _getTodayKey();
     } catch(e) { return false; }
   }
   function _markSlCollectedToday() {
-    try { localStorage.setItem('tn_special_sl_collected', JSON.stringify({ date: _getTodayKey() })); } catch(e) {}
+    try { localStorage.setItem('tn_special_sl_collected_' + _uid(), JSON.stringify({ date: _getTodayKey() })); } catch(e) {}
   }
 
   function handleSlSpecialClick() {
@@ -4812,12 +4839,12 @@
 
   function _isWaCollectedToday() {
     try {
-      var saved = JSON.parse(localStorage.getItem('tn_special_wa_collected') || 'null');
+      var saved = JSON.parse(localStorage.getItem('tn_special_wa_collected_' + _uid()) || 'null');
       return saved && saved.date === _getTodayKey();
     } catch(e) { return false; }
   }
   function _markWaCollectedToday() {
-    try { localStorage.setItem('tn_special_wa_collected', JSON.stringify({ date: _getTodayKey() })); } catch(e) {}
+    try { localStorage.setItem('tn_special_wa_collected_' + _uid(), JSON.stringify({ date: _getTodayKey() })); } catch(e) {}
   }
 
   function handleWaSpecialClick() {
@@ -4910,14 +4937,14 @@
     // Spin count bhi restore karo
     var d = (typeof getDailyData === 'function') ? getDailyData() : null;
     var spCountEl = document.getElementById('spSpecialCount');
-    if (spCountEl && d) spCountEl.textContent = Math.min(d.spins || 0, 6) + '/6';
+    if (spCountEl && d) spCountEl.textContent = Math.min(d.spins || 0, SPIN_TOTAL_MAX) + '/' + SPIN_TOTAL_MAX;
     // Cooldown check — agar chal raha hai toh button hide karo, timer dikhao
     try {
-      var _cdNow = parseInt(localStorage.getItem('tn_spin_cooldown_until') || '0');
+      var _cdNow = parseInt(localStorage.getItem(getSpinCooldownKey()) || '0');
       if (_cdNow && _cdNow > Date.now()) {
         if (typeof _runSpCooldownUI === 'function') _runSpCooldownUI(_cdNow);
       } else {
-        if (_cdNow) { try { localStorage.removeItem('tn_spin_cooldown_until'); } catch(e) {} }
+        if (_cdNow) { try { localStorage.removeItem(getSpinCooldownKey()); } catch(e) {} }
         if (typeof _updateSpSpecialBtn === 'function') _updateSpSpecialBtn();
       }
     } catch(e) {
