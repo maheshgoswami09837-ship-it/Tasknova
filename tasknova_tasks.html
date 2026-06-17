@@ -5002,14 +5002,15 @@
     document.getElementById('specialTasksOverlay').style.display = 'block';
     document.body.style.overflow = 'hidden';
 
-    // ── Pehle local data se turant show karo (no flicker) ──
-    var _dLocal = (typeof getDailyData === 'function') ? getDailyData() : {};
-    var _localSpin = _dLocal.spins || 0;
-    var _localSl   = _loadSpecialCount('sl', _slSpecialMax);
-    var _localWa   = (typeof getAdBatchCount === 'function') ? Math.min(getAdBatchCount(), _waSpecialMax) : _loadSpecialCount('wa', _waSpecialMax);
-    _applySpecialTasksUI(_localSpin, _localSl, _localWa);
+    // ── Pehle loading state dikhao ──
+    var spCountEl = document.getElementById('spSpecialCount');
+    var slBadge   = document.getElementById('slSpecialBadge');
+    var waBadge   = document.getElementById('waSpecialBadge');
+    if (spCountEl) spCountEl.textContent = '...';
+    if (slBadge)   slBadge.textContent   = '...';
+    if (waBadge)   waBadge.textContent   = '...';
 
-    // ── Firebase se fresh counts fetch karo (cross-device sync) ──
+    // ── Firebase se fresh counts fetch karo (single source of truth) ──
     var uid = localStorage.getItem('tasknova_uid');
     if (uid && uid !== 'null' && typeof window._getAuthToken === 'function') {
       window._getAuthToken().then(function(token) {
@@ -5018,18 +5019,16 @@
         fetch(DB_URL + '/users/' + uid + '/dailyTasks/' + todayKey + '.json' + ap)
           .then(function(r) { return r.json(); })
           .then(function(dayData) {
-            if (!dayData) return;
-            var fbSpin = dayData.spins   != null ? dayData.spins   : _localSpin;
-            var fbSl   = dayData.shortlinks != null ? dayData.shortlinks : _localSl;
-            var fbWa   = dayData.adsWatched != null ? dayData.adsWatched : _localWa;
+            var fbSpin = (dayData && dayData.spins   != null) ? dayData.spins   : 0;
+            var fbSl   = (dayData && dayData.shortlinks != null) ? dayData.shortlinks : 0;
+            var fbWa   = (dayData && dayData.adsWatched != null) ? dayData.adsWatched : 0;
 
-            // Local mein bhi sync karo
+            // Local bhi sync karo
             if (typeof getDailyData === 'function' && typeof saveDailyData === 'function') {
               var _ld = getDailyData();
-              if (fbSpin > (_ld.spins || 0)) _ld.spins = fbSpin;
+              _ld.spins = fbSpin;
               saveDailyData(_ld);
             }
-            // Shortlink localStorage sync
             try {
               var _slRaw = localStorage.getItem('sl_data_' + _uid());
               var _slObj = _slRaw ? JSON.parse(_slRaw) : {};
@@ -5040,8 +5039,24 @@
 
             _applySpecialTasksUI(fbSpin, fbSl, fbWa);
           })
-          .catch(function(e) { console.warn('[SpecialTasks] Firebase fetch error:', e); });
+          .catch(function() {
+            // Firebase fail — local fallback
+            var _dLocal = (typeof getDailyData === 'function') ? getDailyData() : {};
+            _applySpecialTasksUI(
+              _dLocal.spins || 0,
+              _loadSpecialCount('sl', _slSpecialMax),
+              (typeof getAdBatchCount === 'function') ? Math.min(getAdBatchCount(), _waSpecialMax) : 0
+            );
+          });
       });
+    } else {
+      // Login nahi — local data dikhao
+      var _dLocal = (typeof getDailyData === 'function') ? getDailyData() : {};
+      _applySpecialTasksUI(
+        _dLocal.spins || 0,
+        _loadSpecialCount('sl', _slSpecialMax),
+        (typeof getAdBatchCount === 'function') ? Math.min(getAdBatchCount(), _waSpecialMax) : 0
+      );
     }
   }
   function closeSpecialTasks() {
