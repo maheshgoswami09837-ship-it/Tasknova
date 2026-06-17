@@ -193,7 +193,7 @@
     background-image: radial-gradient(ellipse at 20% 10%, rgba(108,99,255,0.18) 0%, transparent 55%),
                       radial-gradient(ellipse at 80% 90%, rgba(59,130,246,0.12) 0%, transparent 55%);
     z-index: 999; flex-direction: column; align-items: center;
-    overflow-y: auto; padding: 20px 16px 120px;
+    overflow-y: auto; padding: 20px 16px 40px;
   }
   /* Fixed bottom banner inside modals */
   .modal-bottom-banner {
@@ -661,6 +661,7 @@
   <div class="modal-header" style="border-bottom:1px solid rgba(255,255,255,0.07);">
     <button class="modal-back" onclick="closeModal('spinModal')" style="color:#fff;">&#8592;</button>
     <div class="modal-title" style="color:#fff;">Spin &amp; Win</div>
+    <button id="spinHistoryBtn" onclick="openSpinHistory()" title="Spin History" style="margin-left:auto;background:rgba(255,255,255,0.10);border:1.5px solid rgba(255,255,255,0.18);color:#fff;width:44px;height:44px;border-radius:14px;font-size:19px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;">🕘</button>
   </div>
 
   <!-- Hidden elements to keep JS working -->
@@ -707,13 +708,24 @@
       📺 Watch Ads &amp; Claim Coin
     </button>
   </div>
+</div>
 
-  <div class="modal-bottom-banner" id="spinBottomBanner"></div>
+<!-- Spin History Overlay -->
+<div id="spinHistoryOverlay" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;z-index:1002;background:linear-gradient(180deg,#0f0c29 0%,#1a1050 50%,#0f0c29 100%);overflow-y:auto;padding:20px 16px 40px;">
+  <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px;">
+    <button onclick="closeSpinHistory()" style="background:rgba(255,255,255,0.10);border:1.5px solid rgba(255,255,255,0.18);color:#fff;width:44px;height:44px;border-radius:14px;font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;">&#8592;</button>
+    <div style="font-size:18px;font-weight:800;color:#fff;">🎡 Spin History</div>
+    <button onclick="closeSpinHistory()" title="Close" style="margin-left:auto;background:rgba(255,255,255,0.10);border:1.5px solid rgba(255,255,255,0.18);color:#fff;width:38px;height:38px;border-radius:12px;font-size:18px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;">&#10005;</button>
+  </div>
+  <div id="spinHistoryList" style="display:flex;flex-direction:column;gap:10px;">
+    <div style="text-align:center;color:rgba(255,255,255,0.4);padding:40px 0;font-size:13px;">Loading...</div>
+  </div>
 </div>
 
 <!-- Scratch Modal -->
 <div class="feature-modal" id="scratchModal">
   <div class="modal-header">
+
     <button class="modal-back" onclick="closeModal('scratchModal')">&#8592;</button>
     <div class="modal-title">🎴 Scratch Card</div>
   </div>
@@ -2299,13 +2311,17 @@
           const spinsDB = (data.dailyTasks && data.dailyTasks[todayKey] && data.dailyTasks[todayKey].spins != null)
             ? data.dailyTasks[todayKey].spins
             : 0;
-          if (spinBadge) spinBadge.textContent = spinsDB + '/6';
+          // Local count kabhi DB se neeche na aaye — zero-prize spins sirf local me track hote hain
+          const _ldSpin = getDailyData();
+          const spinsFinal = Math.max(_ldSpin.spins || 0, spinsDB);
+          if (spinBadge) spinBadge.textContent = spinsFinal + '/6';
           const spinCountText = document.getElementById('spinCountText');
-          if (spinCountText) spinCountText.textContent = spinsDB;
+          if (spinCountText) spinCountText.textContent = spinsFinal;
           // Sync to localStorage
-          const _ld = getDailyData();
-          if (_ld.spins !== spinsDB) { _ld.spins = spinsDB; saveDailyData(_ld); }
-          if (spinsDB >= 3) {
+          if (_ldSpin.spins !== spinsFinal) { _ldSpin.spins = spinsFinal; saveDailyData(_ldSpin); }
+          // Local aage hai Firebase se to wapas push karo
+          if (spinsFinal > spinsDB) syncSpinsToFirebase(spinsFinal);
+          if (spinsFinal >= 3) {
             const spinBtn = document.getElementById('spinTaskBtn');
             if (spinBtn) { spinBtn.textContent = '✅ Done'; spinBtn.disabled = true; }
           }
@@ -2930,6 +2946,22 @@
     ctx.shadowBlur = 0;
   }
 
+  function syncSpinsToFirebase(spinsCount) {
+    const uid = localStorage.getItem('tasknova_uid');
+    if (!uid || uid === 'null') return;
+    window._getAuthToken && window._getAuthToken().then(token => {
+      const ap = token ? '?auth=' + token : '';
+      const todayIST = new Date(Date.now() + 5.5*60*60*1000).toISOString().split('T')[0];
+      const patch = { spinsToday: spinsCount };
+      patch['dailyTasks/' + todayIST + '/spins'] = spinsCount;
+      fetch(DB_URL + '/users/' + uid + '.json' + ap, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(patch)
+      }).catch(e => console.warn('[Spin] Firebase sync failed:', e));
+    });
+  }
+
   function openSpinModal() {
     if (isGlobalLocked()) return;
     if (Date.now() < crossTaskFreezeEnd) {
@@ -2939,6 +2971,34 @@
     }
     document.getElementById('spinModal').classList.add('show');
     drawWheel();
+
+    // Agar pehle spin ho chuka hai aur pending prize hai — seedha Watch Ads dikhao
+    var _pendingRaw = null;
+    try { _pendingRaw = localStorage.getItem('tn_spin_pending_prize'); } catch(e) {}
+    if (_pendingRaw) {
+      try {
+        var _pendingData = JSON.parse(_pendingRaw);
+        // 5 min ke andar valid
+        if (_pendingData && _pendingData.prize > 0 && (Date.now() - _pendingData.ts) < 5 * 60 * 1000) {
+          var _prize = _pendingData.prize;
+          // Spin button chhupao
+          var _spinBtn = document.getElementById('spinBtnMain');
+          if (_spinBtn) _spinBtn.style.display = 'none';
+          // Result dikhao
+          var _spinResult = document.getElementById('spinResult');
+          if (_spinResult) _spinResult.textContent = '🎉 Aapne jeeta: +' + _prize + ' Coins! Claim karo!';
+          // Watch Ads & Claim button dikhao
+          var _watchAdWrap = document.getElementById('spinWatchAdWrap');
+          var _watchAdBtn  = document.getElementById('spinWatchAdBtn');
+          if (_watchAdBtn) _watchAdBtn.textContent = '📺 Watch Ads & Claim +' + _prize + ' Coin';
+          if (_watchAdWrap) _watchAdWrap.style.display = 'block';
+          window._latestSpinPrize = _prize;
+          window._pendingSpinPrize = _prize;
+          return; // updateSpinUI mat chalao
+        }
+      } catch(e) {}
+    }
+
     updateSpinUI();
     // Adsterra banner removed — Monetag popunder fires on spin tap
   }
@@ -3073,8 +3133,16 @@
           dd0.spins = (dd0.spins || 0) + 1;
           dd0.lastSpin = Date.now();
           saveDailyData(dd0);
+          syncSpinsToFirebase(dd0.spins);
+          (function() {
+            var _uid = localStorage.getItem('tasknova_uid');
+            if (_uid && _uid !== 'null' && typeof logTaskActivity === 'function') {
+              logTaskActivity({ uid: _uid, taskType: 'Spin', taskName: 'Spin & Win', coins: 0, status: 'Thanks!' }).catch(function(){});
+            }
+          })();
           var spCountEl0 = document.getElementById('spSpecialCount');
           if (spCountEl0) spCountEl0.textContent = Math.min(dd0.spins, 6) + '/6';
+          if (typeof _updateSpSpecialBtn === 'function') _updateSpSpecialBtn();
           var spinBadge0 = document.getElementById('spinCountBadge');
           if (spinBadge0) spinBadge0.textContent = dd0.spins + '/6';
           // koi ad nahi, seedha next spin
@@ -3097,7 +3165,18 @@
             }
           }
         } else {
-          // Coins mile — Watch Ads & Claim button dikhao
+          // Coins mile — spin count ABHI save karo (close karne par bhi count ho)
+          var ddCoin = getDailyData();
+          ddCoin.spins = (ddCoin.spins || 0) + 1;
+          ddCoin.lastSpin = Date.now();
+          saveDailyData(ddCoin);
+          syncSpinsToFirebase(ddCoin.spins);
+          var spinBadgeCoin = document.getElementById('spinCountBadge');
+          if (spinBadgeCoin) spinBadgeCoin.textContent = ddCoin.spins + '/6';
+          var spCountElCoin = document.getElementById('spSpecialCount');
+          if (spCountElCoin) spCountElCoin.textContent = Math.min(ddCoin.spins, 6) + '/6';
+          if (typeof _updateSpSpecialBtn === 'function') _updateSpSpecialBtn();
+          // Watch Ads & Claim button dikhao
           if (spinBtn) spinBtn.style.display = 'none';
           if (watchAdBtn) watchAdBtn.textContent = '📺 Watch Ads & Claim +' + prize + ' Coin';
           if (watchAdWrap) watchAdWrap.style.display = 'block';
@@ -3127,22 +3206,17 @@
       localStorage.setItem('tn_spin_pending_prize', JSON.stringify({prize: prize, ts: Date.now()}));
       // Flag set karo — spin_ad.html se wapas aa rahe hain
       sessionStorage.setItem('tn_coming_from_spin_ad', '1');
+      // Special Tasks overlay se spin shuru hua tha to wapas aate hi reopen karo
+      // (window._fromSpecialTasks in-memory hai, full page nav me reset ho jaata — isliye localStorage me persist karo)
+      if (window._fromSpecialTasks) localStorage.setItem('tn_reopen_special', '1');
     } catch(e) {}
     location.assign('spin_ad.html');
   }
 
   // Spin Watch Ad return handler — pageshow pe check karo
-  // Pehle page load pe clear karo taaki stale data trigger na ho
-  try { 
-    var _staleCheck = localStorage.getItem('tn_spin_pending_prize');
-    if (_staleCheck) {
-      var _staleData = JSON.parse(_staleCheck);
-      // Agar spin_ad.html se redirect nahi hua (flag nahi hai) toh clear karo
-      if (!sessionStorage.getItem('tn_coming_from_spin_ad')) {
-        localStorage.removeItem('tn_spin_pending_prize');
-      }
-    }
-  } catch(e) {}
+  // NOTE: tn_spin_pending_prize yahan clear NAHI karte.
+  // openSpinModal isko use karta hai taaki wapas aane par Watch Ads screen dikhe.
+  // Key sirf pageshow handler (successful claim) ya 5 min expiry pe remove hoti hai.
 
   (function() {
     var _origPageShow = null;
@@ -3170,6 +3244,7 @@
           dd.spins = (dd.spins || 0) + 1;
           dd.lastSpin = Date.now();
           saveDailyData(dd);
+          syncSpinsToFirebase(dd.spins);
           var spinBadge = document.getElementById('spinCountBadge');
           if (spinBadge) spinBadge.textContent = dd.spins + '/6';
           showToast('Better luck next time! Spin count ho gaya 🎡', '#f59e0b');
@@ -3193,6 +3268,7 @@
         var d3 = getDailyData();
         var spCountEl = document.getElementById('spSpecialCount');
         if (spCountEl) spCountEl.textContent = Math.min(d3.spins, 6) + '/6';
+        _updateSpSpecialBtn();
 
         // 1 min cooldown — sirf tab jab spins baaki ho
         if (d3.spins < SPIN_TOTAL_MAX) {
@@ -3204,6 +3280,28 @@
 
   // ── SP SPECIAL COOLDOWN (1 min) ────────────────────────────────
   var _spCooldownInterval = null;
+
+  // Special Tasks card ka Spin button — 6/6 ho jaye to disable + Done ✓
+  function _updateSpSpecialBtn() {
+    var btn   = document.getElementById('spSpecialBtn');
+    var timer = document.getElementById('spCooldownTimer');
+    if (!btn) return;
+    var d = (typeof getDailyData === 'function') ? getDailyData() : { spins: 0 };
+    if ((d.spins || 0) >= SPIN_TOTAL_MAX) {
+      if (timer) timer.style.display = 'none';
+      btn.style.display    = 'inline-flex';
+      btn.textContent      = 'Done ✓';
+      btn.style.background = 'rgba(255,255,255,0.1)';
+      btn.style.color      = 'rgba(255,255,255,0.35)';
+      btn.disabled         = true;
+    } else {
+      btn.textContent      = 'Spin';
+      btn.style.background = 'linear-gradient(135deg,#2563eb,#3b82f6)';
+      btn.style.color      = '#fff';
+      btn.disabled         = false;
+    }
+  }
+
   function startSpSpecialCooldown() {
     var btn   = document.getElementById('spSpecialBtn');
     var timer = document.getElementById('spCooldownTimer');
@@ -3226,9 +3324,77 @@
       if (secsLeft <= 0) {
         clearInterval(_spCooldownInterval);
         timer.style.display = 'none';
-        btn.style.display   = 'inline-flex';
+        _updateSpSpecialBtn();
       }
     }, 1000);
+  }
+
+  // ── SPIN HISTORY ────────────────────────────────────────────────
+  function openSpinHistory() {
+    document.getElementById('spinHistoryOverlay').style.display = 'block';
+    history.pushState({ overlay: 'spinHistory' }, '', location.href);
+    loadSpinHistory();
+  }
+  function closeSpinHistory() {
+    document.getElementById('spinHistoryOverlay').style.display = 'none';
+  }
+  // Back button se Spin History overlay band ho
+  window.addEventListener('popstate', function() {
+    var ov = document.getElementById('spinHistoryOverlay');
+    if (ov && ov.style.display === 'block') closeSpinHistory();
+  });
+
+  async function loadSpinHistory() {
+    const listEl = document.getElementById('spinHistoryList');
+    if (!listEl) return;
+    listEl.innerHTML = '<div style="text-align:center;color:rgba(255,255,255,0.4);padding:40px 0;font-size:13px;">Loading...</div>';
+
+    const uid = localStorage.getItem('tasknova_uid');
+    if (!uid || uid === 'null') {
+      listEl.innerHTML = '<div style="text-align:center;color:rgba(255,255,255,0.4);padding:40px 0;font-size:13px;">Login karo pehle!</div>';
+      return;
+    }
+    try {
+      const token = window._getAuthToken ? await window._getAuthToken() : null;
+      const ap = token ? '?auth=' + token : '';
+      const res = await fetch(DB_URL + '/users/' + uid + '/taskHistory.json' + ap);
+      const data = await res.json();
+      if (!data) {
+        listEl.innerHTML = '<div style="text-align:center;color:rgba(255,255,255,0.4);padding:40px 0;font-size:13px;">Abhi koi spin history nahi hai 🎡</div>';
+        return;
+      }
+      const entries = Object.values(data)
+        .filter(function(e) { return e && e.taskType === 'Spin'; })
+        .sort(function(a, b) { return (b.timestamp || 0) - (a.timestamp || 0); })
+        .slice(0, 100);
+
+      if (!entries.length) {
+        listEl.innerHTML = '<div style="text-align:center;color:rgba(255,255,255,0.4);padding:40px 0;font-size:13px;">Abhi koi spin history nahi hai 🎡</div>';
+        return;
+      }
+
+      listEl.innerHTML = entries.map(function(e) {
+        const won  = (e.coins || 0) > 0;
+        const dt   = new Date(e.timestamp || Date.now());
+        const dateStr = dt.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', timeZone: 'Asia/Kolkata' });
+        const timeStr = dt.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Kolkata' });
+        const label   = won ? ('+' + e.coins + ' Coins') : 'Thanks! Better luck';
+        const tagBg   = won ? 'rgba(34,197,94,0.15)' : 'rgba(255,255,255,0.06)';
+        const tagCol  = won ? '#22c55e' : 'rgba(255,255,255,0.4)';
+        return '<div style="display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:12px 16px;">' +
+            '<div style="display:flex;align-items:center;gap:10px;">' +
+              '<div style="font-size:20px;">' + (won ? '🪙' : '🎡') + '</div>' +
+              '<div>' +
+                '<div style="font-size:13px;font-weight:700;color:#fff;">' + label + '</div>' +
+                '<div style="font-size:11px;color:rgba(255,255,255,0.35);margin-top:2px;">' + dateStr + ' • ' + timeStr + '</div>' +
+              '</div>' +
+            '</div>' +
+            '<div style="font-size:10px;font-weight:700;color:' + tagCol + ';background:' + tagBg + ';padding:4px 10px;border-radius:50px;flex-shrink:0;">' + (e.status || 'Success') + '</div>' +
+          '</div>';
+      }).join('');
+    } catch (err) {
+      listEl.innerHTML = '<div style="text-align:center;color:rgba(255,255,255,0.4);padding:40px 0;font-size:13px;">Load nahi ho paya, dubara try karo</div>';
+    }
   }
 
   // ── SCRATCH CARD ──────────────────────────────────────────────
@@ -3947,6 +4113,8 @@
     if (!slot) return;
     slot.style.background = 'rgba(255,255,255,0.03)';
     slot.style.display = 'none'; // banner slot hide — ads only on claim
+    // Pura outer wrapper bhi hide karo — warna khaali black bar screen ke neeche reh jaata hai
+    if (slot.parentElement) slot.parentElement.style.display = 'none';
   }
 
 
@@ -4692,6 +4860,7 @@
     var d = (typeof getDailyData === 'function') ? getDailyData() : null;
     var spCountEl = document.getElementById('spSpecialCount');
     if (spCountEl && d) spCountEl.textContent = Math.min(d.spins || 0, 6) + '/6';
+    if (typeof _updateSpSpecialBtn === 'function') _updateSpSpecialBtn();
     // Real ad count sync karo — seedha getAdBatchCount se
     _waSpecialCount = (typeof getAdBatchCount === 'function') ? Math.min(getAdBatchCount(), _waSpecialMax) : _loadSpecialCount('wa', _waSpecialMax);
     var badge = document.getElementById('waSpecialBadge');
