@@ -5,8 +5,22 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Watch Ad - TaskNova</title>
 <style>
-  * { margin:0; padding:0; box-sizing:border-box; }
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color: transparent; }
   body { font-family:'Segoe UI',sans-serif; background:#ffffff; margin:0; padding:0; }
+
+  button {
+    -webkit-tap-highlight-color: transparent;
+    position: relative;
+    overflow: hidden;
+  }
+  button:active::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,0.12);
+    border-radius: inherit;
+    pointer-events: none;
+  }
 
   /* Dark UI removed — direct white page flow */
 
@@ -227,12 +241,6 @@
 
       <div class="article-wrap">
 
-        <!-- TOP BANNER AD — Adsterra #1 -->
-        <div class="ad-box" id="s1-ad-top" style="min-height:55px;overflow:visible;">
-          <script>atOptions={'key':'68bf9531f68f81be99e32a8350f48396','format':'iframe','height':50,'width':320,'params':{}};</script>
-          <script src="https://www.highperformanceformat.com/68bf9531f68f81be99e32a8350f48396/invoke.js"></script>
-        </div>
-
         <!-- Fake Article -->
         <div style="width:100%;height:200px;border-radius:12px;margin-bottom:14px;overflow:hidden;background:#e0e7ff;">
           <img src="https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?w=700&q=80"
@@ -246,18 +254,23 @@
           <span>📅 May 2025</span>
           <span>👁 12.4K views</span>
         </div>
+
+        <!-- Start Button — article meta ke niche -->
+        <div style="text-align:center;margin:12px 0 16px;">
+          <button id="startScrollBtn" onclick="openWatchAdPopup()" style="padding:10px 32px;
+            background:linear-gradient(135deg,#2563eb,#3b82f6);border:none;border-radius:50px;
+            color:#fff;font-size:14px;font-weight:800;cursor:pointer;
+            font-family:'Segoe UI',sans-serif;box-shadow:0 4px 14px rgba(37,99,235,0.35);">
+            ▶ Start
+          </button>
+        </div>
+
         <div class="article-body">
           <p>Looking for legitimate ways to earn money from your smartphone? We've tested dozens of apps and shortlisted the best ones that actually pay Indian users on time.</p>
           <h3>1. Survey & Task Apps</h3>
           <p>Survey-based apps have seen a massive surge in India. Platforms like TaskNova let you complete micro-tasks, watch videos, and spin wheels to earn real cash rewards directly to your UPI wallet.</p>
           <h3>2. Refer & Earn Programs</h3>
           <p>Almost every major earning app now has a refer-and-earn program. You can invite friends and earn a percentage of their earnings, creating a passive income stream.</p>
-        </div>
-
-        <!-- MIDDLE BANNER AD — Adsterra #2 -->
-        <div class="ad-box" id="s1-ad-mid" style="min-height:65px;overflow:visible;">
-          <script>atOptions={'key':'a043efa8fb4540fb08dd2a533a283593','format':'iframe','height':60,'width':468,'params':{}};</script>
-          <script src="https://www.highperformanceformat.com/a043efa8fb4540fb08dd2a533a283593/invoke.js"></script>
         </div>
 
         <div class="article-body">
@@ -267,6 +280,7 @@
         </div>
 
         <!-- ── COUNTDOWN TIMER BOX ── -->
+        <div id="timerSection"></div>
         <div class="timer-box">
           <div class="tb-label">⏳ Please Wait</div>
           <div class="tb-num" id="s1TimerNum">15</div>
@@ -274,18 +288,21 @@
           <div class="tb-hint" id="s1Hint">Scroll down and read the article...</div>
         </div>
 
-        <!-- Continue Button — hidden until 15s done -->
-        <button class="wp-btn-continue" id="s1ContinueBtn" onclick="goToStep2()">
-          Continue to Step 2 ➡️
+        <!-- Continue Button — timer ke niche, 15s baad dikhega -->
+        <button id="s1ContinueBtn" onclick="goToStep2()" style="display:none;
+          width:calc(100% - 32px);margin:0 16px 20px;padding:16px;
+          background:linear-gradient(135deg,#16a34a,#22c55e);color:#fff;border:none;
+          border-radius:14px;font-size:16px;font-weight:900;cursor:pointer;
+          font-family:'Segoe UI',sans-serif;box-shadow:0 6px 20px rgba(22,163,74,0.35);
+          letter-spacing:0.3px;">
+          Continue to Step 2
         </button>
 
-        <!-- BOTTOM BANNER AD — Adsterra #3 -->
-        <div class="ad-box" id="s1-ad-bottom" style="min-height:65px;overflow:visible;margin-top:20px;">
-          <script>atOptions={'key':'a043efa8fb4540fb08dd2a533a283593','format':'iframe','height':60,'width':468,'params':{}};</script>
-          <script src="https://www.highperformanceformat.com/a043efa8fb4540fb08dd2a533a283593/invoke.js"></script>
-        </div>
 
-      </div><!-- /article-wrap -->
+
+
+
+        </div><!-- /article-wrap -->
     </div><!-- /wp-inner -->
   </div><!-- /step1 -->
 
@@ -298,9 +315,6 @@
       <div class="blog-header">
         <span class="blog-logo">📰 TechBlog India</span>
         <div style="display:flex;align-items:center;gap:8px;">
-          <button id="scrollToClaimBtn" onclick="document.getElementById('claimBtn').scrollIntoView({behavior:'smooth',block:'center'})" style="display:none;background:linear-gradient(135deg,#16a34a,#22c55e);border:none;border-radius:20px;padding:6px 14px;color:#fff;font-size:12px;font-weight:800;cursor:pointer;font-family:'Segoe UI',sans-serif;">
-            Claim 👇
-          </button>
           <span class="blog-tag">Step 2 of 2</span>
         </div>
       </div>
@@ -313,12 +327,24 @@
             onerror="this.parentElement.innerHTML='💰';this.parentElement.style.display='flex';this.parentElement.style.alignItems='center';this.parentElement.style.justifyContent='center';this.parentElement.style.fontSize='48px';"
             alt="Earning money">
         </div>
+
         <div class="article-title">How TaskNova Pays You Instantly – Full Review</div>
         <div class="article-meta">
           <span>✍️ By Priya Verma</span>
           <span>📅 June 2025</span>
           <span>👁 8.9K views</span>
         </div>
+
+        <!-- Scroll button — article meta ke niche, Step 1 jaisa -->
+        <div style="text-align:center;margin:12px 0 16px;">
+          <button onclick="document.getElementById('s2TimerSection').scrollIntoView({behavior:'smooth',block:'center'})" style="padding:10px 32px;
+            background:linear-gradient(135deg,#2563eb,#3b82f6);border:none;border-radius:50px;
+            color:#fff;font-size:14px;font-weight:800;cursor:pointer;
+            font-family:'Segoe UI',sans-serif;box-shadow:0 4px 14px rgba(37,99,235,0.35);">
+            ⬇ Scroll Down
+          </button>
+        </div>
+
         <div class="article-body">
           <p>TaskNova has emerged as one of India's most trusted micro-earning platforms. With over 1 lakh active users, it offers a transparent, UPI-based payout system that has won widespread praise.</p>
           <h3>How Payouts Work</h3>
@@ -332,9 +358,7 @@
       <!-- Monetag Ads Section -->
       <div class="native-section">
         <div class="native-title">Recommended For You</div>
-        <div id="monetag-native-container" style="min-height:80px;text-align:center;">
-          <!-- Monetag In-Page Push — injected when Step 2 loads -->
-        </div>
+        <div id="monetag-native-container" style="min-height:80px;text-align:center;"></div>
       </div>
 
       <div class="article-wrap">
@@ -345,25 +369,18 @@
         </div>
       </div>
 
-      <!-- Monetag ad — timer ke upar -->
+      <!-- Monetag ad -->
       <div id="monetag-above-timer" style="text-align:center;padding:0 16px;margin-bottom:8px;"></div>
 
-      <!-- Scroll hint — timer ke upar -->
-      <div style="margin:0 16px 8px;background:linear-gradient(135deg,#f0fdf4,#dcfce7);border:1.5px solid #86efac;border-radius:12px;padding:12px 16px;text-align:center;">
-        <div style="font-size:18px;margin-bottom:4px;">👇</div>
-        <div style="font-size:13px;font-weight:700;color:#16a34a;">Niche scroll karo</div>
-        <div style="font-size:11px;color:#6b7280;margin-top:2px;">Timer khatam hone ke baad Claim button aayega</div>
-      </div>
-
-      <!-- ── COUNTDOWN TIMER BOX ── -->
-      <div class="timer-box" style="margin:8px 16px;">
+      <!-- Timer box — Step 1 jaisa -->
+      <div id="s2TimerSection"></div>
+      <div class="timer-box">
         <div class="tb-label">✅ Almost Done!</div>
-        <div class="tb-num" id="s2TimerNum">15</div>
+        <div class="tb-num" id="s2TimerNum" style="color:#16a34a;">15</div>
         <div class="tb-sub">seconds remaining</div>
-        <div class="tb-hint" id="s2Hint">Hang tight, your reward is being prepared...</div>
+        <div class="tb-hint" id="s2Hint">Hang tight, reward being prepared...</div>
       </div>
 
-      <!-- Monetag ad — timer ke neeche -->
       <div id="monetag-below-timer" style="text-align:center;padding:0 16px;margin-bottom:12px;"></div>
 
       <!-- CLAIM BUTTON -->
@@ -376,6 +393,120 @@
 
 </div><!-- /whitePage -->
 
+
+<!-- ══════════════════════════════════════════════════════
+     WATCH ADS POPUP OVERLAY
+══════════════════════════════════════════════════════ -->
+<div id="watchAdPopup" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;
+  background:rgba(0,0,0,0.55);z-index:99998;align-items:center;justify-content:center;
+  font-family:'Segoe UI',sans-serif;">
+  <div style="background:#ffffff;border:1.5px solid #e5e7eb;
+    border-radius:24px;padding:24px 20px;margin:20px;max-width:340px;width:100%;
+    box-shadow:0 20px 60px rgba(0,0,0,0.18);">
+
+    <!-- Header row: icon + title -->
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+      <div style="width:48px;height:48px;border-radius:14px;background:linear-gradient(135deg,#eff6ff,#dbeafe);
+        display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="url(#adGrad2)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <defs>
+            <linearGradient id="adGrad2" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#2563eb"/>
+              <stop offset="100%" stop-color="#3b82f6"/>
+            </linearGradient>
+          </defs>
+          <rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/>
+        </svg>
+      </div>
+      <div style="text-align:left;">
+        <div style="font-size:17px;font-weight:900;color:#111827;line-height:1.2;">Complete Simple Task</div>
+        <div style="font-size:12px;color:#6b7280;margin-top:2px;">30 sec watch karo, unlock ho jayega</div>
+      </div>
+    </div>
+
+    <!-- Reward badge -->
+    <div style="background:linear-gradient(135deg,#f0fdf4,#dcfce7);border:1.5px solid #86efac;
+      border-radius:12px;padding:10px 14px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;">
+      <div style="font-size:12px;color:#15803d;font-weight:600;">Reward</div>
+      <div style="font-size:14px;font-weight:900;color:#16a34a;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="#16a34a" style="vertical-align:middle;margin-right:3px;"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
+        Spin Coins Pending
+      </div>
+    </div>
+
+    <!-- Steps checklist -->
+    <div style="background:#f9fafb;border:1.5px solid #e5e7eb;border-radius:14px;padding:14px;margin-bottom:18px;">
+      <div style="font-size:11px;font-weight:700;color:#9ca3af;letter-spacing:0.8px;text-transform:uppercase;margin-bottom:10px;">Task Steps</div>
+
+      <!-- Step 1 -->
+      <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #f3f4f6;">
+        <div style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#2563eb,#3b82f6);
+          display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round"><rect x="2" y="3" width="20" height="14" rx="2"/></svg>
+        </div>
+        <div style="flex:1;text-align:left;">
+          <div style="font-size:13px;font-weight:700;color:#111827;">Ad Watch karo</div>
+          <div style="font-size:11px;color:#6b7280;">30 seconds tak dekho</div>
+        </div>
+        <div style="font-size:11px;font-weight:700;color:#2563eb;background:#eff6ff;padding:3px 8px;border-radius:20px;">Step 1</div>
+      </div>
+
+      <!-- Step 2 -->
+      <div style="display:flex;align-items:center;gap:10px;padding:8px 0;">
+        <div style="width:28px;height:28px;border-radius:50%;background:#e5e7eb;
+          display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2.5" stroke-linecap="round"><path d="M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2z"/><path d="M12 6v6l4 2"/></svg>
+        </div>
+        <div style="flex:1;text-align:left;">
+          <div style="font-size:13px;font-weight:700;color:#9ca3af;">Article padho</div>
+          <div style="font-size:11px;color:#9ca3af;">15 sec wait karo</div>
+        </div>
+        <div style="font-size:11px;font-weight:700;color:#9ca3af;background:#f3f4f6;padding:3px 8px;border-radius:20px;">Step 2</div>
+      </div>
+    </div>
+
+    <!-- Watch button -->
+    <button id="watchAdsBtn" onclick="watchAdAndContinue()" style="width:100%;padding:15px;
+      background:linear-gradient(135deg,#2563eb,#3b82f6);border:none;border-radius:14px;
+      color:#fff;font-size:16px;font-weight:900;cursor:pointer;font-family:'Segoe UI',sans-serif;
+      box-shadow:0 8px 24px rgba(37,99,235,0.35);letter-spacing:0.3px;">
+      Watch Ads
+    </button>
+
+    <!-- Next Step button — 15s baad dikhega popup ke andar -->
+    <div id="popupNextBtn" style="display:none;margin-top:12px;">
+      <button id="nextStepCompleteBtn" onclick="onNextStepClick()" style="width:100%;padding:14px;
+        background:linear-gradient(135deg,#16a34a,#22c55e);border:none;border-radius:14px;
+        color:#fff;font-size:16px;font-weight:900;cursor:pointer;font-family:'Segoe UI',sans-serif;
+        box-shadow:0 6px 20px rgba(22,163,74,0.35);letter-spacing:0.3px;">
+        Next Step
+      </button>
+      <div id="nextStepWarning" style="display:none;margin-top:8px;font-size:12px;
+        color:#dc2626;background:transparent;border-radius:8px;padding:8px 14px;
+        text-align:center;width:100%;font-weight:700;">
+        30 second genuinely watch karo!
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+
+
+  function onWatchAdClick() {
+    // Monetag popunder trigger
+    (function(s,u,z,p){s.src=u,s.setAttribute('data-zone',z),p.parentNode.insertBefore(s,p);})(
+      document.createElement('script'),
+      'https://al5sm.com/tag.min.js',
+      '11074231',
+      document.querySelector('script')
+    );
+    // Popup band karo aur Step 2 pe jao
+    document.getElementById('watchAdPopup').style.display = 'none';
+    goToStep2();
+  }
+</script>
 
 <script>
   /* ── Config ─────────────────────────────────────────── */
@@ -420,15 +551,7 @@
     document.body.appendChild(s);
   }
 
-  function triggerAdsterraPopunder() {
-    const old = document.getElementById('adsterra-popunder');
-    if (old) old.remove();
-    window.atOptions = {'key':'f1f69a147759698e8fda4cfd27e423ba','format':'iframe','height':50,'width':320,'params':{}};
-    const s = document.createElement('script');
-    s.id = 'adsterra-popunder'; s.type = 'text/javascript';
-    s.src = 'https://www.effectivecpmnetwork.com/b1bggwx0/invoke.js';
-    document.body.appendChild(s);
-  }
+
 
   // Monetag In-Page Push — sirf Step 2 dikhne pe inject hoga
   // Har container mein alag script tag — independently fire karta hai
@@ -451,11 +574,18 @@
   let uid, prize;
   try {
     uid   = localStorage.getItem('tasknova_uid') || null;
-    prize = parseInt(localStorage.getItem(KEY_PRIZE) || '10') || 10;
+    // tn_spin_pending_prize se prize lo (tasknova_tasks.html yahi key use karta hai)
+    var _pendingRaw = localStorage.getItem('tn_spin_pending_prize');
+    if (_pendingRaw) {
+      var _pendingData = JSON.parse(_pendingRaw);
+      prize = (_pendingData && typeof _pendingData.prize === 'number') ? _pendingData.prize : 0;
+    } else {
+      prize = parseInt(localStorage.getItem(KEY_PRIZE) || '0') || 0;
+    }
   } catch(e) {
     // localStorage unavailable (private mode / WebView restriction)
     uid   = null;
-    prize = 10;
+    prize = 0;
   }
   let currentStep   = 0;
   let stepTimer     = null;
@@ -544,7 +674,62 @@
 
     currentStep = 1;
     history.pushState({ step:1 }, '', location.href);
-    startStepTimer(1);
+    // Timer tab shuru hoga jab task complete ho — abhi nahi
+  }
+
+  /* ── Watch Ad Popup ──────────────────────────────────── */
+  function openWatchAdPopup() {
+    const popup = document.getElementById('watchAdPopup');
+    if (popup) popup.style.display = 'flex';
+  }
+
+  var nextStepReady = false;
+
+  function watchAdAndContinue() {
+    // Direct link wala ad open karo new tab mein
+    window.open('https://omg10.com/4/11063028', '_blank');
+    nextStepReady = false;
+    // 15 second baad popup ke andar Next Step button dikhao
+    setTimeout(function() {
+      const btn = document.getElementById('popupNextBtn');
+      if (btn) btn.style.display = 'block';
+    }, 15000);
+    // 45 second baad ready mark karo aur button Complete kar do
+    setTimeout(function() {
+      nextStepReady = true;
+      const btn = document.getElementById('nextStepCompleteBtn');
+      if (btn) {
+        btn.textContent = '✅ Complete';
+        btn.style.background = 'linear-gradient(135deg,#16a34a,#22c55e)';
+        btn.style.boxShadow = '0 6px 20px rgba(22,163,74,0.4)';
+      }
+    }, 45000);
+  }
+
+  function onNextStepClick() {
+    if (nextStepReady) {
+      // Task complete — popup band karo, phir Step 1 timer shuru karo
+      const popup = document.getElementById('watchAdPopup');
+      if (popup) popup.style.display = 'none';
+      startStepTimer(1);
+      // Start button ko scroll button mein badlo
+      const sb = document.getElementById('startScrollBtn');
+      if (sb) {
+        sb.textContent = '⬇️ Scroll Down';
+        sb.style.background = 'linear-gradient(135deg,#16a34a,#22c55e)';
+        sb.style.boxShadow = '0 4px 14px rgba(22,163,74,0.35)';
+        sb.onclick = function() {
+          const ts = document.getElementById('timerSection');
+          if (ts) ts.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        };
+      }
+    } else {
+      const msg = document.getElementById('nextStepWarning');
+      if (msg) {
+        msg.style.display = 'block';
+        setTimeout(function() { msg.style.display = 'none'; }, 3000);
+      }
+    }
   }
 
   /* ── Step 2 load ─────────────────────────────────────── */
@@ -570,24 +755,34 @@
     clearInterval(stepTimer);
     stepSecsLeft = STEP_DURATION;
 
-    const pb     = document.getElementById('progressBar');
-    const numEl  = document.getElementById(step === 1 ? 's1TimerNum' : 's2TimerNum');
-    const hintEl = document.getElementById(step === 1 ? 's1Hint'     : 's2Hint');
-
     setTimeout(() => {
+      const pb = document.getElementById('progressBar');
       if (pb) { pb.style.transition = 'width ' + STEP_DURATION + 's linear'; pb.style.width = '100%'; }
     }, 50);
 
     stepTimer = setInterval(function() {
       stepSecsLeft--;
-      if (numEl)  numEl.textContent  = Math.max(0, stepSecsLeft);
-      if (hintEl) hintEl.textContent = step === 1
-        ? (stepSecsLeft > 0 ? 'Scroll down and read the article... (' + stepSecsLeft + 's)' : '✅ You can continue now!')
-        : (stepSecsLeft > 0 ? 'Hang tight, reward being prepared... (' + stepSecsLeft + 's)' : '✅ Tap below to claim!');
+
+      if (step === 1) {
+        const _numEl  = document.getElementById('s1TimerNum');
+        const _hintEl = document.getElementById('s1Hint');
+        if (_numEl)  _numEl.textContent  = Math.max(0, stepSecsLeft);
+        if (_hintEl) _hintEl.textContent = stepSecsLeft > 0
+          ? 'Scroll down and read the article... (' + stepSecsLeft + 's)'
+          : '✅ You can continue now!';
+      } else {
+        const _numEl  = document.getElementById('s2TimerNum');
+        const _hintEl = document.getElementById('s2Hint');
+        if (_numEl)  _numEl.textContent  = Math.max(0, stepSecsLeft);
+        if (_hintEl) _hintEl.textContent = stepSecsLeft > 0
+          ? 'Hang tight, reward being prepared... (' + stepSecsLeft + 's)'
+          : '✅ Tap below to claim!';
+      }
 
       if (stepSecsLeft <= 0) {
         clearInterval(stepTimer);
-        if (pb) pb.style.width = '100%';
+        const _pb = document.getElementById('progressBar');
+        if (_pb) _pb.style.width = '100%';
         onStepComplete(step);
       }
     }, 1000);
@@ -601,9 +796,6 @@
     } else {
       const btn = document.getElementById('claimBtn');
       if (btn) btn.style.display = 'block';
-      // Scroll button bhi dikhao
-      const sb = document.getElementById('scrollToClaimBtn');
-      if (sb) sb.style.display = 'block';
     }
   }
 
@@ -619,6 +811,8 @@
     incrementWatchCount();
     const cooldownUntil = Date.now() + COOLDOWN_DURATION * 1000;
     localStorage.setItem(KEY_COOLDOWN_UNTIL, String(cooldownUntil));
+    // Pending prize clear karo claim ke baad
+    try { localStorage.removeItem('tn_spin_pending_prize'); } catch(e) {}
 
     if (uid && uid !== 'null') {
       // ── Update localStorage spin count ──────────────────
