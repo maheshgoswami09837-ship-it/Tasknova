@@ -1088,7 +1088,15 @@
   scheduleMidnightReset();
   // ─────────────────────────────────────────────────────────────
   function getAdBatchCount() {
-    // watch_ad.html 'tasknova_daily' key mein watchRounds save karta hai
+    // Pehle tasknova_daily_{uid}_{date} mein adsWatched check karo (new format)
+    try {
+      const todayStr = new Date(Date.now() + 5.5*60*60*1000).toISOString().split('T')[0];
+      const uid = localStorage.getItem('tasknova_uid') || 'guest';
+      const newKey = 'tasknova_daily_' + uid + '_' + todayStr;
+      const newData = JSON.parse(localStorage.getItem(newKey) || '{}');
+      if (newData.adsWatched != null) return newData.adsWatched;
+    } catch(e) {}
+    // Fallback: watch_ad.html wala purana 'tasknova_daily' key (bina date)
     try {
       const daily = JSON.parse(localStorage.getItem('tasknova_daily_' + _uid()) || '{}');
       const todayStr = new Date().toISOString().slice(0,10);
@@ -1100,7 +1108,18 @@
     const raw = parseInt(localStorage.getItem(getKey(AD_COUNT_KEY)) || '0');
     return isNaN(raw) ? 0 : raw;
   }
-  function setAdBatchCount(n) { localStorage.setItem(getKey(AD_COUNT_KEY), n); }
+  function setAdBatchCount(n) {
+    localStorage.setItem(getKey(AD_COUNT_KEY), n);
+    // Naye key mein bhi save karo taaki getAdBatchCount sahi padhे
+    try {
+      const todayStr = new Date(Date.now() + 5.5*60*60*1000).toISOString().split('T')[0];
+      const uid = localStorage.getItem('tasknova_uid') || 'guest';
+      const newKey = 'tasknova_daily_' + uid + '_' + todayStr;
+      const newData = JSON.parse(localStorage.getItem(newKey) || '{}');
+      newData.adsWatched = n;
+      localStorage.setItem(newKey, JSON.stringify(newData));
+    } catch(e) {}
+  }
 
   function get1MinUntil()   { const v = parseInt(localStorage.getItem(getKey(AD_1MIN_KEY))); return (!v || isNaN(v)) ? 0 : v; }
   function get5HrUntil()    { const v = parseInt(localStorage.getItem(getKey(AD_5HR_KEY)));  return (!v || isNaN(v)) ? 0 : v; }
