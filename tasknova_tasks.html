@@ -2343,18 +2343,18 @@
           const earnedDB = (data.dailyTasks && data.dailyTasks[todayKey] && data.dailyTasks[todayKey].earned != null)
             ? data.dailyTasks[todayKey].earned : 0;
 
-          // ── Ek hi baar sab localStorage mein save karo ───────
+          // ── Firebase data seedha localStorage mein save karo ──
+          // Firebase ALWAYS wins — local se max mat lo, warna dusri ID ka data mix ho jaata hai
           const _ld = getDailyData();
-          const spinsFinal = Math.max(_ld.spins || 0, spinsDB);
+          // Sirf agar local aage hai Firebase se (same session mein kuch kiya ho) tab local rakh
+          // Yeh check UID-based hai isliye dusri ID ka data mix nahi hoga
+          const spinsFinal = spinsDB; // Firebase is final
           _ld.spins     = spinsFinal;
-          _ld.scratches = Math.max(_ld.scratches || 0, scratchesDB);
-          _ld.quizzes   = Math.max(_ld.quizzes   || 0, quizzesDB);
-          _ld.earned    = Math.max(_ld.earned     || 0, earnedDB);
-          _ld.checkin   = _ld.checkin || checkinDoneDB;
+          _ld.scratches = scratchesDB;
+          _ld.quizzes   = quizzesDB;
+          _ld.earned    = earnedDB;
+          _ld.checkin   = checkinDoneDB;
           saveDailyData(_ld);
-
-          // Firebase push agar local aage hai
-          if (spinsFinal > spinsDB) syncSpinsToFirebase(spinsFinal);
 
           // ── UI badges update ──────────────────────────────────
           if (spinBadge) spinBadge.textContent = spinsFinal + '/' + SPIN_TOTAL_MAX;
