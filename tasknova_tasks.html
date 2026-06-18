@@ -447,7 +447,7 @@
     <!-- 1. Offerwall Task -->
     <div class="task-card" data-order="0" data-category="survey"
       style="background:linear-gradient(135deg,rgba(108,99,255,0.18),rgba(59,130,246,0.12));border-color:rgba(108,99,255,0.35);"
-      id="offerwallCard" onclick="openOfferwallPage()">
+      id="offerwallCard">
       <div class="task-icon icon-purple">
         <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg>
       </div>
@@ -463,12 +463,12 @@
       <div class="task-reward">
         <div class="coins-reward">+2000</div>
         <div class="rupee">🪙 per offer</div>
-        <button class="do-btn" id="offerwallBtn" onclick="event.stopPropagation();openOfferwallPage()">Open</button>
+        <button class="do-btn" id="offerwallBtn" onclick="openOfferwallPage()">Open</button>
       </div>
     </div>
 
     <!-- 3. Survey Task -->
-    <div class="task-card" data-order="0" data-category="survey" id="surveyCard" onclick="openSurvey()">
+    <div class="task-card" data-order="0" data-category="survey" id="surveyCard">
       <div class="task-icon icon-blue">
         <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/></svg>
       </div>
@@ -483,14 +483,14 @@
       <div class="task-reward">
         <div class="coins-reward">+2000</div>
         <div class="rupee">🪙 per survey</div>
-        <button class="do-btn" id="surveyBtn">Start</button>
+        <button class="do-btn" id="surveyBtn" onclick="openSurvey()">Start</button>
       </div>
     </div>
 
 
 
     <!-- Special Tasks -->
-    <div class="task-card" data-order="0" data-category="watchads" id="specialTaskCard" onclick="if(typeof openSpecialTasks==='function'){openSpecialTasks();}else{setTimeout(openSpecialTasks,300);}">
+    <div class="task-card" data-order="0" data-category="watchads" id="specialTaskCard">
       <div class="task-icon" style="background:linear-gradient(135deg,#f97316,#ef4444);">
         <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" fill="#fff" stroke="none"/>
@@ -506,7 +506,7 @@
       <div class="task-reward">
         <div class="coins-reward">+1000</div>
         <div class="rupee">🪙 per task</div>
-        <button class="do-btn">Start</button>
+        <button class="do-btn" id="specialTaskBtn" onclick="if(typeof openSpecialTasks==='function'){openSpecialTasks();}else{setTimeout(openSpecialTasks,300);}">Start</button>
       </div>
     </div>
 
@@ -2304,7 +2304,16 @@
 
           // ── Shortlink — DB se today count ─────────────────────
           const slBadge = document.getElementById('shortlinkCountBadge');
-          const slToday = (data.dailyTasks && data.dailyTasks[todayKey] && data.dailyTasks[todayKey].shortlinks) || data.shortlinkToday || 0;
+          const slTodayDB = (data.dailyTasks && data.dailyTasks[todayKey] && data.dailyTasks[todayKey].shortlinks) || data.shortlinkToday || 0;
+          // Local count bhi nikaalo aur jo bhi zyada ho wahi maano —
+          // isse stale Firebase fetch local ke fresh count ko neeche nahi le jaayega
+          let _slLocalForBadge = 0;
+          try {
+            const _slRawB = localStorage.getItem('sl_data_' + _uid());
+            const _slObjB = _slRawB ? JSON.parse(_slRawB) : {};
+            _slLocalForBadge = (_slObjB.date === todayKey) ? (_slObjB.done || 0) : 0;
+          } catch(e) {}
+          const slToday = Math.max(slTodayDB, _slLocalForBadge);
           if (slBadge) slBadge.textContent = slToday + '/' + MAX_SHORTLINKS;
           // sl_data localStorage mein sync karo taaki dusre device pe bhi count sahi rahe
           try {
@@ -4618,6 +4627,16 @@
                 extraData:{ claimedAt: Date.now() }
               });
 
+              // dailyTasks mein progress (1/2) bhi save karo — pehle yeh
+              // sirf final claim (2/2) pe hota tha, isliye 1st shortlink ke
+              // baad badge reload/Special Tasks pe wapas 0/2 dikhta tha.
+              const _slTodayKey1 = new Date(Date.now() + 5.5*60*60*1000).toISOString().split('T')[0];
+              fetch(DB_URL + '/users/' + uid + '/dailyTasks/' + _slTodayKey1 + '/shortlinks.json' + ap, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: String(d.done)
+              }).catch(e => console.warn('[Shortlink] progress save error:', e));
+
               const visitBtn2 = document.getElementById('slVisitBtn');
               if (visitBtn2) {
                 visitBtn2.textContent = '🔗 Visit Link';
@@ -4914,6 +4933,19 @@
       }
       if (typeof showToast === 'function') showToast('+' + coins + ' Coins Collected! 🎉', 'linear-gradient(135deg,#22c55e,#16a34a)');
       _markWaCollectedToday();
+      // Firebase mein bhi mark karo — taaki dusre device pe dobara claim na ho sake
+      var _uidWaCol = localStorage.getItem('tasknova_uid');
+      if (_uidWaCol && _uidWaCol !== 'null' && typeof window._getAuthToken === 'function') {
+        window._getAuthToken().then(function(token) {
+          var ap = token ? '?auth=' + token : '';
+          var todayKeyWa = _getTodayKey();
+          fetch(DB_URL + '/users/' + _uidWaCol + '/dailyTasks/' + todayKeyWa + '/waSpecialCollected.json' + ap, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: 'true'
+          }).catch(function(e) { console.warn('[SpecialTasks] waSpecialCollected save error:', e); });
+        });
+      }
       _waSpecialCount = _waSpecialMax; // badge 10/10 rahega
       _saveSpecialCount('wa', _waSpecialMax);
       badge.textContent = _waSpecialMax + '/' + _waSpecialMax;
@@ -4966,7 +4998,7 @@
     }
   }
 
-  function _applySpecialTasksUI(spinCount, slCount, waCount) {
+  function _applySpecialTasksUI(spinCount, slCount, waCount, waCollected) {
     // ── Spin ──
     var spCountEl = document.getElementById('spSpecialCount');
     if (spCountEl) spCountEl.textContent = Math.min(spinCount, SPIN_TOTAL_MAX) + '/' + SPIN_TOTAL_MAX;
@@ -4983,7 +5015,9 @@
     }
 
     // ── Shortlink ──
-    _slSpecialCount = Math.min(slCount, _slSpecialMax);
+    // Local aur Firebase mein se jo bhi zyada ho wahi maano (ads wali fix jaisa)
+    var _slLocalCount2 = (typeof getSlData === 'function') ? (getSlData().done || 0) : 0;
+    _slSpecialCount = Math.min(Math.max(slCount, _slLocalCount2), _slSpecialMax);
     var slBadge = document.getElementById('slSpecialBadge');
     var slBtn   = document.getElementById('slSpecialBtn');
     if (slBadge) slBadge.textContent = _slSpecialCount + '/' + _slSpecialMax;
@@ -4996,15 +5030,21 @@
     }
 
     // ── Watch Ads ──
-    _waSpecialCount = Math.min(waCount, _waSpecialMax);
-    // localStorage bhi sync karo
-    if (typeof setAdBatchCount === 'function' && waCount > (typeof getAdBatchCount === 'function' ? getAdBatchCount() : 0)) {
-      setAdBatchCount(waCount);
+    // Local aur Firebase mein se jo bhi zyada ho wahi maano — isse ek
+    // stale/abhi-tak-incomplete Firebase fetch local ke fresh count ko
+    // neeche nahi le jaayega, aur dusre device pe Firebase ka higher
+    // count bhi sahi se reflect hoga.
+    var _waLocalCount = (typeof getAdBatchCount === 'function') ? getAdBatchCount() : 0;
+    _waSpecialCount = Math.min(Math.max(waCount, _waLocalCount), _waSpecialMax);
+    // localStorage ko bhi sync karo (jo bhi zyada nikla)
+    if (typeof setAdBatchCount === 'function' && _waSpecialCount > _waLocalCount) {
+      setAdBatchCount(_waSpecialCount);
     }
     var waBadge = document.getElementById('waSpecialBadge');
     var waBtn   = document.getElementById('waSpecialBtn');
     if (waBadge) waBadge.textContent = _waSpecialCount + '/' + _waSpecialMax;
-    if (_isWaCollectedToday()) {
+    if (waCollected || _isWaCollectedToday()) {
+      if (!_isWaCollectedToday()) _markWaCollectedToday(); // Firebase se pata chala, local bhi sync karo
       if (waBtn) { waBtn.textContent = 'Done ✓'; waBtn.style.background = 'rgba(255,255,255,0.1)'; waBtn.style.color = 'rgba(255,255,255,0.35)'; waBtn.disabled = true; }
     } else if (_waSpecialCount >= _waSpecialMax && waBtn) {
       waBtn.textContent = 'Collect'; waBtn.style.background = 'linear-gradient(135deg,#16a34a,#22c55e)'; waBtn.style.color = '#fff'; waBtn.disabled = false;
@@ -5037,6 +5077,7 @@
             var fbSpin = (dayData && dayData.spins   != null) ? dayData.spins   : 0;
             var fbSl   = (dayData && dayData.shortlinks != null) ? dayData.shortlinks : 0;
             var fbWa   = (dayData && dayData.adsWatched != null) ? dayData.adsWatched : 0;
+            var fbWaCollected = !!(dayData && dayData.waSpecialCollected);
 
             // Local bhi sync karo
             if (typeof getDailyData === 'function' && typeof saveDailyData === 'function') {
@@ -5052,7 +5093,7 @@
               }
             } catch(e) {}
 
-            _applySpecialTasksUI(fbSpin, fbSl, fbWa);
+            _applySpecialTasksUI(fbSpin, fbSl, fbWa, fbWaCollected);
           })
           .catch(function() {
             // Firebase fail — local fallback
