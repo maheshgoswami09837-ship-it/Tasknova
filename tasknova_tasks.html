@@ -2211,7 +2211,7 @@
       adsWatchedToday = 0;
 
       // ── Shortlink reset ──────────────────────────────────────
-      const slFresh = { date: new Date().toDateString(), done: 0 };
+      const slFresh = { date: new Date(Date.now() + 5.5*60*60*1000).toISOString().split('T')[0], done: 0 };
       localStorage.setItem('sl_data_' + _uid(), JSON.stringify(slFresh));
       const uidReset = localStorage.getItem('tasknova_uid');
       if (uidReset && uidReset !== 'null') {
@@ -4373,7 +4373,7 @@
     document.body.style.width = '100%';
     // Firebase se latest data load karo pehle
     const uid = localStorage.getItem('tasknova_uid');
-    const today = new Date().toDateString();
+    const today = new Date(Date.now() + 5.5*60*60*1000).toISOString().split('T')[0];
     if (uid && uid !== 'null') {
       window._getAuthToken && window._getAuthToken().then(token => {
         const ap = token ? '?auth=' + token : '';
