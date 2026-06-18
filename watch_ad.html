@@ -1104,14 +1104,23 @@ function claimCoins() {
   const cooldownUntil = Date.now() + COOLDOWN_DURATION * 1000;
   safeSet(getCooldownKey(), String(cooldownUntil));
 
+  function goToTasks() { window.location.href = 'tasknova_tasks.html'; }
+
   // ── Firebase mein adsWatched + coins save karo (cross-device sync) ──
+  // IMPORTANT: navigate sirf save complete hone ke baad karo (ya safety
+  // timeout pe), warna page-unload se PATCH cancel ho jaata hai aur
+  // Firebase mein count kabhi save hi nahi hota — yahi badge na badhne
+  // aur dusre device pe reset dikhne wale bug ka asli reason tha.
   const uid = _getUID();
   if(uid && uid !== 'null' && uid !== 'guest' && typeof window._getAuthToken === 'function') {
+    let navigated = false;
+    const safetyNav = setTimeout(function(){ if(!navigated){ navigated = true; goToTasks(); } }, 3500);
+
     window._getAuthToken().then(function(token) {
       const ap = token ? '?auth=' + token : '';
       const todayKey = _getTodayIST();
       // Pehle current coins padho, phir add karo
-      fetch(DB_URL + '/users/' + uid + '.json' + ap)
+      return fetch(DB_URL + '/users/' + uid + '.json' + ap, { keepalive: true })
         .then(function(r){ return r.json(); })
         .then(function(data) {
           if(!data) return;
@@ -1130,16 +1139,19 @@ function claimCoins() {
           return fetch(DB_URL + '/users/' + uid + '.json' + ap, {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(patch)
+            body: JSON.stringify(patch),
+            keepalive: true
           });
-        })
-        .catch(function(e){ console.warn('[WatchAd] Firebase save error:', e); });
+        });
+    })
+    .catch(function(e){ console.warn('[WatchAd] Firebase save error:', e); })
+    .then(function(){
+      clearTimeout(safetyNav);
+      if(!navigated){ navigated = true; goToTasks(); }
     });
+  } else {
+    setTimeout(goToTasks, 1200);
   }
-
-  setTimeout(function(){
-    window.location.href = 'tasknova_tasks.html';
-  }, 1200);
 }
 
 /* ══ Penalty ══ */
