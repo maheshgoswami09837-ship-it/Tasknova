@@ -828,7 +828,6 @@
     const btn = document.getElementById('claimBtn');
     if (btn) { btn.disabled = true; btn.textContent = '⏳ Crediting...'; }
 
-    incrementWatchCount();
     const cooldownUntil = Date.now() + COOLDOWN_DURATION * 1000;
     localStorage.setItem(getCooldownKey(), String(cooldownUntil));
     try { localStorage.removeItem('tn_spin_pending_prize'); } catch(e) {}
