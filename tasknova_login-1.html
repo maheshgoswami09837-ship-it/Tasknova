@@ -648,6 +648,9 @@
     } else {
       document.getElementById('loadingScreen').style.display = 'none';
       document.getElementById('loginSection').style.display = 'flex';
+      if (window.Android && window.Android.contentReady) {
+        window.Android.contentReady();
+      }
     }
   });
 
@@ -658,6 +661,9 @@
     document.getElementById('loadingScreen').style.display = 'none';
     document.getElementById('loginSection').style.display = 'none';
     document.getElementById('homeSection').style.display  = 'block';
+    if (window.Android && window.Android.contentReady) {
+      window.Android.contentReady();
+    }
     try {
       const snap = await get(ref(db, 'users/' + uid));
       if (snap.exists()) {
