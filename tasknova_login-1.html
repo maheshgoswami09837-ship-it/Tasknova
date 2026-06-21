@@ -282,7 +282,7 @@
     </div>
     <div class="rule-item">
       <div class="rule-num">2</div>
-      <div class="rule-text"><strong>Welcome Bonus:</strong> Signup karne par ₹10 aur 1000 coins milte hain.</div>
+      <div class="rule-text"><strong>Welcome Bonus:</strong> Signup karne par ₹10 (10 coins) milte hain.</div>
     </div>
     <div class="rule-item">
       <div class="rule-num">3</div>
@@ -669,7 +669,7 @@
       if (snap.exists()) {
         const data = snap.val();
         const totalCoins = data.coins || 0;
-        const calculatedBalance = parseFloat((totalCoins / 100).toFixed(2));
+        const calculatedBalance = parseFloat((totalCoins / 1).toFixed(2));
         document.querySelectorAll('.user-balance').forEach(el => el.textContent = '₹' + calculatedBalance.toFixed(2));
         const headerBalEl = document.getElementById('headerBalance');
         if (headerBalEl) headerBalEl.textContent = '₹' + calculatedBalance.toFixed(2);
@@ -856,7 +856,7 @@
       const myReferralCode = generateReferralCode();
 
       await set(ref(db, 'users/' + uid), {
-        name, email, balance: 10, coins: 1000,
+        name, email, balance: 10, coins: 10,
         referralCode: myReferralCode, referredBy: referral || '',
         totalEarned: 10, tasksDone: 0, referrals: 0,
         joinDate: new Date().toISOString(), welcomeBonus: true
@@ -879,9 +879,9 @@
             if (referrerUid) {
               const rData = users[referrerUid];
               const newReferrals = (rData.referrals || 0) + 1;
-              // Referrer ko 100 coins bonus (join bonus — withdraw pe aur milega)
-              const newCoins   = (rData.coins || 0) + 100;
-              const newBalance = parseFloat((newCoins / 100).toFixed(2));
+              // Referrer ko 1 coin bonus (join bonus — withdraw pe aur milega)
+              const newCoins   = (rData.coins || 0) + 1;
+              const newBalance = parseFloat((newCoins / 1).toFixed(2));
               await set(ref(db, 'users/' + referrerUid), {
                 ...rData,
                 referrals:   newReferrals,
