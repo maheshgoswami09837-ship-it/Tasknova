@@ -13,8 +13,8 @@
 //  Coin Formula (dono ke liye same):
 //    USD × 84 (INR rate) = INR
 //    INR × 0.25 (25% user share) = User INR
-//    User INR × 100 = Coins
-//    Balance = Total Coins / 100
+//    User INR × 1 (1 coin = ₹1) = Coins
+//    Balance = Total Coins
 // ============================================================
 
 const FIREBASE_URL      = 'https://tasknova-66d0f-default-rtdb.firebaseio.com';
@@ -24,7 +24,7 @@ const POSTBACK_PASSWORD = process.env.POSTBACK_PASSWORD;
 // ── Shared constants ─────────────────────────────────────────
 const USD_TO_INR      = 84;    // 1 USD = ₹84
 const USER_SHARE      = 0.25;  // 25% user ko milega
-const COINS_PER_RUPEE = 100;   // 100 coins = ₹1
+const COINS_PER_RUPEE = 1;     // 1 coin = ₹1
 
 // Helper: USD → Coins
 // $1 × 84 = ₹84 → ₹84 × 0.25 = ₹21 → ₹21 × 100 = 2100 coins
@@ -47,8 +47,8 @@ export default async function handler(req, res) {
   // ════════════════════════════════════════════════════════════
   //  SOURCE 1 — CPX Research
   //  CPX → amount_usd (publisher dollar payout)
-  //  Formula: amount_usd × 84 × 0.25 × 100 = coins
-  //  Example: $0.50 × 84 = ₹42 → ₹42 × 0.25 = ₹10.50 → 1050 coins
+  //  Formula: amount_usd × 84 × 0.25 × 1 = coins
+  //  Example: $0.50 × 84 = ₹42 → ₹42 × 0.25 = ₹10.50 → 11 coins (rounded)
   // ════════════════════════════════════════════════════════════
   if (source === 'cpx') {
     const { status, trans_id, amount_usd, amount_local, user_id } = req.query;
@@ -59,10 +59,12 @@ export default async function handler(req, res) {
     if (!user_id) {
       return res.status(200).json({ success: false, reason: 'Missing user_id' });
     }
-    if (parseInt(status) !== 1) {
+    const statusCode = parseInt(status);
+    if (statusCode !== 1 && statusCode !== 2) {
       console.log('[CPX] Non-success status:', status, '— skip');
       return res.status(200).send('1');
     }
+    const isBonus = statusCode === 2; // 2 = survey screen-out bonus
 
     // Parse USD amount
     // amount_usd = direct dollar value (e.g. 0.50)
@@ -121,7 +123,7 @@ export default async function handler(req, res) {
         body   : JSON.stringify({
           userId    : user_id,
           taskType  : 'Survey',
-          taskName  : 'CPX Survey Completed',
+          taskName  : isBonus ? 'CPX Survey Screen-Out Bonus' : 'CPX Survey Completed',
           coins     : coinsToAdd,
           status    : 'Success',
           source    : 'CPX Research',
@@ -140,7 +142,7 @@ export default async function handler(req, res) {
         body   : JSON.stringify({ credited: true, coins: coinsToAdd, ts: Date.now() })
       });
 
-      console.log(`[CPX] ✅ +${coinsToAdd} coins → user: ${user_id} | $${usdAmount} → ₹${userShare}`);
+      console.log(`[CPX] ✅ ${isBonus ? '(Bonus) ' : ''}+${coinsToAdd} coins → user: ${user_id} | $${usdAmount} → ₹${userShare}`);
       return res.status(200).send('1');
 
     } catch (e) {
@@ -152,8 +154,8 @@ export default async function handler(req, res) {
   // ════════════════════════════════════════════════════════════
   //  SOURCE 2 — CPALead Offerwall
   //  CPALead → payout (dollar amount)
-  //  Formula: payout × 84 × 0.25 × 100 = coins
-  //  Example: $0.10 × 84 = ₹8.4 → ₹8.4 × 0.25 = ₹2.10 → 210 coins
+  //  Formula: payout × 84 × 0.25 × 1 = coins
+  //  Example: $0.10 × 84 = ₹8.4 → ₹8.4 × 0.25 = ₹2.10 → 2 coins (rounded)
   // ════════════════════════════════════════════════════════════
   if (source === 'cpalead') {
     const { subid, payout, password, offer_name, offer_id, lead_id } = req.query;
