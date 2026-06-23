@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>TaskNova — Coin Migration Tool</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:#0f172a; font-family: -apple-system, 'Segoe UI', Roboto, Arial, sans-serif; min-height:100vh; display:flex; align-items:center; justify-content:center; padding:20px; }
+  .card { background:#1e293b; border-radius:18px; padding:28px 24px; max-width:480px; width:100%; box-shadow:0 10px 40px rgba(0,0,0,0.4); }
+  h1 { color:#fff; font-size:20px; font-weight:800; margin-bottom:6px; }
+  .sub { color:#94a3b8; font-size:13px; margin-bottom:20px; line-height:1.5; }
+  .warn { background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.3); border-radius:12px; padding:14px; margin-bottom:20px; }
+  .warn b { color:#fca5a5; font-size:13px; }
+  .warn p { color:#fca5a5; font-size:12.5px; margin-top:6px; line-height:1.5; }
+  button { width:100%; padding:14px; border:none; border-radius:12px; font-size:15px; font-weight:800; cursor:pointer; margin-bottom:10px; }
+  #scanBtn { background:#3b82f6; color:#fff; }
+  #scanBtn:disabled { background:#475569; cursor:not-allowed; }
+  #migrateBtn { background:#ef4444; color:#fff; display:none; }
+  #migrateBtn:disabled { background:#475569; cursor:not-allowed; }
+  #log { background:#0f172a; border:1px solid #334155; border-radius:10px; padding:14px; margin-top:16px; max-height:320px; overflow-y:auto; font-family:monospace; font-size:12px; color:#cbd5e1; white-space:pre-wrap; display:none; }
+  .stat { display:flex; justify-content:space-between; background:#0f172a; border-radius:10px; padding:12px 14px; margin-bottom:8px; font-size:13px; color:#e2e8f0; }
+  .stat b { color:#60a5fa; }
+  #statsBox { display:none; margin-bottom:16px; }
+</style>
+</head>
+<body>
+
+<div class="card">
+  <h1>🔧 Coin Migration Tool</h1>
+  <p class="sub">Purane system (100 coins = ₹1) se naye system (1 coin = ₹1) mein convert karega. Sabke coins ko ÷100 karega — ek hi baar chalana hai.</p>
+
+  <div class="warn">
+    <b>⚠️ Zaroori baatein</b>
+    <p>1. Pehle "Scan" dabao — yeh sirf dikhayega kitne users affect honge, kuch change nahi karega.<br>
+    2. Phir "Migrate" dabao — yeh actual coins ko Firebase mein update karega.<br>
+    3. Jin users ka migration ho chuka hoga unhe dobara skip kar dega (safe to re-run).</p>
+  </div>
+
+  <div id="statsBox"></div>
+
+  <button id="scanBtn" onclick="scanUsers()">1️⃣ Scan Users (safe, no changes)</button>
+  <button id="migrateBtn" onclick="migrateUsers()">2️⃣ Migrate Now (÷100 coins)</button>
+
+  <div id="log"></div>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+  import { getDatabase, ref, get, update } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyBbDeBse2WXwzd_X0Mr8VyEzytI8Yya_uc",
+    authDomain: "tasknova-66d0f.firebaseapp.com",
+    databaseURL: "https://tasknova-66d0f-default-rtdb.firebaseio.com",
+    projectId: "tasknova-66d0f",
+    storageBucket: "tasknova-66d0f.firebasestorage.app",
+    messagingSenderId: "135129024485",
+    appId: "1:135129024485:web:232a90fd0752086568510c"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+
+  let usersToMigrate = [];
+
+  function logMsg(msg) {
+    const log = document.getElementById('log');
+    log.style.display = 'block';
+    log.textContent += msg + '\n';
+    log.scrollTop = log.scrollHeight;
+  }
+
+  window.scanUsers = async function() {
+    const scanBtn = document.getElementById('scanBtn');
+    const migrateBtn = document.getElementById('migrateBtn');
+    const statsBox = document.getElementById('statsBox');
+    scanBtn.disabled = true;
+    scanBtn.textContent = 'Scanning...';
+    document.getElementById('log').textContent = '';
+    document.getElementById('log').style.display = 'block';
+    logMsg('🔍 Fetching all users from Firebase...');
+
+    try {
+      const snap = await get(ref(db, 'users'));
+      if (!snap.exists()) {
+        logMsg('❌ No users found.');
+        scanBtn.disabled = false;
+        scanBtn.textContent = '1️⃣ Scan Users (safe, no changes)';
+        return;
+      }
+
+      const allUsers = snap.val();
+      const uids = Object.keys(allUsers);
+      logMsg(`✅ Total users found: ${uids.length}`);
+
+      usersToMigrate = [];
+      let alreadyMigrated = 0;
+      let zeroCoins = 0;
+
+      uids.forEach(uid => {
+        const u = allUsers[uid];
+        const coins = u.coins || 0;
+        if (u.coinsMigratedV2) {
+          alreadyMigrated++;
+          return;
+        }
+        if (coins === 0) {
+          zeroCoins++;
+          return;
+        }
+        usersToMigrate.push({ uid, oldCoins: coins, newCoins: Math.round((coins / 100) * 100) / 100 });
+      });
+
+      logMsg(`⏭️  Already migrated (skip): ${alreadyMigrated}`);
+      logMsg(`⏭️  Zero coins (skip): ${zeroCoins}`);
+      logMsg(`🟡 Users pending migration: ${usersToMigrate.length}`);
+      logMsg('');
+      logMsg('Preview (first 10):');
+      usersToMigrate.slice(0, 10).forEach(u => {
+        logMsg(`  ${u.uid.slice(0,8)}...  ${u.oldCoins} coins → ${u.newCoins} coins`);
+      });
+
+      statsBox.style.display = 'block';
+      statsBox.innerHTML = `
+        <div class="stat">Total Users <b>${uids.length}</b></div>
+        <div class="stat">Already Migrated <b>${alreadyMigrated}</b></div>
+        <div class="stat">Pending Migration <b>${usersToMigrate.length}</b></div>
+      `;
+
+      if (usersToMigrate.length > 0) {
+        migrateBtn.style.display = 'block';
+        migrateBtn.disabled = false;
+      } else {
+        logMsg('');
+        logMsg('🎉 Nothing to migrate — sab already up to date hai!');
+      }
+
+      scanBtn.textContent = '1️⃣ Scan Users (safe, no changes)';
+      scanBtn.disabled = false;
+
+    } catch (e) {
+      logMsg('❌ Error: ' + e.message);
+      scanBtn.disabled = false;
+      scanBtn.textContent = '1️⃣ Scan Users (safe, no changes)';
+    }
+  };
+
+  window.migrateUsers = async function() {
+    if (usersToMigrate.length === 0) {
+      logMsg('⚠️ Pehle Scan karo.');
+      return;
+    }
+    const confirmed = confirm(`${usersToMigrate.length} users ke coins update honge. Yeh action undo nahi ho sakta. Pakka karna hai?`);
+    if (!confirmed) return;
+
+    const migrateBtn = document.getElementById('migrateBtn');
+    migrateBtn.disabled = true;
+    migrateBtn.textContent = 'Migrating...';
+    logMsg('');
+    logMsg('🚀 Migration shuru ho rahi hai...');
+
+    let success = 0;
+    let failed = 0;
+
+    for (const u of usersToMigrate) {
+      try {
+        await update(ref(db, 'users/' + u.uid), {
+          coins: u.newCoins,
+          coinsMigratedV2: true
+        });
+        success++;
+        logMsg(`✅ ${u.uid.slice(0,8)}...  ${u.oldCoins} → ${u.newCoins}`);
+      } catch (e) {
+        failed++;
+        logMsg(`❌ ${u.uid.slice(0,8)}... FAILED: ${e.message}`);
+      }
+    }
+
+    logMsg('');
+    logMsg(`🎉 Migration complete! Success: ${success}, Failed: ${failed}`);
+    migrateBtn.textContent = '✅ Migration Done';
+    usersToMigrate = [];
+  };
+</script>
+</body>
+</html>
