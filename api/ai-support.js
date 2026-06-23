@@ -1,6 +1,6 @@
 // /api/ai-support.js
 // TaskNova AI Support Assistant — Vercel Serverless Function
-// Uses Google Gemini API (free tier) — gemini-1.5-flash model.
+// Uses Google Gemini API (free tier) — gemini-2.0-flash model.
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -136,7 +136,7 @@ TUMHARA BEHAVIOR:
     contents.push({ role: 'user', parts: [{ text: message.trim() }] });
 
     const geminiRes = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
