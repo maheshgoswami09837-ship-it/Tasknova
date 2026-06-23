@@ -6,65 +6,87 @@
 <title>Daily Check-In</title>
 <style>
   * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; outline:none; }
-  body { font-family:'Segoe UI',sans-serif; background:#eeeeff; min-height:100vh; padding:20px 16px 40px; }
 
-  .back-btn { display:inline-flex; align-items:center; gap:6px; background:none; border:none; color:#6c3aff; font-size:15px; font-weight:700; cursor:pointer; margin-bottom:16px; padding:0; }
+  :root {
+    --ink:#1a1530; --muted:#948da8; --brand:#6c3aff; --brand-deep:#4f46e5;
+    --gold:#f5a623; --line:#eee7ff;
+  }
 
-  .card { background:#fff; border-radius:24px; padding:24px 20px 32px; width:100%; box-shadow:0 8px 32px rgba(108,99,255,0.12); }
+  body {
+    font-family:'Segoe UI',-apple-system,Roboto,sans-serif;
+    background:linear-gradient(160deg,#f3effc 0%,#eaeeff 55%,#eef2ff 100%);
+    min-height:100vh; padding:20px 16px 40px; color:var(--ink);
+  }
 
-  .card-header { display:flex; align-items:center; gap:12px; margin-bottom:24px; padding-bottom:16px; border-bottom:1px solid #f0f0f0; }
-  .card-header .icon { width:44px; height:44px; background:#ede9fe; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:22px; }
-  .card-header h2 { font-size:20px; font-weight:800; color:#111; }
+  .back-btn { display:inline-flex; align-items:center; gap:6px; background:none; border:none; color:var(--brand); font-size:15px; font-weight:700; cursor:pointer; margin-bottom:18px; padding:0; }
 
-  .streak-scroll { overflow-x:auto; overflow-y:visible; -webkit-overflow-scrolling:touch; padding:20px 4px 12px; scrollbar-width:none; }
+  /* ── Streak flame hero ───────────────────────── */
+  .flame-hero { display:flex; align-items:center; gap:14px; margin-bottom:18px; padding:16px 18px; border-radius:20px; background:linear-gradient(135deg,#2b1a55,#4f2bb3); box-shadow:0 10px 28px rgba(76,41,200,0.28); position:relative; overflow:hidden; }
+  .flame-hero::after { content:''; position:absolute; inset:0; background:radial-gradient(circle at 85% 0%, rgba(255,255,255,0.16), transparent 55%); }
+  .flame-icon { display:flex; align-items:center; justify-content:center; flex-shrink:0; filter:drop-shadow(0 0 10px rgba(255,120,0,0.7)); animation:flameFlicker 1.6s ease-in-out infinite; }
+  @keyframes flameFlicker { 0%,100%{ transform:scale(1) rotate(-2deg);} 50%{ transform:scale(1.08) rotate(2deg);} }
+  .flame-text { position:relative; z-index:1; }
+  .flame-text .label { font-size:11px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:rgba(255,255,255,0.65); }
+  .flame-text .value { font-size:23px; font-weight:900; color:#fff; line-height:1.2; }
+  .flame-text .value span { font-size:18px; margin-left:2px; }
+
+  .card { background:#fff; border-radius:26px; padding:22px 18px 30px; width:100%; box-shadow:0 14px 36px rgba(108,58,255,0.14), 0 2px 8px rgba(108,58,255,0.06); }
+
+  .card-header { display:flex; align-items:center; gap:12px; margin-bottom:22px; padding-bottom:16px; border-bottom:1px solid var(--line); }
+  .card-header .icon { width:44px; height:44px; background:linear-gradient(135deg,#ede9fe,#e0d4ff); border-radius:13px; display:flex; align-items:center; justify-content:center; font-size:22px; flex-shrink:0; }
+  .card-header h2 { font-size:19px; font-weight:800; color:var(--ink); letter-spacing:-0.01em; }
+  .card-header .sub { font-size:12px; color:var(--muted); font-weight:600; margin-top:1px; }
+
+  .streak-scroll { overflow-x:auto; overflow-y:visible; -webkit-overflow-scrolling:touch; touch-action:pan-x; padding:22px 4px 14px; scrollbar-width:none; }
   .streak-scroll::-webkit-scrollbar { display:none; }
 
   .streak-row { display:flex; align-items:flex-start; width:max-content; padding:8px 8px 4px; gap:0; position:relative; }
 
-  .day-item { display:flex; flex-direction:column; align-items:center; gap:10px; position:relative; width:86px; }
+  .day-item { display:flex; flex-direction:column; align-items:center; gap:9px; position:relative; width:86px; }
 
-  /* connecting line */
-  .day-item:not(:last-child)::after { content:''; position:absolute; top:36px; left:calc(50% + 26px); width:calc(86px - 52px); height:3px; background:#6c3aff; z-index:0; }
-  .day-item.future:not(:last-child)::after { background:#ddd; }
+  /* connecting line — dashed */
+  .day-item:not(:last-child)::after { content:''; position:absolute; top:35px; left:calc(50% + 25px); width:calc(86px - 50px); height:3px; background-image:linear-gradient(90deg, var(--brand) 50%, transparent 50%); background-size:8px 3px; z-index:0; border-radius:3px; }
+  .day-item.future:not(:last-child)::after { background-image:linear-gradient(90deg, #ddd 50%, transparent 50%); background-size:8px 3px; }
 
   /* coin circle */
-  .coin-wrap { width:60px; height:60px; border-radius:50%; display:flex; align-items:center; justify-content:center; position:relative; z-index:1; flex-shrink:0; transition:all 0.3s; }
+  .coin-wrap { width:58px; height:58px; border-radius:50%; display:flex; align-items:center; justify-content:center; position:relative; z-index:1; flex-shrink:0; transition:all 0.3s; }
 
-  /* states */
-  .coin-wrap.claimed  { background:#f0f0f0; border:2.5px solid #6c3aff; }
-  .coin-wrap.active   { background:#fff8e1; border:3px solid #6c3aff; box-shadow:0 0 0 5px rgba(108,58,255,0.13); width:66px; height:66px; }
-  .coin-wrap.future   { background:#f5f5f5; border:2.5px solid #e0e0e0; }
+  .coin-wrap.claimed  { background:linear-gradient(135deg,#f3effc,#eee7ff); border:2.5px solid var(--brand); box-shadow:0 3px 9px rgba(108,58,255,0.13); }
+  .coin-wrap.active   { background:linear-gradient(135deg,#fff8e1,#ffefc4); border:3px solid var(--brand); box-shadow:0 0 0 5px rgba(108,58,255,0.13), 0 6px 16px rgba(245,166,35,0.25); width:64px; height:64px; }
+  .coin-wrap.future   { background:#f6f5fa; border:2.5px dashed #ddd6ec; box-shadow:inset 0 1px 4px rgba(108,58,255,0.05); }
+
+  /* milestone (day 7 / 14) — star ring */
+  .coin-wrap.milestone:not(.future) { box-shadow:0 0 0 4px rgba(245,166,35,0.2); }
+  .coin-wrap.milestone::before { content:'★'; position:absolute; top:-8px; right:-5px; font-size:12px; color:#fff; background:linear-gradient(135deg,var(--gold),#e0840f); width:19px; height:19px; border-radius:50%; display:flex; align-items:center; justify-content:center; box-shadow:0 2px 6px rgba(229,145,15,0.5); z-index:2; }
 
   /* pointer */
-  .pointer { position:absolute; top:-18px; left:50%; transform:translateX(-50%); width:0; height:0; border-left:8px solid transparent; border-right:8px solid transparent; border-top:12px solid #6c3aff; }
+  .pointer { position:absolute; top:-17px; left:50%; transform:translateX(-50%); width:0; height:0; border-left:8px solid transparent; border-right:8px solid transparent; border-top:11px solid var(--brand); }
 
-  /* coin emoji sizes */
-  .coin-wrap.claimed .coin-emoji { font-size:28px; opacity:0.45; filter:grayscale(0.6); }
-  .coin-wrap.active  .coin-emoji { font-size:34px; filter:drop-shadow(0 2px 6px rgba(245,166,35,0.7)); }
-  .coin-wrap.future  .coin-emoji { font-size:26px; opacity:0.25; filter:grayscale(1); }
+  .coin-wrap.claimed .coin-emoji { font-size:26px; opacity:0.5; filter:grayscale(0.5); }
+  .coin-wrap.active  .coin-emoji { font-size:32px; filter:drop-shadow(0 2px 6px rgba(245,166,35,0.7)); }
+  .coin-wrap.future  .coin-emoji { font-size:24px; opacity:0.35; filter:grayscale(1); }
 
-  /* coin pop */
   @keyframes coinPop { 0%{transform:translateY(0) scale(0);opacity:0} 50%{transform:translateY(-28px) scale(1.3);opacity:1} 100%{transform:translateY(-48px) scale(1);opacity:0} }
-  @keyframes pulse { 0%,100%{box-shadow:0 0 0 5px rgba(108,58,255,0.13)} 50%{box-shadow:0 0 0 8px rgba(108,58,255,0.22)} }
+  @keyframes pulse { 0%,100%{box-shadow:0 0 0 5px rgba(108,58,255,0.13), 0 6px 16px rgba(245,166,35,0.25)} 50%{box-shadow:0 0 0 9px rgba(108,58,255,0.24), 0 6px 20px rgba(245,166,35,0.4)} }
   .coin-wrap.active { animation:pulse 1.8s ease-in-out infinite; }
   .coin-pop { position:absolute; top:0; left:50%; transform:translateX(-50%); font-size:18px; animation:coinPop 0.8s ease forwards; pointer-events:none; z-index:10; }
 
-  .day-label { font-size:11px; font-weight:700; color:#aaa; white-space:nowrap; }
-  .day-label.active  { color:#6c3aff; font-weight:800; }
-  .day-label.claimed { color:#888; }
+  .day-label { font-size:11px; font-weight:700; color:#b4adc9; white-space:nowrap; }
+  .day-label.active  { color:var(--brand); font-weight:800; }
+  .day-label.claimed { color:#998fb8; }
 
-  .reward-badge { display:inline-flex; align-items:center; gap:3px; background:#f5f5ff; border-radius:8px; padding:4px 9px; font-size:12px; font-weight:700; color:#888; }
-  .reward-badge.active  { background:#ede9fe; color:#6c3aff; }
-  .reward-badge.claimed { background:#f0f0f0; color:#aaa; }
+  .reward-badge { display:inline-flex; align-items:center; gap:3px; background:#f5f5ff; border-radius:8px; padding:4px 9px; font-size:12px; font-weight:700; color:#998fb8; }
+  .reward-badge.active  { background:#ede9fe; color:var(--brand); }
+  .reward-badge.claimed { background:#f1eefb; color:#a89dc4; }
 
-  .streak-info { text-align:center; margin:20px 0 6px; font-size:13px; color:#888; font-weight:600; }
-  .streak-info strong { color:#6c3aff; }
+  .streak-info { text-align:center; margin:22px 0 6px; font-size:13.5px; color:var(--muted); font-weight:600; line-height:1.5; }
+  .streak-info strong { color:var(--brand); }
 
-  .claim-btn { width:60%; margin:16px auto 0; padding:14px; background:linear-gradient(135deg,#6c3aff,#4f46e5); border:none; border-radius:50px; color:#fff; font-size:15px; font-weight:800; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; box-shadow:0 6px 18px rgba(108,58,255,0.4); }
+  .claim-btn { width:64%; margin:18px auto 0; padding:15px; background:linear-gradient(135deg,var(--brand),var(--brand-deep)); border:none; border-radius:50px; color:#fff; font-size:15px; font-weight:800; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; box-shadow:0 8px 22px rgba(108,58,255,0.4); transition:transform 0.15s; }
   .claim-btn:active { transform:scale(0.96); }
-  .claim-btn:disabled { background:#ccc; box-shadow:none; cursor:not-allowed; animation:none; }
+  .claim-btn:disabled { background:#ddd9e6; box-shadow:none; cursor:not-allowed; animation:none; color:#a39ab8; }
 
-  .toast { position:fixed; bottom:30px; left:50%; transform:translateX(-50%); background:linear-gradient(135deg,#6c3aff,#4f46e5); color:#fff; padding:12px 28px; border-radius:50px; font-size:15px; font-weight:700; z-index:9999; opacity:0; transition:opacity 0.3s; white-space:nowrap; box-shadow:0 4px 20px rgba(108,58,255,0.4); pointer-events:none; }
+  .toast { position:fixed; bottom:30px; left:50%; transform:translateX(-50%); background:linear-gradient(135deg,var(--brand),var(--brand-deep)); color:#fff; padding:12px 28px; border-radius:50px; font-size:15px; font-weight:700; z-index:9999; opacity:0; transition:opacity 0.3s; white-space:nowrap; box-shadow:0 4px 20px rgba(108,58,255,0.4); pointer-events:none; }
   .toast.show { opacity:1; }
 </style>
 </head>
@@ -75,9 +97,42 @@
   Back
 </button>
 
+<div class="flame-hero">
+  <div class="flame-icon">
+    <svg width="38" height="38" viewBox="0 0 24 24" fill="none">
+      <defs>
+        <linearGradient id="fireGrad" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="#ff9a00"/>
+          <stop offset="100%" stop-color="#ff3d00"/>
+        </linearGradient>
+      </defs>
+      <path d="M12 2C12 2 8 6 8 10C8 10 6 8.5 6.5 6C4 8 3 11 3 13C3 17.97 7.03 22 12 22C16.97 22 21 17.97 21 13C21 8 17 4 12 2Z" fill="url(#fireGrad)"/>
+      <path d="M12 22C14.21 22 16 20.21 16 18C16 15.5 14 13.5 12 12C12 12 10 14 10 16.5C10 17.5 10.5 18.5 11 19C9.5 18.5 8.5 17 8.5 15.5C8.5 15.5 7 16.5 7 18C7 20.21 9.24 22 12 22Z" fill="#ffcc02"/>
+    </svg>
+  </div>
+  <div class="flame-text">
+    <div class="label">Current Streak</div>
+    <div class="value" id="flameStreak">Loading<span></span></div>
+  </div>
+</div>
+
 <div class="card">
   <div class="card-header">
-    <h2>Daily Check-In</h2>
+    <div class="icon">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
+        <rect x="2" y="4" width="20" height="18" rx="3" fill="#ede9fe" stroke="#6c3aff" stroke-width="1.5"/>
+        <rect x="2" y="4" width="20" height="6" rx="3" fill="#6c3aff"/>
+        <rect x="8" y="0" width="2" height="6" rx="1" fill="#6c3aff"/>
+        <rect x="14" y="0" width="2" height="6" rx="1" fill="#6c3aff"/>
+        <rect x="6" y="13" width="3" height="3" rx="0.5" fill="#6c3aff" opacity="0.5"/>
+        <rect x="10.5" y="13" width="3" height="3" rx="0.5" fill="#6c3aff" opacity="0.5"/>
+        <rect x="15" y="13" width="3" height="3" rx="0.5" fill="#6c3aff" opacity="0.5"/>
+      </svg>
+    </div>
+    <div>
+      <h2>Daily Check-In</h2>
+      <div class="sub">14-din streak poora karo, bonus jeeto</div>
+    </div>
   </div>
 
   <div class="streak-scroll">
@@ -128,7 +183,7 @@
 </script>
 
 <script>
-  const REWARDS = [10,10,10,10,10,10,50, 10,10,10,10,10,10,50];
+  const REWARDS = [2,1,1,2,1,1,5, 1,1,1,2,1,1,5];
   const DB_URL  = 'https://tasknova-66d0f-default-rtdb.firebaseio.com';
 
   // ── IST date helper (matches tasks page) ───────────────────────
@@ -152,23 +207,30 @@
     const row = document.getElementById('streakRow');
     row.innerHTML = '';
 
-    for (let i = 0; i < 14; i++) {
-      const isClaimed = i < streak;
-      const isActive  = i === activeDay;
-      const isFuture  = !isClaimed && !isActive;
-      const coins     = REWARDS[i];
+    const flameEl = document.getElementById('flameStreak');
+    if (flameEl) {
+      flameEl.innerHTML = streak > 0 ? `Day ${streak}<span> of 14</span>` : `Shuru karo<span>!</span>`;
+    }
 
-      const wrapCls  = 'coin-wrap ' + (isClaimed ? 'claimed' : isActive ? 'active' : 'future');
+    for (let i = 0; i < 14; i++) {
+      const isClaimed   = i < streak;
+      const isActive    = i === activeDay;
+      const isFuture    = !isClaimed && !isActive;
+      const isMilestone = (i + 1) % 7 === 0;
+      const coins       = REWARDS[i];
+
+      const wrapCls  = 'coin-wrap ' + (isClaimed ? 'claimed' : isActive ? 'active' : 'future') + (isMilestone ? ' milestone' : '');
       const labelCls = 'day-label ' + (isClaimed ? 'claimed' : isActive ? 'active' : '');
       const badgeCls = 'reward-badge ' + (isClaimed ? 'claimed' : isActive ? 'active' : '');
       const itemCls  = 'day-item' + (isFuture ? ' future' : '');
       const pointer  = isActive ? '<div class="pointer"></div>' : '';
+      const emoji    = isMilestone ? '🎁' : '🪙';
 
       row.innerHTML += `
         <div class="${itemCls}" id="dayItem${i}">
           <div class="${wrapCls}" id="coinWrap${i}">
             ${pointer}
-            <span class="coin-emoji">🪙</span>
+            <span class="coin-emoji">${emoji}</span>
           </div>
           <div class="${labelCls}">${i+1} Day</div>
           <div class="${badgeCls}">🪙 ${coins}</div>
@@ -189,7 +251,7 @@
     if (claimed) {
       const isBonus = (streak === 7 || streak === 14);
       info.innerHTML = isBonus
-        ? `🎉 Streak: <strong>Day ${streak}</strong> Complete! Bonus <strong>+50 Coins</strong> milgaye!`
+        ? `🎉 Streak: <strong>Day ${streak}</strong> Complete! Bonus <strong>+${REWARDS[streak-1]} Coins</strong> milgaye!`
         : `Aaj ka check-in ho chuka! Streak: <strong>Day ${streak}</strong>`;
       btn.disabled = true;
       btn.textContent = 'Already Claimed';
@@ -257,7 +319,7 @@
     const yesterdayKey = getYesterdayIST();
 
     let streak = currentStreak;
-    streak = (streak > 0 && (currentLastDateMatches(yesterdayKey))) ? Math.min(streak+1, 14) : 1;
+    streak = (streak > 0 && (currentLastDateMatches(yesterdayKey))) ? (streak >= 14 ? 1 : streak + 1) : 1;
     if (streak > 14) streak = 1;
 
     const coins    = REWARDS[streak-1];
@@ -267,7 +329,7 @@
     if (wrap) {
       const pop = document.createElement('span');
       pop.className = 'coin-pop';
-      pop.textContent = '🪙';
+      pop.textContent = ((dayIndex + 1) % 7 === 0) ? '🎁' : '🪙';
       wrap.appendChild(pop);
       setTimeout(() => pop.remove(), 800);
     }
@@ -291,7 +353,7 @@
       }
 
       const newCoins   = (data.coins || 0) + coins;
-      const newBalance = parseFloat((newCoins / 100).toFixed(2));
+      const newBalance = parseFloat((newCoins / 1).toFixed(2));
 
       const patch = {
         coins: newCoins,
