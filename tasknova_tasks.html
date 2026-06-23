@@ -11,7 +11,7 @@
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent !important; }
   *, *:focus { outline: none !important; -webkit-tap-highlight-color: transparent !important; }
-  body { font-family: 'Segoe UI', sans-serif; background: #000; min-height: 100vh; overflow-x: hidden; padding-bottom: 80px; }
+  body { font-family: 'Segoe UI', sans-serif; background: #000; min-height: 100vh; overflow-x: hidden; padding-bottom: 80px; touch-action: pan-y; }
 
 
   @keyframes twinkle { 0%, 100% { opacity: 0.2; } 50% { opacity: 1; } }
@@ -319,7 +319,7 @@
   .ad-content { width:100%; height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:20px; }
   .ad-skip-btn { position:absolute; top:20px; right:20px; background:rgba(255,255,255,0.15); border:none; color:#fff; padding:8px 16px; border-radius:20px; font-size:13px; font-weight:700; cursor:pointer;  -webkit-tap-highlight-color: transparent; }
   /* ══════════════ WHITE THEME OVERRIDES ══════════════ */
-  body { background: #f5f6fa; }
+  body { background: #f5f6fa; touch-action: pan-y; }
   .header h1 { color: #1a1a2e; }
   .header p { color: rgba(26,26,46,0.45); }
 
@@ -461,7 +461,7 @@
         <span id="offerwallCooldownBadge" style="display:none;font-size:10px;color:#f59e0b;font-weight:700;margin-top:6px;background:rgba(245,158,11,0.15);padding:3px 8px;border-radius:50px;">⏳ --:--:--</span>
       </div>
       <div class="task-reward">
-        <div class="coins-reward">+2000</div>
+        <div class="coins-reward">+20</div>
         <div class="rupee">🪙 per offer</div>
         <button class="do-btn" id="offerwallBtn" onclick="openOfferwallPage()">Open</button>
       </div>
@@ -481,7 +481,7 @@
         </div>
       </div>
       <div class="task-reward">
-        <div class="coins-reward">+2000</div>
+        <div class="coins-reward">+20</div>
         <div class="rupee">🪙 per survey</div>
         <button class="do-btn" id="surveyBtn" onclick="openSurvey()">Start</button>
       </div>
@@ -504,7 +504,7 @@
         </div>
       </div>
       <div class="task-reward">
-        <div class="coins-reward">+1000</div>
+        <div class="coins-reward">+10</div>
         <div class="rupee">🪙 per task</div>
         <button class="do-btn" id="specialTaskBtn" onclick="if(typeof openSpecialTasks==='function'){openSpecialTasks();}else{setTimeout(openSpecialTasks,300);}">Start</button>
       </div>
@@ -521,7 +521,7 @@
         <div class="task-meta"><span class="task-time">⏱ 2 min</span></div>
       </div>
       <div class="task-reward">
-        <div class="coins-reward">+500</div>
+        <div class="coins-reward">+5</div>
         <div class="rupee">🪙 = ₹5</div>
         <div class="coming-soon-badge">🔒 Soon</div>
       </div>
@@ -651,7 +651,7 @@
   <div class="popup-box">
     <div style="font-size:48px;margin-bottom:12px;">🚫</div>
     <div style="font-size:20px;font-weight:800;color:#fff;margin-bottom:8px;">Today's Limit Reached!</div>
-    <div style="font-size:13px;color:rgba(255,255,255,0.5);margin-bottom:20px;">Aapne aaj 1000 coins kama liye! Kal wapas aao 🎉</div>
+    <div style="font-size:13px;color:rgba(255,255,255,0.5);margin-bottom:20px;">Aapne aaj coins kama liye! Kal wapas aao 🎉</div>
     <button onclick="document.getElementById('limitPopup').classList.remove('show')" style="background:linear-gradient(135deg,#6c63ff,#3b82f6);border:none;border-radius:12px;padding:12px 32px;color:#fff;font-size:14px;font-weight:700;cursor:pointer;">OK</button>
   </div>
 </div>
@@ -1536,7 +1536,7 @@
       // ✅ Ad loaded successfully — now credit coins
       console.log('[AdListener] Daily Bonus ad loaded OK');
       try { window.AppInventor && window.AppInventor.setWebViewString('AD_SHOWED:dailyBonus'); } catch(e) {}
-      creditCoins(100, 'bonus').then(earned => {
+      creditCoins(1, 'bonus').then(earned => {
         if (earned > 0) {
           const data = { claimed: true, claimedAt: Date.now() };
           saveDailyBonusData(data);
@@ -1763,7 +1763,7 @@
 
     // Sirf watch_ad.html pe bhejo — wahan sab handle hoga
     localStorage.setItem('pendingAdReward_' + _uid(), JSON.stringify({
-      coins: 10, ts: Date.now(), adNum: batchCount + 1
+      coins: 1, ts: Date.now(), adNum: batchCount + 1
     }));
     window.location.href = 'watch_ad.html';
   }
@@ -1813,7 +1813,7 @@
           .then(r => r.json())
           .then(data => {
             const newCoins   = (data.coins    || 0) + currentCoins;
-            const newBalance = parseFloat((newCoins / 100).toFixed(2));
+            const newBalance = parseFloat((newCoins / 1).toFixed(2));
             const newTasks   = (data.tasksDone || 0) + 1;
             return fetch(DB_URL + '/users/' + localUid + '.json' + authParam, {
               method: 'PATCH',
@@ -2038,7 +2038,7 @@
           const newTasksDone = (userData.tasksDone  || 0) + 1;
 
           // Step 2: PATCH updated values back to Firebase
-          const newBalance = parseFloat((newCoins / 100).toFixed(2));
+          const newBalance = parseFloat((newCoins / 1).toFixed(2));
           return fetch(DB_URL + '/users/' + targetUid + '.json' + authParam, {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
@@ -2291,7 +2291,7 @@
 
           // ── Balance & Coins — instant display ─────────────────
           const totalCoins = data.coins || 0;
-          const calculatedBalance = parseFloat((totalCoins / 100).toFixed(2));
+          const calculatedBalance = parseFloat((totalCoins / 1).toFixed(2));
           const balEl = document.getElementById('balanceDisplay');
           const coinEl = document.getElementById('coinsDisplay');
           if (balEl) balEl.innerHTML = '₹' + calculatedBalance.toFixed(2);
@@ -2637,7 +2637,7 @@
           .then(r => r.json())
           .then(data => {
             const newCoins   = (data.coins || 0) + actual;
-            const newBalance = parseFloat((newCoins / 100).toFixed(2));
+            const newBalance = parseFloat((newCoins / 1).toFixed(2));
             const newTasks   = (data.tasksDone || 0) + 1;
 
             // ── Build patch — coins + type-specific counter ──────
@@ -2821,7 +2821,7 @@
           }
 
           // ✅ Allow — credit karo
-          creditCoins(20, 'checkin').then(earned => {
+          creditCoins(2, 'checkin').then(earned => {
             if (btn) btn.style.display = 'none';
             if (cb)  cb.style.display = 'inline-block';
             if (earned > 0) {
@@ -2840,7 +2840,7 @@
             showToast('Aaj check-in ho chuka hai!', '#f59e0b');
             return;
           }
-          creditCoins(20, 'checkin').then(earned => {
+          creditCoins(2, 'checkin').then(earned => {
             if (btn) btn.style.display = 'none';
             if (cb)  cb.style.display = 'inline-block';
             if (earned > 0) showToast('+20 Coins! Check-in complete! 🎉', 'linear-gradient(135deg,#22c55e,#16a34a)');
@@ -2856,7 +2856,7 @@
   // 10000 = jackpot (never lands, weight=0, sirf dikhne ke liye)
   // 8 segments: 10x2, 50x2, 100x2, Thanks!x1, 10000x1
   const SPIN_PRIZES = [10, 50, 100, 10000, 10, 50, 100, 0];
-  const SPIN_LABELS = ['10', '50', '100', '10,000', '10', '50', '100', 'Thanks!'];
+  const SPIN_LABELS = ['1', '2', '5', '100', '1', '2', '5', 'Thanks!'];
   const SPIN_COLORS = [
     '#2563eb', '#7c3aed', '#0891b2', '#d97706',
     '#1d4ed8', '#6d28d9', '#0e7490', '#374151'
@@ -2865,10 +2865,10 @@
   // Weighted prize table — 10000 ka weight=0 (kabhi nahi milega)
   const PRIZE_WEIGHTS = [
     { prize: 0,     weight: 50 },   // Thanks! — zyada baar
-    { prize: 10,    weight: 38 },   // 10 coins — thoda milega
-    { prize: 50,    weight: 10 },   // 50 coins — mushkil
-    { prize: 100,   weight: 2  },   // 100 coins — bahut mushkil
-    { prize: 10000, weight: 0  }    // Jackpot — kabhi nahi
+    { prize: 1,     weight: 38 },   // 1 coin = ₹1 — thoda milega
+    { prize: 2,     weight: 10 },   // 2 coins = ₹2 — mushkil
+    { prize: 5,     weight: 2  },   // 5 coins = ₹5 — bahut mushkil
+    { prize: 100,   weight: 0  }    // Jackpot — kabhi nahi
   ];
 
   function getWeightedPrize() {
@@ -2956,7 +2956,7 @@
       ctx.shadowColor = 'rgba(0,0,0,0.7)';
       ctx.shadowBlur = 5;
 
-      if (label === '10,000') {
+      if (label === '100') {
         ctx.font = 'bold 13px Arial';
         ctx.fillText('10,000', 0, -5);
         ctx.shadowBlur = 0;
@@ -4258,7 +4258,7 @@
   });
   const SL_API     = 'https://shrinkearn.com/api?api=7e797b664e29f22c0dd93aaf2a4333387f22305c&url=';
   const SL_LIMIT   = 2;
-  const SL_COINS   = 20;
+  const SL_COINS   = 1;
   // Success page URL — ShrinkEarn destination yahi hogi
   const SUCCESS_BASE = 'https://tasknovaofficial.vercel.app/success.html';
 
@@ -4552,12 +4552,12 @@
 
             if (d.done >= SL_LIMIT) {
               // ── 2/2 Complete: Coins credit karo ──
-              const totalCoins = SL_LIMIT * SL_COINS; // 2 × 20 = 40 coins
+              const totalCoins = SL_LIMIT * SL_COINS; // 2 × 1 = 2 coins
               fetch(DB_URL + '/users/' + uid + '.json' + ap)
                 .then(r => r.json())
                 .then(userData => {
                   const newCoins   = (userData.coins || 0) + totalCoins;
-                  const newBalance = parseFloat((newCoins / 100).toFixed(2));
+                  const newBalance = parseFloat((newCoins / 1).toFixed(2));
                   const newTasks   = (userData.tasksDone || 0) + 1;
                   // dailyTasks mein shortlinks count save karo (cross-device sync ke liye)
                   const _slTodayKey = new Date(Date.now() + 5.5*60*60*1000).toISOString().split('T')[0];
@@ -4769,7 +4769,7 @@
     <button onclick="closeSpecialTasks()" style="width:38px; height:38px; background:#fff; border:1px solid rgba(0,0,0,0.08); border-radius:12px; color:#1a1a2e; font-size:22px; cursor:pointer; display:flex; align-items:center; justify-content:center; box-shadow:0 2px 8px rgba(0,0,0,0.04);">&#8249;</button>
     <div>
       <div style="font-size:20px; font-weight:800; color:#1a1a2e;">Special Tasks ⚡</div>
-      <div style="font-size:12px; color:rgba(26,26,46,0.45); margin-top:2px;">Complete karo, 1000 coins pao</div>
+      <div style="font-size:12px; color:rgba(26,26,46,0.45); margin-top:2px;">Complete karo, coins pao</div>
     </div>
   </div>
 
@@ -4925,7 +4925,7 @@
     if (!btn) return;
 
     if (btn.textContent.trim() === 'Collect') {
-      var coins = _waSpecialMax * 20; // 10 ads × 20 coins = 200
+      var coins = _waSpecialMax * 1; // 10 ads × 1 coin = 10
       if (typeof creditCoins === 'function') {
         creditCoins(coins, 'watchAdSpecial');
       } else if (typeof addCoins === 'function') {
