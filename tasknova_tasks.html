@@ -565,7 +565,7 @@
 
     <!-- Reward badge -->
     <div style="display:flex;align-items:center;gap:8px;background:rgba(249,200,70,0.1);border:1.5px solid rgba(249,200,70,0.3);border-radius:50px;padding:10px 22px;font-size:20px;font-weight:900;color:#f9c846;margin-bottom:28px;">
-      🔗 +40-50 Coins
+      🔗 +2 Coins
     </div>
 
     <!-- Status text -->
@@ -595,7 +595,7 @@
     <!-- Claim button -->
     <button id="slClaimBtn" onclick="claimShortlink()"
       style="display:none;width:100%;max-width:320px;padding:20px;border:none;border-radius:20px;background:linear-gradient(135deg,#1db954,#22d67a);color:#fff;font-size:18px;font-weight:900;cursor:pointer;font-family:'Segoe UI',sans-serif;box-shadow:0 12px 40px rgba(34,214,122,0.45);">
-      🎉 Claim 20 Coins
+      🎉 Claim Reward
     </button>
 
     <!-- Hidden spans used by JS -->
@@ -945,7 +945,7 @@
   let adTimeSpent      = 0;
   let adTimerInterval  = null;
   let adBarWidth       = 0;
-  let currentCoins     = 10;
+  let currentCoins     = 0.2;
   let adHardLockActive = false;   // true during 15s force-watch window
   let adCountdownInterval = null; // live 1-min / 5-hr countdown
   let crossTaskFreezeEnd  = 0;    // timestamp until cross-task freeze expires
@@ -2855,20 +2855,20 @@
   // Wheel segments — 5 slots
   // 10000 = jackpot (never lands, weight=0, sirf dikhne ke liye)
   // 8 segments: 10x2, 50x2, 100x2, Thanks!x1, 10000x1
-  const SPIN_PRIZES = [10, 50, 100, 10000, 10, 50, 100, 0];
-  const SPIN_LABELS = ['1', '2', '5', '100', '1', '2', '5', 'Thanks!'];
+  const SPIN_PRIZES = [1, 2, 5, 10000, 1, 2, 5, 0];
+  const SPIN_LABELS = ['1', '2', '5', '10,000', '1', '2', '5', 'Thanks!'];
   const SPIN_COLORS = [
     '#2563eb', '#7c3aed', '#0891b2', '#d97706',
     '#1d4ed8', '#6d28d9', '#0e7490', '#374151'
   ];
 
-  // Weighted prize table — 10000 ka weight=0 (kabhi nahi milega)
+  // Weighted prize table — 10000 kabhi nahi milega, 5 ka chance ~0.001%
   const PRIZE_WEIGHTS = [
-    { prize: 0,     weight: 50 },   // Thanks! — zyada baar
-    { prize: 1,     weight: 38 },   // 1 coin = ₹1 — thoda milega
-    { prize: 2,     weight: 10 },   // 2 coins = ₹2 — mushkil
-    { prize: 5,     weight: 2  },   // 5 coins = ₹5 — bahut mushkil
-    { prize: 100,   weight: 0  }    // Jackpot — kabhi nahi
+    { prize: 0,     weight: 150000 },  // Thanks! — bahut zyada
+    { prize: 1,     weight: 40000  },  // 1 coin — kam
+    { prize: 2,     weight: 20000  },  // 2 coins — mushkil
+    { prize: 5,     weight: 1      },  // 5 coins — ~0.001% chance
+    { prize: 10000, weight: 0      }   // Jackpot — kabhi nahi
   ];
 
   function getWeightedPrize() {
@@ -2881,11 +2881,14 @@
     return 10;
   }
 
-  // Map prize to one of its matching indices randomly (skip 10000 index=3)
+  // Map prize to one of its matching indices randomly (skip index 3 = 10000 jackpot segment)
   function getPrizeIndex(prize) {
     const indices = [];
-    SPIN_PRIZES.forEach((p, i) => { if (p === prize) indices.push(i); });
-    if (indices.length === 0) return 0;
+    SPIN_PRIZES.forEach((p, i) => { if (p === prize && i !== 3) indices.push(i); });
+    if (indices.length === 0) {
+      // Fallback — koi bhi non-jackpot segment
+      SPIN_PRIZES.forEach((p, i) => { if (i !== 3) indices.push(i); });
+    }
     return indices[Math.floor(Math.random() * indices.length)];
   }
 
@@ -4258,7 +4261,7 @@
   });
   const SL_API     = 'https://shrinkearn.com/api?api=7e797b664e29f22c0dd93aaf2a4333387f22305c&url=';
   const SL_LIMIT   = 2;
-  const SL_COINS   = 1;
+  const SL_COINS   = 0.20;
   // Success page URL — ShrinkEarn destination yahi hogi
   const SUCCESS_BASE = 'https://tasknovaofficial.vercel.app/success.html';
 
@@ -4551,72 +4554,23 @@
             if (clm3) clm3.style.display = 'none';
 
             if (d.done >= SL_LIMIT) {
-              // ── 2/2 Complete: Coins credit karo ──
-              const totalCoins = SL_LIMIT * SL_COINS; // 2 × 1 = 2 coins
-              fetch(DB_URL + '/users/' + uid + '.json' + ap)
-                .then(r => r.json())
-                .then(userData => {
-                  const newCoins   = (userData.coins || 0) + totalCoins;
-                  const newBalance = parseFloat((newCoins / 1).toFixed(2));
-                  const newTasks   = (userData.tasksDone || 0) + 1;
-                  // dailyTasks mein shortlinks count save karo (cross-device sync ke liye)
-                  const _slTodayKey = new Date(Date.now() + 5.5*60*60*1000).toISOString().split('T')[0];
-                  const _slPatch = {
-                    coins: newCoins, balance: newBalance, tasksDone: newTasks, totalEarned: newBalance,
-                    ['dailyTasks/' + _slTodayKey + '/shortlinks']: d.done,
-                    ['dailyTasks/' + _slTodayKey + '/earned']: (typeof getDailyData === 'function') ? getDailyData().earned + totalCoins : totalCoins
-                  };
-                  return fetch(DB_URL + '/users/' + uid + '.json' + ap, {
-                    method: 'PATCH',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(_slPatch)
-                  }).then(() => {
-                    // UI update
-                    const coinsEl = document.querySelector('.user-coins');
-                    const balEl   = document.querySelector('.user-balance');
-                    if (coinsEl) coinsEl.textContent = newCoins + ' Coins';
-                    if (balEl)   balEl.textContent   = '₹' + newBalance.toFixed(2);
-
-                    // Toast
-                    showToast('🎉 +' + totalCoins + ' Coins Credited! Shortlink task complete!', 'linear-gradient(135deg,#22c55e,#16a34a)');
-
-                    // Mark today collected (duplicate se bachao)
-                    if (typeof _markSlCollectedToday === 'function') _markSlCollectedToday();
-
-                    // Task history mein Success save karo
-                    logTaskActivity({
-                      uid, taskType:'Shortlink', taskName:'🔗 Shortlink Task',
-                      coins: totalCoins, status:'Success',
-                      extraData:{ claimedAt: Date.now() }
-                    });
-
-                    // Visit button — Done state
-                    const visitBtn = document.getElementById('slVisitBtn');
-                    if (visitBtn) {
-                      visitBtn.textContent = '✅ Aaj ke sab tasks complete!';
-                      visitBtn.disabled = true;
-                      visitBtn.style.background = 'rgba(255,255,255,0.08)';
-                      visitBtn.style.color = 'rgba(255,255,255,0.35)';
-                      visitBtn.style.cursor = 'not-allowed';
-                      visitBtn.onclick = null;
-                    }
-
-                    // Special Tasks Collect button bhi Done karo
-                    const slSpecialBtn = document.getElementById('slSpecialBtn');
-                    if (slSpecialBtn) {
-                      slSpecialBtn.textContent = 'Done ✓';
-                      slSpecialBtn.style.background = 'rgba(255,255,255,0.1)';
-                      slSpecialBtn.style.color = 'rgba(255,255,255,0.35)';
-                      slSpecialBtn.disabled = true;
-                    }
-
-                    updateSlUI();
-                  });
-                })
-                .catch(() => showToast('Error! Dobara try karo.', '#ef4444'));
-
-              claimBtn.disabled = true;
-              claimBtn.textContent = '✅ Done';
+              // ── 2/2 Complete: Claim button dikhao ──
+              const clmBtn = document.getElementById('slClaimBtn');
+              const visitBtn2 = document.getElementById('slVisitBtn');
+              if (clmBtn) {
+                clmBtn.style.display = 'block';
+                clmBtn.disabled = false;
+                clmBtn.textContent = '🎉 Claim Reward';
+                clmBtn.onclick = function() { claimSlReward(uid, ap); };
+              }
+              if (visitBtn2) {
+                visitBtn2.disabled = true;
+                visitBtn2.textContent = '✅ Dono links complete!';
+                visitBtn2.style.background = 'rgba(255,255,255,0.08)';
+                visitBtn2.style.color = 'rgba(255,255,255,0.35)';
+                visitBtn2.style.cursor = 'not-allowed';
+              }
+              updateSlUI();
             } else {
               // 1/2 Complete — next task ke liye reset
               showToast('✅ 1/2 Complete! Ek aur karo Collect ke liye 🔗', 'linear-gradient(135deg,#6c63ff,#3b82f6)');
@@ -4650,6 +4604,64 @@
               updateSlUI();
               claimBtn.disabled = false;
             }
+    });
+  }
+
+  // ── SHORTLINK FINAL CLAIM ─────────────────────────────────────
+  function claimSlReward(uid, ap) {
+    const clmBtn = document.getElementById('slClaimBtn');
+    if (clmBtn) { clmBtn.disabled = true; clmBtn.textContent = '⏳ Crediting...'; }
+
+    const totalCoins = SL_LIMIT * SL_COINS; // 2 × 0.20 = 0.40 coins
+    window._getAuthToken && window._getAuthToken().then(token => {
+      const authParam = token ? '?auth=' + token : '';
+      fetch(DB_URL + '/users/' + uid + '.json' + authParam)
+        .then(r => r.json())
+        .then(userData => {
+          const newCoins   = (userData.coins || 0) + totalCoins;
+          const newBalance = parseFloat((newCoins / 1).toFixed(2));
+          const newTasks   = (userData.tasksDone || 0) + 1;
+          const _slTodayKey = new Date(Date.now() + 5.5*60*60*1000).toISOString().split('T')[0];
+          const patch = {
+            coins: newCoins, balance: newBalance, tasksDone: newTasks, totalEarned: newBalance,
+            ['dailyTasks/' + _slTodayKey + '/shortlinks']: SL_LIMIT,
+            ['dailyTasks/' + _slTodayKey + '/earned']: (typeof getDailyData === 'function') ? getDailyData().earned + totalCoins : totalCoins
+          };
+          return fetch(DB_URL + '/users/' + uid + '.json' + authParam, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(patch)
+          }).then(() => {
+            const coinsEl = document.querySelector('.user-coins');
+            const balEl   = document.querySelector('.user-balance');
+            if (coinsEl) coinsEl.textContent = newCoins + ' Coins';
+            if (balEl)   balEl.textContent   = '₹' + newBalance.toFixed(2);
+
+            showToast('🎉 +' + totalCoins + ' Coins Credited! Shortlink complete!', 'linear-gradient(135deg,#22c55e,#16a34a)');
+            if (typeof _markSlCollectedToday === 'function') _markSlCollectedToday();
+
+            logTaskActivity({
+              uid, taskType:'Shortlink', taskName:'🔗 Shortlink Task',
+              coins: totalCoins, status:'Success',
+              extraData:{ claimedAt: Date.now() }
+            });
+
+            if (clmBtn) { clmBtn.textContent = '✅ Claimed!'; clmBtn.style.background = 'rgba(34,197,94,0.2)'; }
+
+            const slSpecialBtn = document.getElementById('slSpecialBtn');
+            if (slSpecialBtn) {
+              slSpecialBtn.textContent = 'Done ✓';
+              slSpecialBtn.style.background = 'rgba(255,255,255,0.1)';
+              slSpecialBtn.style.color = 'rgba(255,255,255,0.35)';
+              slSpecialBtn.disabled = true;
+            }
+            updateSlUI();
+          });
+        })
+        .catch(() => {
+          showToast('Error! Dobara try karo.', '#ef4444');
+          if (clmBtn) { clmBtn.disabled = false; clmBtn.textContent = '🎉 Claim Reward'; }
+        });
     });
   }
   // ── SHORTLINK TASK END ────────────────────────────────────────
@@ -4820,7 +4832,7 @@
         </div>
       </div>
       <div style="text-align:right; flex-shrink:0; min-width:82px;">
-        <div style="font-size:18px; font-weight:900; color:#f59e0b; text-shadow:0 0 12px rgba(245,158,11,0.3);">+40-50</div>
+        <div style="font-size:18px; font-weight:900; color:#f59e0b; text-shadow:0 0 12px rgba(245,158,11,0.3);">+2</div>
         <div style="font-size:10px; color:rgba(26,26,46,0.4); margin-top:1px;">🪙 coins</div>
         <button id="slSpecialBtn" style="margin-top:6px; width:72px; height:32px; border:none; border-radius:8px; color:#fff; font-size:12px; font-weight:700; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; background:linear-gradient(135deg,#2563eb,#3b82f6);" onclick="event.stopPropagation(); handleSlSpecialClick();">Visit</button>
       </div>
@@ -4840,7 +4852,7 @@
         </div>
       </div>
       <div style="text-align:right; flex-shrink:0; min-width:82px;">
-        <div style="font-size:18px; font-weight:900; color:#f59e0b; text-shadow:0 0 12px rgba(245,158,11,0.3);">+200</div>
+        <div style="font-size:18px; font-weight:900; color:#f59e0b; text-shadow:0 0 12px rgba(245,158,11,0.3);">+2</div>
         <div style="font-size:10px; color:rgba(26,26,46,0.4); margin-top:1px;">🪙 coins</div>
         <button id="waSpecialBtn" style="margin-top:6px; width:72px; height:32px; border:none; border-radius:8px; color:#fff; font-size:12px; font-weight:700; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; background:linear-gradient(135deg,#2563eb,#3b82f6);" onclick="event.stopPropagation(); handleWaSpecialClick();">Watch</button>
       </div>
