@@ -692,42 +692,30 @@ function updateRoundUI(roundNum) {
 
 /* ══ Inject ads dynamically ══ */
 function makeIframeAd(src, containerId) {
-  var container = document.getElementById(containerId);
-  if(!container) return;
-  container.innerHTML = '';
-  container.style.cssText = 'text-align:center;display:flex;justify-content:center;align-items:center;min-height:60px;';
+  // wpadmngr ke liye — purana container hata ke naya div banao taaki script fresh load ho
+  var old = document.getElementById(containerId);
+  if(!old) return;
+  var parent = old.parentNode;
+
+  var newContainer = document.createElement('div');
+  newContainer.id = containerId;
+  newContainer.style.cssText = 'text-align:center;min-height:60px;width:100%;';
+  parent.replaceChild(newContainer, old);
 
   var admpidMatch = src.match(/admpid=(\d+)/);
-  var iframe = document.createElement('iframe');
-  iframe.scrolling = 'no';
-  iframe.frameBorder = '0';
-  iframe.style.cssText = 'width:320px;min-height:60px;border:none;display:block;';
-  container.appendChild(iframe);
-
-  try {
-    var doc = iframe.contentDocument || iframe.contentWindow.document;
-    doc.open();
-    if(admpidMatch) {
-      var admpid = admpidMatch[1];
-      doc.write('<!DOCTYPE html><html><head><meta charset="utf-8"></head>'
-        + '<body style="margin:0;padding:0;text-align:center;">'
-        + '<script async src="https://js.wpadmngr.com/static/adManager.js" data-admpid="' + admpid + '"><\/script>'
-        + '</body></html>');
-    } else {
-      doc.write('<!DOCTYPE html><html><head><meta charset="utf-8"></head>'
-        + '<body style="margin:0;padding:0;text-align:center;">'
-        + '<script src="' + src + '" async><\/script>'
-        + '</body></html>');
-    }
-    doc.close();
-  } catch(e) { console.warn('[WatchAd] iframe write error:', e); }
-
-  setTimeout(function(){
-    try {
-      var h = (iframe.contentDocument||iframe.contentWindow.document).body.scrollHeight;
-      if(h > 10) iframe.style.height = h + 'px';
-    } catch(e){}
-  }, 3000);
+  if(admpidMatch) {
+    var admpid = admpidMatch[1];
+    var s = document.createElement('script');
+    s.setAttribute('async', '');
+    s.setAttribute('data-admpid', admpid);
+    s.src = 'https://js.wpadmngr.com/static/adManager.js';
+    newContainer.appendChild(s);
+  } else {
+    var s2 = document.createElement('script');
+    s2.src = src;
+    s2.async = true;
+    newContainer.appendChild(s2);
+  }
 }
 
 function injectAds(company) {
