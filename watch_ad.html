@@ -620,11 +620,13 @@ function getDailyDataKey() { return 'tasknova_daily_' + _getUID() + '_' + _getTo
 
 /* ── Company A ke Ad Scripts (wpadmngr) ── */
 const ADS_COMPANY_A = {
+  useIframe: true,
+  s1_src: 'https://www.wpadmngr.com/static/adManager.html?admpid=444367',
+  s2_src: 'https://www.wpadmngr.com/static/adManager.html?admpid=444368',
   s1_top: `<script async src="https://js.wpadmngr.com/static/adManager.js" data-admpid="444367"><\/script>`,
   s2_top: `<script async src="https://js.wpadmngr.com/static/adManager.js" data-admpid="444368"><\/script>`,
-  useIframe: false,
-  watchLink: null,   // wpadmngr ka koi direct watch link nahi hai
-  popunder: true,    // Watch Ad button dabane par fire hoga
+  watchLink: null,
+  popunder: true,
   name: 'Company A'
 };
 
@@ -692,28 +694,34 @@ function updateRoundUI(roundNum) {
 function makeIframeAd(src, containerId) {
   var container = document.getElementById(containerId);
   if(!container) return;
+  container.innerHTML = '';
+  container.style.cssText = 'text-align:center;display:flex;justify-content:center;align-items:center;min-height:60px;';
+
+  var admpidMatch = src.match(/admpid=(\d+)/);
   var iframe = document.createElement('iframe');
   iframe.scrolling = 'no';
   iframe.frameBorder = '0';
-  iframe.style.cssText = 'width:100%;min-height:60px;border:none;display:block;';
-  container.style.textAlign = 'center';
-  container.style.display = 'flex';
-  container.style.justifyContent = 'center';
-  container.style.alignItems = 'center';
-  container.innerHTML = '';
+  iframe.style.cssText = 'width:320px;min-height:60px;border:none;display:block;';
   container.appendChild(iframe);
-  var doc = iframe.contentDocument || iframe.contentWindow.document;
-  doc.open();
-  doc.write('<html><body style="margin:0;padding:0;display:flex;justify-content:center;align-items:center;text-align:center;">'
-    + '<script>(function(svpif){'
-    + 'var d=document,s=d.createElement("script"),l=d.scripts[d.scripts.length-1];'
-    + 's.settings=svpif||{};'
-    + 's.src="' + src + '";'
-    + 's.async=true;s.referrerPolicy="no-referrer-when-downgrade";'
-    + 'l.parentNode.insertBefore(s,l);'
-    + '})({})<\/script>'
-    + '</body></html>');
-  doc.close();
+
+  try {
+    var doc = iframe.contentDocument || iframe.contentWindow.document;
+    doc.open();
+    if(admpidMatch) {
+      var admpid = admpidMatch[1];
+      doc.write('<!DOCTYPE html><html><head><meta charset="utf-8"></head>'
+        + '<body style="margin:0;padding:0;text-align:center;">'
+        + '<script async src="https://js.wpadmngr.com/static/adManager.js" data-admpid="' + admpid + '"><\/script>'
+        + '</body></html>');
+    } else {
+      doc.write('<!DOCTYPE html><html><head><meta charset="utf-8"></head>'
+        + '<body style="margin:0;padding:0;text-align:center;">'
+        + '<script src="' + src + '" async><\/script>'
+        + '</body></html>');
+    }
+    doc.close();
+  } catch(e) { console.warn('[WatchAd] iframe write error:', e); }
+
   setTimeout(function(){
     try {
       var h = (iframe.contentDocument||iframe.contentWindow.document).body.scrollHeight;
