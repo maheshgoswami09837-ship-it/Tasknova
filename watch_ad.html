@@ -723,8 +723,8 @@ function makeIframeAd(src, containerId) {
 }
 
 function injectAds(company) {
-  if(company.useIframe) {
-    makeIframeAd(company.s1_src, 's1-ad-top');
+  if(company.name === 'Company A') {
+    injectWpadmngr('444367', 's1-ad-top');
   } else {
     var s1 = document.getElementById('s1-ad-top');
     if(s1) { s1.innerHTML = company.s1_top; rerunScripts(s1); }
@@ -732,8 +732,8 @@ function injectAds(company) {
 }
 
 function injectStep2Ad(company) {
-  if(company.useIframe) {
-    makeIframeAd(company.s2_src, 's2-ad-top');
+  if(company.name === 'Company A') {
+    injectWpadmngr('444368', 's2-ad-top');
   } else {
     var s2 = document.getElementById('s2-ad-top');
     if(s2) { s2.innerHTML = company.s2_top; rerunScripts(s2); }
@@ -750,6 +750,24 @@ function rerunScripts(container) {
       oldScript.parentNode.replaceChild(newScript, oldScript);
     });
   } catch(e) {}
+}
+
+// wpadmngr ke liye fresh inject — purana div hatao, naya banao
+function injectWpadmngr(admpid, containerId) {
+  try {
+    var old = document.getElementById(containerId);
+    if(!old) return;
+    var parent = old.parentNode;
+    var fresh = document.createElement('div');
+    fresh.id = containerId;
+    fresh.style.cssText = 'text-align:center;min-height:60px;width:100%;';
+    var s = document.createElement('script');
+    s.src = 'https://js.wpadmngr.com/static/adManager.js';
+    s.setAttribute('data-admpid', admpid);
+    s.async = true;
+    fresh.appendChild(s);
+    parent.replaceChild(fresh, old);
+  } catch(e){ console.warn('[WatchAd] wpadmngr inject error:', e); }
 }
 
 /* ══ Company A Popunder (wpadmngr, admpid 444420) — fires on Watch Ad button press ══ */
