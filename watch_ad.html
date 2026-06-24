@@ -620,13 +620,11 @@ function getDailyDataKey() { return 'tasknova_daily_' + _getUID() + '_' + _getTo
 
 /* ── Company A ke Ad Scripts (wpadmngr) ── */
 const ADS_COMPANY_A = {
-  useIframe: true,
-  s1_src: 'https://www.wpadmngr.com/static/adManager.html?admpid=444367',
-  s2_src: 'https://www.wpadmngr.com/static/adManager.html?admpid=444368',
   s1_top: `<script async src="https://js.wpadmngr.com/static/adManager.js" data-admpid="444367"><\/script>`,
   s2_top: `<script async src="https://js.wpadmngr.com/static/adManager.js" data-admpid="444368"><\/script>`,
-  watchLink: null,
-  popunder: true,
+  useIframe: false,
+  watchLink: null,   // wpadmngr ka koi direct watch link nahi hai
+  popunder: true,    // Watch Ad button dabane par fire hoga
   name: 'Company A'
 };
 
@@ -692,30 +690,36 @@ function updateRoundUI(roundNum) {
 
 /* ══ Inject ads dynamically ══ */
 function makeIframeAd(src, containerId) {
-  // wpadmngr ke liye — purana container hata ke naya div banao taaki script fresh load ho
-  var old = document.getElementById(containerId);
-  if(!old) return;
-  var parent = old.parentNode;
-
-  var newContainer = document.createElement('div');
-  newContainer.id = containerId;
-  newContainer.style.cssText = 'text-align:center;min-height:60px;width:100%;';
-  parent.replaceChild(newContainer, old);
-
-  var admpidMatch = src.match(/admpid=(\d+)/);
-  if(admpidMatch) {
-    var admpid = admpidMatch[1];
-    var s = document.createElement('script');
-    s.setAttribute('async', '');
-    s.setAttribute('data-admpid', admpid);
-    s.src = 'https://js.wpadmngr.com/static/adManager.js';
-    newContainer.appendChild(s);
-  } else {
-    var s2 = document.createElement('script');
-    s2.src = src;
-    s2.async = true;
-    newContainer.appendChild(s2);
-  }
+  var container = document.getElementById(containerId);
+  if(!container) return;
+  var iframe = document.createElement('iframe');
+  iframe.scrolling = 'no';
+  iframe.frameBorder = '0';
+  iframe.style.cssText = 'width:100%;min-height:60px;border:none;display:block;';
+  container.style.textAlign = 'center';
+  container.style.display = 'flex';
+  container.style.justifyContent = 'center';
+  container.style.alignItems = 'center';
+  container.innerHTML = '';
+  container.appendChild(iframe);
+  var doc = iframe.contentDocument || iframe.contentWindow.document;
+  doc.open();
+  doc.write('<html><body style="margin:0;padding:0;display:flex;justify-content:center;align-items:center;text-align:center;">'
+    + '<script>(function(svpif){'
+    + 'var d=document,s=d.createElement("script"),l=d.scripts[d.scripts.length-1];'
+    + 's.settings=svpif||{};'
+    + 's.src="' + src + '";'
+    + 's.async=true;s.referrerPolicy="no-referrer-when-downgrade";'
+    + 'l.parentNode.insertBefore(s,l);'
+    + '})({})<\/script>'
+    + '</body></html>');
+  doc.close();
+  setTimeout(function(){
+    try {
+      var h = (iframe.contentDocument||iframe.contentWindow.document).body.scrollHeight;
+      if(h > 10) iframe.style.height = h + 'px';
+    } catch(e){}
+  }, 3000);
 }
 
 function injectAds(company) {
