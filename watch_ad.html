@@ -365,7 +365,7 @@ window.TNTracker = (function() {
       </div>
 
       <!-- AD SLOT — Company A ya B inject hoga JS se -->
-      <div class="ad-box" id="s1-ad-top" style="min-height:55px;overflow:visible;"></div>
+      <div class="ad-box" id="s1-ad-top" style="min-height:90px;overflow:visible;margin-bottom:8px;display:flex;align-items:center;justify-content:center;position:sticky;top:0;z-index:99;background:#fff;"></div>
 
       <div class="article-wrap">
 
@@ -518,7 +518,7 @@ window.TNTracker = (function() {
       <div class="article-wrap">
 
         <!-- AD SLOT Step2 — inject hoga JS se -->
-        <div class="ad-box" id="s2-ad-top" style="min-height:65px;overflow:visible;"></div>
+        <div class="ad-box" id="s2-ad-top" style="min-height:90px;overflow:visible;display:flex;align-items:center;justify-content:center;position:sticky;top:0;z-index:99;background:#fff;"></div>
 
         <div style="width:100%;height:210px;border-radius:12px;margin-bottom:14px;overflow:hidden;">
           <img src="https://images.unsplash.com/photo-1579621970563-ebec7560ff3e?w=800&q=80"
@@ -696,6 +696,7 @@ function makeIframeAd(src, containerId) {
   iframe.scrolling = 'no';
   iframe.frameBorder = '0';
   iframe.style.cssText = 'width:100%;min-height:60px;border:none;display:block;';
+  if(!container) return;
   container.style.textAlign = 'center';
   container.style.display = 'flex';
   container.style.justifyContent = 'center';
@@ -775,7 +776,7 @@ function showErrorPage(type, until) {
 
   const overlay=document.getElementById('errorOverlay');
   if(!overlay) return;
-  overlay.style.display='flex';
+  if(overlay) overlay.style.display='flex';
 
   const errIcon=document.getElementById('errIcon');
   const errTitle=document.getElementById('errTitle');
@@ -792,7 +793,7 @@ function showErrorPage(type, until) {
     if(errTitle) errTitle.textContent = 'Aaj ke Saare Rounds Complete!';
     if(errMsg)   errMsg.textContent   = '10/10 rounds pura ho gaye — kal wapas aao';
     if(errTimer) errTimer.textContent = '';
-    document.getElementById('errTimerBox').style.display='none';
+    var _etb=document.getElementById('errTimerBox'); if(_etb) _etb.style.display='none';
   }
 }
 
