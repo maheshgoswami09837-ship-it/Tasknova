@@ -364,8 +364,8 @@ window.TNTracker = (function() {
         </div>
       </div>
 
-      <!-- AD SLOT -->
-      <div id="s1-ad-top" style="width:100%;min-height:70px;display:flex;align-items:center;justify-content:center;overflow:visible;background:#f8fafc;border-radius:8px;margin-bottom:8px;"></div>
+      <!-- AD SLOT S1 -->
+      <div id="s1-ad-top" style="width:100%;min-height:70px;overflow:visible;margin-bottom:8px;"></div>
 
       <div class="article-wrap">
 
@@ -518,8 +518,8 @@ window.TNTracker = (function() {
       <div class="article-wrap">
 
         <!-- AD SLOT Step2 — inject hoga JS se -->
-        <!-- AD SLOT step2 -->
-        <div id="s2-ad-top" style="width:100%;min-height:70px;display:flex;align-items:center;justify-content:center;overflow:visible;background:#f8fafc;border-radius:8px;margin-bottom:8px;"></div>
+        <!-- AD SLOT S2 -->
+        <div id="s2-ad-top" style="width:100%;min-height:70px;overflow:visible;margin-bottom:8px;"></div>
 
         <div style="width:100%;height:210px;border-radius:12px;margin-bottom:14px;overflow:hidden;">
           <img src="https://images.unsplash.com/photo-1579621970563-ebec7560ff3e?w=800&q=80"
@@ -689,39 +689,39 @@ function updateRoundUI(roundNum) {
   if(link) link.href = company.watchLink || '#';
 }
 
-/* ══ Inject ads dynamically ══ */
+/* ══ Inject ads via iframe srcdoc ══ */
 function makeIframeAd(src, containerId) {
   var container = document.getElementById(containerId);
   if(!container) return;
+  container.innerHTML = '';
+  container.style.cssText = 'width:100%;min-height:70px;overflow:visible;';
+
+  var admpidMatch = src ? src.match(/admpid=(\d+)/) : null;
+  var admpid = admpidMatch ? admpidMatch[1] : null;
+
+  var scriptContent = admpid
+    ? '<scr'+'ipt async src="https://js.wpadmngr.com/static/adManager.js" data-admpid="' + admpid + '"><'+'/scr'+'ipt>'
+    : '<scr'+'ipt>(function(r){var d=document,s=d.createElement("script"),l=d.scripts[d.scripts.length-1];s.settings=r||{};s.src="' + src + '";s.async=true;s.referrerPolicy="no-referrer-when-downgrade";l.parentNode.insertBefore(s,l);})({})<'+'/scr'+'ipt>';
+
+  var html = '<!DOCTYPE html><html><head><meta charset="utf-8">'
+    + '<style>*{margin:0;padding:0;}body{min-height:70px;display:flex;align-items:center;justify-content:center;overflow:visible;}</style>'
+    + '</head><body>' + scriptContent + '</body></html>';
+
   var iframe = document.createElement('iframe');
   iframe.scrolling = 'no';
   iframe.frameBorder = '0';
-  iframe.style.cssText = 'width:100%;min-height:60px;border:none;display:block;';
-  if(!container) return;
-  container.style.textAlign = 'center';
-  container.style.display = 'flex';
-  container.style.justifyContent = 'center';
-  container.style.alignItems = 'center';
-  container.innerHTML = '';
+  iframe.style.cssText = 'width:100%;min-height:70px;border:none;display:block;overflow:visible;';
+  iframe.srcdoc = html;
   container.appendChild(iframe);
-  var doc = iframe.contentDocument || iframe.contentWindow.document;
-  doc.open();
-  doc.write('<html><body style="margin:0;padding:0;display:flex;justify-content:center;align-items:center;text-align:center;">'
-    + '<script>(function(svpif){'
-    + 'var d=document,s=d.createElement("script"),l=d.scripts[d.scripts.length-1];'
-    + 's.settings=svpif||{};'
-    + 's.src="' + src + '";'
-    + 's.async=true;s.referrerPolicy="no-referrer-when-downgrade";'
-    + 'l.parentNode.insertBefore(s,l);'
-    + '})({})<\/script>'
-    + '</body></html>');
-  doc.close();
-  setTimeout(function(){
+
+  iframe.onload = function() {
     try {
-      var h = (iframe.contentDocument||iframe.contentWindow.document).body.scrollHeight;
-      if(h > 10) iframe.style.height = h + 'px';
+      setTimeout(function(){
+        var h = iframe.contentDocument.body.scrollHeight;
+        if(h > 20) iframe.style.height = h + 'px';
+      }, 2000);
     } catch(e){}
-  }, 3000);
+  };
 }
 
 function injectAds(company) {
