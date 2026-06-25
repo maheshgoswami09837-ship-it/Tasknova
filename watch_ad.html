@@ -727,22 +727,34 @@ function makeIframeAd(src, containerId) {
 }
 
 function injectHilltop(src, containerId) {
-  // Purana div remove, fresh div banao taaki script fresh execute ho
-  var old = document.getElementById(containerId);
-  if(!old) return;
-  var parent = old.parentNode;
-  var fresh = document.createElement('div');
-  fresh.id = containerId;
-  fresh.style.cssText = 'width:100%;min-height:250px;overflow:visible;margin-bottom:8px;';
-  var s = document.createElement('script');
-  s.src = src;
-  s.async = true;
-  s.referrerPolicy = 'no-referrer-when-downgrade';
-  // HilltopAds ka IIFE wrapper
+  var target = document.getElementById(containerId);
+  if(!target) return;
+  target.innerHTML = '';
+  target.style.cssText = 'width:100%;min-height:250px;overflow:visible;margin-bottom:8px;';
+
+  // Script inject
   var wrapper = document.createElement('script');
-  wrapper.textContent = '(function(r){var d=document,s=d.createElement("script"),l=d.scripts[d.scripts.length-1];s.settings=r||{};s.src="' + src + '";s.async=true;s.referrerPolicy="no-referrer-when-downgrade";l.parentNode.insertBefore(s,l);})(document.getElementById("' + containerId + '"))';
-  fresh.appendChild(wrapper);
-  parent.replaceChild(fresh, old);
+  wrapper.textContent = '(function(r){var d=document,s=d.createElement("script"),l=d.scripts[d.scripts.length-1];s.settings=r||{};s.src="' + src + '";s.async=true;s.referrerPolicy="no-referrer-when-downgrade";l.parentNode.insertBefore(s,l);})({})';
+  target.appendChild(wrapper);
+
+  // Observer — HilltopAds jo bhi body mein inject kare use target mein move karo
+  var observer = new MutationObserver(function(mutations) {
+    mutations.forEach(function(m) {
+      m.addedNodes.forEach(function(node) {
+        if(node.nodeType === 1) {
+          var tag = (node.tagName||'').toLowerCase();
+          // iframe ya div jo ad network inject kare
+          if((tag === 'iframe' || tag === 'div' || tag === 'ins') && node.parentNode !== target) {
+            target.appendChild(node);
+          }
+        }
+      });
+    });
+  });
+  observer.observe(document.body, { childList: true, subtree: false });
+
+  // 5 sec baad observer band karo
+  setTimeout(function(){ observer.disconnect(); }, 5000);
 }
 
 function injectAds(company) {
@@ -798,7 +810,7 @@ function showErrorPage(type, until) {
 
   const overlay=document.getElementById('errorOverlay');
   if(!overlay) return;
-  if(overlay) overlay.style.display='flex';
+  if(overlay) if(overlay) overlay.style.display='flex';
 
   const errIcon=document.getElementById('errIcon');
   const errTitle=document.getElementById('errTitle');
@@ -890,7 +902,7 @@ function startNextRound() {
   const continueBtn=document.getElementById('continueBtn');
 
   if(startBtn) { startBtn.style.display='inline-block'; }
-  if(timer)    { timer.style.display='none'; document.getElementById('s1TimerNum').textContent='15'; }
+  if(timer)    { timer.style.display='none'; var _tn=document.getElementById('s1TimerNum'); if(_tn) _tn.textContent='15'; }
   if(sdb)      { sdb.style.display='none'; sdb.classList.remove('visible'); }
   if(npb)      { npb.style.display='none'; }
   if(s2TimerBox)     { s2TimerBox.style.display='none'; }
