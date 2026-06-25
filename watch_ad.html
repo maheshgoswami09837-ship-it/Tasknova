@@ -365,7 +365,7 @@ window.TNTracker = (function() {
       </div>
 
       <!-- AD SLOT S1 -->
-      <div id="s1-ad-top" style="width:100%;min-height:70px;overflow:visible;margin-bottom:8px;"></div>
+      <div id="s1-ad-top" style="width:100%;min-height:250px;overflow:visible;margin-bottom:8px;"></div>
 
       <div class="article-wrap">
 
@@ -519,7 +519,7 @@ window.TNTracker = (function() {
 
         <!-- AD SLOT Step2 — inject hoga JS se -->
         <!-- AD SLOT S2 -->
-        <div id="s2-ad-top" style="width:100%;min-height:70px;overflow:visible;margin-bottom:8px;"></div>
+        <div id="s2-ad-top" style="width:100%;min-height:250px;overflow:visible;margin-bottom:8px;"></div>
 
         <div style="width:100%;height:210px;border-radius:12px;margin-bottom:14px;overflow:hidden;">
           <img src="https://images.unsplash.com/photo-1579621970563-ebec7560ff3e?w=800&q=80"
@@ -694,7 +694,7 @@ function makeIframeAd(src, containerId) {
   var container = document.getElementById(containerId);
   if(!container) return;
   container.innerHTML = '';
-  container.style.cssText = 'width:100%;min-height:70px;overflow:visible;';
+  container.style.cssText = 'width:100%;min-height:250px;overflow:visible;';
 
   var admpidMatch = src ? src.match(/admpid=(\d+)/) : null;
   var admpid = admpidMatch ? admpidMatch[1] : null;
@@ -710,7 +710,7 @@ function makeIframeAd(src, containerId) {
   var iframe = document.createElement('iframe');
   iframe.scrolling = 'no';
   iframe.frameBorder = '0';
-  iframe.style.cssText = 'width:100%;min-height:70px;border:none;display:block;overflow:visible;';
+  iframe.style.cssText = 'width:100%;height:250px;border:none;display:block;';
   iframe.srcdoc = html;
   container.appendChild(iframe);
 
