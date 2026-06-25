@@ -621,8 +621,10 @@ function getDailyDataKey() { return 'tasknova_daily_' + _getUID() + '_' + _getTo
 
 /* ── Company A ke Ad Scripts (wpadmngr) ── */
 const ADS_COMPANY_A = {
-  s1_top: `<script>(function(rvlezw){var d=document,s=d.createElement('script'),l=d.scripts[d.scripts.length-1];s.settings=rvlezw||{};s.src="//quarrelsomebitter.com/bGXyVasmd.GQlQ0RYSWvcf/ae/mh9DuVZaU/lyk/PMTEc/xOMqjCM/4/MWD_EstrNKzvENyzM/z/gzwRNaQj";s.async=true;s.referrerPolicy='no-referrer-when-downgrade';l.parentNode.insertBefore(s,l);})({})<\/script>`,
-  s2_top: `<script>(function(rvlezw){var d=document,s=d.createElement('script'),l=d.scripts[d.scripts.length-1];s.settings=rvlezw||{};s.src="//quarrelsomebitter.com/bfXlVxsKd.GFll0_YxWocc/yeIm-9/uQZiU/lLkdPMTXcaxRMWjXMg4/MDzEMGtaNWzaEayHMozMg/zdNHwz";s.async=true;s.referrerPolicy='no-referrer-when-downgrade';l.parentNode.insertBefore(s,l);})({})<\/script>`,
+  s1_src: '//quarrelsomebitter.com/bGXyVasmd.GQlQ0RYSWvcf/ae/mh9DuVZaU/lyk/PMTEc/xOMqjCM/4/MWD_EstrNKzvENyzM/z/gzwRNaQj',
+  s2_src: '//quarrelsomebitter.com/bfXlVxsKd.GFll0_YxWocc/yeIm-9/uQZiU/lLkdPMTXcaxRMWjXMg4/MDzEMGtaNWzaEayHMozMg/zdNHwz',
+  s1_top: ``,
+  s2_top: ``,
   useIframe: false,
   watchLink: 'https://plump-plastic.com/bw3_V.0kP/3JpFv/bpm/V/JAZDD/0f3/M_TAI/0eNqzFkazcLhTScwx/MCjQQh3WOSTIcu',
   popunder: false,
@@ -724,9 +726,28 @@ function makeIframeAd(src, containerId) {
   };
 }
 
+function injectHilltop(src, containerId) {
+  // Purana div remove, fresh div banao taaki script fresh execute ho
+  var old = document.getElementById(containerId);
+  if(!old) return;
+  var parent = old.parentNode;
+  var fresh = document.createElement('div');
+  fresh.id = containerId;
+  fresh.style.cssText = 'width:100%;min-height:250px;overflow:visible;margin-bottom:8px;';
+  var s = document.createElement('script');
+  s.src = src;
+  s.async = true;
+  s.referrerPolicy = 'no-referrer-when-downgrade';
+  // HilltopAds ka IIFE wrapper
+  var wrapper = document.createElement('script');
+  wrapper.textContent = '(function(r){var d=document,s=d.createElement("script"),l=d.scripts[d.scripts.length-1];s.settings=r||{};s.src="' + src + '";s.async=true;s.referrerPolicy="no-referrer-when-downgrade";l.parentNode.insertBefore(s,l);})(document.getElementById("' + containerId + '"))';
+  fresh.appendChild(wrapper);
+  parent.replaceChild(fresh, old);
+}
+
 function injectAds(company) {
-  if(company.useIframe) {
-    makeIframeAd(company.s1_src, 's1-ad-top');
+  if(company.name === 'Company A') {
+    injectHilltop(company.s1_src, 's1-ad-top');
   } else {
     var s1 = document.getElementById('s1-ad-top');
     if(s1) { s1.innerHTML = company.s1_top; rerunScripts(s1); }
@@ -734,8 +755,8 @@ function injectAds(company) {
 }
 
 function injectStep2Ad(company) {
-  if(company.useIframe) {
-    makeIframeAd(company.s2_src, 's2-ad-top');
+  if(company.name === 'Company A') {
+    injectHilltop(company.s2_src, 's2-ad-top');
   } else {
     var s2 = document.getElementById('s2-ad-top');
     if(s2) { s2.innerHTML = company.s2_top; rerunScripts(s2); }
