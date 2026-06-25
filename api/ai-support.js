@@ -53,9 +53,25 @@ Watch Ads:
 4. Agar ad load nahi ho raha, internet check kare ya thodi der baad try kare
 
 Spin & Win:
-1. "Spin & Win" section mein jaa kar wheel par tap kare
-2. Wheel ghoomega aur jo reward aayega wahi mil jayega
-3. Roz limited spins milte hain, agar spin available nahi hai to next day try kare
+Spin & Win mein coins jeeto! Roz 6 spins milte hain. Har spin ke baad 1 minute wait karna padta hai.
+
+Steps:
+1. Tasks page pe "Spin" button tap karo
+[IMG:spin_task_card]
+2. Spin karo — result aayega. Agar coins jeete to "Watch Ads & Claim" button tap karo
+[IMG:spin_result_win]
+3. Article page khulega — "Start" button tap karo
+[IMG:spin_article_step1]
+4. Popup aayega — "Watch Ads" tap karo aur 30 seconds genuinely ad dekho (band mat karo warna unlock nahi hoga)
+[IMG:spin_popup_watchads]
+5. Ad dekhne ke baad green "Complete" button aayega — tap karo
+[IMG:spin_popup_complete]
+6. Article scroll karo niche — "Continue to Step 2" tap karo
+[IMG:spin_continue_step2]
+7. Step 2 pe scroll karo — "Claim Coins" tap karo, coins mil jayenge!
+[IMG:spin_claim_coins]
+
+Note: 6 spins/day, har spin ke baad 1 min cooldown. Agar "Better luck next time" aaye to coins nahi milte, agla spin try karo.
 
 Shortlink:
 1. "Shortlink" task open kare
