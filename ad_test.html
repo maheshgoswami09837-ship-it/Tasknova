@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ad Test</title>
+  <style>
+    body { font-family: sans-serif; padding: 20px; background: #f0f0f0; }
+    .box { background: white; border-radius: 10px; padding: 15px; margin-bottom: 20px; }
+    h3 { margin: 0 0 10px; color: #333; }
+    iframe { width: 100%; border: none; min-height: 80px; }
+  </style>
+</head>
+<body>
+
+  <div class="box">
+    <h3>Banner 1 Test (admpid 444367)</h3>
+    <div id="ad1"></div>
+  </div>
+
+  <div class="box">
+    <h3>Banner 2 Test (admpid 444368)</h3>
+    <div id="ad2"></div>
+  </div>
+
+  <script>
+    function injectIframeAd(scriptHtml, containerId) {
+      var container = document.getElementById(containerId);
+      var iframe = document.createElement('iframe');
+      iframe.style.cssText = 'width:100%;min-height:80px;border:none;display:block;';
+      iframe.scrolling = 'no';
+      container.appendChild(iframe);
+      var doc = iframe.contentDocument || iframe.contentWindow.document;
+      doc.open();
+      doc.write('<html><body style="margin:0;padding:0;">' + scriptHtml + '</body></html>');
+      doc.close();
+      setTimeout(function(){
+        try {
+          var h = (iframe.contentDocument||iframe.contentWindow.document).body.scrollHeight;
+          if(h > 10) iframe.style.height = h + 'px';
+        } catch(e){}
+      }, 3000);
+    }
+
+    injectIframeAd('<script async src="https://js.wpadmngr.com/static/adManager.js" data-admpid="444367"><\/script>', 'ad1');
+    injectIframeAd('<script async src="https://js.wpadmngr.com/static/adManager.js" data-admpid="444368"><\/script>', 'ad2');
+  </script>
+
+</body>
+</html>
