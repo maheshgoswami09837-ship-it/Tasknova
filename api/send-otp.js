@@ -1,4 +1,5 @@
 export default async function handler(req, res) {
+  // CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -13,17 +14,17 @@ export default async function handler(req, res) {
   }
 
   try {
-    const response = await fetch('https://api.resend.com/emails', {
+    const response = await fetch('https://api.brevo.com/v3/smtp/email', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + process.env.RESEND_API_KEY
+        'api-key': process.env.BREVO_API_KEY
       },
       body: JSON.stringify({
-        from: 'TaskNova <onboarding@resend.dev>',
-        to: [email],
+        sender: { name: 'TaskNova Team', email: 'bekarboy73@gmail.com' },
+        to: [{ email, name }],
         subject: 'TaskNova - Your OTP Code: ' + otp,
-        html: `
+        htmlContent: `
           <div style="font-family:Segoe UI,sans-serif;background:#05051a;padding:32px;border-radius:16px;max-width:480px;margin:auto;">
             <div style="text-align:center;margin-bottom:24px;">
               <div style="display:inline-block;background:linear-gradient(135deg,#6c63ff,#3b82f6);border-radius:16px;padding:12px 20px;">
@@ -45,7 +46,7 @@ export default async function handler(req, res) {
 
     const data = await response.json();
 
-    if (data.id) {
+    if (data.messageId) {
       return res.status(200).json({ success: true });
     } else {
       return res.status(500).json({ error: data.message || 'Failed to send email' });
