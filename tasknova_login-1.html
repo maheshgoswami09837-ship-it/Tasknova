@@ -525,7 +525,7 @@
           <h3>Offerwall Tasks</h3>
           <p>Offers complete karo, zyada coins pao! · Unlimited</p>
         </div>
-        <div class="earn-card-reward">+2000 🪙</div>
+        <div class="earn-card-reward">+20 🪙</div>
       </div>
 
       <!-- 2. Complete Survey -->
@@ -537,7 +537,7 @@
           <h3>Complete Survey</h3>
           <p>Questions answer karo & earn karo · 5-10 min</p>
         </div>
-        <div class="earn-card-reward">+2000 🪙</div>
+        <div class="earn-card-reward">+20 🪙</div>
       </div>
 
       <!-- 3. Special Tasks -->
@@ -552,7 +552,7 @@
           <h3>Special Tasks ⚡</h3>
           <p>Shortlink & Watch Ads — dono karo · Daily</p>
         </div>
-        <div class="earn-card-reward">+1000 🪙</div>
+        <div class="earn-card-reward">+10 🪙</div>
       </div>
 
       <!-- 4. Instagram Post (Coming Soon) -->
@@ -690,7 +690,7 @@
   let pendingRegData = null;
 
   let alreadyChecked = false;
-  window.addEventListener('load', () => {
+  window.addEventListener('load', async () => {
     if (alreadyChecked) return;
     alreadyChecked = true;
 
@@ -706,18 +706,59 @@
 
     const uid = localStorage.getItem('tasknova_uid');
     if (uid && uid !== 'null') {
-      showHome(uid);
+      // Loading screen ke andar hi data fetch karo — phir home dikhao
+      const minWait = new Promise(res => setTimeout(res, 1000)); // 1 sec extra loading
+      const dataFetch = get(ref(db, 'users/' + uid)).catch(() => null);
+      const [snap] = await Promise.all([dataFetch, minWait]);
+      showHome(uid, snap);
     } else {
-      document.getElementById('loadingScreen').style.display = 'none';
-      document.getElementById('loginSection').style.display = 'flex';
-      if (window.Android && window.Android.contentReady) {
-        window.Android.contentReady();
-      }
+      setTimeout(() => {
+        document.getElementById('loadingScreen').style.display = 'none';
+        document.getElementById('loginSection').style.display = 'flex';
+        if (window.Android && window.Android.contentReady) {
+          window.Android.contentReady();
+        }
+      }, 1000);
     }
   });
 
   // ── Show Home ─────────────────────────────────────────────────
-  async function showHome(uid) {
+  function _applyUserData(uid, data) {
+    const totalCoins = data.coins || 0;
+    const calculatedBalance = parseFloat((totalCoins / 1).toFixed(2));
+    document.querySelectorAll('.user-balance').forEach(el => el.textContent = '₹' + calculatedBalance.toFixed(2));
+    const headerBalEl = document.getElementById('headerBalance');
+    if (headerBalEl) headerBalEl.textContent = '₹' + calculatedBalance.toFixed(2);
+    const headerCoinsEl = document.getElementById('headerCoins');
+    if (headerCoinsEl) headerCoinsEl.textContent = totalCoins.toLocaleString('en-IN');
+    document.querySelectorAll('.user-coins').forEach(el => el.textContent = totalCoins + ' Coins');
+    document.querySelectorAll('.user-total-earned').forEach(el => el.textContent = '₹' + (data.totalEarned || 0));
+    document.querySelectorAll('.user-tasks').forEach(el => el.textContent = data.tasksDone || 0);
+    document.querySelectorAll('.user-referrals').forEach(el => el.textContent = data.referrals || 0);
+    updateMilestones(data.referrals || 0);
+    document.querySelector('.header-left h2').textContent = 'Hello, ' + (data.name || 'User') + '! 👋';
+    const myCode = data.referralCode || '';
+    document.querySelectorAll('.user-referral-code').forEach(el => { el.textContent = myCode || ''; });
+    document.querySelectorAll('.user-referral-link').forEach(el => { el.value = 'https://tasknovaofficial.vercel.app/?ref=' + myCode; });
+    if (!data.welcomeBonus) {
+      const wc = document.getElementById('welcomeBonusCard');
+      if (wc) wc.style.display = 'none';
+    }
+    // Referral count sync (background)
+    if (myCode) {
+      get(ref(db, 'referrals/' + myCode)).then(refSnap => {
+        const actualCount = refSnap.exists() ? Object.keys(refSnap.val()).length : 0;
+        document.querySelectorAll('.user-referrals').forEach(el => el.textContent = actualCount);
+        updateMilestones(actualCount);
+        if (actualCount !== (data.referrals || 0)) {
+          set(ref(db, 'users/' + uid + '/referrals'), actualCount).catch(() => {});
+        }
+      }).catch(() => {});
+    }
+    checkFirstWithdrawBonus(uid, data);
+  }
+
+  async function showHome(uid, prefetchedSnap) {
     if (!uid) return;
     window.__HOME_ACTIVE__ = true;
     document.getElementById('loadingScreen').style.display = 'none';
@@ -727,53 +768,10 @@
       window.Android.contentReady();
     }
     try {
-      const snap = await get(ref(db, 'users/' + uid));
-      if (snap.exists()) {
-        const data = snap.val();
-        const totalCoins = data.coins || 0;
-        const calculatedBalance = parseFloat((totalCoins / 1).toFixed(2));
-        document.querySelectorAll('.user-balance').forEach(el => el.textContent = '₹' + calculatedBalance.toFixed(2));
-        const headerBalEl = document.getElementById('headerBalance');
-        if (headerBalEl) headerBalEl.textContent = '₹' + calculatedBalance.toFixed(2);
-        const headerCoinsEl = document.getElementById('headerCoins');
-        if (headerCoinsEl) headerCoinsEl.textContent = totalCoins.toLocaleString('en-IN');
-        document.querySelectorAll('.user-coins').forEach(el => el.textContent = totalCoins + ' Coins');
-        document.querySelectorAll('.user-total-earned').forEach(el => el.textContent = '₹' + (data.totalEarned || 0));
-        document.querySelectorAll('.user-tasks').forEach(el => el.textContent = data.tasksDone || 0);
-        document.querySelectorAll('.user-referrals').forEach(el => el.textContent = data.referrals || 0);
-        updateMilestones(data.referrals || 0);
-
-        // ── Accurate referral count from referrals node ──────
-        const myCode = data.referralCode || '';
-        if (myCode) {
-          get(ref(db, 'referrals/' + myCode)).then(refSnap => {
-            const actualCount = refSnap.exists() ? Object.keys(refSnap.val()).length : 0;
-            document.querySelectorAll('.user-referrals').forEach(el => el.textContent = actualCount);
-            updateMilestones(actualCount);
-            // Sync back to users node if mismatch
-            if (actualCount !== (data.referrals || 0)) {
-              set(ref(db, 'users/' + uid + '/referrals'), actualCount).catch(() => {});
-            }
-          }).catch(() => {});
-        }
-        if (!data.welcomeBonus) {
-          const wc = document.getElementById('welcomeBonusCard');
-          if (wc) wc.style.display = 'none';
-        }
-        document.querySelector('.header-left h2').textContent = 'Hello, ' + (data.name || 'User') + '! 👋';
-
-        // ── Show referral code on home page ─────────────────
-        // myCode already declared above — reuse it
-        document.querySelectorAll('.user-referral-code').forEach(el => {
-          el.textContent = myCode || 'Loading...';
-        });
-        // Share link update
-        document.querySelectorAll('.user-referral-link').forEach(el => {
-          el.value = 'https://tasknovaofficial.vercel.app/?ref=' + myCode;
-        });
-
-        // ── First Withdraw Success Popup Check ────────────────
-        checkFirstWithdrawBonus(uid, data);
+      // Prefetched snap use karo (loading screen ke dauran fetch hua)
+      const snap = prefetchedSnap || await get(ref(db, 'users/' + uid));
+      if (snap && snap.exists()) {
+        _applyUserData(uid, snap.val());
       }
     } catch(e) { console.log('error:', e); }
   }
@@ -904,22 +902,24 @@
     return html;
   }
 
-  const AI_IMG_BASE = 'https://raw.githubusercontent.com/maheshgoswami09837-ship-it/Tasknova/main/images/spin/';
+  const AI_IMG_BASE_SPIN = 'https://raw.githubusercontent.com/maheshgoswami09837-ship-it/Tasknova/main/images/spin/';
+  const AI_IMG_BASE_OTP  = 'https://raw.githubusercontent.com/maheshgoswami09837-ship-it/Tasknova/main/images/otp/';
   const AI_IMG_MAP = {
-    'spin_task_card': 'spin_task_card.png',
-    'spin_result_win': 'spin_result_win.png',
-    'spin_article_step1': 'spin_article_step1.png',
-    'spin_popup_watchads': 'spin_popup_watchads.png',
-    'spin_popup_complete': 'spin_popup_complete.png',
-    'spin_continue_step2': 'spin_continue_step2.png',
-    'spin_claim_coins': 'spin_claim_coins.png',
+    'spin_task_card':      { base: AI_IMG_BASE_SPIN, file: 'spin_task_card.png' },
+    'spin_result_win':     { base: AI_IMG_BASE_SPIN, file: 'spin_result_win.png' },
+    'spin_article_step1':  { base: AI_IMG_BASE_SPIN, file: 'spin_article_step1.png' },
+    'spin_popup_watchads': { base: AI_IMG_BASE_SPIN, file: 'spin_popup_watchads.png' },
+    'spin_popup_complete': { base: AI_IMG_BASE_SPIN, file: 'spin_popup_complete.png' },
+    'spin_continue_step2': { base: AI_IMG_BASE_SPIN, file: 'spin_continue_step2.png' },
+    'spin_claim_coins':    { base: AI_IMG_BASE_SPIN, file: 'spin_claim_coins.png' },
+    'otp_spam':            { base: AI_IMG_BASE_OTP,  file: 'otp_spam.png' },
   };
 
   function parseAIImages(text) {
     return text.replace(/\[IMG:([^\]]+)\]/g, (match, key) => {
-      const file = AI_IMG_MAP[key.trim()];
-      if (!file) return '';
-      const url = AI_IMG_BASE + file;
+      const entry = AI_IMG_MAP[key.trim()];
+      if (!entry) return '';
+      const url = entry.base + entry.file;
       return `\n__AIIMG__${url}__AIIMG__\n`;
     });
   }
@@ -952,7 +952,7 @@
 
     if (sender === 'user') {
       row.style.justifyContent = 'flex-end';
-      row.innerHTML = `<div><div style="background:linear-gradient(135deg,#2563eb,#1d4ed8);color:#fff;border-radius:16px 16px 4px 16px;padding:11px 14px;font-size:14px;line-height:1.5;max-width:260px;word-wrap:break-word;white-space:pre-wrap;box-shadow:0 2px 8px rgba(37,99,235,0.25);"></div><div style="font-size:10.5px;color:#9ca3af;margin-top:4px;text-align:right;padding:0 4px;">${time}</div></div>`;
+      row.innerHTML = `<div style="max-width:75%;"><div style="background:linear-gradient(135deg,#2563eb,#1d4ed8);color:#fff;border-radius:16px 16px 4px 16px;padding:11px 14px;font-size:14px;line-height:1.5;word-wrap:break-word;word-break:break-word;white-space:pre-wrap;box-shadow:0 2px 8px rgba(37,99,235,0.25);"></div><div style="font-size:10.5px;color:#9ca3af;margin-top:4px;text-align:right;padding:0 4px;">${time}</div></div>`;
       row.querySelector('div > div').textContent = text;
     } else {
       const speakId = 'speak-' + Math.random().toString(36).slice(2, 9);
