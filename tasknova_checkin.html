@@ -23,8 +23,8 @@
   /* ── Streak flame hero ───────────────────────── */
   .flame-hero { display:flex; align-items:center; gap:14px; margin-bottom:18px; padding:16px 18px; border-radius:20px; background:linear-gradient(135deg,#2b1a55,#4f2bb3); box-shadow:0 10px 28px rgba(76,41,200,0.28); position:relative; overflow:hidden; }
   .flame-hero::after { content:''; position:absolute; inset:0; background:radial-gradient(circle at 85% 0%, rgba(255,255,255,0.16), transparent 55%); }
-  .flame-icon { display:flex; align-items:center; justify-content:center; flex-shrink:0; filter:drop-shadow(0 0 10px rgba(255,120,0,0.7)); animation:flameFlicker 1.6s ease-in-out infinite; }
-  @keyframes flameFlicker { 0%,100%{ transform:scale(1) rotate(-2deg);} 50%{ transform:scale(1.08) rotate(2deg);} }
+  .flame-icon { display:flex; align-items:center; justify-content:center; flex-shrink:0; filter:drop-shadow(0 0 10px rgba(245,158,11,0.6)); animation:starPulse 1.8s ease-in-out infinite; }
+  @keyframes starPulse { 0%,100%{ transform:scale(1);} 50%{ transform:scale(1.1);} }
   .flame-text { position:relative; z-index:1; }
   .flame-text .label { font-size:11px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:rgba(255,255,255,0.65); }
   .flame-text .value { font-size:23px; font-weight:900; color:#fff; line-height:1.2; }
@@ -100,14 +100,14 @@
 <div class="flame-hero">
   <div class="flame-icon">
     <svg width="38" height="38" viewBox="0 0 24 24" fill="none">
+      <circle cx="12" cy="12" r="10" fill="url(#starGrad)"/>
       <defs>
-        <linearGradient id="fireGrad" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stop-color="#ff9a00"/>
-          <stop offset="100%" stop-color="#ff3d00"/>
+        <linearGradient id="starGrad" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="#f59e0b"/>
+          <stop offset="100%" stop-color="#f97316"/>
         </linearGradient>
       </defs>
-      <path d="M12 2C12 2 8 6 8 10C8 10 6 8.5 6.5 6C4 8 3 11 3 13C3 17.97 7.03 22 12 22C16.97 22 21 17.97 21 13C21 8 17 4 12 2Z" fill="url(#fireGrad)"/>
-      <path d="M12 22C14.21 22 16 20.21 16 18C16 15.5 14 13.5 12 12C12 12 10 14 10 16.5C10 17.5 10.5 18.5 11 19C9.5 18.5 8.5 17 8.5 15.5C8.5 15.5 7 16.5 7 18C7 20.21 9.24 22 12 22Z" fill="#ffcc02"/>
+      <path d="M12 6l1.5 3.5L17 10l-2.5 2.5.5 3.5L12 14.5 9 16l.5-3.5L7 10l3.5-.5L12 6z" fill="#fff" opacity="0.95"/>
     </svg>
   </div>
   <div class="flame-text">
@@ -131,7 +131,7 @@
     </div>
     <div>
       <h2>Daily Check-In</h2>
-      <div class="sub">14-din streak poora karo, bonus jeeto</div>
+      <div class="sub">Roz check-in karo aur coins kamao!</div>
     </div>
   </div>
 
@@ -183,7 +183,7 @@
 </script>
 
 <script>
-  const REWARDS = [2,1,1,2,1,1,5, 1,1,1,2,1,1,5];
+  const REWARDS = [2,1,1,2,1,1,5, 1,1,2,1,1,2,5, 1,1,2,1,1,2,5, 1,1,2,1,1,2,5, 1,10];
   const DB_URL  = 'https://tasknova-66d0f-default-rtdb.firebaseio.com';
 
   // ── IST date helper (matches tasks page) ───────────────────────
@@ -209,14 +209,14 @@
 
     const flameEl = document.getElementById('flameStreak');
     if (flameEl) {
-      flameEl.innerHTML = streak > 0 ? `Day ${streak}<span> of 14</span>` : `Shuru karo<span>!</span>`;
+      flameEl.innerHTML = streak > 0 ? `Day ${streak}` : `Shuru karo<span>!</span>`;
     }
 
-    for (let i = 0; i < 14; i++) {
+    for (let i = 0; i < 30; i++) {
       const isClaimed   = i < streak;
       const isActive    = i === activeDay;
       const isFuture    = !isClaimed && !isActive;
-      const isMilestone = (i + 1) % 7 === 0;
+      const isMilestone = ((i + 1) % 7 === 0) || (i + 1 === 30);
       const coins       = REWARDS[i];
 
       const wrapCls  = 'coin-wrap ' + (isClaimed ? 'claimed' : isActive ? 'active' : 'future') + (isMilestone ? ' milestone' : '');
@@ -249,14 +249,14 @@
     const info = document.getElementById('streakInfo');
     const btn  = document.getElementById('claimBtn');
     if (claimed) {
-      const isBonus = (streak === 7 || streak === 14);
+      const isBonus = (streak % 7 === 0 || streak === 30);
       info.innerHTML = isBonus
         ? `🎉 Streak: <strong>Day ${streak}</strong> Complete! Bonus <strong>+${REWARDS[streak-1]} Coins</strong> milgaye!`
         : `Aaj ka check-in ho chuka! Streak: <strong>Day ${streak}</strong>`;
       btn.disabled = true;
       btn.textContent = 'Already Claimed';
     } else {
-      const coins = REWARDS[Math.min(streak, 13)];
+      const coins = REWARDS[Math.min(streak, 29)];
       info.innerHTML = `Aaj claim karo: <strong>+${coins} Coins</strong> | Streak: <strong>Day ${streak+1}</strong>`;
       btn.disabled = false;
       btn.textContent = `Claim +${coins} Coins`;
@@ -290,10 +290,7 @@
       let streak   = data.checkinStreak || 0;
       const lastDate = data.checkinLastDate || '';
 
-      // Reset streak if user missed a day (lastDate not today/yesterday)
-      if (lastDate !== todayKey && lastDate !== yesterdayKey && lastDate !== '') {
-        streak = 0;
-      }
+      // Streak reset nahi hoga — miss karo to wahan se continue karo jahan chhoda tha
 
       const claimedToday = (data.dailyTasks && data.dailyTasks[todayKey] && data.dailyTasks[todayKey].checkin) || (lastDate === todayKey);
 
@@ -319,8 +316,9 @@
     const yesterdayKey = getYesterdayIST();
 
     let streak = currentStreak;
-    streak = (streak > 0 && (currentLastDateMatches(yesterdayKey))) ? (streak >= 14 ? 1 : streak + 1) : 1;
-    if (streak > 14) streak = 1;
+    // Miss karo ya consecutive — dono mein sirf increment, reset nahi
+    // 14 ke baad wapas Day 1 se shuru
+    streak = streak >= 30 ? 1 : streak + 1;
 
     const coins    = REWARDS[streak-1];
     const dayIndex = streak-1;
