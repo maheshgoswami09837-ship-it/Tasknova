@@ -920,15 +920,15 @@
       const entry = AI_IMG_MAP[key.trim()];
       if (!entry) return '';
       const url = entry.base + entry.file;
-      return `\n__AIIMG__${url}__AIIMG__\n`;
+      return `__AIIMG__${url}__AIIMG__`;
     });
   }
 
   function renderAIBotContent(rawText) {
     // Step 1: pehle [IMG:...] tags ko placeholders mein convert karo
     const text = parseAIImages(rawText);
-    // Step 2: placeholders pe split karo
-    const parts = text.split(/\n?__AIIMG__(https?:[^_]+)__AIIMG__\n?/);
+    // Step 2: placeholders pe split karo (newline optional)
+    const parts = text.split(/__AIIMG__(https?:[^_]+)__AIIMG__/);
     let html = '';
     parts.forEach((part, i) => {
       if (i % 2 === 0) {
