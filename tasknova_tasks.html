@@ -4554,15 +4554,10 @@
             if (clm3) clm3.style.display = 'none';
 
             if (d.done >= SL_LIMIT) {
-              // ── 2/2 Complete: Claim button dikhao ──
-              const clmBtn = document.getElementById('slClaimBtn');
+              // ── 2/2 Complete: Modal band karo, Special Tasks pe wapas jao ──
+              // Coins Special Tasks ke Collect button pe credit honge
+              showToast('✅ 2/2 Shortlinks complete! Special Tasks se Collect karo 🎉', 'linear-gradient(135deg,#16a34a,#22c55e)');
               const visitBtn2 = document.getElementById('slVisitBtn');
-              if (clmBtn) {
-                clmBtn.style.display = 'block';
-                clmBtn.disabled = false;
-                clmBtn.textContent = '🎉 Claim Reward';
-                clmBtn.onclick = function() { claimSlReward(uid, ap); };
-              }
               if (visitBtn2) {
                 visitBtn2.disabled = true;
                 visitBtn2.textContent = '✅ Dono links complete!';
@@ -4570,7 +4565,18 @@
                 visitBtn2.style.color = 'rgba(255,255,255,0.35)';
                 visitBtn2.style.cursor = 'not-allowed';
               }
-              updateSlUI();
+              // dailyTasks mein 2/2 save karo
+              const _slTodayKey2 = new Date(Date.now() + 5.5*60*60*1000).toISOString().split('T')[0];
+              fetch(DB_URL + '/users/' + uid + '/dailyTasks/' + _slTodayKey2 + '/shortlinks.json' + ap, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: String(d.done)
+              }).catch(e => console.warn('[Shortlink] 2/2 save error:', e));
+              // 1 sec baad modal band, Special Tasks pe wapas
+              setTimeout(function() {
+                closeModal('shortlinkModal');
+                setTimeout(function() { openSpecialTasks(); }, 200);
+              }, 1200);
             } else {
               // 1/2 Complete — next task ke liye reset
               showToast('✅ 1/2 Complete! Ek aur karo Collect ke liye 🔗', 'linear-gradient(135deg,#6c63ff,#3b82f6)');
@@ -4607,63 +4613,6 @@
     });
   }
 
-  // ── SHORTLINK FINAL CLAIM ─────────────────────────────────────
-  function claimSlReward(uid, ap) {
-    const clmBtn = document.getElementById('slClaimBtn');
-    if (clmBtn) { clmBtn.disabled = true; clmBtn.textContent = '⏳ Crediting...'; }
-
-    const totalCoins = SL_LIMIT * SL_COINS; // 2 × 0.20 = 0.40 coins
-    window._getAuthToken && window._getAuthToken().then(token => {
-      const authParam = token ? '?auth=' + token : '';
-      fetch(DB_URL + '/users/' + uid + '.json' + authParam)
-        .then(r => r.json())
-        .then(userData => {
-          const newCoins   = (userData.coins || 0) + totalCoins;
-          const newBalance = parseFloat((newCoins / 1).toFixed(2));
-          const newTasks   = (userData.tasksDone || 0) + 1;
-          const _slTodayKey = new Date(Date.now() + 5.5*60*60*1000).toISOString().split('T')[0];
-          const patch = {
-            coins: newCoins, balance: newBalance, tasksDone: newTasks, totalEarned: newBalance,
-            ['dailyTasks/' + _slTodayKey + '/shortlinks']: SL_LIMIT,
-            ['dailyTasks/' + _slTodayKey + '/earned']: (typeof getDailyData === 'function') ? getDailyData().earned + totalCoins : totalCoins
-          };
-          return fetch(DB_URL + '/users/' + uid + '.json' + authParam, {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(patch)
-          }).then(() => {
-            const coinsEl = document.querySelector('.user-coins');
-            const balEl   = document.querySelector('.user-balance');
-            if (coinsEl) coinsEl.textContent = newCoins + ' Coins';
-            if (balEl)   balEl.textContent   = '₹' + newBalance.toFixed(2);
-
-            showToast('🎉 +' + totalCoins + ' Coins Credited! Shortlink complete!', 'linear-gradient(135deg,#22c55e,#16a34a)');
-            if (typeof _markSlCollectedToday === 'function') _markSlCollectedToday();
-
-            logTaskActivity({
-              uid, taskType:'Shortlink', taskName:'🔗 Shortlink Task',
-              coins: totalCoins, status:'Success',
-              extraData:{ claimedAt: Date.now() }
-            });
-
-            if (clmBtn) { clmBtn.textContent = '✅ Claimed!'; clmBtn.style.background = 'rgba(34,197,94,0.2)'; }
-
-            const slSpecialBtn = document.getElementById('slSpecialBtn');
-            if (slSpecialBtn) {
-              slSpecialBtn.textContent = 'Done ✓';
-              slSpecialBtn.style.background = 'rgba(255,255,255,0.1)';
-              slSpecialBtn.style.color = 'rgba(255,255,255,0.35)';
-              slSpecialBtn.disabled = true;
-            }
-            updateSlUI();
-          });
-        })
-        .catch(() => {
-          showToast('Error! Dobara try karo.', '#ef4444');
-          if (clmBtn) { clmBtn.disabled = false; clmBtn.textContent = '🎉 Claim Reward'; }
-        });
-    });
-  }
   // ── SHORTLINK TASK END ────────────────────────────────────────
   function openTutVideo(videoId, title) {
     // YouTube Shorts bhi /embed/ se chalte hain — loop=1 add kiya
@@ -4908,12 +4857,71 @@
     }
 
     if (btn.textContent.trim() === 'Collect') {
-      // Safety guard — yahan aana nahi chahiye (coins already claimShortlink ne credit kiye)
-      // Phir bhi agar aaye to Done state show karo
-      btn.textContent = 'Done ✓';
-      btn.style.background = 'rgba(255,255,255,0.1)';
-      btn.style.color = 'rgba(255,255,255,0.35)';
+      // Random coins 0.40–0.50 (2 decimal places), kabhi exactly 2 nahi
+      var randomCoins = parseFloat((Math.random() * 0.10 + 0.40).toFixed(2));
+      // Edge case: agar exactly 0.50 aaye to 0.49 karo, 0.40 aaye to 0.41
+      if (randomCoins >= 0.50) randomCoins = 0.49;
+      if (randomCoins <= 0.40) randomCoins = 0.41;
+
       btn.disabled = true;
+      btn.textContent = '⏳';
+
+      var uid = localStorage.getItem('tasknova_uid');
+      if (!uid || uid === 'null') {
+        if (typeof showToast === 'function') showToast('Pehle login karo!', '#ef4444');
+        btn.disabled = false; btn.textContent = 'Collect';
+        return;
+      }
+
+      window._getAuthToken && window._getAuthToken().then(function(token) {
+        var ap = token ? '?auth=' + token : '';
+        fetch(DB_URL + '/users/' + uid + '.json' + ap)
+          .then(function(r) { return r.json(); })
+          .then(function(userData) {
+            var newCoins   = parseFloat(((userData.coins || 0) + randomCoins).toFixed(2));
+            var newBalance = parseFloat((newCoins / 1).toFixed(2));
+            var todayKey   = _getTodayKey();
+            var patch = {
+              coins: newCoins, balance: newBalance, totalEarned: newBalance,
+              ['dailyTasks/' + todayKey + '/shortlinks']: _slSpecialMax,
+              ['dailyTasks/' + todayKey + '/slSpecialCollected']: true
+            };
+            return fetch(DB_URL + '/users/' + uid + '.json' + ap, {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(patch)
+            }).then(function() {
+              _markSlCollectedToday();
+              // Balance UI update
+              var coinsEl = document.querySelector('.user-coins');
+              var balEl   = document.querySelector('.user-balance');
+              if (coinsEl) coinsEl.textContent = newCoins + ' Coins';
+              if (balEl)   balEl.textContent   = '₹' + newBalance.toFixed(2);
+
+              // Special reward message — kabhi 2 nahi milega
+              if (typeof showToast === 'function') {
+                showToast('🎰 Reward mila! +' + randomCoins + ' Coins — Ye reward random milta hai! 🎉', 'linear-gradient(135deg,#16a34a,#22c55e)');
+              }
+
+              if (typeof logTaskActivity === 'function') {
+                logTaskActivity({
+                  uid: uid, taskType: 'Shortlink', taskName: '🔗 Shortlink Task',
+                  coins: randomCoins, status: 'Success',
+                  extraData: { claimedAt: Date.now(), randomReward: true }
+                });
+              }
+
+              btn.textContent = 'Done ✓';
+              btn.style.background = 'rgba(255,255,255,0.1)';
+              btn.style.color = 'rgba(255,255,255,0.35)';
+              btn.disabled = true;
+            });
+          })
+          .catch(function() {
+            if (typeof showToast === 'function') showToast('Error! Dobara try karo.', '#ef4444');
+            btn.disabled = false; btn.textContent = 'Collect';
+          });
+      });
     } else {
       window._fromSpecialTasks = true;
       closeSpecialTasks();
@@ -4979,13 +4987,12 @@
     var btn   = document.getElementById('slSpecialBtn');
     if (badge) badge.textContent = _slSpecialCount + '/' + _slSpecialMax;
     if (_slSpecialCount >= _slSpecialMax) {
-      // 2/2 complete — coins claimShortlink ne already credit kar diye
-      // Special Tasks btn Done state
+      // 2/2 complete — Collect button dikhao
       if (btn) {
-        btn.textContent = 'Done ✓';
-        btn.style.background = 'rgba(255,255,255,0.1)';
-        btn.style.color = 'rgba(255,255,255,0.35)';
-        btn.disabled = true;
+        btn.textContent = 'Collect';
+        btn.style.background = 'linear-gradient(135deg,#16a34a,#22c55e)';
+        btn.style.color = '#fff';
+        btn.disabled = false;
       }
       // Code area hide karo
       var lbl = document.getElementById('slCodeLabel');
@@ -5036,6 +5043,8 @@
     if (slBtn) {
       if (_isSlCollectedToday()) {
         slBtn.textContent = 'Done ✓'; slBtn.style.background = 'rgba(255,255,255,0.1)'; slBtn.style.color = 'rgba(255,255,255,0.35)'; slBtn.disabled = true;
+      } else if (_slSpecialCount >= _slSpecialMax) {
+        slBtn.textContent = 'Collect'; slBtn.style.background = 'linear-gradient(135deg,#16a34a,#22c55e)'; slBtn.style.color = '#fff'; slBtn.disabled = false;
       } else {
         slBtn.textContent = 'Visit'; slBtn.style.background = 'linear-gradient(135deg,#2563eb,#3b82f6)'; slBtn.style.color = '#fff'; slBtn.disabled = false;
       }
