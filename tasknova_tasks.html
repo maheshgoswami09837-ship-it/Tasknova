@@ -4945,34 +4945,67 @@
     if (!btn) return;
 
     if (btn.textContent.trim() === 'Collect') {
-      var coins = _waSpecialMax * 1; // 10 ads × 1 coin = 10
-      if (typeof creditCoins === 'function') {
-        creditCoins(coins, 'watchAdSpecial');
-      } else if (typeof addCoins === 'function') {
-        addCoins(coins);
-      }
-      if (typeof showToast === 'function') showToast('+' + coins + ' Coins Collected! 🎉', 'linear-gradient(135deg,#22c55e,#16a34a)');
-      _markWaCollectedToday();
-      // Firebase mein bhi mark karo — taaki dusre device pe dobara claim na ho sake
-      var _uidWaCol = localStorage.getItem('tasknova_uid');
-      if (_uidWaCol && _uidWaCol !== 'null' && typeof window._getAuthToken === 'function') {
-        window._getAuthToken().then(function(token) {
-          var ap = token ? '?auth=' + token : '';
-          var todayKeyWa = _getTodayKey();
-          fetch(DB_URL + '/users/' + _uidWaCol + '/dailyTasks/' + todayKeyWa + '/waSpecialCollected.json' + ap, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: 'true'
-          }).catch(function(e) { console.warn('[SpecialTasks] waSpecialCollected save error:', e); });
-        });
-      }
-      _waSpecialCount = _waSpecialMax; // badge 10/10 rahega
-      _saveSpecialCount('wa', _waSpecialMax);
-      badge.textContent = _waSpecialMax + '/' + _waSpecialMax;
-      btn.textContent = 'Done ✓';
-      btn.style.background = 'rgba(255,255,255,0.1)';
-      btn.style.color = 'rgba(255,255,255,0.35)';
+      var WA_COINS = 2; // 10 ads = 2 coins
       btn.disabled = true;
+      btn.textContent = '⏳';
+
+      var _uidWaCol = localStorage.getItem('tasknova_uid');
+      if (!_uidWaCol || _uidWaCol === 'null') {
+        if (typeof showToast === 'function') showToast('Pehle login karo!', '#ef4444');
+        btn.disabled = false; btn.textContent = 'Collect';
+        return;
+      }
+
+      window._getAuthToken && window._getAuthToken().then(function(token) {
+        var ap = token ? '?auth=' + token : '';
+        fetch(DB_URL + '/users/' + _uidWaCol + '.json' + ap)
+          .then(function(r) { return r.json(); })
+          .then(function(userData) {
+            var newCoins   = parseFloat(((userData.coins || 0) + WA_COINS).toFixed(2));
+            var newBalance = parseFloat((newCoins / 1).toFixed(2));
+            var todayKeyWa = _getTodayKey();
+            var patch = {
+              coins: newCoins, balance: newBalance, totalEarned: newBalance,
+              ['dailyTasks/' + todayKeyWa + '/watchAds']: _waSpecialMax,
+              ['dailyTasks/' + todayKeyWa + '/waSpecialCollected']: true
+            };
+            return fetch(DB_URL + '/users/' + _uidWaCol + '.json' + ap, {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(patch)
+            }).then(function() {
+              _markWaCollectedToday();
+              _waSpecialCount = _waSpecialMax;
+              _saveSpecialCount('wa', _waSpecialMax);
+              if (badge) badge.textContent = _waSpecialMax + '/' + _waSpecialMax;
+
+              // UI update
+              var coinsEl = document.querySelector('.user-coins');
+              var balEl   = document.querySelector('.user-balance');
+              if (coinsEl) coinsEl.textContent = newCoins + ' Coins';
+              if (balEl)   balEl.textContent   = '₹' + newBalance.toFixed(2);
+
+              if (typeof showToast === 'function') showToast('🎉 +' + WA_COINS + ' Coins Collected! Watch Ads complete!', 'linear-gradient(135deg,#22c55e,#16a34a)');
+
+              if (typeof logTaskActivity === 'function') {
+                logTaskActivity({
+                  uid: _uidWaCol, taskType: 'watchAdSpecial', taskName: '⚡ Special Watch Ad Task',
+                  coins: WA_COINS, status: 'Success',
+                  extraData: { claimedAt: Date.now() }
+                });
+              }
+
+              btn.textContent = 'Done ✓';
+              btn.style.background = 'rgba(255,255,255,0.1)';
+              btn.style.color = 'rgba(255,255,255,0.35)';
+              btn.disabled = true;
+            });
+          })
+          .catch(function() {
+            if (typeof showToast === 'function') showToast('Error! Dobara try karo.', '#ef4444');
+            btn.disabled = false; btn.textContent = 'Collect';
+          });
+      });
     } else {
       localStorage.setItem('tn_reopen_special', '1');
       location.assign('watch_ad.html');
@@ -5017,7 +5050,7 @@
     }
   }
 
-  function _applySpecialTasksUI(spinCount, slCount, waCount, waCollected) {
+  function _applySpecialTasksUI(spinCount, slCount, waCount, waCollected, slCollected) {
     // ── Spin ──
     var spCountEl = document.getElementById('spSpecialCount');
     if (spCountEl) spCountEl.textContent = Math.min(spinCount, SPIN_TOTAL_MAX) + '/' + SPIN_TOTAL_MAX;
@@ -5041,7 +5074,8 @@
     var slBtn   = document.getElementById('slSpecialBtn');
     if (slBadge) slBadge.textContent = _slSpecialCount + '/' + _slSpecialMax;
     if (slBtn) {
-      if (_isSlCollectedToday()) {
+      if (slCollected || _isSlCollectedToday()) {
+        if (slCollected && !_isSlCollectedToday()) _markSlCollectedToday();
         slBtn.textContent = 'Done ✓'; slBtn.style.background = 'rgba(255,255,255,0.1)'; slBtn.style.color = 'rgba(255,255,255,0.35)'; slBtn.disabled = true;
       } else if (_slSpecialCount >= _slSpecialMax) {
         slBtn.textContent = 'Collect'; slBtn.style.background = 'linear-gradient(135deg,#16a34a,#22c55e)'; slBtn.style.color = '#fff'; slBtn.disabled = false;
@@ -5097,8 +5131,9 @@
           .then(function(dayData) {
             var fbSpin = (dayData && dayData.spins   != null) ? dayData.spins   : 0;
             var fbSl   = (dayData && dayData.shortlinks != null) ? dayData.shortlinks : 0;
-            var fbWa   = (dayData && dayData.adsWatched != null) ? dayData.adsWatched : 0;
+            var fbWa   = (dayData && dayData.watchAds != null) ? dayData.watchAds : (dayData && dayData.adsWatched != null ? dayData.adsWatched : 0);
             var fbWaCollected = !!(dayData && dayData.waSpecialCollected);
+            var fbSlCollected = !!(dayData && dayData.slSpecialCollected);
 
             // Local bhi sync karo
             if (typeof getDailyData === 'function' && typeof saveDailyData === 'function') {
@@ -5114,7 +5149,10 @@
               }
             } catch(e) {}
 
-            _applySpecialTasksUI(fbSpin, fbSl, fbWa, fbWaCollected);
+            // slSpecialCollected sync
+            if (fbSlCollected && !_isSlCollectedToday()) _markSlCollectedToday();
+
+            _applySpecialTasksUI(fbSpin, fbSl, fbWa, fbWaCollected, fbSlCollected);
           })
           .catch(function() {
             // Firebase fail — local fallback
