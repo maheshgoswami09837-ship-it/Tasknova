@@ -706,19 +706,32 @@
 
     const uid = localStorage.getItem('tasknova_uid');
     if (uid && uid !== 'null') {
-      // Loading screen ke andar hi data fetch karo — phir home dikhao
-      const minWait = new Promise(res => setTimeout(res, 1000)); // 1 sec extra loading
-      const dataFetch = get(ref(db, 'users/' + uid)).catch(() => null);
-      const [snap] = await Promise.all([dataFetch, minWait]);
-      showHome(uid, snap);
-    } else {
-      setTimeout(() => {
-        document.getElementById('loadingScreen').style.display = 'none';
-        document.getElementById('loginSection').style.display = 'flex';
-        if (window.Android && window.Android.contentReady) {
-          window.Android.contentReady();
+      // Cache se instant dikhao — loading screen bilkul nahi
+      const cached = localStorage.getItem('tn_cache_' + uid);
+      if (cached) {
+        try {
+          showHome(uid, null, JSON.parse(cached));
+        } catch(e) {
+          showHome(uid, null, null);
         }
-      }, 1000);
+      } else {
+        // Pehli baar — Firebase se fetch karo (loading screen dikhegi)
+        const snap = await get(ref(db, 'users/' + uid)).catch(() => null);
+        showHome(uid, snap, null);
+      }
+      // Background mein Firebase se fresh data fetch karo
+      get(ref(db, 'users/' + uid)).then(snap => {
+        if (snap && snap.exists()) {
+          localStorage.setItem('tn_cache_' + uid, JSON.stringify(snap.val()));
+          _applyUserData(uid, snap.val());
+        }
+      }).catch(() => {});
+    } else {
+      document.getElementById('loadingScreen').style.display = 'none';
+      document.getElementById('loginSection').style.display = 'flex';
+      if (window.Android && window.Android.contentReady) {
+        window.Android.contentReady();
+      }
     }
   });
 
@@ -758,7 +771,7 @@
     checkFirstWithdrawBonus(uid, data);
   }
 
-  async function showHome(uid, prefetchedSnap) {
+  async function showHome(uid, prefetchedSnap, cachedData) {
     if (!uid) return;
     window.__HOME_ACTIVE__ = true;
     document.getElementById('loadingScreen').style.display = 'none';
@@ -767,11 +780,17 @@
     if (window.Android && window.Android.contentReady) {
       window.Android.contentReady();
     }
+    // Cache se instant dikhao
+    if (cachedData) {
+      _applyUserData(uid, cachedData);
+      return;
+    }
     try {
-      // Prefetched snap use karo (loading screen ke dauran fetch hua)
       const snap = prefetchedSnap || await get(ref(db, 'users/' + uid));
       if (snap && snap.exists()) {
-        _applyUserData(uid, snap.val());
+        const data = snap.val();
+        localStorage.setItem('tn_cache_' + uid, JSON.stringify(data));
+        _applyUserData(uid, data);
       }
     } catch(e) { console.log('error:', e); }
   }
@@ -928,7 +947,7 @@
     // Step 1: pehle [IMG:...] tags ko placeholders mein convert karo
     const text = parseAIImages(rawText);
     // Step 2: placeholders pe split karo (newline optional)
-    const parts = text.split(/__AIIMG__(https?:[^_]+)__AIIMG__/);
+    const parts = text.split(/__AIIMG__(https?:[^ ]+?)__AIIMG__/);
     let html = '';
     parts.forEach((part, i) => {
       if (i % 2 === 0) {
@@ -954,8 +973,17 @@
 
     if (sender === 'user') {
       row.style.justifyContent = 'flex-end';
-      row.innerHTML = `<div style="max-width:75%;"><div style="background:linear-gradient(135deg,#2563eb,#1d4ed8);color:#fff;border-radius:16px 16px 4px 16px;padding:11px 14px;font-size:14px;line-height:1.5;word-wrap:break-word;word-break:break-word;white-space:pre-wrap;box-shadow:0 2px 8px rgba(37,99,235,0.25);"></div><div style="font-size:10.5px;color:#9ca3af;margin-top:4px;text-align:right;padding:0 4px;">${time}</div></div>`;
-      row.querySelector('div > div').textContent = text;
+      const uBubble = document.createElement('div');
+      uBubble.style.cssText = 'max-width:75%;display:flex;flex-direction:column;align-items:flex-end;';
+      const uMsg = document.createElement('div');
+      uMsg.style.cssText = 'background:linear-gradient(135deg,#2563eb,#1d4ed8);color:#fff;border-radius:16px 16px 4px 16px;padding:11px 14px;font-size:14px;line-height:1.5;word-wrap:break-word;word-break:break-word;white-space:pre-wrap;box-shadow:0 2px 8px rgba(37,99,235,0.25);';
+      uMsg.textContent = text;
+      const uTime = document.createElement('div');
+      uTime.style.cssText = 'font-size:10.5px;color:#9ca3af;margin-top:4px;text-align:right;padding:0 4px;';
+      uTime.textContent = time;
+      uBubble.appendChild(uMsg);
+      uBubble.appendChild(uTime);
+      row.appendChild(uBubble);
     } else {
       const speakId = 'speak-' + Math.random().toString(36).slice(2, 9);
       row.style.justifyContent = 'flex-start';
