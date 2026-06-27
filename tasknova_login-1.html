@@ -383,7 +383,7 @@
       </div>
       <!-- Referral field hidden, auto-fill hoga URL se -->
       <input type="hidden" id="regReferral">
-      <button class="btn-main" id="registerBtn" onclick="startRegister()">SEND OTP & REGISTER</button>
+      <button class="btn-main" id="registerBtn" onclick="startRegister()">CREATE ACCOUNT</button>
     </div>
   </div>
 </div>
@@ -1309,10 +1309,21 @@
     return user.slice(0, 2) + '****@' + domain;
   }
 
-  // ── REGISTER Step 1: Validate → Send OTP ─────────────────────
-  window.startRegister_module = window.startRegister = function() {
+  // ── Disposable/Fake email domains block ─────────────────────
+  const BLOCKED_DOMAINS = [
+    'mailinator.com','guerrillamail.com','tempmail.com','throwaway.email',
+    'sharklasers.com','guerrillamailblock.com','grr.la','guerrillamail.info',
+    'spam4.me','trashmail.com','trashmail.me','dispostable.com','yopmail.com',
+    'fakeinbox.com','maildrop.cc','mailnull.com','spamgourmet.com','spoofmail.de',
+    'getairmail.com','filzmail.com','discard.email','spamhereplease.com',
+    'mytemp.email','tempr.email','tnef.email','moakt.com','gufum.com',
+    '10minutemail.com','20minutemail.com','tempinbox.com','mailscrap.com'
+  ];
+
+  // ── REGISTER: Validate → Direct Account Create (No OTP) ──────
+  window.startRegister_module = window.startRegister = async function() {
     const name     = document.getElementById('regName').value.trim();
-    const email    = document.getElementById('regEmail').value.trim();
+    const email    = document.getElementById('regEmail').value.trim().toLowerCase();
     const password = document.getElementById('regPassword').value;
     const referral = document.getElementById('regReferral').value.trim();
 
@@ -1320,8 +1331,62 @@
     if (password.length < 6) { showToast('Password must be 6+ characters!', 'error'); return; }
     if (!email.includes('@')) { showToast('Valid email enter karein!', 'error'); return; }
 
-    pendingRegData = { name, email, password, referral };
-    sendRegOTP();
+    // Disposable email check
+    const domain = email.split('@')[1];
+    if (BLOCKED_DOMAINS.includes(domain)) {
+      showToast('Fake/temporary email allowed nahi hai! Real email use karein. ❌', 'error');
+      return;
+    }
+
+    const btn = document.getElementById('registerBtn');
+    btn.innerHTML = '<span class="spinner"></span>Creating Account...';
+    btn.disabled  = true;
+
+    try {
+      const userCred = await createUserWithEmailAndPassword(auth, email, password);
+      const uid = userCred.user.uid;
+      localStorage.setItem('tasknova_uid', uid);
+      const myReferralCode = generateReferralCode();
+
+      await set(ref(db, 'users/' + uid), {
+        name, email, balance: 10, coins: 10,
+        referralCode: myReferralCode, referredBy: referral || '',
+        totalEarned: 10, tasksDone: 0, referrals: 0,
+        joinDate: new Date().toISOString(), welcomeBonus: true
+      });
+
+      if (referral) {
+        await set(ref(db, 'referrals/' + referral + '/' + uid), {
+          joined: new Date().toISOString(), withdrawn: false
+        });
+        try {
+          const usersSnap = await get(ref(db, 'users'));
+          if (usersSnap.exists()) {
+            const users = usersSnap.val();
+            const referrerUid = Object.keys(users).find(k => users[k].referralCode === referral);
+            if (referrerUid) {
+              const rData = users[referrerUid];
+              const newReferrals = (rData.referrals || 0) + 1;
+              const newCoins   = (rData.coins || 0) + 1;
+              const newBalance = parseFloat((newCoins / 1).toFixed(2));
+              await set(ref(db, 'users/' + referrerUid), {
+                ...rData, referrals: newReferrals, coins: newCoins,
+                balance: newBalance, totalEarned: newBalance
+              });
+            }
+          }
+        } catch(refErr) { console.warn('[Referral] Could not update referrer:', refErr); }
+      }
+
+      showToast('Welcome! ₹10 bonus added! 🎉', 'success');
+      setTimeout(() => { window.__HOME_ACTIVE__ = false; showHome(uid); }, 1500);
+
+    } catch(e) {
+      if (e.code === 'auth/email-already-in-use') showToast('Email already registered!', 'error');
+      else showToast('Error: ' + e.message, 'error');
+      btn.innerHTML = 'CREATE ACCOUNT';
+      btn.disabled  = false;
+    }
   };
 
   function sendRegOTP() {
@@ -1354,7 +1419,7 @@
       console.error('OTP Error:', err);
       showToast('OTP send failed. Internet check karein.', 'error');
     }).finally(() => {
-      btn.innerHTML = 'SEND OTP & REGISTER';
+      btn.innerHTML = 'CREATE ACCOUNT';
       btn.disabled  = false;
     });
   }
