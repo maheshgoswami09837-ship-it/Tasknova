@@ -5,19 +5,28 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Ad Test</title>
   <style>
-    body { font-family: sans-serif; padding: 20px; background: #f0f0f0; }
-    .box { background: white; border-radius: 10px; padding: 15px; margin-bottom: 20px; }
-    h3 { margin: 0 0 10px; color: #333; }
+    body { font-family: sans-serif; padding: 20px; background: #f0f0f0; text-align: center; }
+    .box { background: white; border-radius: 10px; padding: 20px; margin-bottom: 20px; }
+    button { background: #22c55e; color: white; border: none; padding: 16px 40px; border-radius: 12px; font-size: 18px; font-weight: 700; cursor: pointer; }
   </style>
 </head>
 <body>
 
   <div class="box">
-    <h3>ExoClick Fullpage Interstitial Test (zoneid 5946220)</h3>
-    <script async type="application/javascript" src="https://a.pemsrv.com/ad-provider.js"></script>
-    <ins class="eas6a97888e33" data-zoneid="5946220"></ins>
-    <script>(AdProvider = window.AdProvider || []).push({"serve": {}});</script>
+    <h3>ExoClick Fullpage Interstitial Test</h3>
+    <p>Button dabao — ad aana chahiye</p>
+    <button onclick="triggerAd()">▶ Click karo</button>
   </div>
+
+  <script async type="application/javascript" src="https://a.pemsrv.com/ad-provider.js"></script>
+  <ins class="eas6a97888e33" data-zoneid="5946220"></ins>
+  <script>(AdProvider = window.AdProvider || []).push({"serve": {}});</script>
+
+  <script>
+    function triggerAd() {
+      (window.AdProvider = window.AdProvider || []).push({"serve": {}});
+    }
+  </script>
 
 </body>
 </html>
