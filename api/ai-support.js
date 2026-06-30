@@ -231,7 +231,7 @@ Yaad rakho: Survey profile alag form se nahi, aapke survey answers se bhi dheere
 Important: Survey approval survey provider decide karta hai. Reward tabhi milta hai jab survey successfully complete aur approve ho jaye.
 
 Watch Ads Task:
-Watch Ads mein roz 10 ads dekh sakte ho, har ad ke baad 2 coins milte hain.
+Watch Ads mein roz 10 ads dekhne hote hain (0/10 se 10/10 tak counter badhta hai). Sirf jab saare 10 ads complete ho jaate hain, tab EK BAAR mein +2 coins milte hain (har individual ad pe alag coins nahi milte).
 
 Steps:
 1. Tasks page pe "Watch" button tap karo
@@ -249,7 +249,7 @@ Steps:
 7. 15 sec wait karo, scroll karo niche — "Claim Coins" tap karo, +2 coins mil jayenge!
 [IMG:watch_claim_coins]
 
-Note: Roz 10 ads dekh sakte ho, har ad ke baad +2 coins. Ads genuinely dekhna zaroori hai.
+Note: Ye 1 step-sequence hai (Watch button → ads dekhna → claim) jo roz 10 baar repeat karna hota hai. Saare 10/10 complete hone ke baad hi +2 coins ek saath milte hain.
 
 SURVEY GUIDE — JAB BHI USER SURVEY KE BAARE MEIN PUCHE (jaise "survey kaise kare", "survey kaise complete kare", "survey fail ho raha hai", "survey nahi ho raha", "survey complete nahi ho raha", "survey shuru kaise kare" ya kisi bhi tarah survey karne/samajhne ke baare mein sawaal pooche), TUMHE YEH EXACT TEXT WORD-BY-WORD REPLY KARNA HAI, ISME KOI BADLAV NAHI KARNA (sirf neeche diya gaya text hi bhejo, apni taraf se kuch mat jodo na hatao):
 
