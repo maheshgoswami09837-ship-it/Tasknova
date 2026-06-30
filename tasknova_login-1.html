@@ -925,7 +925,7 @@
     }
   };
 
-  function aiFormatBotText(text) {
+  function aiFormatBotText(text, startInList) {
     let safe = text
       .replace(/&/g, '&amp;')
       .replace(/</g, '&lt;')
@@ -933,11 +933,11 @@
     safe = safe.replace(/\*\*(.+?)\*\*/g, '<strong style="font-weight:800;color:#1d4ed8;">$1</strong>');
     const lines = safe.split('\n');
     let html = '';
-    let inList = false;
+    let inList = !!startInList;
     lines.forEach(line => {
       const m = line.match(/^\s*(\d+)\.\s+(.*)/);
       if (m) {
-        if (!inList) { html += '<ol style="margin:6px 0 0 18px;padding:0;">'; inList = true; }
+        if (!inList) { html += `<ol style="margin:6px 0 0 18px;padding:0;" start="${m[1]}">`; inList = true; }
         html += `<li style="margin-bottom:3px;">${m[2]}</li>`;
       } else {
         if (inList) { html += '</ol>'; inList = false; }
@@ -945,8 +945,7 @@
         else html += '<div style="height:6px;"></div>';
       }
     });
-    if (inList) html += '</ol>';
-    return html;
+    return { html: html, inList: inList };
   }
 
   const AI_IMG_BASE_SPIN = 'https://raw.githubusercontent.com/maheshgoswami09837-ship-it/Tasknova/main/images/spin/';
@@ -985,15 +984,22 @@
     // Step 2: placeholders pe split karo (newline optional)
     const parts = text.split(/__AIIMG__(https?:[^ ]+?)__AIIMG__/);
     let html = '';
+    let inList = false;
     parts.forEach((part, i) => {
       if (i % 2 === 0) {
         // Text part
-        if (part.trim()) html += aiFormatBotText(part);
+        if (part.trim()) {
+          const result = aiFormatBotText(part, inList);
+          html += result.html;
+          inList = result.inList;
+        }
       } else {
-        // Image URL part
+        // Image URL part - close list before image, keep numbering continuous after
+        if (inList) { html += '</ol>'; inList = false; }
         html += `<img src="${part}" style="width:100%;max-width:240px;border-radius:10px;margin:8px 0 4px 0;display:block;" loading="lazy" onerror="this.style.display='none'">`;
       }
     });
+    if (inList) html += '</ol>';
     return html;
   }
 
