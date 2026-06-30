@@ -74,11 +74,16 @@ Steps:
 Note: 6 spins/day, har spin ke baad 1 min cooldown. Agar "Better luck next time" aaye to coins nahi milte, agla spin try karo.
 
 Shortlink:
-1. "Shortlink" task open kare
-2. Diya gaya link par click kare, woh kisi page par redirect karega
-3. Us page ko thodi der tak khula rakhe, band na kare
-4. Wapas app mein aakar verify/claim kare, coins mil jayenge
-5. Din mein limited shortlink tasks hote hain (jaise 2/day)
+1. Tasks page pe "Shortlink" task open kare — har link pe random coins milte hain (jaise +2 Coins)
+2. "Visit Link" button tap kare — TaskNova ka shortlink URL khulega
+3. Us page (ShrinkEarn) ke saare steps complete kare jaise bataya gaya ho
+4. Steps complete hone ke baad "Task Complete!" wala success page aayega, jisme ek "Secret Code" milega (jaise 2QFH)
+5. "Code Copy Karo" button se code copy kare
+6. Wapas TaskNova app mein aaye — wahan "Link Visited!" already dikh raha hoga aur neeche ek CODE box hoga
+7. Copy kiya hua code us CODE box mein paste/type kare
+8. "Claim Reward" button tap kare — coins turant credit ho jayenge
+9. Ek shortlink complete hone ke baad agla shortlink try kar sakte hain — roz ke 10 sequential shortlinks hote hain, har ek alag random coins deta hai
+10. Important: Ye secret code sirf ek hi baar kaam karta hai, kisi ke saath share na kare
 
 Surveys:
 1. "Surveys" section mein available survey choose kare
