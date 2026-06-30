@@ -7,7 +7,8 @@
 <title>TaskNova</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-  body { font-family: 'Segoe UI', sans-serif; background: #f5f6fa; min-height: 100vh; overflow-x: hidden; }
+  html { overscroll-behavior-y: contain; }
+  body { font-family: 'Segoe UI', sans-serif; background: #f5f6fa; min-height: 100vh; overflow-x: hidden; overscroll-behavior-y: contain; }
   .glow-circle { display:none; }
   .glow-circle { position: fixed; border-radius: 50%; filter: blur(80px); z-index: 0; pointer-events: none; }
   .glow-1 { width: 300px; height: 300px; background: rgba(108,99,255,0.25); top: -100px; left: -100px; }
@@ -1063,47 +1064,6 @@
     if (row) row.remove();
   }
 
-  const SURVEY_GUIDE_TEXT = `Survey Start Karne Se Pehle
-
-Welcome!
-Survey complete karne se pehle ye samajhna zaroori hai ki surveys kaise kaam karte hain.
-
-**1. Pehle 1-2 survey fail ho jaye to tension mat lo**
-Kabhi-kabhi starting mein survey complete nahi hota. Iska matlab account kharab nahi hai.
-
-Survey companies har survey ke liye alag type ke users dhoondti hain. Agar aap us survey ke liye match nahi hote, survey band ho sakta hai.
-
-**2. Profile dhyan se banao**
-Survey mein jo information do:
-
-Sahi age, Sahi city/state, Student ho to Student select karo, Har survey mein same basic details rakho.
-
-Galat ya alag-alag information dene se surveys reject ho sakte hain.
-
-**3. Survey kaise complete kare**
-Questions dhyan se padho. Jaldi-jaldi answer mat do. Beech mein app band mat karo. Random answers mat do. Survey end hone tak wait karo.
-
-**4. Survey fail kyu hota hai?**
-Aap target user nahi the. Answers match nahi hue. Survey already full ho gaya. Bahut fast complete kiya gaya. Ye normal hai.
-
-**5. Survey pass hone ke chances kaise badhaye**
-Profile complete rakho. Har baar sach aur same information do. Roz naye surveys try karo.
-
-**6. Aapki Survey Profile kaise banti hai?**
-Survey companies aapki profile aapke diye hue answers se banati hain. Jaise: Age, City/Location, Education, Occupation, Interests. Ye sab milkar decide karte hain ki kaunse surveys aapko dikhaye jayenge.
-
-Agar ek survey mein location kuch aur, dusre mein kuch aur, ya details baar-baar change karoge to system confuse ho sakta hai aur surveys kam mil sakte hain ya reject ho sakte hain.
-
-Isliye: Har survey mein same basic information rakho. Sirf sahi information do. Random answers mat do.
-
-Yaad rakho: Survey approval survey provider decide karta hai. Reward tabhi milta hai jab survey successfully complete aur approve ho jaye.`;
-
-  function isSurveyQuestion(text) {
-    const lower = text.toLowerCase();
-    const keywords = ['survey kaise', 'survey kese', 'survey karna', 'survey complete', 'survey fail', 'survey nahi', 'survey start', 'survey help', 'survey guide'];
-    return keywords.some(k => lower.includes(k));
-  }
-
   window.sendAIChatMessage2 = async function() {
     const input = document.getElementById('aiChatInput2');
     const text = input.value.trim();
@@ -1116,31 +1076,6 @@ Yaad rakho: Survey approval survey provider decide karta hai. Reward tabhi milta
     aiChatHistory2.push({ role: 'user', content: text });
     input.value = '';
     input.style.height = 'auto';
-
-    // Survey guide: fixed response — no API call
-    if (isSurveyQuestion(text)) {
-      showAITyping2();
-      setTimeout(() => {
-        hideAITyping2();
-        appendAIMessage2(SURVEY_GUIDE_TEXT, 'bot');
-        aiChatHistory2.push({ role: 'assistant', content: SURVEY_GUIDE_TEXT });
-
-        // Show I Understand + Start Survey buttons
-        const msgBox = document.getElementById('aiChatMessages2');
-        const btnDiv = document.createElement('div');
-        btnDiv.style.cssText = 'display:flex;gap:10px;margin-top:8px;flex-wrap:wrap;';
-        btnDiv.innerHTML = `
-          <button onclick="this.parentElement.remove(); appendAIMessage2('Samajh gaya! Koi aur sawaal?', 'user');" style="flex:1;min-width:120px;padding:11px 14px;border-radius:12px;background:linear-gradient(135deg,#2563eb,#1d4ed8);border:none;color:#fff;font-size:13px;font-weight:700;cursor:pointer;">I Understand</button>
-          <button onclick="this.parentElement.remove(); window.location.href='tasknova_tasks.html';" style="flex:1;min-width:120px;padding:11px 14px;border-radius:12px;background:#f1f5f9;border:1.5px solid #e2e8f0;color:#2563eb;font-size:13px;font-weight:700;cursor:pointer;">Start Survey</button>
-        `;
-        msgBox.appendChild(btnDiv);
-        msgBox.scrollTop = msgBox.scrollHeight;
-        sendBtn.disabled = false;
-        input.focus();
-      }, 800);
-      return;
-    }
-
     showAITyping2();
 
     try {
@@ -1861,7 +1796,7 @@ Yaad rakho: Survey approval survey provider decide karta hai. Reward tabhi milta
   <!-- ════════════════════════════════════════════════════════════
        AI CHAT SECTION — full-screen, same-file (no separate page)
   ════════════════════════════════════════════════════════════ -->
-  <div id="aiChatSection" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:#f5f6fa;z-index:1500;flex-direction:column;font-family:-apple-system,'Segoe UI',Roboto,Arial,sans-serif;overflow:hidden;" ontouchmove="event.stopPropagation();">
+  <div id="aiChatSection" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:#f5f6fa;z-index:1500;flex-direction:column;font-family:-apple-system,'Segoe UI',Roboto,Arial,sans-serif;overflow:hidden;overscroll-behavior:contain;touch-action:pan-y;" ontouchmove="event.stopPropagation();">
 
     <div style="flex-shrink:0;background:linear-gradient(135deg,#2563eb,#1d4ed8);padding:calc(env(safe-area-inset-top,0px) + 14px) 16px 16px;display:flex;align-items:center;gap:12px;box-shadow:0 2px 12px rgba(37,99,235,0.25);">
       <button onclick="closeAIChatSection()" style="width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,0.15);border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;">
