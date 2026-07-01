@@ -156,12 +156,42 @@
   .badge-locked { background: #f6f7fb; color: #aaa; border: 1px solid #e8eaef; }
 
   @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* Share Now Center Popup */
+  .share-modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.45); backdrop-filter: blur(6px); z-index: 999; display: none; justify-content: center; align-items: center; padding: 20px; }
+  .share-modal-box { position: relative; background: #fff; border-radius: 22px; padding: 26px 22px; width: 100%; max-width: 340px; text-align: center; animation: popIn 0.25s ease; box-shadow: 0 20px 50px rgba(0,0,0,0.2); }
+  @keyframes popIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+  .share-modal-close { position: absolute; top: -12px; right: -12px; width: 30px; height: 30px; background: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 15px; border: none; box-shadow: 0 2px 10px rgba(0,0,0,0.15); }
+  .share-modal-icon { width: 56px; height: 56px; margin: 0 auto 14px; background: linear-gradient(135deg, #6c63ff, #3b82f6); border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+  .share-modal-title { font-size: 17px; font-weight: 800; color: #1a1a2e; margin-bottom: 4px; }
+  .share-modal-sub { font-size: 12px; color: #999; margin-bottom: 18px; }
+  .share-modal-code-label { font-size: 11px; font-weight: 700; color: #aaa; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; text-align: left; }
+  .share-modal-code { background: #f6f7fb; border: 1.5px dashed #d4d0ff; border-radius: 12px; padding: 12px 14px; font-size: 16px; font-weight: 800; color: #6c63ff; letter-spacing: 1px; margin-bottom: 16px; }
+  .share-modal-link-text { display: inline-block; max-width: 100%; font-size: 13.5px; font-weight: 700; color: #1a1a2e; text-align: center; word-break: break-all; line-height: 1.5; background: #f6f7fb; border: 1.5px solid #e8eaef; border-radius: 12px; padding: 12px 14px; margin-bottom: 20px; }
+  .share-modal-copy-btn { width: 100%; background: #2563eb; color: #fff; border: none; border-radius: 14px; padding: 13px; font-size: 14px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; -webkit-tap-highlight-color: transparent; transition: transform 0.1s; }
+  .share-modal-copy-btn:active { transform: scale(0.97); }
 </style>
 </head>
 <body>
 
 
 <div class="toast" id="toast">Copied!</div>
+
+<div class="share-modal-overlay" id="shareModal" onclick="if(event.target===this)closeShareModal()">
+  <div class="share-modal-box">
+    <button class="share-modal-close" onclick="closeShareModal()">✕</button>
+    <div class="share-modal-icon">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+    </div>
+    <div class="share-modal-title">Invite &amp; Earn</div>
+    <div class="share-modal-sub">Share your code with friends</div>
+    <div class="share-modal-link-text" id="shareModalLink">https://tasknovaofficial.vercel.app/?ref=</div>
+    <button class="share-modal-copy-btn" onclick="copyShareModalLink()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+      Copy Link
+    </button>
+  </div>
+</div>
 
 <div class="content">
   <div class="header">
@@ -376,24 +406,32 @@
 
   window.shareWhatsApp = function() {
     const code = getCode();
-    const link = "https://maheshgoswami09837-ship-it.github.io/Tasknova/tasknova_login-1.html?ref=" + code;
+    const link = "https://tasknovaofficial.vercel.app/?ref=" + code;
     const msg = "🚀 Join TaskNova & earn money!\n\nUse my referral code: *" + code + "*\n\nClick to join & start earning:\n" + link;
     window.open("https://wa.me/?text=" + encodeURIComponent(msg), "_blank");
   }
 
   window.shareNow = function() {
     const code = getCode();
-    const link = "https://maheshgoswami09837-ship-it.github.io/Tasknova/tasknova_login-1.html?ref=" + code;
-    if (navigator.share) {
-      navigator.share({ title: "TaskNova", text: "Join TaskNova! Use code: " + code, url: link }).catch(e => console.log(e));
-    } else {
-      navigator.clipboard.writeText(link).then(() => {
-        const toast = document.getElementById("toast");
-        toast.textContent = "✅ Link Copied!";
-        toast.classList.add("show");
-        setTimeout(() => toast.classList.remove("show"), 2000);
-      });
-    }
+    const link = "https://tasknovaofficial.vercel.app/?ref=" + code;
+    document.getElementById("shareModalLink").textContent = link;
+    document.getElementById("shareModal").style.display = "flex";
+    document.body.style.overflow = "hidden";
+  }
+
+  window.closeShareModal = function() {
+    document.getElementById("shareModal").style.display = "none";
+    document.body.style.overflow = "";
+  }
+
+  window.copyShareModalLink = function() {
+    const link = document.getElementById("shareModalLink").textContent;
+    navigator.clipboard.writeText(link).then(() => {
+      const toast = document.getElementById("toast");
+      toast.textContent = "✅ Link Copied!";
+      toast.classList.add("show");
+      setTimeout(() => toast.classList.remove("show"), 2000);
+    }).catch(() => { alert("Link: " + link); });
   }
 
   // Page load hote hi data fetch karo
