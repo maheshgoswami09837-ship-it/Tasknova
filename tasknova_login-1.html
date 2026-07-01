@@ -382,8 +382,13 @@
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
         </span>
       </div>
-      <!-- Referral field hidden, auto-fill hoga URL se -->
-      <input type="hidden" id="regReferral">
+      <!-- Referral field: always visible, auto-fills from URL if link se aaya, warna manually type kar sakta hai -->
+      <div class="input-wrap" id="regReferralWrap">
+        <span class="input-icon" style="display:flex;align-items:center;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg>
+        </span>
+        <input type="text" id="regReferralDisplay" placeholder="Referral Code (optional)">
+      </div>
       <button class="btn-main" id="registerBtn" onclick="startRegister()">CREATE ACCOUNT</button>
     </div>
   </div>
@@ -699,7 +704,7 @@
     const urlParams = new URLSearchParams(window.location.search);
     const refCode   = urlParams.get('ref');
     if (refCode) {
-      document.getElementById('regReferral').value = refCode;
+      document.getElementById('regReferralDisplay').value = refCode;
       // Register tab show karo agar refer link se aaya
       showRegister();
       showToast('Referral code apply ho gaya! 🎁', 'success');
@@ -1370,7 +1375,7 @@
     const name     = document.getElementById('regName').value.trim();
     const email    = document.getElementById('regEmail').value.trim().toLowerCase();
     const password = document.getElementById('regPassword').value;
-    const referral = document.getElementById('regReferral').value.trim();
+    const referral = document.getElementById('regReferralDisplay').value.trim();
 
     if (!name || !email || !password) { showToast('Please fill all fields!', 'error'); return; }
     if (password.length < 6) { showToast('Password must be 6+ characters!', 'error'); return; }
