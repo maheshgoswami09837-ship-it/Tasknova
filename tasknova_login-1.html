@@ -711,7 +711,7 @@
     }
 
     const uid = localStorage.getItem('tasknova_uid');
-    if (uid && uid !== 'null') {
+    if (uid && uid !== 'null' && !refCode) {
       // Cache se instant dikhao — loading screen bilkul nahi
       const cached = localStorage.getItem('tn_cache_' + uid);
       if (cached) {
