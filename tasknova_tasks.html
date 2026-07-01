@@ -11,7 +11,8 @@
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent !important; }
   *, *:focus { outline: none !important; -webkit-tap-highlight-color: transparent !important; }
-  body { font-family: 'Segoe UI', sans-serif; background: #000; min-height: 100vh; overflow-x: hidden; padding-bottom: 80px; touch-action: pan-y; }
+  html { height: 100%; }
+  body { font-family: 'Segoe UI', sans-serif; background: #000; min-height: 100vh; overflow-x: hidden; overflow-y: auto; -webkit-overflow-scrolling: touch; padding-bottom: 80px; }
 
 
   @keyframes twinkle { 0%, 100% { opacity: 0.2; } 50% { opacity: 1; } }
@@ -319,7 +320,7 @@
   .ad-content { width:100%; height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:20px; }
   .ad-skip-btn { position:absolute; top:20px; right:20px; background:rgba(255,255,255,0.15); border:none; color:#fff; padding:8px 16px; border-radius:20px; font-size:13px; font-weight:700; cursor:pointer;  -webkit-tap-highlight-color: transparent; }
   /* ══════════════ WHITE THEME OVERRIDES ══════════════ */
-  body { background: #f5f6fa; touch-action: pan-y; }
+  body { background: #f5f6fa; }
   .header h1 { color: #1a1a2e; }
   .header p { color: rgba(26,26,46,0.45); }
 
@@ -398,8 +399,34 @@
         <iframe id="tutVideoIframe" src="" style="width:100%;height:100%;border:none;display:block;flex:1;" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
       </div>
 
+      <!-- Shortlink Image Swipe Gallery -->
+      <div id="shortlinkGalleryModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;z-index:999999;flex-direction:column;background:#000;">
+        <div id="slgBgBlur" style="position:absolute;top:0;left:0;width:100%;height:100%;background-size:cover;background-position:center;filter:blur(28px) brightness(0.55);transform:scale(1.15);transition:background-image 0.25s ease;"></div>
+        <button onclick="closeShortlinkGallery()" style="position:absolute;top:14px;right:14px;z-index:10001;background:rgba(0,0,0,0.5);border:1.5px solid rgba(255,255,255,0.25);color:#fff;width:38px;height:38px;border-radius:50%;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;">✕</button>
+        <div id="slgDots" style="position:absolute;top:16px;left:16px;right:64px;z-index:10001;display:flex;gap:6px;"></div>
+        <div id="slgTrack" style="position:relative;flex:1;display:flex;width:100%;height:100%;transition:transform 0.3s ease;"></div>
+        <button onclick="slgNav(-1)" id="slgPrevBtn" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);z-index:10001;background:rgba(0,0,0,0.45);border:1px solid rgba(255,255,255,0.2);color:#fff;width:38px;height:38px;border-radius:50%;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;">‹</button>
+        <button onclick="slgNav(1)" id="slgNextBtn" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);z-index:10001;background:rgba(0,0,0,0.45);border:1px solid rgba(255,255,255,0.2);color:#fff;width:38px;height:38px;border-radius:50%;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;">›</button>
+      </div>
+
+      <!-- Watch Ads Image Swipe Gallery -->
+      <div id="watchAdsGalleryModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;z-index:999999;flex-direction:column;background:#000;">
+        <div id="wagBgBlur" style="position:absolute;top:0;left:0;width:100%;height:100%;background-size:cover;background-position:center;filter:blur(28px) brightness(0.55);transform:scale(1.15);transition:background-image 0.25s ease;"></div>
+        <button onclick="closeWatchAdsGallery()" style="position:absolute;top:14px;right:14px;z-index:10001;background:rgba(0,0,0,0.5);border:1.5px solid rgba(255,255,255,0.25);color:#fff;width:38px;height:38px;border-radius:50%;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;">✕</button>
+
+        <!-- Dots -->
+        <div id="wagDots" style="position:absolute;top:16px;left:16px;right:64px;z-index:10001;display:flex;gap:6px;"></div>
+
+        <!-- Slide track -->
+        <div id="wagTrack" style="position:relative;flex:1;display:flex;width:100%;height:100%;transition:transform 0.3s ease;"></div>
+
+        <!-- Nav arrows -->
+        <button onclick="wagNav(-1)" id="wagPrevBtn" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);z-index:10001;background:rgba(0,0,0,0.45);border:1px solid rgba(255,255,255,0.2);color:#fff;width:38px;height:38px;border-radius:50%;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;">‹</button>
+        <button onclick="wagNav(1)" id="wagNextBtn" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);z-index:10001;background:rgba(0,0,0,0.45);border:1px solid rgba(255,255,255,0.2);color:#fff;width:38px;height:38px;border-radius:50%;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;">›</button>
+      </div>
+
       <!-- Watch Video Ad Task Card -->
-      <div onclick="openTutVideo('SOmEbgFcBE8','Watch Ads Tutorial')" style="background:#fff;border:1px solid rgba(0,0,0,0.06);border-radius:20px;padding:16px;margin-bottom:12px;display:flex;align-items:center;gap:14px;cursor:pointer;box-shadow:0 2px 12px rgba(0,0,0,0.05);">
+      <div onclick="openWatchAdsGallery()" style="background:#fff;border:1px solid rgba(0,0,0,0.06);border-radius:20px;padding:16px;margin-bottom:12px;display:flex;align-items:center;gap:14px;cursor:pointer;box-shadow:0 2px 12px rgba(0,0,0,0.05);">
         <div style="width:56px;height:56px;background:linear-gradient(135deg,#4f3ff0,#7c6fff);border-radius:16px;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 4px 12px rgba(108,99,255,0.3);">
           <svg width="26" height="26" viewBox="0 0 24 24" fill="none"><rect x="2" y="4" width="20" height="16" rx="3" fill="rgba(255,255,255,0.2)"/><circle cx="12" cy="12" r="5" fill="rgba(255,255,255,0.15)"/><polygon points="10.5,9.5 10.5,14.5 15,12" fill="white"/></svg>
         </div>
@@ -415,7 +442,7 @@
       </div>
 
       <!-- Shortlink Task Card -->
-      <div onclick="openTutVideo('pu0EPoqNQ5A','Shortlink Tutorial')" style="background:#fff;border:1px solid rgba(0,0,0,0.06);border-radius:20px;padding:16px;margin-bottom:12px;display:flex;align-items:center;gap:14px;cursor:pointer;box-shadow:0 2px 12px rgba(0,0,0,0.05);">
+      <div onclick="openShortlinkGallery()" style="background:#fff;border:1px solid rgba(0,0,0,0.06);border-radius:20px;padding:16px;margin-bottom:12px;display:flex;align-items:center;gap:14px;cursor:pointer;box-shadow:0 2px 12px rgba(0,0,0,0.05);">
         <div style="width:56px;height:56px;background:linear-gradient(135deg,#059669,#22c55e);border-radius:16px;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 4px 12px rgba(34,197,94,0.3);">
           <svg width="26" height="26" viewBox="0 0 24 24" fill="none"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71" stroke="white" stroke-width="2.2" stroke-linecap="round"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71" stroke="white" stroke-width="2.2" stroke-linecap="round"/></svg>
         </div>
@@ -4614,6 +4641,164 @@
   }
 
   // ── SHORTLINK TASK END ────────────────────────────────────────
+  // ── SHORTLINK IMAGE SWIPE GALLERY ───────────────────────────
+  const SL_IMG_BASE = 'https://raw.githubusercontent.com/maheshgoswami09837-ship-it/Tasknova/main/images/';
+  const SL_SLIDES = [
+    { file: 'sl_task_card.png',      text: 'Step 1: Tasks page pe "Shortlink Task" card pe tap karo' },
+    { file: 'sl_visit_link.png',     text: 'Step 2: "Visit Link" button pe tap karo' },
+    { file: 'sl_captcha.png',        text: 'Step 3: Cloudflare captcha verify karo — "Download Now" ya "Play Now" pe tap mat karna!' },
+    { file: 'sl_continue1.png',      text: 'Step 4: "Continue..." button pe tap karo' },
+    { file: 'sl_almost_ready.png',   text: 'Step 5: Timer khatam hone ka wait karo, phir "Continue" pe tap karo' },
+    { file: 'sl_get_link.png',       text: 'Step 6: "Get Link" button pe tap karo' },
+    { file: 'sl_get_link2.png',      text: 'Step 7: Dobara "Get Link" / "Play" pe tap karo' },
+    { file: 'sl_secret_code.png',    text: 'Step 8: "Code Copy Karo" button se secret code copy karo' },
+    { file: 'sl_claim_reward.png',   text: 'Step 9: TaskNova app mein wapas aao, code daalo aur "Claim Reward" pe tap karo 🎉' },
+  ];
+  let slgIndex = 0;
+  let slgTouchStartX = 0;
+  let slgTouchDeltaX = 0;
+
+  function slgRender() {
+    const track = document.getElementById('slgTrack');
+    const dots  = document.getElementById('slgDots');
+    track.innerHTML = '';
+    dots.innerHTML = '';
+    SL_SLIDES.forEach(function(s, i) {
+      const slide = document.createElement('div');
+      slide.style.cssText = 'position:relative;flex:0 0 100%;width:100%;height:100%;display:flex;flex-direction:column;align-items:center;box-sizing:border-box;padding:54px 20px 90px;';
+      slide.innerHTML =
+        '<div style="text-align:center;margin-bottom:16px;">' +
+          '<div style="display:inline-block;background:rgba(0,0,0,0.55);backdrop-filter:blur(6px);color:#fff;font-size:13px;font-weight:700;padding:9px 14px;border-radius:14px;line-height:1.4;max-width:280px;">' + s.text + '</div>' +
+        '</div>' +
+        '<div style="position:relative;flex:1;width:100%;max-width:300px;display:flex;align-items:center;justify-content:center;">' +
+          '<div class="wagLoader" style="position:absolute;width:32px;height:32px;border:3px solid rgba(255,255,255,0.25);border-top-color:#fff;border-radius:50%;animation:wagSpin 0.7s linear infinite;"></div>' +
+          '<img src="' + SL_IMG_BASE + s.file + '" loading="lazy" style="width:100%;max-height:48vh;object-fit:contain;border-radius:16px;box-shadow:0 12px 40px rgba(0,0,0,0.5);display:block;margin:0 auto;background:#fff;opacity:0;transition:opacity 0.3s ease;" onload="this.style.opacity=1;this.previousElementSibling.style.display=\'none\';" onerror="this.previousElementSibling.style.display=\'none\';">' +
+        '</div>';
+      track.appendChild(slide);
+
+      const dot = document.createElement('div');
+      dot.style.cssText = 'flex:1;height:3px;border-radius:3px;background:rgba(255,255,255,0.3);overflow:hidden;';
+      dot.innerHTML = '<div style="height:100%;background:#fff;width:' + (i <= slgIndex ? '100%' : '0%') + ';"></div>';
+      dots.appendChild(dot);
+    });
+    document.getElementById('slgBgBlur').style.backgroundImage = "url('" + SL_IMG_BASE + SL_SLIDES[slgIndex].file + "')";
+    document.getElementById('slgTrack').style.transform = 'translateX(' + (-slgIndex * 100) + '%)';
+    document.getElementById('slgPrevBtn').style.display = slgIndex === 0 ? 'none' : 'flex';
+    document.getElementById('slgNextBtn').style.display = slgIndex === SL_SLIDES.length - 1 ? 'none' : 'flex';
+  }
+
+  function slgNav(dir) {
+    slgIndex = Math.max(0, Math.min(SL_SLIDES.length - 1, slgIndex + dir));
+    slgRender();
+  }
+
+  function openShortlinkGallery() {
+    slgIndex = 0;
+    slgRender();
+    const modal = document.getElementById('shortlinkGalleryModal');
+    modal.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+    const nav = document.querySelector('.bottom-nav');
+    if (nav) nav.style.display = 'none';
+
+    const track = document.getElementById('slgTrack');
+    track.ontouchstart = function(e) { slgTouchStartX = e.touches[0].clientX; slgTouchDeltaX = 0; };
+    track.ontouchmove  = function(e) { slgTouchDeltaX = e.touches[0].clientX - slgTouchStartX; };
+    track.ontouchend   = function() {
+      if (slgTouchDeltaX > 50) slgNav(-1);
+      else if (slgTouchDeltaX < -50) slgNav(1);
+    };
+  }
+
+  function closeShortlinkGallery() {
+    document.getElementById('shortlinkGalleryModal').style.display = 'none';
+    document.body.style.overflow = '';
+    const nav = document.querySelector('.bottom-nav');
+    if (nav) nav.style.display = '';
+  }
+  // ── SHORTLINK IMAGE SWIPE GALLERY END ───────────────────────
+
+  // ── WATCH ADS IMAGE SWIPE GALLERY ───────────────────────────
+  const WAG_IMG_BASE = 'https://raw.githubusercontent.com/maheshgoswami09837-ship-it/Tasknova/main/images/';
+  if (!document.getElementById('wagSpinStyle')) {
+    const st = document.createElement('style');
+    st.id = 'wagSpinStyle';
+    st.textContent = '@keyframes wagSpin{to{transform:rotate(360deg)}}';
+    document.head.appendChild(st);
+  }
+  const WAG_SLIDES = [
+    { file: 'watch_task_card.png',     text: 'Step 1: "Watch Video Ad" task card pe tap karo' },
+    { file: 'watch_article_start.png', text: 'Step 2: Article page open hoga, thoda scroll karo' },
+    { file: 'watch_next_page.png',     text: 'Step 3: "Next" button pe tap karo' },
+    { file: 'watch_ad_popup.png',      text: 'Step 4: Ad popup open hoga, use pura dekho' },
+    { file: 'watch_ad_verified.png',   text: 'Step 5: Ad verified hone tak wait karo' },
+    { file: 'watch_continue.png',      text: 'Step 6: "Continue" pe tap karke aage badho' },
+    { file: 'watch_claim_coins.png',   text: 'Step 7: "Collect" pe tap karke coins claim karo 🎉' },
+  ];
+  let wagIndex = 0;
+  let wagTouchStartX = 0;
+  let wagTouchDeltaX = 0;
+
+  function wagRender() {
+    const track = document.getElementById('wagTrack');
+    const dots  = document.getElementById('wagDots');
+    track.innerHTML = '';
+    dots.innerHTML = '';
+    WAG_SLIDES.forEach((s, i) => {
+      const slide = document.createElement('div');
+      slide.style.cssText = 'position:relative;flex:0 0 100%;width:100%;height:100%;display:flex;flex-direction:column;align-items:center;box-sizing:border-box;padding:54px 20px 90px;';
+      slide.innerHTML =
+        '<div style="text-align:center;margin-bottom:16px;">' +
+          '<div style="display:inline-block;background:rgba(0,0,0,0.55);backdrop-filter:blur(6px);color:#fff;font-size:13px;font-weight:700;padding:9px 14px;border-radius:14px;line-height:1.4;max-width:280px;">' + s.text + '</div>' +
+        '</div>' +
+        '<div style="position:relative;flex:1;width:100%;max-width:300px;display:flex;align-items:center;justify-content:center;">' +
+          '<div class="wagLoader" style="position:absolute;width:32px;height:32px;border:3px solid rgba(255,255,255,0.25);border-top-color:#fff;border-radius:50%;animation:wagSpin 0.7s linear infinite;"></div>' +
+          '<img src="' + WAG_IMG_BASE + s.file + '" loading="lazy" style="width:100%;max-height:48vh;object-fit:contain;border-radius:16px;box-shadow:0 12px 40px rgba(0,0,0,0.5);display:block;margin:0 auto;background:#fff;opacity:0;transition:opacity 0.3s ease;" onload="this.style.opacity=1;this.previousElementSibling.style.display=\'none\';" onerror="this.previousElementSibling.style.display=\'none\';">' +
+        '</div>';
+      track.appendChild(slide);
+
+      const dot = document.createElement('div');
+      dot.style.cssText = 'flex:1;height:3px;border-radius:3px;background:rgba(255,255,255,0.3);overflow:hidden;';
+      dot.innerHTML = '<div style="height:100%;background:#fff;width:' + (i <= wagIndex ? '100%' : '0%') + ';"></div>';
+      dots.appendChild(dot);
+    });
+    document.getElementById('wagBgBlur').style.backgroundImage = "url('" + WAG_IMG_BASE + WAG_SLIDES[wagIndex].file + "')";
+    document.getElementById('wagTrack').style.transform = 'translateX(' + (-wagIndex * 100) + '%)';
+    document.getElementById('wagPrevBtn').style.display = wagIndex === 0 ? 'none' : 'flex';
+    document.getElementById('wagNextBtn').style.display = wagIndex === WAG_SLIDES.length - 1 ? 'none' : 'flex';
+  }
+
+  function wagNav(dir) {
+    wagIndex = Math.max(0, Math.min(WAG_SLIDES.length - 1, wagIndex + dir));
+    wagRender();
+  }
+
+  function openWatchAdsGallery() {
+    wagIndex = 0;
+    wagRender();
+    const modal = document.getElementById('watchAdsGalleryModal');
+    modal.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+    const nav = document.querySelector('.bottom-nav');
+    if (nav) nav.style.display = 'none';
+
+    const track = document.getElementById('wagTrack');
+    track.ontouchstart = function(e) { wagTouchStartX = e.touches[0].clientX; wagTouchDeltaX = 0; };
+    track.ontouchmove  = function(e) { wagTouchDeltaX = e.touches[0].clientX - wagTouchStartX; };
+    track.ontouchend   = function() {
+      if (wagTouchDeltaX > 50) wagNav(-1);
+      else if (wagTouchDeltaX < -50) wagNav(1);
+    };
+  }
+
+  function closeWatchAdsGallery() {
+    document.getElementById('watchAdsGalleryModal').style.display = 'none';
+    document.body.style.overflow = '';
+    const nav = document.querySelector('.bottom-nav');
+    if (nav) nav.style.display = '';
+  }
+  // ── WATCH ADS IMAGE SWIPE GALLERY END ───────────────────────
+
   function openTutVideo(videoId, title) {
     // YouTube Shorts bhi /embed/ se chalte hain — loop=1 add kiya
     document.getElementById('tutVideoIframe').src =
@@ -4723,10 +4908,10 @@
 <!-- ═══════════════════════════════════════════════
      SPECIAL TASKS OVERLAY
 ═══════════════════════════════════════════════ -->
-<div id="specialTasksOverlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#f5f6fa; z-index:9999; overflow:hidden;">
+<div id="specialTasksOverlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#f5f6fa; z-index:9999; overflow:hidden; flex-direction:column;">
 
   <!-- Fixed Header -->
-  <div style="position:sticky; top:0; background:#f5f6fa; z-index:10; display:flex; align-items:center; gap:14px; padding:20px 16px 10px;">
+  <div style="flex:none; background:#f5f6fa; z-index:10; display:flex; align-items:center; gap:14px; padding:20px 16px 10px;">
     <button onclick="closeSpecialTasks()" style="width:38px; height:38px; background:#fff; border:1px solid rgba(0,0,0,0.08); border-radius:12px; color:#1a1a2e; font-size:22px; cursor:pointer; display:flex; align-items:center; justify-content:center; box-shadow:0 2px 8px rgba(0,0,0,0.04);">&#8249;</button>
     <div>
       <div style="font-size:20px; font-weight:800; color:#1a1a2e;">Special Tasks ⚡</div>
@@ -4735,7 +4920,7 @@
   </div>
 
   <!-- Scrollable Inner -->
-  <div style="height:calc(100% - 80px); overflow-y:scroll; -webkit-overflow-scrolling:touch; overscroll-behavior:contain; padding-bottom:40px;">
+  <div style="flex:1; min-height:0; overflow-y:auto; -webkit-overflow-scrolling:touch; overscroll-behavior:contain; padding-bottom:40px;">
 
   <!-- Section Title -->
   <div style="padding:18px 16px 10px; font-size:13px; font-weight:700; color:rgba(26,26,46,0.45); text-transform:uppercase; letter-spacing:1px;">Available Tasks</div>
@@ -5109,7 +5294,7 @@
   }
 
   function openSpecialTasks() {
-    document.getElementById('specialTasksOverlay').style.display = 'block';
+    document.getElementById('specialTasksOverlay').style.display = 'flex';
     document.body.style.overflow = 'hidden';
 
     // ── Pehle loading state dikhao ──
