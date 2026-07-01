@@ -332,7 +332,7 @@
     return new Promise((resolve) => {
       const unsub = onAuthStateChanged(getAuth(_app), async (user) => {
         unsub();
-        resolve(user ? await user.getIdToken(true) : null);
+        resolve(user ? await user.getIdToken() : null);
       });
     });
   };
@@ -406,6 +406,13 @@
 
   window.shareWhatsApp = function() {
     const code = getCode();
+    if (!code || !window._referDataReady) {
+      const toast = document.getElementById("toast");
+      toast.textContent = "⏳ Loading, thoda ruko...";
+      toast.classList.add("show");
+      setTimeout(() => toast.classList.remove("show"), 1500);
+      return;
+    }
     const link = "https://tasknovaofficial.vercel.app/?ref=" + code;
     const msg = "🚀 Join TaskNova & earn money!\n\nUse my referral code: *" + code + "*\n\nClick to join & start earning:\n" + link;
     window.open("https://wa.me/?text=" + encodeURIComponent(msg), "_blank");
@@ -413,6 +420,13 @@
 
   window.shareNow = function() {
     const code = getCode();
+    if (!code || !window._referDataReady) {
+      const toast = document.getElementById("toast");
+      toast.textContent = "⏳ Loading, thoda ruko...";
+      toast.classList.add("show");
+      setTimeout(() => toast.classList.remove("show"), 1500);
+      return;
+    }
     const link = "https://tasknovaofficial.vercel.app/?ref=" + code;
     document.getElementById("shareModalLink").textContent = link;
     document.getElementById("shareModal").style.display = "flex";
@@ -445,92 +459,85 @@
   }
 
   window.addEventListener('load', () => {
-    waitForAuth(() => {
+    waitForAuth(async () => {
       const uid = localStorage.getItem('tasknova_uid');
       if (!uid || uid === 'null') return;
 
       const dbURL = 'https://tasknova-66d0f-default-rtdb.firebaseio.com';
 
-      // User data fetch karo
-      window._getAuthToken().then(token => {
+      try {
+        // Auth token ek hi baar lo (no forced refresh — fast, cached token use hoga)
+        const token = await window._getAuthToken();
         const ap = token ? '?auth=' + token : '';
-        fetch(dbURL + '/users/' + uid + '.json' + ap)
-        .then(res => res.json())
-        .then(data => {
-          if (!data) return;
 
-          // Referral code set karo
-          document.querySelector('.user-referral-code').textContent = data.referralCode || ('TN' + uid.substring(0, 6).toUpperCase());
+        // User data ek hi baar fetch karo
+        const userRes = await fetch(dbURL + '/users/' + uid + '.json' + ap);
+        const data = await userRes.json();
+        if (!data) return;
 
-          // Stats update karo
-          const totalRefers = data.referrals || 0;
-          const completedRefers = data.completedReferrals || 0;
-          const referEarned = completedRefers * 10;
+        const referralCode = data.referralCode || ('TN' + uid.substring(0, 6).toUpperCase());
 
-          document.querySelector('.user-referrals').textContent = totalRefers;
-          document.getElementById('completedReferrals').textContent = completedRefers;
-          document.getElementById('referEarned').textContent = '₹' + referEarned;
+        // Referral code set karo
+        document.querySelector('.user-referral-code').textContent = referralCode;
 
-          // Milestones render karo real data se
-          renderMilestones(completedRefers); renderMilestoneModal(completedRefers);
-        })
-        .catch(e => console.log('User fetch error:', e));
-      });
+        // Stats update karo
+        const totalRefers = data.referrals || 0;
+        const completedRefers = data.completedReferrals || 0;
+        const referEarned = completedRefers * 10;
 
-      // Referral list fetch karo - referral code se
-      window._getAuthToken().then(token => {
-        const ap = token ? '?auth=' + token : '';
-        // Pehle user ka referral code lo
-        fetch(dbURL + '/users/' + uid + '.json' + ap)
-        .then(res => res.json())
-        .then(userData => {
-          if (!userData) return;
-          const referralCode = userData.referralCode || ('TN' + uid.substring(0, 6).toUpperCase());
+        document.querySelector('.user-referrals').textContent = totalRefers;
+        document.getElementById('completedReferrals').textContent = completedRefers;
+        document.getElementById('referEarned').textContent = '₹' + referEarned;
 
-          // Ab referral code se referrals fetch karo
-          return fetch(dbURL + '/referrals/' + referralCode + '.json' + ap)
-          .then(res => res.json())
-          .then(data => {
-            const container = document.getElementById('referList');
-            if (!data) {
-              container.innerHTML = `
-                <div class="empty-state">
-                  <div class="emoji"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#c0c8d8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 014-4h4a4 4 0 014 4v2"/><path d="M16 3.13a4 4 0 010 7.75"/><path d="M21 21v-2a4 4 0 00-3-3.87"/></svg></div>
-                  <h4>No referrals yet!</h4>
-                  <p>Share your code and start earning 10 coins per refer!</p>
-                </div>`;
-              return;
-            }
+        // Milestones render karo real data se
+        renderMilestones(completedRefers); renderMilestoneModal(completedRefers);
 
-            const items = Object.entries(data).reverse();
-            let total = items.length;
-            let completed = items.filter(([k,v]) => v.withdrawn).length;
-            let earned = completed * 10;
+        // Data ready — ab share/copy buttons safely kaam karenge
+        window._referDataReady = true;
 
-            // Stats bhi update karo
-            document.querySelector('.user-referrals').textContent = total;
-            document.getElementById('completedReferrals').textContent = completed;
-            document.getElementById('referEarned').textContent = '₹' + earned;
-            renderMilestones(completed); renderMilestoneModal(completed);
+        // Referral list fetch karo (same referral code se, koi duplicate user fetch nahi)
+        const refRes = await fetch(dbURL + '/referrals/' + referralCode + '.json' + ap);
+        const refData = await refRes.json();
+        const container = document.getElementById('referList');
 
-            container.innerHTML = items.map(([key, item]) => `
-              <div class="refer-item" style="background:rgba(0,0,0,0.04);border:1px solid rgba(0,0,0,0.07);border-radius:12px;padding:14px 16px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;">
-                <div>
-                  <div style="font-weight:700;color:#1a1a2e;font-size:14px;">👤 ${item.name || 'Friend'}</div>
-                  <div style="font-size:11px;color:#888;margin-top:3px;">${new Date(item.joined || item.date).toLocaleDateString()}</div>
-                </div>
-                <div style="text-align:right;">
-                  <div style="padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600;background:${item.withdrawn ? 'rgba(34,197,94,0.2)' : 'rgba(234,179,8,0.2)'};color:${item.withdrawn ? '#22c55e' : '#eab308'};">
-                    ${item.withdrawn ? '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:3px;"><polyline points="20 6 9 17 4 12"/></svg>Completed' : '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#eab308" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:3px;"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Pending'}
-                  </div>
-                  ${item.withdrawn ? '<div style="font-size:12px;color:#22c55e;margin-top:4px;display:flex;align-items:center;justify-content:flex-end;gap:3px;"><svg width="12" height="12" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><circle cx="10" cy="10" r="9" fill="#f5a700"/><circle cx="10" cy="10" r="7" fill="#ffd600" opacity="0.5"/><text x="10" y="14" text-anchor="middle" font-size="9" font-weight="900" fill="#7a4200" font-family="Arial">₹</text></svg>+10 coins earned</div>' : ''}
-                </div>
+        if (!refData) {
+          container.innerHTML = `
+            <div class="empty-state">
+              <div class="emoji"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#c0c8d8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 014-4h4a4 4 0 014 4v2"/><path d="M16 3.13a4 4 0 010 7.75"/><path d="M21 21v-2a4 4 0 00-3-3.87"/></svg></div>
+              <h4>No referrals yet!</h4>
+              <p>Share your code and start earning 10 coins per refer!</p>
+            </div>`;
+          return;
+        }
+
+        const items = Object.entries(refData).reverse();
+        const total = items.length;
+        const completed = items.filter(([k,v]) => v.withdrawn).length;
+        const earned = completed * 10;
+
+        // Stats bhi update karo (actual referral list ke hisaab se)
+        document.querySelector('.user-referrals').textContent = total;
+        document.getElementById('completedReferrals').textContent = completed;
+        document.getElementById('referEarned').textContent = '₹' + earned;
+        renderMilestones(completed); renderMilestoneModal(completed);
+
+        container.innerHTML = items.map(([key, item]) => `
+          <div class="refer-item" style="background:rgba(0,0,0,0.04);border:1px solid rgba(0,0,0,0.07);border-radius:12px;padding:14px 16px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;">
+            <div>
+              <div style="font-weight:700;color:#1a1a2e;font-size:14px;">👤 ${item.name || 'Friend'}</div>
+              <div style="font-size:11px;color:#888;margin-top:3px;">${new Date(item.joined || item.date).toLocaleDateString()}</div>
+            </div>
+            <div style="text-align:right;">
+              <div style="padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600;background:${item.withdrawn ? 'rgba(34,197,94,0.2)' : 'rgba(234,179,8,0.2)'};color:${item.withdrawn ? '#22c55e' : '#eab308'};">
+                ${item.withdrawn ? '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:3px;"><polyline points="20 6 9 17 4 12"/></svg>Completed' : '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#eab308" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:3px;"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Pending'}
               </div>
-            `).join('');
-          });
-        })
-        .catch(e => console.log('Referral fetch error:', e));
-      });
+              ${item.withdrawn ? '<div style="font-size:12px;color:#22c55e;margin-top:4px;display:flex;align-items:center;justify-content:flex-end;gap:3px;"><svg width="12" height="12" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><circle cx="10" cy="10" r="9" fill="#f5a700"/><circle cx="10" cy="10" r="7" fill="#ffd600" opacity="0.5"/><text x="10" y="14" text-anchor="middle" font-size="9" font-weight="900" fill="#7a4200" font-family="Arial">₹</text></svg>+10 coins earned</div>' : ''}
+            </div>
+          </div>
+        `).join('');
+      } catch (e) {
+        console.log('Refer page load error:', e);
+      }
     }); // end waitForAuth
   });
 </script>
