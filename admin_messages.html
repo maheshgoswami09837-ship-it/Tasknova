@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin - Send Message</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Segoe UI',sans-serif; background:#f5f6fa; min-height:100vh; padding:20px; }
+  .wrap { max-width:480px; margin:0 auto; }
+  h1 { font-size:20px; font-weight:800; color:#1a1a2e; margin-bottom:20px; }
+  .card { background:#fff; border-radius:16px; padding:20px; box-shadow:0 2px 10px rgba(0,0,0,0.05); margin-bottom:16px; }
+  label { display:block; font-size:12.5px; font-weight:700; color:#475569; margin-bottom:6px; margin-top:14px; }
+  label:first-child { margin-top:0; }
+  input, textarea, select { width:100%; padding:12px 14px; border:1.5px solid #e2e8f0; border-radius:12px; font-size:14px; font-family:inherit; outline:none; }
+  textarea { resize:vertical; min-height:90px; }
+  input:focus, textarea:focus, select:focus { border-color:#2563eb; }
+  .toggleRow { display:flex; gap:8px; margin-top:6px; }
+  .toggleBtn { flex:1; padding:11px; border-radius:12px; border:1.5px solid #e2e8f0; background:#fff; font-size:13px; font-weight:700; color:#64748b; cursor:pointer; text-align:center; }
+  .toggleBtn.active { border-color:#2563eb; background:#eff6ff; color:#2563eb; }
+  #uidField { display:none; }
+  .sendBtn { width:100%; margin-top:18px; padding:14px; border:none; border-radius:14px; background:linear-gradient(135deg,#2563eb,#1d4ed8); color:#fff; font-size:14.5px; font-weight:800; cursor:pointer; }
+  .sendBtn:disabled { opacity:0.6; cursor:not-allowed; }
+  .status { margin-top:12px; font-size:13px; font-weight:600; text-align:center; padding:10px; border-radius:10px; display:none; }
+  .status.ok { display:block; background:#ecfdf5; color:#059669; }
+  .status.err { display:block; background:#fef2f2; color:#dc2626; }
+  .lock { max-width:340px; margin:100px auto; text-align:center; }
+  .lock input { text-align:center; font-size:18px; letter-spacing:4px; margin-top:16px; }
+  .lock button { margin-top:14px; width:100%; padding:13px; border:none; border-radius:12px; background:#2563eb; color:#fff; font-weight:700; cursor:pointer; }
+</style>
+</head>
+<body>
+
+<div class="lock" id="lockScreen">
+  <h1>Admin Access</h1>
+  <input type="password" id="passInput" placeholder="Enter passcode">
+  <button onclick="checkPass()">Unlock</button>
+  <div class="status err" id="lockErr">Galat passcode</div>
+</div>
+
+<div class="wrap" id="mainPanel" style="display:none;">
+  <h1>📨 Send Message</h1>
+
+  <div class="card">
+    <label>Send To</label>
+    <div class="toggleRow">
+      <div class="toggleBtn active" id="btnAll" onclick="setMode('all')">All Users</div>
+      <div class="toggleBtn" id="btnUser" onclick="setMode('user')">Specific User</div>
+    </div>
+
+    <div id="uidField">
+      <label>User UID</label>
+      <input type="text" id="targetUid" placeholder="Paste user's UID here">
+    </div>
+
+    <label>Title</label>
+    <input type="text" id="msgTitle" placeholder="e.g. Naya Offer Aaya Hai!">
+
+    <label>Message</label>
+    <textarea id="msgBody" placeholder="Apna message likho..."></textarea>
+
+    <button class="sendBtn" id="sendBtn" onclick="sendMessage()">Send Message</button>
+    <div class="status" id="statusBox"></div>
+  </div>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+  import { getDatabase, ref, push, set } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyBbDeBse2WXwzd_X0Mr8VyEzytI8Yya_uc",
+    authDomain: "tasknova-66d0f.firebaseapp.com",
+    databaseURL: "https://tasknova-66d0f-default-rtdb.firebaseio.com",
+    projectId: "tasknova-66d0f",
+    storageBucket: "tasknova-66d0f.firebasestorage.app",
+    messagingSenderId: "135129024485",
+    appId: "1:135129024485:web:232a90fd0752086568510c"
+  };
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+
+  const ADMIN_PASSCODE = "tasknova2026"; // change this to your own secret
+
+  window.checkPass = function() {
+    const val = document.getElementById('passInput').value;
+    if (val === ADMIN_PASSCODE) {
+      document.getElementById('lockScreen').style.display = 'none';
+      document.getElementById('mainPanel').style.display = 'block';
+      sessionStorage.setItem('tn_admin_ok', '1');
+    } else {
+      document.getElementById('lockErr').style.display = 'block';
+    }
+  };
+
+  if (sessionStorage.getItem('tn_admin_ok') === '1') {
+    document.getElementById('lockScreen').style.display = 'none';
+    document.getElementById('mainPanel').style.display = 'block';
+  }
+
+  let mode = 'all';
+  window.setMode = function(m) {
+    mode = m;
+    document.getElementById('btnAll').classList.toggle('active', m === 'all');
+    document.getElementById('btnUser').classList.toggle('active', m === 'user');
+    document.getElementById('uidField').style.display = m === 'user' ? 'block' : 'none';
+  };
+
+  window.sendMessage = async function() {
+    const title = document.getElementById('msgTitle').value.trim();
+    const body = document.getElementById('msgBody').value.trim();
+    const uid = document.getElementById('targetUid').value.trim();
+    const statusBox = document.getElementById('statusBox');
+    const sendBtn = document.getElementById('sendBtn');
+
+    if (!title || !body) {
+      showStatus('Title aur message dono bharo', false);
+      return;
+    }
+    if (mode === 'user' && !uid) {
+      showStatus('User UID daalo', false);
+      return;
+    }
+
+    sendBtn.disabled = true;
+    sendBtn.textContent = 'Sending...';
+
+    try {
+      const payload = { title, body, timestamp: Date.now() };
+
+      if (mode === 'all') {
+        const newRef = push(ref(db, 'broadcastMessages'));
+        await set(newRef, payload);
+      } else {
+        const newRef = push(ref(db, 'messages/' + uid));
+        await set(newRef, { ...payload, read: false });
+      }
+
+      showStatus('Message bhej diya! ✅', true);
+      document.getElementById('msgTitle').value = '';
+      document.getElementById('msgBody').value = '';
+      document.getElementById('targetUid').value = '';
+    } catch (e) {
+      console.error(e);
+      showStatus('Error: ' + e.message, false);
+    } finally {
+      sendBtn.disabled = false;
+      sendBtn.textContent = 'Send Message';
+    }
+  };
+
+  function showStatus(msg, ok) {
+    const box = document.getElementById('statusBox');
+    box.textContent = msg;
+    box.className = 'status ' + (ok ? 'ok' : 'err');
+    setTimeout(() => { box.className = 'status'; }, 4000);
+  }
+</script>
+</body>
+</html>
