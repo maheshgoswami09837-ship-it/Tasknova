@@ -794,6 +794,7 @@
     if (window.Android && window.Android.contentReady) {
       window.Android.contentReady();
     }
+    updateInboxBadge(uid);
     // Cache se instant dikhao
     if (cachedData) {
       _applyUserData(uid, cachedData);
@@ -807,6 +808,37 @@
         _applyUserData(uid, data);
       }
     } catch(e) { console.log('error:', e); }
+  }
+
+  async function updateInboxBadge(uid) {
+    try {
+      const [targetedSnap, broadcastSnap, readsSnap] = await Promise.all([
+        get(ref(db, 'messages/' + uid)),
+        get(ref(db, 'broadcastMessages')),
+        get(ref(db, 'broadcastReads/' + uid))
+      ]);
+
+      let unreadCount = 0;
+      if (targetedSnap.exists()) {
+        const data = targetedSnap.val();
+        Object.values(data).forEach(m => { if (!m.read) unreadCount++; });
+      }
+      if (broadcastSnap.exists()) {
+        const reads = readsSnap.exists() ? readsSnap.val() : {};
+        const data = broadcastSnap.val();
+        Object.keys(data).forEach(id => { if (!reads[id]) unreadCount++; });
+      }
+
+      const badge = document.getElementById('inboxUnreadBadge');
+      if (badge) {
+        if (unreadCount > 0) {
+          badge.textContent = unreadCount > 9 ? '9+' : unreadCount;
+          badge.style.display = 'flex';
+        } else {
+          badge.style.display = 'none';
+        }
+      }
+    } catch (e) { console.log('badge error:', e); }
   }
 
   // ── Check & show First Withdraw Success popup ───────────────
