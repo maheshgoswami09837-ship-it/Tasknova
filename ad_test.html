@@ -922,15 +922,6 @@
     document.body.style.overflow = 'hidden';
     document.getElementById('aiChatInput2').focus();
     if (history.pushState) history.pushState({aiChat: true}, '', '#ai-support');
-
-    if (!window.__aiWelcomeShown) {
-      window.__aiWelcomeShown = true;
-      const welcomeMsg = "👋 Welcome to TaskNova!\nI can help you with Surveys, Offerwall, Shortlinks, Watch Ads, Daily Spin, Withdrawals, and any other task.\nIf you don't understand how to complete a task, simply tap one of the buttons below or ask me your question. I'll guide you step by step.";
-      setTimeout(() => {
-        appendAIMessage2(welcomeMsg, 'bot', true);
-        aiChatHistory2.push({ role: 'assistant', content: welcomeMsg });
-      }, 300);
-    }
   };
 
   window.closeAIChatSection = function() {
@@ -1962,6 +1953,15 @@
   <button id="aiChatBtn" style="position:fixed;bottom:110px;right:16px;width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#2563eb,#1d4ed8);border:none;box-shadow:0 6px 18px rgba(37,99,235,0.45);z-index:998;display:flex;align-items:center;justify-content:center;cursor:pointer;touch-action:none;transition:box-shadow 0.2s;pointer-events:auto;">
     <svg width="26" height="26" viewBox="0 0 24 24" fill="none"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
   </button>
+  <script>
+    // Inbox se "AI Help" link tap karne par seedha AI chat khol do
+    (function() {
+      var params = new URLSearchParams(window.location.search);
+      if (params.get('openAI') === '1' || window.location.hash === '#ai-support') {
+        setTimeout(function() { if (window.toggleAIChat) toggleAIChat(); }, 300);
+      }
+    })();
+  </script>
   <script>
     // Home screen par AI button ke paas chhota teaser bubble — kuch der dikh kar khud gayab ho jata hai
     (function() {
