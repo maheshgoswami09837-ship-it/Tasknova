@@ -57,7 +57,7 @@
     <span id="sheetBadge"></span>
     <h2 id="sheetTitle"></h2>
     <p id="sheetBody"></p>
-    <a id="sheetAction" href="#" style="display:none;margin:14px 0 4px;padding:11px 18px;background:linear-gradient(135deg,#2563eb,#3b82f6);color:#fff;border-radius:10px;text-align:center;font-weight:700;font-size:14px;text-decoration:none;">Open</a>
+    <a id="sheetAction" href="#" style="display:none;margin:14px 0 4px;color:#2563eb;font-weight:700;font-size:14.5px;text-decoration:none;">Open →</a>
     <button class="closeSheet" onclick="closeSheet()">Close</button>
   </div>
 </div>
@@ -148,8 +148,8 @@
           <div class="msgBody">${escapeHtml((item.body || '').slice(0, 90))}${(item.body||'').length > 90 ? '...' : ''}</div>
           <div class="msgTime">${timeStr}</div>
           <div class="msgCardActions" style="display:flex;gap:8px;margin-top:10px;">
-            <button onclick="event.stopPropagation();window.__toggleRead('${item.id}','${item.type}')" style="flex:1;padding:7px;border-radius:8px;border:1px solid #e2e8f0;background:#f8fafc;color:#374151;font-size:12px;font-weight:600;cursor:pointer;">${isUnread ? '✓ Read mark karo' : '● Unread mark karo'}</button>
-            <button onclick="event.stopPropagation();window.__deleteMsg('${item.id}','${item.type}')" style="padding:7px 12px;border-radius:8px;border:1px solid #fecaca;background:#fef2f2;color:#dc2626;font-size:12px;font-weight:600;cursor:pointer;">🗑️ Delete</button>
+            <button onclick="event.stopPropagation();window.__toggleRead('${item.id}','${item.type}')" style="flex:1;padding:7px;border-radius:7px;border:1px solid #e5e7eb;background:#f5f6fa;color:#6b7280;font-size:11.5px;font-weight:600;cursor:pointer;">${isUnread ? 'Read mark karo' : 'Unread mark karo'}</button>
+            <button onclick="event.stopPropagation();window.__deleteMsg('${item.id}','${item.type}')" style="padding:7px 14px;border-radius:7px;border:1px solid #e5e7eb;background:#f5f6fa;color:#6b7280;font-size:11.5px;font-weight:600;cursor:pointer;">Delete</button>
           </div>
         </div>`;
     }).join('');
@@ -202,7 +202,7 @@
     const actionEl = document.getElementById('sheetAction');
     if (item.actionUrl) {
       actionEl.href = item.actionUrl;
-      actionEl.textContent = item.actionLabel || 'Open';
+      actionEl.textContent = (item.actionLabel || 'Open') + ' →';
       actionEl.style.display = 'block';
     } else {
       actionEl.style.display = 'none';
