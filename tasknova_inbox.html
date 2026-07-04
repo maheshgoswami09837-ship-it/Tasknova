@@ -64,7 +64,7 @@
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-  import { getDatabase, ref, get, set, child } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+  import { getDatabase, ref, get, set, remove, child } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyBbDeBse2WXwzd_X0Mr8VyEzytI8Yya_uc",
@@ -89,13 +89,15 @@
 
   async function loadInbox() {
     try {
-      const [targetedSnap, broadcastSnap, readsSnap] = await Promise.all([
+      const [targetedSnap, broadcastSnap, readsSnap, hiddenSnap] = await Promise.all([
         get(ref(db, 'messages/' + uid)),
         get(ref(db, 'broadcastMessages')),
-        get(ref(db, 'broadcastReads/' + uid))
+        get(ref(db, 'broadcastReads/' + uid)),
+        get(ref(db, 'broadcastHidden/' + uid))
       ]);
 
       const reads = readsSnap.exists() ? readsSnap.val() : {};
+      const hidden = hiddenSnap.exists() ? hiddenSnap.val() : {};
       let items = [];
 
       if (targetedSnap.exists()) {
@@ -108,11 +110,12 @@
       if (broadcastSnap.exists()) {
         const data = broadcastSnap.val();
         Object.keys(data).forEach(id => {
+          if (hidden[id]) return; // is user ne is broadcast ko delete/hide kiya hai
           items.push({ id, type: 'broadcast', read: !!reads[id], ...data[id] });
         });
       }
 
-      items.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+      items.sort((a, b) => (Number(b.timestamp) || 0) - (Number(a.timestamp) || 0));
       renderInbox(items);
     } catch (e) {
       contentEl.innerHTML = '<div class="emptyState"><p>Kuch gadbad ho gayi. Dobara try karo.</p></div>';
@@ -144,11 +147,50 @@
           </div>
           <div class="msgBody">${escapeHtml((item.body || '').slice(0, 90))}${(item.body||'').length > 90 ? '...' : ''}</div>
           <div class="msgTime">${timeStr}</div>
+          <div class="msgCardActions" style="display:flex;gap:8px;margin-top:10px;">
+            <button onclick="event.stopPropagation();window.__toggleRead('${item.id}','${item.type}')" style="flex:1;padding:7px;border-radius:8px;border:1px solid #e2e8f0;background:#f8fafc;color:#374151;font-size:12px;font-weight:600;cursor:pointer;">${isUnread ? '✓ Read mark karo' : '● Unread mark karo'}</button>
+            <button onclick="event.stopPropagation();window.__deleteMsg('${item.id}','${item.type}')" style="padding:7px 12px;border-radius:8px;border:1px solid #fecaca;background:#fef2f2;color:#dc2626;font-size:12px;font-weight:600;cursor:pointer;">🗑️ Delete</button>
+          </div>
         </div>`;
     }).join('');
 
     window.__items = items;
   }
+
+  window.__toggleRead = async function(id, type) {
+    const item = window.__items.find(i => i.id === id && i.type === type);
+    if (!item) return;
+    const newRead = !item.read;
+    try {
+      if (type === 'broadcast') {
+        if (newRead) {
+          await set(ref(db, 'broadcastReads/' + uid + '/' + id), true);
+        } else {
+          await remove(ref(db, 'broadcastReads/' + uid + '/' + id));
+        }
+      } else {
+        await set(ref(db, 'messages/' + uid + '/' + id + '/read'), newRead);
+      }
+      loadInbox();
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  window.__deleteMsg = async function(id, type) {
+    if (!confirm('Ye message delete karna hai?')) return;
+    try {
+      if (type === 'broadcast') {
+        // Broadcast sabke liye common hota hai, isliye sirf apne liye hide karo
+        await set(ref(db, 'broadcastHidden/' + uid + '/' + id), true);
+      } else {
+        await remove(ref(db, 'messages/' + uid + '/' + id));
+      }
+      loadInbox();
+    } catch (e) {
+      console.error(e);
+    }
+  };
 
   window.__openMsg = async function(id, type) {
     const item = window.__items.find(i => i.id === id && i.type === type);
