@@ -927,7 +927,7 @@
       window.__aiWelcomeShown = true;
       const welcomeMsg = "👋 Welcome to TaskNova!\nI can help you with Surveys, Offerwall, Shortlinks, Watch Ads, Daily Spin, Withdrawals, and any other task.\nIf you don't understand how to complete a task, simply tap one of the buttons below or ask me your question. I'll guide you step by step.";
       setTimeout(() => {
-        appendAIMessage2(welcomeMsg, 'bot');
+        appendAIMessage2(welcomeMsg, 'bot', true);
         aiChatHistory2.push({ role: 'assistant', content: welcomeMsg });
       }, 300);
     }
@@ -1069,13 +1069,15 @@
     return html;
   }
 
-  function appendAIMessage2(text, sender) {
+  function appendAIMessage2(text, sender, keepWelcome) {
     const msgBox = document.getElementById('aiChatMessages2');
     const welcome = document.getElementById('aiChatWelcomeBlock');
-    if (welcome) welcome.remove();
-    // Trash button dikhao jab chat start ho
-    var trashBtn = document.getElementById('aiTrashBtn');
-    if (trashBtn) { trashBtn.style.display = 'flex'; }
+    if (welcome && !keepWelcome) welcome.remove();
+    // Trash button dikhao jab chat start ho (welcome auto-message ke liye nahi)
+    if (!keepWelcome) {
+      var trashBtn = document.getElementById('aiTrashBtn');
+      if (trashBtn) { trashBtn.style.display = 'flex'; }
+    }
 
     const row = document.createElement('div');
     row.style.display = 'flex';
@@ -1111,8 +1113,12 @@
         </div>
       `;
     }
-    msgBox.appendChild(row);
-    msgBox.scrollTop = msgBox.scrollHeight;
+    if (keepWelcome && welcome) {
+      msgBox.insertBefore(row, welcome);
+    } else {
+      msgBox.appendChild(row);
+    }
+    msgBox.scrollTop = 0;
   }
 
   function showAITyping2() {
@@ -1950,9 +1956,38 @@
   </div>
 
   <!-- AI SUPPORT CHAT WIDGET — floating bubble, opens aiChatSection below -->
+  <div id="aiTeaserBubble" onclick="toggleAIChat(); this.style.display='none';" style="display:none;position:fixed;bottom:172px;right:16px;max-width:210px;background:#fff;color:#1a1a2e;font-size:12.5px;line-height:1.4;padding:10px 12px;border-radius:14px 14px 4px 14px;box-shadow:0 6px 18px rgba(0,0,0,0.15);z-index:997;cursor:pointer;font-family:-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">
+    👋 Need help? Tap here — main step-by-step guide karunga!
+  </div>
   <button id="aiChatBtn" style="position:fixed;bottom:110px;right:16px;width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#2563eb,#1d4ed8);border:none;box-shadow:0 6px 18px rgba(37,99,235,0.45);z-index:998;display:flex;align-items:center;justify-content:center;cursor:pointer;touch-action:none;transition:box-shadow 0.2s;pointer-events:auto;">
     <svg width="26" height="26" viewBox="0 0 24 24" fill="none"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
   </button>
+  <script>
+    // Home screen par AI button ke paas chhota teaser bubble — kuch der dikh kar khud gayab ho jata hai
+    (function() {
+      if (sessionStorage.getItem('tn_ai_teaser_shown')) return;
+      setTimeout(function() {
+        var bubble = document.getElementById('aiTeaserBubble');
+        var chatSection = document.getElementById('aiChatSection');
+        if (!bubble || (chatSection && chatSection.style.display === 'flex')) return;
+        bubble.style.display = 'block';
+        bubble.style.animation = 'tnTeaserFadeIn 0.3s ease';
+        sessionStorage.setItem('tn_ai_teaser_shown', '1');
+        setTimeout(function() {
+          bubble.style.transition = 'opacity 0.4s ease';
+          bubble.style.opacity = '0';
+          setTimeout(function() { bubble.style.display = 'none'; }, 400);
+        }, 6000);
+      }, 2500);
+    })();
+  </script>
+  <style>
+    @keyframes tnTeaserFadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+
 
   <!-- ════════════════════════════════════════════════════════════
        AI CHAT SECTION — full-screen, same-file (no separate page)
