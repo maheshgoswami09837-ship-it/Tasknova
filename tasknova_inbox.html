@@ -57,6 +57,7 @@
     <span id="sheetBadge"></span>
     <h2 id="sheetTitle"></h2>
     <p id="sheetBody"></p>
+    <a id="sheetAction" href="#" style="display:none;margin:14px 0 4px;padding:11px 18px;background:linear-gradient(135deg,#2563eb,#3b82f6);color:#fff;border-radius:10px;text-align:center;font-weight:700;font-size:14px;text-decoration:none;">Open</a>
     <button class="closeSheet" onclick="closeSheet()">Close</button>
   </div>
 </div>
@@ -156,6 +157,14 @@
     document.getElementById('sheetBadge').outerHTML = `<span class="badgeType ${type === 'broadcast' ? 'broadcast' : 'targeted'}" id="sheetBadge">${type === 'broadcast' ? 'Announcement' : 'For You'}</span>`;
     document.getElementById('sheetTitle').textContent = item.title || 'Message';
     document.getElementById('sheetBody').textContent = item.body || '';
+    const actionEl = document.getElementById('sheetAction');
+    if (item.actionUrl) {
+      actionEl.href = item.actionUrl;
+      actionEl.textContent = item.actionLabel || 'Open';
+      actionEl.style.display = 'block';
+    } else {
+      actionEl.style.display = 'none';
+    }
     document.getElementById('msgOverlay').classList.add('show');
 
     if (!item.read) {
