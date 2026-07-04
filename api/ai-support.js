@@ -7,6 +7,28 @@ export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
+  // Groq rate-limit headers duration string (jaise "1m39.474s" ya "45.2s") ko seconds me convert karta hai
+  function parseGroqDurationToSeconds(str) {
+    if (!str) return null;
+    const match = String(str).match(/(?:(\d+)m)?([\d.]+)s/);
+    if (!match) return null;
+    const minutes = parseFloat(match[1] || '0');
+    const seconds = parseFloat(match[2] || '0');
+    return minutes * 60 + seconds;
+  }
+
+  function getGroqResetSeconds(groqRes) {
+    const retryAfter = groqRes.headers.get('retry-after');
+    if (retryAfter && !isNaN(Number(retryAfter))) return Number(retryAfter);
+
+    const resetRequests = groqRes.headers.get('x-ratelimit-reset-requests');
+    const resetTokens = groqRes.headers.get('x-ratelimit-reset-tokens');
+    const secReq = parseGroqDurationToSeconds(resetRequests);
+    const secTok = parseGroqDurationToSeconds(resetTokens);
+    const candidates = [secReq, secTok].filter(v => typeof v === 'number' && !isNaN(v));
+    return candidates.length ? Math.max(...candidates) : null;
+  }
+
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
   }
@@ -344,6 +366,13 @@ TUMHARA BEHAVIOR:
     if (!groqRes.ok) {
       const errText = await groqRes.text();
       console.error('Groq API error:', groqRes.status, errText);
+
+      if (groqRes.status === 429) {
+        const resetSeconds = getGroqResetSeconds(groqRes);
+        const resetAt = new Date(Date.now() + (resetSeconds != null ? resetSeconds * 1000 : 24 * 60 * 60 * 1000)).toISOString();
+        return res.status(429).json({ error: 'AI limit reached', resetAt });
+      }
+
       return res.status(502).json({ error: 'AI service unavailable, try again' });
     }
 
