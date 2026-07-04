@@ -242,11 +242,11 @@
     },
     {
       keys: ['spin'],
-      reply: `**Spin Kaise Kare:**\n1. Home page par "Spin & Win" card par tap kare.\n2. Wheel ko spin button dabakar ghumaye — roz limited spins milte hai.\n3. Spin result aane ke baad "Watch Ad & Claim" button dabaye.\n4. Poora ad dekhne ke baad coins aapke balance me automatically add ho jayenge.\n\nAgar spin button disable dikhe, iska matlab aaj ke saare spins khatam ho chuke hai — kal wapas try kare.`
+      reply: `**Spin Kaise Kare:**\n1. Home page par "Spin & Win" card par tap kare.\n[IMG:spin_task_card]\n2. Wheel wale page par pahunch jayenge — yahan se spin shuru hota hai.\n[IMG:spin_article_step1]\n3. Spin button dabaye — wheel ghoomega aur result aayega.\n[IMG:spin_result_win]\n4. Result ke baad "Watch Ad & Claim" popup aayega, usme dabaye.\n[IMG:spin_popup_watchads]\n5. Ad shuru hone ke baad "Continue" dabaye.\n[IMG:spin_continue_step2]\n6. Ad poora complete hone par confirmation popup aayega.\n[IMG:spin_popup_complete]\n7. Ab "Claim" button dabaye — coins turant balance me add ho jayenge.\n[IMG:spin_claim_coins]\n\nAgar spin button disable dikhe, iska matlab aaj ke saare spins khatam ho chuke hai — kal wapas try kare.`
     },
     {
       keys: ['watch ad', 'watch video', 'ads dekh', 'video dekh', 'ad dekh'],
-      reply: `**Watch Ads Kaise Kare:**\n1. Home page par "Watch Ads" task par tap kare.\n2. "Watch Ad" button dabaye — ek naya tab/ad khulega.\n3. Poora ad dekhe, beech me band na kare warna coins nahi milenge.\n4. Ad khatam hone ke baad app par wapas aaye — coins turant credit ho jayenge.\n\nRoz ek fixed limit tak ads dekh sakte hai, limit khatam hone ke baad button disable ho jayega.`
+      reply: `**Watch Ads Kaise Kare:**\n1. Home page par "Watch Ads" task card par tap kare.\n[IMG:watch_task_card]\n2. Ad wale page par pahunch jayenge — yahan se ad shuru hota hai.\n[IMG:watch_article_start]\n3. "Next" dabakar aage badhe.\n[IMG:watch_next_page]\n4. Ad popup khulega, use poora dekhe — beech me band na kare.\n[IMG:watch_ad_popup]\n5. Ad complete hone par verified confirmation milega.\n[IMG:watch_ad_verified]\n6. "Continue" dabaye.\n[IMG:watch_continue]\n7. Ab "Claim" button dabaye — coins turant credit ho jayenge.\n[IMG:watch_claim_coins]\n\nRoz ek fixed limit tak ads dekh sakte hai, limit khatam hone ke baad button disable ho jayega.`
     },
     {
       keys: ['offerwall'],
