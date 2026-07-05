@@ -682,7 +682,7 @@
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
   import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, updatePassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-  import { getDatabase, ref, set, get, update } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+  import { getDatabase, ref, set, get, update, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyBbDeBse2WXwzd_X0Mr8VyEzytI8Yya_uc",
@@ -795,6 +795,9 @@
       window.Android.contentReady();
     }
     updateInboxBadge(uid);
+    // Track real app activity for the admin dashboard's "Active Users Today" —
+    // fire-and-forget, never blocks the UI even if it fails.
+    update(ref(db, 'users/' + uid), { lastActive: serverTimestamp() }).catch(() => {});
     // Cache se instant dikhao
     if (cachedData) {
       _applyUserData(uid, cachedData);
