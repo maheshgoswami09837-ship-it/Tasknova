@@ -23,10 +23,12 @@ export default async function handler(req, res) {
       const response = await fetch(url, {
         headers: { 'Accept': 'application/json', 'X-API-Key': ADSTERRA_TOKEN },
       });
+      const rawText = await response.text();
       if (!response.ok) {
-        throw new Error(`Adsterra API error for domain ${domainId}: ${response.status}`);
+        throw new Error(`Adsterra API error for domain ${domainId}: ${response.status} — ${rawText.slice(0, 300)}`);
       }
-      return response.json();
+      try { return JSON.parse(rawText); }
+      catch { throw new Error(`Adsterra returned non-JSON for domain ${domainId}: ${rawText.slice(0, 300)}`); }
     }));
 
     // Merge items from all domains, summing by date
