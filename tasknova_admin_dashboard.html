@@ -248,7 +248,7 @@ tbody tr:hover{background:var(--surface-2);}
       <div class="panel" style="margin-bottom:18px; border-color:var(--emerald);">
         <div class="panel-title" style="margin-bottom:10px;">💰 Real Revenue — Money Received From Ad Networks</div>
         <div id="realRevenueCards" class="grid grid-9" style="color:var(--text-faint); font-size:12.5px;">Waiting for network data to load…</div>
-        <div style="font-size:10.5px; color:var(--text-faint); margin-top:10px;">This is actual money from Adsterra, HilltopAds, CPX Research + whatever you've manually entered for Monetag/ExoClick/ShrinkEarn/CPALead. This is NOT the same as "Total Revenue (User Earnings)" below — that one is what users have earned/been credited, not real cash you received.</div>
+        <div style="font-size:10.5px; color:var(--text-faint); margin-top:10px;">This is actual money from Adsterra + HilltopAds (live API) + CPX Research (amount credited to users, used as an approximation) + whatever you've manually entered for Monetag/ShrinkEarn. This is NOT the same as "Total Revenue (User Earnings)" below — that one is what users have earned/been credited overall, not real cash you received.</div>
       </div>
 
       <div class="grid grid-9" id="overviewCards"></div>
@@ -266,7 +266,7 @@ tbody tr:hover{background:var(--surface-2);}
 
     <!-- ===================== AD NETWORKS ===================== -->
     <div class="page" id="page-companies">
-      <div class="placeholder-note">⚠ Adsterra, HilltopAds & CPX Research pull live data (API/postback). Monetag, ExoClick & ShrinkEarn don't offer a revenue-pulling API — use "Add today's entry" on those cards to log numbers manually from their own dashboards.</div>
+      <div class="placeholder-note">⚠ Adsterra, HilltopAds & CPX Research pull live data automatically. Monetag & ShrinkEarn don't offer any stats API — use "Add today's entry" to log real revenue numbers manually from their own dashboards. (Note: CPX Research's number is the amount credited to users via CPX, used here as an approximation of CPX earnings.)</div>
       <div class="grid grid-9" id="networkSummaryCards" style="margin-bottom:18px;"></div>
       <div class="grid grid-5" id="companyCards"></div>
 
@@ -630,9 +630,7 @@ const networks = [
   {name:'HilltopAds', key:'hilltopads', color:'#F59E0B', live:true},
   {name:'CPX Research', key:'cpxresearch', color:'#12D992', live:true},
   {name:'Monetag', key:'monetag', color:'#8B5CF6', live:false},
-  {name:'ExoClick', key:'exoclick', color:'#EF4444', live:false},
   {name:'ShrinkEarn', key:'shrinkearn', color:'#06B6D4', live:false},
-  {name:'CPALead', key:'cpalead', color:'#EC4899', live:false},
 ];
 
 function renderCompanyCards(){
@@ -789,9 +787,14 @@ function fetchCpxStats(){
       <div><span>Last Sync</span><b>${lastTs ? new Date(lastTs).toLocaleString('en-IN',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}) : '—'}</b></div>`;
     statusEl.textContent = 'live';
     statusEl.style.color = 'var(--emerald)';
-    footEl.textContent = 'Reading from /postback_log/cpx (existing webhook)';
+    footEl.textContent = 'Included in All Networks Total (based on amount credited to users via CPX)';
 
     networkTotals.cpxresearch = {today, yesterday, month, total};
+    // NOTE: This is NOT counted as "real revenue from CPX" — the postback only tells us
+    // what was paid OUT to users for completing CPX offers, not what CPX actually pays
+    // the app (which is usually a different, often higher, number due to their margin).
+    // We feed it into user payouts (cost) instead, and exclude it from ad revenue totals.
+    window.cpxUserPayouts = {today, yesterday, month, total};
     renderNetworkSummary();
 
     networkExtra.cpxresearch = {
