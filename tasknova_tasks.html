@@ -368,10 +368,6 @@
 <div class="content">
   <div class="header">
     <div><h1>Tasks</h1><p>Complete tasks & earn coins</p></div>
-    <button onclick="openTutorialModal()" style="background:linear-gradient(135deg,#2563eb,#3b82f6);border:none;border-radius:12px;padding:8px 14px;color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:6px;box-shadow:0 4px 14px rgba(37,99,235,0.35);">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 2L2 7l10 5 10-5-10-5z" fill="white"/><path d="M2 17l10 5 10-5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M2 12l10 5 10-5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      Tutorial
-    </button>
   </div>
 
   <!-- TUTORIAL MODAL -->
@@ -392,38 +388,6 @@
       </div>
 
       <!-- Video Modal — full screen -->
-      <div id="tutVideoModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:#000;z-index:9999;flex-direction:column;">
-        <!-- X button top right -->
-        <button onclick="closeTutVideo()" style="position:absolute;top:14px;right:14px;z-index:10000;background:rgba(0,0,0,0.6);border:1.5px solid rgba(255,255,255,0.25);color:#fff;width:38px;height:38px;border-radius:50%;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;">✕</button>
-        <!-- Full screen iframe -->
-        <iframe id="tutVideoIframe" src="" style="width:100%;height:100%;border:none;display:block;flex:1;" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-      </div>
-
-      <!-- Shortlink Image Swipe Gallery -->
-      <div id="shortlinkGalleryModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;z-index:999999;flex-direction:column;background:#000;">
-        <div id="slgBgBlur" style="position:absolute;top:0;left:0;width:100%;height:100%;background-size:cover;background-position:center;filter:blur(28px) brightness(0.55);transform:scale(1.15);transition:background-image 0.25s ease;"></div>
-        <button onclick="closeShortlinkGallery()" style="position:absolute;top:14px;right:14px;z-index:10001;background:rgba(0,0,0,0.5);border:1.5px solid rgba(255,255,255,0.25);color:#fff;width:38px;height:38px;border-radius:50%;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;">✕</button>
-        <div id="slgDots" style="position:absolute;top:16px;left:16px;right:64px;z-index:10001;display:flex;gap:6px;"></div>
-        <div id="slgTrack" style="position:relative;flex:1;display:flex;width:100%;height:100%;transition:transform 0.3s ease;"></div>
-        <button onclick="slgNav(-1)" id="slgPrevBtn" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);z-index:10001;background:rgba(0,0,0,0.45);border:1px solid rgba(255,255,255,0.2);color:#fff;width:38px;height:38px;border-radius:50%;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;">‹</button>
-        <button onclick="slgNav(1)" id="slgNextBtn" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);z-index:10001;background:rgba(0,0,0,0.45);border:1px solid rgba(255,255,255,0.2);color:#fff;width:38px;height:38px;border-radius:50%;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;">›</button>
-      </div>
-
-      <!-- Watch Ads Image Swipe Gallery -->
-      <div id="watchAdsGalleryModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;z-index:999999;flex-direction:column;background:#000;">
-        <div id="wagBgBlur" style="position:absolute;top:0;left:0;width:100%;height:100%;background-size:cover;background-position:center;filter:blur(28px) brightness(0.55);transform:scale(1.15);transition:background-image 0.25s ease;"></div>
-        <button onclick="closeWatchAdsGallery()" style="position:absolute;top:14px;right:14px;z-index:10001;background:rgba(0,0,0,0.5);border:1.5px solid rgba(255,255,255,0.25);color:#fff;width:38px;height:38px;border-radius:50%;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;">✕</button>
-
-        <!-- Dots -->
-        <div id="wagDots" style="position:absolute;top:16px;left:16px;right:64px;z-index:10001;display:flex;gap:6px;"></div>
-
-        <!-- Slide track -->
-        <div id="wagTrack" style="position:relative;flex:1;display:flex;width:100%;height:100%;transition:transform 0.3s ease;"></div>
-
-        <!-- Nav arrows -->
-        <button onclick="wagNav(-1)" id="wagPrevBtn" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);z-index:10001;background:rgba(0,0,0,0.45);border:1px solid rgba(255,255,255,0.2);color:#fff;width:38px;height:38px;border-radius:50%;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;">‹</button>
-        <button onclick="wagNav(1)" id="wagNextBtn" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);z-index:10001;background:rgba(0,0,0,0.45);border:1px solid rgba(255,255,255,0.2);color:#fff;width:38px;height:38px;border-radius:50%;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;">›</button>
-      </div>
 
       <!-- Watch Video Ad Task Card -->
       <div onclick="openWatchAdsGallery()" style="background:#fff;border:1px solid rgba(0,0,0,0.06);border-radius:20px;padding:16px;margin-bottom:12px;display:flex;align-items:center;gap:14px;cursor:pointer;box-shadow:0 2px 12px rgba(0,0,0,0.05);">
@@ -461,6 +425,7 @@
 
 
 
+
   <div class="cat-tabs">
     <div class="cat-tab active" onclick="filterTasks('all', this)">All Tasks</div>
     <div class="cat-tab" onclick="filterTasks('watchads', this)">Special Tasks</div>
@@ -473,24 +438,25 @@
 
     <!-- 1. Offerwall Task -->
     <div class="task-card" data-order="0" data-category="survey"
-      style="background:linear-gradient(135deg,rgba(108,99,255,0.18),rgba(59,130,246,0.12));border-color:rgba(108,99,255,0.35);"
       id="offerwallCard">
       <div class="task-icon icon-purple">
         <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg>
       </div>
       <div class="task-info">
         <h3>Offerwall Tasks</h3>
-        <p>Offers complete karo, zyada coins pao!</p>
+        <p>Offers complete karo & coins pao</p>
         <div class="task-meta">
           <span class="task-time">⏱ Unlimited</span>
-          <span style="font-size:10px;color:#a78bfa;font-weight:700;background:rgba(108,99,255,0.15);padding:3px 8px;border-radius:50px;">🔥 High Reward</span>
         </div>
         <span id="offerwallCooldownBadge" style="display:none;font-size:10px;color:#f59e0b;font-weight:700;margin-top:6px;background:rgba(245,158,11,0.15);padding:3px 8px;border-radius:50px;">⏳ --:--:--</span>
       </div>
-      <div class="task-reward">
+      <div class="task-reward" style="min-width:150px;">
         <div class="coins-reward">+20</div>
         <div class="rupee">🪙 per offer</div>
-        <button class="do-btn" id="offerwallBtn" onclick="openOfferwallPage()">Open</button>
+        <div style="display:flex;gap:6px;margin-top:8px;">
+          <button onclick="event.stopPropagation();openOfferwallTutorial();" style="width:60px;height:34px;border:1px solid rgba(217,119,6,0.3);border-radius:10px;color:#d97706;font-size:10px;font-weight:800;cursor:pointer;font-family:'Segoe UI',sans-serif;background:rgba(217,119,6,0.06);">Tutorial</button>
+          <button class="do-btn" id="offerwallBtn" onclick="openOfferwallPage()" style="margin-top:0;">Open</button>
+        </div>
       </div>
     </div>
 
@@ -507,10 +473,13 @@
           <span id="surveyCooldownBadge" style="display:none;font-size:10px;color:#f59e0b;font-weight:700;margin-left:8px;background:rgba(245,158,11,0.15);padding:3px 8px;border-radius:50px;">⏳ 00:00</span>
         </div>
       </div>
-      <div class="task-reward">
+      <div class="task-reward" style="min-width:150px;">
         <div class="coins-reward">+20</div>
         <div class="rupee">🪙 per survey</div>
-        <button class="do-btn" id="surveyBtn" onclick="openSurvey()">Start</button>
+        <div style="display:flex;gap:6px;margin-top:8px;">
+          <button onclick="event.stopPropagation();openSurveyTutorial();" style="width:60px;height:34px;border:1px solid rgba(37,99,235,0.3);border-radius:10px;color:#2563eb;font-size:10px;font-weight:800;cursor:pointer;font-family:'Segoe UI',sans-serif;background:rgba(37,99,235,0.06);">Tutorial</button>
+          <button class="do-btn" id="surveyBtn" onclick="openSurvey()" style="margin-top:0;">Start</button>
+        </div>
       </div>
     </div>
 
@@ -838,6 +807,283 @@
     <div id="quizBannerSlot" style="width:320px;height:50px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.03);border-radius:8px;overflow:hidden;"></div>
   </div>
 </div>
+
+<!-- Survey Tutorial Modal -->
+<div id="surveyTutorialModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:#f7f7fb;z-index:9999;flex-direction:column;">
+  <div style="flex:none;background:linear-gradient(135deg,#4f46e5,#7c3aed);display:flex;align-items:center;gap:14px;padding:20px 16px 22px;box-shadow:0 4px 16px rgba(79,70,229,0.25);">
+    <button onclick="closeSurveyTutorial()" style="width:38px;height:38px;background:rgba(255,255,255,0.18);border:1px solid rgba(255,255,255,0.3);border-radius:12px;color:#fff;font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;">&#8249;</button>
+    <div style="flex:1;">
+      <div style="font-size:18px;font-weight:800;color:#fff;">Survey Start Karne Se Pehle</div>
+      <div style="font-size:12px;color:rgba(255,255,255,0.8);margin-top:2px;">Ye guide padhkar survey complete karo</div>
+    </div>
+    <button onclick="closeSurveyTutorial()" style="width:34px;height:34px;background:rgba(255,255,255,0.18);border:1px solid rgba(255,255,255,0.3);border-radius:10px;color:#fff;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;">&#10005;</button>
+  </div>
+
+  <div style="flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;padding:18px 18px 30px;margin-top:-12px;">
+
+    <div style="background:#fff;border-radius:16px;padding:18px;margin-bottom:14px;box-shadow:0 2px 12px rgba(79,70,229,0.08);border:1px solid rgba(79,70,229,0.12);">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+        <div style="width:30px;height:30px;border-radius:50%;background:rgba(79,70,229,0.1);color:#4f46e5;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4f46e5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        </div>
+        <div style="font-size:14.5px;font-weight:800;color:#1a1a2e;">Survey Hota Kya Hai?</div>
+      </div>
+      <p style="font-size:13.5px;color:#4b5563;line-height:1.6;margin:0 0 10px;">Companies aur brands ko apne products, services ya customers ki pasand-napasand ke baare me jaanna hota hai. Isliye wo aam logo se kuch simple questions puchte hain — isi ko "Survey" kehte hain.</p>
+      <p style="font-size:13.5px;color:#4b5563;line-height:1.6;margin:0 0 10px;">Survey ek chhoti si online form jaisi hoti hai jisme aapko questions dikhte hain aur aapko unke jawab dene hote hain — jaise:</p>
+      <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px;">
+        <div style="font-size:13.5px;color:#1a1a2e;">"Aap din me kitni baar online shopping karte hain?"</div>
+        <div style="font-size:13.5px;color:#1a1a2e;">"Aapki age kya hai?"</div>
+        <div style="font-size:13.5px;color:#1a1a2e;">"Aap ye product use karte hain ya nahi?"</div>
+      </div>
+      <p style="font-size:13.5px;color:#4b5563;line-height:1.6;margin:0 0 10px;">Aapko bas diye gaye options me se sahi wala select karna hota hai (multiple choice, yes/no, ya rating), koi typing ya likhna zyada nahi karna padta. Ek survey usually 5–15 minute me complete ho jata hai.</p>
+      <p style="font-size:13.5px;color:#4b5563;line-height:1.6;margin:0;">Jab aap survey ko poora aur sahi tarike se complete karte ho, tab aapko coins reward milte hain.</p>
+    </div>
+
+    <div style="background:#fff;border-radius:16px;padding:18px;margin-bottom:14px;box-shadow:0 2px 12px rgba(79,70,229,0.08);">
+      <div style="font-size:15px;font-weight:800;color:#1a1a2e;margin-bottom:6px;">Welcome</div>
+      <p style="font-size:13.5px;color:#4b5563;line-height:1.6;margin:0;">Survey complete karne se pehle ye samajhna zaroori hai ki surveys kaise kaam karte hain.</p>
+    </div>
+
+    <div style="background:#fff;border-radius:16px;padding:18px;margin-bottom:14px;box-shadow:0 2px 12px rgba(79,70,229,0.08);">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+        <div style="width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;font-size:13px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;">1</div>
+        <div style="font-size:14.5px;font-weight:800;color:#1a1a2e;">Pehle 1–2 survey fail ho jaye to tension mat lo</div>
+      </div>
+      <p style="font-size:13.5px;color:#4b5563;line-height:1.6;margin:0 0 8px;padding-left:36px;">Kabhi-kabhi starting me survey complete nahi hota. Iska matlab account kharab nahi hai.</p>
+      <p style="font-size:13.5px;color:#4b5563;line-height:1.6;margin:0;padding-left:36px;">Survey companies har survey ke liye alag type ke users dhoondti hain. Agar aap us survey ke liye match nahi hote, survey band ho sakta hai.</p>
+    </div>
+
+    <div style="background:#fff;border-radius:16px;padding:18px;margin-bottom:14px;box-shadow:0 2px 12px rgba(79,70,229,0.08);">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+        <div style="width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;font-size:13px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;">2</div>
+        <div style="font-size:14.5px;font-weight:800;color:#1a1a2e;">Profile dhyan se banao</div>
+      </div>
+      <p style="font-size:13px;color:#6b7280;margin:0 0 8px;padding-left:36px;">Survey me jo information do:</p>
+      <div style="display:flex;flex-direction:column;gap:8px;padding-left:36px;">
+        <div style="display:flex;align-items:center;gap:8px;font-size:13.5px;color:#1a1a2e;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><polyline points="20 6 9 17 4 12"/></svg> Real age</div>
+        <div style="display:flex;align-items:center;gap:8px;font-size:13.5px;color:#1a1a2e;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><polyline points="20 6 9 17 4 12"/></svg> Real city/state</div>
+        <div style="display:flex;align-items:center;gap:8px;font-size:13.5px;color:#1a1a2e;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><polyline points="20 6 9 17 4 12"/></svg> Student ho to Student select karo</div>
+        <div style="display:flex;align-items:center;gap:8px;font-size:13.5px;color:#1a1a2e;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><polyline points="20 6 9 17 4 12"/></svg> Har survey me same basic details rakho</div>
+      </div>
+      <p style="font-size:13px;color:#ef4444;margin:10px 0 0;padding-left:36px;">Galat ya alag-alag information dene se surveys reject ho sakte hain.</p>
+    </div>
+
+    <div style="background:#fff;border-radius:16px;padding:18px;margin-bottom:14px;box-shadow:0 2px 12px rgba(79,70,229,0.08);">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+        <div style="width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;font-size:13px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;">3</div>
+        <div style="font-size:14.5px;font-weight:800;color:#1a1a2e;">Survey kaise complete kare</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:7px;font-size:13.5px;color:#1a1a2e;padding-left:36px;">
+        <div>Questions dhyan se padho</div>
+        <div>Jaldi-jaldi answer mat do</div>
+        <div>Beech me app band mat karo</div>
+        <div>Random answers mat do</div>
+        <div>Survey end hone tak wait karo</div>
+      </div>
+    </div>
+
+    <div style="background:#fff;border-radius:16px;padding:18px;margin-bottom:14px;box-shadow:0 2px 12px rgba(79,70,229,0.08);">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+        <div style="width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;font-size:13px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;">4</div>
+        <div style="font-size:14.5px;font-weight:800;color:#1a1a2e;">Survey fail kyu hota hai?</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:7px;font-size:13.5px;color:#4b5563;padding-left:36px;">
+        <div>Aap target user nahi the</div>
+        <div>Answers match nahi hue</div>
+        <div>Survey already full ho gaya</div>
+        <div>Bahut fast complete kiya gaya</div>
+      </div>
+      <p style="font-size:13px;color:#6b7280;margin:10px 0 0;padding-left:36px;font-style:italic;">Ye normal hai.</p>
+    </div>
+
+    <div style="background:#fff;border-radius:16px;padding:18px;margin-bottom:14px;box-shadow:0 2px 12px rgba(79,70,229,0.08);">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+        <div style="width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;font-size:13px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;">5</div>
+        <div style="font-size:14.5px;font-weight:800;color:#1a1a2e;">Survey pass hone ke chances kaise badhaye</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px;padding-left:36px;">
+        <div style="display:flex;align-items:center;gap:8px;font-size:13.5px;color:#1a1a2e;"><svg width="15" height="15" viewBox="0 0 24 24" fill="#7c3aed" style="flex-shrink:0;"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> Profile complete rakho</div>
+        <div style="display:flex;align-items:center;gap:8px;font-size:13.5px;color:#1a1a2e;"><svg width="15" height="15" viewBox="0 0 24 24" fill="#7c3aed" style="flex-shrink:0;"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> Har baar sach aur same information do</div>
+        <div style="display:flex;align-items:center;gap:8px;font-size:13.5px;color:#1a1a2e;"><svg width="15" height="15" viewBox="0 0 24 24" fill="#7c3aed" style="flex-shrink:0;"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> Roz naye surveys try karo</div>
+      </div>
+    </div>
+
+    <div style="background:#fff;border-radius:16px;padding:18px;margin-bottom:14px;box-shadow:0 2px 12px rgba(79,70,229,0.08);">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+        <div style="width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;font-size:13px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;">6</div>
+        <div style="font-size:14.5px;font-weight:800;color:#1a1a2e;">Aapki Survey Profile kaise banti hai?</div>
+      </div>
+      <p style="font-size:13.5px;color:#4b5563;line-height:1.6;margin:0 0 10px;padding-left:36px;">Survey companies aapki profile aapke diye hue answers se banati hain. Jaise:</p>
+      <div style="display:flex;flex-direction:column;gap:6px;font-size:13.5px;color:#1a1a2e;margin-bottom:10px;padding-left:36px;">
+        <div>Age</div>
+        <div>City / Location</div>
+        <div>Education</div>
+        <div>Occupation</div>
+        <div>Interests</div>
+      </div>
+      <p style="font-size:13.5px;color:#4b5563;line-height:1.6;margin:0;padding-left:36px;">Ye sab milkar decide karte hain ki kaunse surveys aapko dikhaye jayenge.</p>
+    </div>
+
+    <div style="background:#fdf4ff;border:1px solid rgba(147,51,234,0.25);border-radius:16px;padding:18px;margin-bottom:14px;">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9333ea" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        <div style="font-size:14px;font-weight:800;color:#7e22ce;">Important</div>
+      </div>
+      <p style="font-size:13.5px;color:#581c87;line-height:1.6;margin:0 0 12px;">Agar ek survey me location kuch aur, dusre me kuch aur, ya details baar-baar change karoge to system confuse ho sakta hai aur surveys kam mil sakte hain ya reject ho sakte hain.</p>
+      <p style="font-size:13.5px;color:#581c87;line-height:1.6;margin:0 0 6px;">Isliye:</p>
+      <div style="display:flex;flex-direction:column;gap:7px;font-size:13.5px;color:#581c87;">
+        <div style="display:flex;align-items:center;gap:8px;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#9333ea" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><polyline points="20 6 9 17 4 12"/></svg> Har survey me same basic information rakho</div>
+        <div style="display:flex;align-items:center;gap:8px;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#9333ea" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><polyline points="20 6 9 17 4 12"/></svg> Sirf sahi information do</div>
+        <div style="display:flex;align-items:center;gap:8px;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#9333ea" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><polyline points="20 6 9 17 4 12"/></svg> Random answers mat do</div>
+      </div>
+      <p style="font-size:12.5px;color:#7e22ce;line-height:1.6;margin:12px 0 0;font-style:italic;">Yaad rakho: Survey profile alag form se nahi, aapke survey answers se bhi dheere-dheere improve hoti rehti hai.</p>
+    </div>
+
+    <div style="background:#eef2ff;border:1px solid rgba(79,70,229,0.25);border-radius:16px;padding:16px;margin-bottom:6px;display:flex;align-items:flex-start;gap:10px;">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#4338ca" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:1px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+      <p style="font-size:13px;color:#3730a3;line-height:1.6;margin:0;"><strong>Note:</strong> Survey approval survey provider decide karta hai. Reward tabhi milta hai jab survey successfully complete aur approve ho jaye.</p>
+    </div>
+
+  </div>
+
+  <!-- Fixed bottom action buttons -->
+  <div style="flex:none;display:flex;gap:10px;padding:14px 18px 22px;background:#f7f7fb;box-shadow:0 -4px 14px rgba(0,0,0,0.05);">
+    <button onclick="closeSurveyTutorial()" style="flex:1;padding:13px;border-radius:12px;border:1.5px solid #e2e8f0;background:#fff;color:#374151;font-weight:700;font-size:14px;cursor:pointer;">I Understand</button>
+    <button onclick="closeSurveyTutorial();openSurvey();" style="flex:1;padding:13px;border-radius:12px;border:none;background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;font-weight:800;font-size:14px;cursor:pointer;">Start Survey</button>
+  </div>
+</div>
+
+<div id="offerwallTutorialModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:#fdfaf6;z-index:9999;flex-direction:column;">
+  <div style="flex:none;background:linear-gradient(135deg,#d97706,#f59e0b);display:flex;align-items:center;gap:14px;padding:20px 16px 22px;box-shadow:0 4px 16px rgba(217,119,6,0.25);">
+    <button onclick="closeOfferwallTutorial()" style="width:38px;height:38px;background:rgba(255,255,255,0.18);border:1px solid rgba(255,255,255,0.3);border-radius:12px;color:#fff;font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;">&#8249;</button>
+    <div style="flex:1;">
+      <div style="font-size:18px;font-weight:800;color:#fff;">Offerwall Start Karne Se Pehle</div>
+      <div style="font-size:12px;color:rgba(255,255,255,0.85);margin-top:2px;">Ye guide padhkar offer complete karo</div>
+    </div>
+    <button onclick="closeOfferwallTutorial()" style="width:34px;height:34px;background:rgba(255,255,255,0.18);border:1px solid rgba(255,255,255,0.3);border-radius:10px;color:#fff;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;">&#10005;</button>
+  </div>
+
+  <div style="flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;padding:18px 18px 30px;margin-top:-12px;">
+
+    <div style="background:#fff;border-radius:16px;padding:18px;margin-bottom:14px;box-shadow:0 2px 12px rgba(217,119,6,0.08);border:1px solid rgba(217,119,6,0.14);">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+        <div style="width:30px;height:30px;border-radius:50%;background:rgba(217,119,6,0.1);color:#d97706;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        </div>
+        <div style="font-size:14.5px;font-weight:800;color:#1a1a2e;">Offerwall Hota Kya Hai?</div>
+      </div>
+      <p style="font-size:13.5px;color:#4b5563;line-height:1.6;margin:0 0 10px;">Offerwall ek list hoti hai jisme alag-alag apps, games aur offers diye hote hain. Har offer ke andar kuch simple steps likhe hote hain — jaise app install karna, ek level cross karna, ya signup karna.</p>
+      <p style="font-size:13.5px;color:#4b5563;line-height:1.6;margin:0;">Jab aap us offer ke saare steps poore kar lete ho, tab wo advertiser company confirm karti hai ki task complete hua — aur tabhi aapko coins reward milte hain. Normal Watch Ads ya Spin se offerwall me reward zyada milta hai, kyunki isme thoda zyada effort lagta hai.</p>
+    </div>
+
+    <div style="background:#fff;border-radius:16px;padding:18px;margin-bottom:14px;box-shadow:0 2px 12px rgba(217,119,6,0.08);">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+        <div style="width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,#d97706,#f59e0b);color:#fff;font-size:13px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;">1</div>
+        <div style="font-size:14.5px;font-weight:800;color:#1a1a2e;">Offerwall Kaise Kare</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:7px;font-size:13.5px;color:#1a1a2e;padding-left:36px;">
+        <div>"Open" button dabakar offerwall list khole</div>
+        <div>Jo offer sabse zyada coins deta ho, use choose kare</div>
+        <div>Offer par tap karke uske instructions poore padhe</div>
+        <div>Jo bhi steps likhe hai (install / signup / level complete) wahi bilkul karein</div>
+        <div>Offer complete hone ke baad wapas app me aa jaye</div>
+      </div>
+    </div>
+
+    <div style="background:#fff;border-radius:16px;padding:18px;margin-bottom:14px;box-shadow:0 2px 12px rgba(217,119,6,0.08);">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+        <div style="width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,#d97706,#f59e0b);color:#fff;font-size:13px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;">2</div>
+        <div style="font-size:14.5px;font-weight:800;color:#1a1a2e;">App Download Karne Se Pehle Ye Check Karo</div>
+      </div>
+      <p style="font-size:13px;color:#6b7280;margin:0 0 8px;padding-left:36px;">Koi bhi app install karne se pehle uski permissions aur terms dhyan se dekho:</p>
+      <div style="display:flex;flex-direction:column;gap:8px;padding-left:36px;">
+        <div style="display:flex;align-items:center;gap:8px;font-size:13.5px;color:#1a1a2e;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><polyline points="20 6 9 17 4 12"/></svg> App ka naam aur developer verify karo (Play Store rating/reviews dekho)</div>
+        <div style="display:flex;align-items:center;gap:8px;font-size:13.5px;color:#1a1a2e;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><polyline points="20 6 9 17 4 12"/></svg> App kaunsi permissions maang raha hai (contacts, camera, SMS) — agar zaroorat se zyada permission maange to samajh ke hi allow karo</div>
+        <div style="display:flex;align-items:center;gap:8px;font-size:13.5px;color:#1a1a2e;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><polyline points="20 6 9 17 4 12"/></svg> Offer ki terms me kitna time/level chahiye wo poora padho</div>
+        <div style="display:flex;align-items:center;gap:8px;font-size:13.5px;color:#1a1a2e;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><polyline points="20 6 9 17 4 12"/></svg> Sirf Play Store se hi app install karo, kisi third-party link se nahi</div>
+      </div>
+    </div>
+
+    <div style="background:#fff;border-radius:16px;padding:18px;margin-bottom:14px;box-shadow:0 2px 12px rgba(217,119,6,0.08);">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+        <div style="width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,#d97706,#f59e0b);color:#fff;font-size:13px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;">3</div>
+        <div style="font-size:14.5px;font-weight:800;color:#1a1a2e;">Offer Fail/Reject Kyu Hota Hai?</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:7px;font-size:13.5px;color:#4b5563;padding-left:36px;">
+        <div>App ko required level/task poora hone se pehle uninstall kar diya</div>
+        <div>Offer ke instructions poori tarah follow nahi kiye</div>
+        <div>Wahi offer pehle bhi complete kiya ja chuka hai (duplicate)</div>
+        <div>VPN ya fake location use kiya gaya</div>
+        <div>Emulator ya cloned app se offer complete kiya gaya</div>
+      </div>
+      <p style="font-size:13px;color:#6b7280;margin:10px 0 0;padding-left:36px;font-style:italic;">In sab cases me advertiser company reward approve nahi karti.</p>
+    </div>
+
+    <div style="background:#fff;border-radius:16px;padding:18px;margin-bottom:14px;box-shadow:0 2px 12px rgba(217,119,6,0.08);">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+        <div style="width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,#d97706,#f59e0b);color:#fff;font-size:13px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;">4</div>
+        <div style="font-size:14.5px;font-weight:800;color:#1a1a2e;">Coins Kab Milenge?</div>
+      </div>
+      <p style="font-size:13.5px;color:#4b5563;line-height:1.6;margin:0;padding-left:36px;">Offer complete hone ke turant baad kabhi kabhi coins turant aa jate hain, lekin kai offers me advertiser ko verify karne me 15 minute se 24-48 ghante tak lag sakte hain. Coins na aaye to thoda wait kare, panic na kare.</p>
+    </div>
+
+    <div style="background:#fff7ed;border:1px solid rgba(217,119,6,0.3);border-radius:16px;padding:18px;margin-bottom:14px;">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#b45309" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        <div style="font-size:14px;font-weight:800;color:#b45309;">Important</div>
+      </div>
+      <p style="font-size:13.5px;color:#78350f;line-height:1.6;margin:0 0 6px;">App install karne ke baad turant uninstall mat karo — jab tak offer required steps poore na ho jaye, app ko rakhe rehne do.</p>
+      <p style="font-size:13.5px;color:#78350f;line-height:1.6;margin:0;">Ek hi offer ko dobara-dobara complete karne ki koshish mat karo, ye reject ho jayega.</p>
+    </div>
+
+    <div style="background:#f0fdfa;border:1px solid rgba(13,148,136,0.25);border-radius:16px;padding:16px;margin-bottom:6px;display:flex;align-items:flex-start;gap:10px;">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0d9488" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:1px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+      <p style="font-size:13px;color:#115e59;line-height:1.6;margin:0;"><strong>Note:</strong> Offer approval advertiser company decide karti hai. Reward tabhi milta hai jab offer successfully complete aur verify ho jaye.</p>
+    </div>
+
+  </div>
+
+  <!-- Fixed bottom action buttons — sirf tutorial band karke task page par wapas jate hai, offerwall khud open nahi karte -->
+  <div style="flex:none;display:flex;gap:10px;padding:14px 18px 22px;background:#fdfaf6;box-shadow:0 -4px 14px rgba(0,0,0,0.05);">
+    <button onclick="closeOfferwallTutorial()" style="flex:1;padding:13px;border-radius:12px;border:1.5px solid #e2e8f0;background:#fff;color:#374151;font-weight:700;font-size:14px;cursor:pointer;">I Understand</button>
+    <button onclick="closeOfferwallTutorial()" style="flex:1;padding:13px;border-radius:12px;border:none;background:linear-gradient(135deg,#d97706,#f59e0b);color:#fff;font-weight:800;font-size:14px;cursor:pointer;">Got It, Continue</button>
+  </div>
+</div>
+
+<!-- Tutorial video/gallery modals — moved OUTSIDE .content so their z-index isn't trapped inside .content's stacking context (z-index:10), letting them render above Special Tasks / other full-screen overlays -->
+      <div id="tutVideoModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:#000;z-index:9999;flex-direction:column;">
+        <!-- X button top right -->
+        <button onclick="closeTutVideo()" style="position:absolute;top:14px;right:14px;z-index:10000;background:rgba(0,0,0,0.6);border:1.5px solid rgba(255,255,255,0.25);color:#fff;width:38px;height:38px;border-radius:50%;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;">✕</button>
+        <!-- Full screen iframe -->
+        <iframe id="tutVideoIframe" src="" style="width:100%;height:100%;border:none;display:block;flex:1;" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+      </div>
+
+      <!-- Shortlink Image Swipe Gallery -->
+      <div id="shortlinkGalleryModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;z-index:999999;flex-direction:column;background:#000;">
+        <div id="slgBgBlur" style="position:absolute;top:0;left:0;width:100%;height:100%;background-size:cover;background-position:center;filter:blur(28px) brightness(0.55);transform:scale(1.15);transition:background-image 0.25s ease;"></div>
+        <button onclick="closeShortlinkGallery()" style="position:absolute;top:14px;right:14px;z-index:10001;background:rgba(0,0,0,0.5);border:1.5px solid rgba(255,255,255,0.25);color:#fff;width:38px;height:38px;border-radius:50%;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;">✕</button>
+        <div id="slgDots" style="position:absolute;top:16px;left:16px;right:64px;z-index:10001;display:flex;gap:6px;"></div>
+        <div id="slgTrack" style="position:relative;flex:1;display:flex;width:100%;height:100%;transition:transform 0.3s ease;"></div>
+        <button onclick="slgNav(-1)" id="slgPrevBtn" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);z-index:10001;background:rgba(0,0,0,0.45);border:1px solid rgba(255,255,255,0.2);color:#fff;width:38px;height:38px;border-radius:50%;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;">‹</button>
+        <button onclick="slgNav(1)" id="slgNextBtn" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);z-index:10001;background:rgba(0,0,0,0.45);border:1px solid rgba(255,255,255,0.2);color:#fff;width:38px;height:38px;border-radius:50%;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;">›</button>
+      </div>
+
+      <!-- Watch Ads Image Swipe Gallery -->
+      <div id="watchAdsGalleryModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;z-index:999999;flex-direction:column;background:#000;">
+        <div id="wagBgBlur" style="position:absolute;top:0;left:0;width:100%;height:100%;background-size:cover;background-position:center;filter:blur(28px) brightness(0.55);transform:scale(1.15);transition:background-image 0.25s ease;"></div>
+        <button onclick="closeWatchAdsGallery()" style="position:absolute;top:14px;right:14px;z-index:10001;background:rgba(0,0,0,0.5);border:1.5px solid rgba(255,255,255,0.25);color:#fff;width:38px;height:38px;border-radius:50%;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;">✕</button>
+
+        <!-- Dots -->
+        <div id="wagDots" style="position:absolute;top:16px;left:16px;right:64px;z-index:10001;display:flex;gap:6px;"></div>
+
+        <!-- Slide track -->
+        <div id="wagTrack" style="position:relative;flex:1;display:flex;width:100%;height:100%;transition:transform 0.3s ease;"></div>
+
+        <!-- Nav arrows -->
+        <button onclick="wagNav(-1)" id="wagPrevBtn" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);z-index:10001;background:rgba(0,0,0,0.45);border:1px solid rgba(255,255,255,0.2);color:#fff;width:38px;height:38px;border-radius:50%;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;">‹</button>
+        <button onclick="wagNav(1)" id="wagNextBtn" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);z-index:10001;background:rgba(0,0,0,0.45);border:1px solid rgba(255,255,255,0.2);color:#fff;width:38px;height:38px;border-radius:50%;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;">›</button>
+      </div>
+
 
 <div class="bottom-nav">
   <div class="nav-item" onclick="window.location.href='tasknova_login-1.html'">
@@ -4813,6 +5059,26 @@
     document.getElementById('tutVideoModal').style.display = 'none';
     document.body.style.overflow = '';
   }
+  function openOfferwallTutorial() {
+    document.getElementById('offerwallTutorialModal').style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeOfferwallTutorial() {
+    document.getElementById('offerwallTutorialModal').style.display = 'none';
+    document.body.style.overflow = '';
+  }
+
+  function openSurveyTutorial() {
+    document.getElementById('surveyTutorialModal').style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeSurveyTutorial() {
+    document.getElementById('surveyTutorialModal').style.display = 'none';
+    document.body.style.overflow = '';
+  }
+
   function openTutorialModal() {
     document.getElementById('tutorialModal').style.display = 'block';
     document.body.style.overflow = 'hidden';
@@ -4875,7 +5141,16 @@
     localStorage.setItem(getOfferwallKey(), Date.now().toString());
     updateOfferwallUI();
     const uid = localStorage.getItem('tasknova_uid');
-    window.location.href = 'cpalead_offerwall.html?uid=' + (uid || '');
+    const offerwallUrl = 'cpalead_offerwall.html?uid=' + (uid || '');
+
+    // Naye tab me kholo taaki current Tasks page waisi hi rahe (Survey jaisa behavior)
+    const a = document.createElement('a');
+    a.href = offerwallUrl;
+    a.target = '_blank';
+    a.rel = 'noopener';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
   }
   // ── OFFERWALL END ────────────────────────────────────────────
 
@@ -4920,7 +5195,7 @@
   </div>
 
   <!-- Scrollable Inner -->
-  <div style="flex:1; min-height:0; overflow-y:auto; -webkit-overflow-scrolling:touch; overscroll-behavior:contain; padding-bottom:40px;">
+  <div style="flex:1; min-height:0; overflow-y:auto; -webkit-overflow-scrolling:touch; overscroll-behavior:contain; touch-action:pan-y; padding-bottom:40px;">
 
   <!-- Section Title -->
   <div style="padding:18px 16px 10px; font-size:13px; font-weight:700; color:rgba(26,26,46,0.45); text-transform:uppercase; letter-spacing:1px;">Available Tasks</div>
@@ -4965,10 +5240,13 @@
           <span id="slSpecialBadge" style="font-size:11px; font-weight:700; color:#2563eb; background:rgba(37,99,235,0.1); padding:3px 9px; border-radius:50px;">0/2</span>
         </div>
       </div>
-      <div style="text-align:right; flex-shrink:0; min-width:82px;">
+      <div style="text-align:right; flex-shrink:0; min-width:140px;">
         <div style="font-size:18px; font-weight:900; color:#f59e0b; text-shadow:0 0 12px rgba(245,158,11,0.3);">+2</div>
         <div style="font-size:10px; color:rgba(26,26,46,0.4); margin-top:1px;">🪙 coins</div>
-        <button id="slSpecialBtn" style="margin-top:6px; width:72px; height:32px; border:none; border-radius:8px; color:#fff; font-size:12px; font-weight:700; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; background:linear-gradient(135deg,#2563eb,#3b82f6);" onclick="event.stopPropagation(); handleSlSpecialClick();">Visit</button>
+        <div style="margin-top:6px; display:flex; gap:6px;">
+          <button onclick="event.stopPropagation(); openShortlinkGallery();" style="width:60px; height:32px; border:1px solid rgba(37,99,235,0.3); border-radius:8px; color:#2563eb; font-size:10px; font-weight:700; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; background:rgba(37,99,235,0.06);">Tutorial</button>
+          <button id="slSpecialBtn" style="width:72px; height:32px; border:none; border-radius:8px; color:#fff; font-size:12px; font-weight:700; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; background:linear-gradient(135deg,#2563eb,#3b82f6);" onclick="event.stopPropagation(); handleSlSpecialClick();">Visit</button>
+        </div>
       </div>
     </div>
 
@@ -4985,10 +5263,13 @@
           <span id="waSpecialBadge" style="font-size:11px; font-weight:700; color:#2563eb; background:rgba(37,99,235,0.1); padding:3px 9px; border-radius:50px;">0/10</span>
         </div>
       </div>
-      <div style="text-align:right; flex-shrink:0; min-width:82px;">
+      <div style="text-align:right; flex-shrink:0; min-width:140px;">
         <div style="font-size:18px; font-weight:900; color:#f59e0b; text-shadow:0 0 12px rgba(245,158,11,0.3);">+2</div>
         <div style="font-size:10px; color:rgba(26,26,46,0.4); margin-top:1px;">🪙 coins</div>
-        <button id="waSpecialBtn" style="margin-top:6px; width:72px; height:32px; border:none; border-radius:8px; color:#fff; font-size:12px; font-weight:700; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; background:linear-gradient(135deg,#2563eb,#3b82f6);" onclick="event.stopPropagation(); handleWaSpecialClick();">Watch</button>
+        <div style="margin-top:6px; display:flex; gap:6px;">
+          <button onclick="event.stopPropagation(); openWatchAdsGallery();" style="width:60px; height:32px; border:1px solid rgba(37,99,235,0.3); border-radius:8px; color:#2563eb; font-size:10px; font-weight:700; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; background:rgba(37,99,235,0.06);">Tutorial</button>
+          <button id="waSpecialBtn" style="width:72px; height:32px; border:none; border-radius:8px; color:#fff; font-size:12px; font-weight:700; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; background:linear-gradient(135deg,#2563eb,#3b82f6);" onclick="event.stopPropagation(); handleWaSpecialClick();">Watch</button>
+        </div>
       </div>
     </div>
 
