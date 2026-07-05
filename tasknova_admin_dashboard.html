@@ -301,9 +301,9 @@ tbody tr:hover{background:var(--surface-2);}
         <div class="table-wrap">
           <table>
             <thead><tr>
-              <th>User</th><th>UID</th><th>Registered</th><th>Last Login</th>
-              <th>Today Earn</th><th>Total Earn</th><th>Ads Today</th><th>Ads Total</th>
-              <th>Survey</th><th>Offerwall</th><th>Balance</th>
+              <th>User</th><th>UID</th><th>Joined</th><th>Last Active</th>
+              <th>Balance</th><th>Total Earned</th><th>Earned Today</th><th>Ads Today</th><th>Tasks Done</th>
+              <th>Quizzes Today</th><th>Scratches Today</th><th>Spins Today</th><th>Referrals</th>
             </tr></thead>
             <tbody id="usersBody"></tbody>
           </table>
@@ -429,19 +429,27 @@ function handleLogin(){
 }
 function handleLogout(){ auth.signOut(); }
 
+// Session-only persistence: login won't survive closing the browser/tab.
+// This means anyone picking up the phone later still has to sign in fresh.
+auth.setPersistence(firebase.auth.Auth.Persistence.SESSION);
+
 auth.onAuthStateChanged(user => {
   if(user){
-    // Optional: gate by /admins/{uid} === true. If this read is blocked by your
-    // database security rules, we don't want login to hang — so we proceed
-    // either way and just log a warning in that case.
+    // Admin whitelist: only UIDs marked true under /admins/{uid} in Firebase can enter,
+    // even with a correct email+password. Add your own UID there to use the dashboard.
     db.ref('admins/'+user.uid).once('value')
       .then(snap=>{
-        // if(!snap.exists()){ document.getElementById('loginError').textContent="Not authorized as admin."; auth.signOut(); return; }
+        if(!snap.exists() || snap.val()!==true){
+          document.getElementById('loginError').textContent = 'This account is not authorized as admin.';
+          auth.signOut();
+          return;
+        }
         enterDashboard(user);
       })
       .catch(err=>{
-        console.warn('Admin-check read failed (check DB rules) — logging in anyway:', err.message);
-        enterDashboard(user);
+        console.warn('Admin-check read failed (check DB rules):', err.message);
+        document.getElementById('loginError').textContent = 'Could not verify admin access. Check Firebase rules.';
+        auth.signOut();
       });
   } else {
     document.getElementById('loginScreen').style.display='flex';
@@ -528,21 +536,30 @@ function renderOverview(){
   const users = Object.entries(usersData).map(([uid,u])=>({uid,...u}));
   const wds = Object.entries(withdrawalsData).map(([id,w])=>({id,...w}));
 
-  const totalRevenue = users.reduce((s,u)=>s+(Number(u.totalEarnings)||0),0);
-  const todayRevenue = users.reduce((s,u)=>s+(Number(u.todayEarnings)||0),0);
-  // Yesterday revenue can't be derived from a live "todayEarnings" field alone —
-  // ideally log a daily snapshot node like /dailyStats/{date}/revenue.
+  // Sum a user's completed taskHistory earnings matching a date filter on completedAt (epoch ms)
+  const sumUserTasks = (u, dateFilterFn) => {
+    if(!u.taskHistory) return 0;
+    return Object.values(u.taskHistory).reduce((s,t)=>{
+      if(!t || t.status!=='completed') return s;
+      if(!dateFilterFn(t.completedAt)) return s;
+      return s + (Number(t.coinsEarned)||0);
+    },0);
+  };
+
+  const totalRevenue = users.reduce((s,u)=>s+(Number(u.totalEarned)||0),0);
+  const todayRevenue = users.reduce((s,u)=>s+sumUserTasks(u, ts=>isToday(ts)),0);
+  const yesterdayRevenue = users.reduce((s,u)=>s+sumUserTasks(u, ts=>isYesterday(ts)),0);
+  const monthRevenue = users.reduce((s,u)=>s+sumUserTasks(u, ts=>isThisMonth(ts)),0);
   const totalWithdrawals = wds.filter(w=>w.status==='approved').reduce((s,w)=>s+(Number(w.amount)||0),0);
-  const monthRevenue = users.reduce((s,u)=>s+(isThisMonth(u.lastLogin)?(Number(u.todayEarnings)||0):0),0);
   const netProfitLoss = totalRevenue - totalWithdrawals;
   const totalUsers = users.length;
-  const activeToday = users.filter(u=>isToday(u.lastLogin)).length;
-  const newToday = users.filter(u=>isToday(u.createdAt)).length;
+  const activeToday = users.filter(u=>isToday(u.lastResetDate)).length;
+  const newToday = users.filter(u=>isToday(u.joinDate)).length;
 
   const cards = [
-    {label:'Total Revenue', value:fmtMoney(totalRevenue), color:'var(--emerald)'},
+    {label:'Total Revenue (User Earnings)', value:fmtMoney(totalRevenue), color:'var(--emerald)'},
     {label:"Today's Revenue", value:fmtMoney(todayRevenue), color:'var(--emerald)'},
-    {label:"Yesterday's Revenue", value:'— (needs daily snapshot)', color:'var(--text-faint)', small:true},
+    {label:"Yesterday's Revenue", value:fmtMoney(yesterdayRevenue), color:'var(--text-dim)'},
     {label:'This Month Revenue', value:fmtMoney(monthRevenue), color:'var(--blue)'},
     {label:'Total Withdrawals', value:fmtMoney(totalWithdrawals), color:'var(--amber)'},
     {label:'Net Profit / Loss', value:fmtMoney(netProfitLoss), color: netProfitLoss>=0?'var(--emerald)':'var(--red)'},
@@ -558,7 +575,7 @@ function renderOverview(){
       <div class="stat-value ${c.small?'small':''}">${c.value}</div>
     </div>`).join('');
 
-  window.userPayoutTotals = {today:todayRevenue, yesterday:null, month:monthRevenue, total:totalRevenue};
+  window.userPayoutTotals = {today:todayRevenue, yesterday:yesterdayRevenue, month:monthRevenue, total:totalRevenue};
   renderProfitLoss();
 }
 
@@ -959,23 +976,33 @@ function renderUsers(){
   document.getElementById('userCount').textContent = `(${rows.length})`;
 
   if(rows.length===0){
-    document.getElementById('usersBody').innerHTML = `<tr><td colspan="11"><div class="empty-state"><div class="icon">👥</div>No users found. Data will appear here once your /users node has entries.</div></td></tr>`;
+    document.getElementById('usersBody').innerHTML = `<tr><td colspan="13"><div class="empty-state"><div class="icon">👥</div>No users found. Data will appear here once your /users node has entries.</div></td></tr>`;
     return;
   }
+
+  const earnedTodayFor = u => {
+    if(!u.taskHistory) return 0;
+    return Object.values(u.taskHistory).reduce((s,t)=>{
+      if(!t || t.status!=='completed' || !isToday(t.completedAt)) return s;
+      return s + (Number(t.coinsEarned)||0);
+    },0);
+  };
 
   document.getElementById('usersBody').innerHTML = rows.map(u=>`
     <tr>
       <td><div class="avatar-chip"><div class="avatar">${initials(u.name)}</div><div><div>${u.name||'—'}</div><div style="font-size:10.5px;color:var(--text-faint)">${u.email||'—'}</div></div></div></td>
       <td class="cell-mono">${u.uid.slice(0,10)}…</td>
-      <td>${fmtDate(u.createdAt)}</td>
-      <td>${fmtDate(u.lastLogin)}</td>
-      <td class="cell-mono">${fmtMoney(u.todayEarnings)}</td>
-      <td class="cell-mono">${fmtMoney(u.totalEarnings)}</td>
-      <td class="cell-mono">${u.todayAdsViewed||0}</td>
-      <td class="cell-mono">${u.totalAdsViewed||0}</td>
-      <td class="cell-mono">${fmtMoney(u.surveyEarnings)}</td>
-      <td class="cell-mono">${fmtMoney(u.offerwallEarnings)}</td>
+      <td>${fmtDate(u.joinDate)}</td>
+      <td>${fmtDate(u.lastResetDate)}</td>
       <td class="cell-mono">${fmtMoney(u.balance)}</td>
+      <td class="cell-mono">${fmtMoney(u.totalEarned)}</td>
+      <td class="cell-mono">${fmtMoney(earnedTodayFor(u))}</td>
+      <td class="cell-mono">${u.adsWatchedToday||0}</td>
+      <td class="cell-mono">${u.tasksDone||0}</td>
+      <td class="cell-mono">${u.quizzesToday||0}</td>
+      <td class="cell-mono">${u.scratchesToday||0}</td>
+      <td class="cell-mono">${u.spinsToday||0}</td>
+      <td class="cell-mono">${u.referrals||0}</td>
     </tr>`).join('');
 }
 
@@ -1043,7 +1070,7 @@ function last14Days(){
 function renderUserGrowthChart(){
   const days = last14Days();
   const users = Object.values(usersData);
-  const counts = days.map(d => users.filter(u=>u.createdAt && new Date(u.createdAt).toDateString()===d.toDateString()).length);
+  const counts = days.map(d => users.filter(u=>u.joinDate && new Date(u.joinDate).toDateString()===d.toDateString()).length);
   const labels = days.map(d=>d.toLocaleDateString('en-IN',{day:'2-digit',month:'short'}));
   if(chartUG) chartUG.destroy();
   chartUG = new Chart(document.getElementById('chartUserGrowth'), {
