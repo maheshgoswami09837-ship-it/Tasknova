@@ -1,35 +1,64 @@
 // File: /api/adsterra-stats.js
-// Deploy this inside your Vercel project's "api" folder.
-// It hides your Adsterra token from the browser and avoids CORS issues.
+// Deploy inside your Vercel project's "api" folder.
+// Fetches stats for BOTH your Adsterra websites and combines them into one response.
 
 export default async function handler(req, res) {
-  const ADSTERRA_TOKEN = process.env.ADSTERRA_API_TOKEN; // set this in Vercel → Project → Settings → Environment Variables
-  const DOMAIN_ID = process.env.ADSTERRA_DOMAIN_ID;       // your website's domain ID from Adsterra
+  const ADSTERRA_TOKEN = process.env.ADSTERRA_API_TOKEN;
+
+  // Both your registered Adsterra websites — comma-separated in env, or hardcoded fallback below.
+  const domainIds = (process.env.ADSTERRA_DOMAIN_IDS || '5790053,5796089')
+    .split(',')
+    .map(d => d.trim())
+    .filter(Boolean);
 
   const today = new Date().toISOString().slice(0, 10);
   const monthAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
-
   const startDate = req.query.start_date || monthAgo;
   const finishDate = req.query.finish_date || today;
 
-  // Exact params per Adsterra docs: format, finish_date, group_by, start_date, domain
-  const url = `https://api3.adsterratools.com/publisher/stats.json?format=json&domain=${DOMAIN_ID}&start_date=${startDate}&finish_date=${finishDate}&group_by=date`;
-
   try {
-    const response = await fetch(url, {
-      headers: {
-        'Accept': 'application/json',
-        'X-API-Key': ADSTERRA_TOKEN, // header, not URL — per docs
-      },
-    });
+    // Fetch each domain's stats in parallel
+    const results = await Promise.all(domainIds.map(async (domainId) => {
+      const url = `https://api3.adsterratools.com/publisher/stats.json?format=json&domain=${domainId}&start_date=${startDate}&finish_date=${finishDate}&group_by=date`;
+      const response = await fetch(url, {
+        headers: { 'Accept': 'application/json', 'X-API-Key': ADSTERRA_TOKEN },
+      });
+      if (!response.ok) {
+        throw new Error(`Adsterra API error for domain ${domainId}: ${response.status}`);
+      }
+      return response.json();
+    }));
 
-    if (!response.ok) {
-      return res.status(response.status).json({ error: `Adsterra API returned ${response.status}` });
+    // Merge items from all domains, summing by date
+    const mergedByDate = {};
+    for (const domainResult of results) {
+      for (const item of (domainResult.items || [])) {
+        const d = item.date;
+        if (!mergedByDate[d]) {
+          mergedByDate[d] = { date: d, impression: 0, clicks: 0, revenue: 0, cpmSum: 0, cpmCount: 0 };
+        }
+        mergedByDate[d].impression += Number(item.impression) || 0;
+        mergedByDate[d].clicks += Number(item.clicks) || 0;
+        mergedByDate[d].revenue += Number(item.revenue) || 0;
+        mergedByDate[d].cpmSum += Number(item.cpm) || 0;
+        mergedByDate[d].cpmCount += 1;
+      }
     }
 
-    const data = await response.json();
-    res.setHeader('Access-Control-Allow-Origin', '*'); // restrict to your domain in production if you want
-    res.status(200).json(data);
+    const items = Object.values(mergedByDate).map(d => ({
+      date: d.date,
+      impression: d.impression,
+      clicks: d.clicks,
+      revenue: d.revenue,
+      cpm: d.cpmCount ? d.cpmSum / d.cpmCount : 0,
+    }));
+
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.status(200).json({
+      items,
+      itemCount: items.length,
+      domainsCombined: domainIds,
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
