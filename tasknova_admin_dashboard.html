@@ -263,6 +263,11 @@ tbody tr:hover{background:var(--surface-2);}
       <div class="placeholder-note">⚠ Adsterra, HilltopAds & CPX Research pull live data (API/postback). Monetag, ExoClick & ShrinkEarn don't offer a revenue-pulling API — use "Add today's entry" on those cards to log numbers manually from their own dashboards.</div>
       <div class="grid grid-9" id="networkSummaryCards" style="margin-bottom:18px;"></div>
       <div class="grid grid-5" id="companyCards"></div>
+
+      <div class="panel" style="margin-top:18px;">
+        <div class="panel-title" style="margin-bottom:14px;">Ad Analytics</div>
+        <div id="adAnalyticsBody" style="color:var(--text-faint); font-size:12.5px;">Waiting for network data to load…</div>
+      </div>
     </div>
 
     <!-- MANUAL ENTRY MODAL -->
@@ -340,10 +345,12 @@ tbody tr:hover{background:var(--surface-2);}
 
     <!-- ===================== GRAPHS ===================== -->
     <div class="page" id="page-graphs">
-      <div class="placeholder-note">⚠ Revenue-by-company and ads-by-company graphs need the postback data described on the Ad Networks page. User Growth and Withdrawals graphs (real data) are on the Overview page.</div>
       <div class="grid grid-2">
-        <div class="chart-box"><h3>Daily Revenue (placeholder)</h3><canvas id="chartRevenuePH"></canvas></div>
-        <div class="chart-box"><h3>Revenue by Company (placeholder)</h3><canvas id="chartCompanyPH"></canvas></div>
+        <div class="chart-box"><h3>Daily Revenue — All Networks Combined (last 14 days)</h3><canvas id="chartRevenuePH"></canvas></div>
+        <div class="chart-box"><h3>Revenue by Company (all-time)</h3><canvas id="chartCompanyPH"></canvas></div>
+      </div>
+      <div class="grid grid-2" style="margin-top:14px;">
+        <div class="chart-box"><h3>Ads Viewed by Company</h3><canvas id="chartAdsViewed"></canvas></div>
       </div>
     </div>
 
@@ -493,7 +500,6 @@ function initData(){
 
   renderCompanyCards();
   renderActivityPlaceholder();
-  renderPlaceholderCharts();
 
   // Auto-refresh note: Firebase .on() listeners are already real-time,
   // so data updates instantly. This just forces a light re-render every
@@ -660,8 +666,9 @@ function fetchCpxStats(){
     const yesterdayStr = y.toISOString().slice(0,10);
     const monthPrefix = todayStr.slice(0,7);
 
-    let today=0, yesterday=0, month=0, total=0, offerCount=0, lastTs=0;
+    let today=0, yesterday=0, month=0, total=0, offerCount=0, lastTs=0, todayOfferCount=0;
     const earners = new Set();
+    const dateMap = {}; // dateStr -> revenue, for the combined Daily Revenue chart
 
     Object.entries(data).forEach(([uid, transactions])=>{
       Object.entries(transactions||{}).forEach(([transId, t])=>{
@@ -673,7 +680,8 @@ function fetchCpxStats(){
         total += coins;
         offerCount++;
         earners.add(uid);
-        if(dateStr===todayStr) today+=coins;
+        if(dateStr){ dateMap[dateStr] = (dateMap[dateStr]||0) + coins; }
+        if(dateStr===todayStr){ today+=coins; todayOfferCount++; }
         if(dateStr===yesterdayStr) yesterday+=coins;
         if(dateStr && dateStr.startsWith(monthPrefix)) month+=coins;
         if(ts>lastTs) lastTs = ts;
@@ -695,6 +703,13 @@ function fetchCpxStats(){
 
     networkTotals.cpxresearch = {today, yesterday, month, total};
     renderNetworkSummary();
+
+    networkExtra.cpxresearch = {
+      dailyRevenue: dateMap,
+      impressions: offerCount,       // proxy: "impressions" = completed offers for CPX
+      todayImpressions: todayOfferCount,
+    };
+    updateAggregateVisuals();
   }, err=>{
     statusEl.textContent = 'error';
     statusEl.style.color = 'var(--red)';
@@ -749,6 +764,14 @@ function watchManualNetwork(key){
 
     networkTotals[key] = {today:c.today, yesterday:c.yesterday, month:c.month, total:c.total};
     renderNetworkSummary();
+
+    const todayStr2 = new Date().toISOString().slice(0,10);
+    networkExtra[key] = {
+      dailyRevenue: Object.fromEntries(entries.map(([d,v])=>[d, Number(v.revenue)||0])),
+      impressions: c.impressions,
+      todayImpressions: entries.filter(([d])=>d===todayStr2).reduce((s,[,v])=>s+(Number(v.impressions)||0),0),
+    };
+    updateAggregateVisuals();
   });
 }
 
@@ -831,6 +854,13 @@ async function fetchHilltopAdsStats(){
 
     networkTotals.hilltopads = {today:todayRevenue, yesterday:yestRevenue, month:monthRevenue, total:totalRevenue};
     renderNetworkSummary();
+
+    networkExtra.hilltopads = {
+      dailyRevenue: Object.fromEntries(entries.map(([d,v])=>[d, Number(v.revenue)||0])),
+      impressions: totalImpressions,
+      todayImpressions: sumWhere(d=>d===todayStr,'impressions'),
+    };
+    updateAggregateVisuals();
   } catch(err){
     statusEl.textContent = 'error';
     statusEl.style.color = 'var(--red)';
@@ -1012,17 +1042,96 @@ function renderWithdrawalsChart(){
   });
 }
 
-/* ---------- PLACEHOLDER CHARTS (Ad Networks — no data source yet) ---------- */
-function renderPlaceholderCharts(){
-  new Chart(document.getElementById('chartRevenuePH'), {
-    type:'line',
-    data:{labels:['Day 1','Day 2','Day 3','Day 4','Day 5','Day 6','Day 7'], datasets:[{data:[0,0,0,0,0,0,0], borderColor:'#5B6785', borderDash:[4,4], pointRadius:0}]},
-    options:{plugins:{legend:{display:false}}, scales:{x:{ticks:{color:'#5B6785',font:{size:10}}},y:{ticks:{color:'#5B6785',font:{size:10}}}}}
+/* ---------- AGGREGATE VISUALS: Ad Analytics panel + Graphs page charts ---------- */
+/* Called by every network's fetch/watch function whenever its data updates. */
+let chartRevPH, chartCompanyPH, chartAdsViewed;
+
+function updateAggregateVisuals(){
+  renderAdAnalyticsPanel();
+  renderCombinedDailyRevenueChart();
+  renderRevenueByCompanyChart();
+  renderAdsViewedByCompanyChart();
+}
+
+function networkDisplayInfo(key){
+  return networks.find(n=>n.key===key) || {name:key, color:'#888'};
+}
+
+function renderAdAnalyticsPanel(){
+  const body = document.getElementById('adAnalyticsBody');
+  const keys = Object.keys(networkExtra).filter(k => networkTotals[k]);
+  if(keys.length===0){ body.textContent = 'Waiting for network data to load…'; return; }
+
+  const totalAdsToday = keys.reduce((s,k)=>s+(Number(networkExtra[k].todayImpressions)||0),0);
+
+  const rows = keys.map(k=>{
+    const rev = networkTotals[k].total || 0;
+    const imp = networkExtra[k].impressions || 0;
+    const rpm = imp>0 ? (rev/imp)*1000 : 0; // revenue per 1000 impressions
+    return {key:k, name:networkDisplayInfo(k).name, revenue:rev, impressions:imp, rpm};
   });
-  new Chart(document.getElementById('chartCompanyPH'), {
+
+  const withImpressions = rows.filter(r=>r.impressions>0);
+  const best = withImpressions.length ? withImpressions.reduce((a,b)=> b.rpm>a.rpm?b:a) : null;
+  const worst = withImpressions.length ? withImpressions.reduce((a,b)=> b.rpm<a.rpm?b:a) : null;
+
+  body.innerHTML = `
+    <div class="grid grid-9" style="margin-bottom:16px;">
+      <div class="stat-card"><div class="stat-label">Total Ads Viewed Today</div><div class="stat-value small">${totalAdsToday.toLocaleString('en-IN')}</div></div>
+      <div class="stat-card"><div class="stat-label">Best Performing (by RPM)</div><div class="stat-value small" style="color:var(--emerald)">${best ? best.name : '—'}</div></div>
+      <div class="stat-card"><div class="stat-label">Lowest Performing (by RPM)</div><div class="stat-value small" style="color:var(--red)">${worst ? worst.name : '—'}</div></div>
+    </div>
+    <table class="pl-table">
+      <thead><tr><th>Network</th><th>Ads Viewed (total)</th><th>Revenue (total)</th><th>Revenue / 1000 views</th></tr></thead>
+      <tbody>
+        ${rows.map(r=>`<tr><td>${r.name}</td><td>${r.impressions.toLocaleString('en-IN')}</td><td>${fmtMoney(r.revenue)}</td><td>${r.impressions>0?fmtMoney(r.rpm):'—'}</td></tr>`).join('')}
+      </tbody>
+    </table>
+    <div style="font-size:10.5px; color:var(--text-faint); margin-top:10px;">For CPX Research, "Ads Viewed" is a proxy = completed offers (CPX doesn't expose ad-impression counts, only conversions).</div>`;
+}
+
+function last14DayStrings(){
+  return last14Days().map(d=>d.toISOString().slice(0,10));
+}
+
+function renderCombinedDailyRevenueChart(){
+  const days = last14DayStrings();
+  const labels = days.map(d=>new Date(d).toLocaleDateString('en-IN',{day:'2-digit',month:'short'}));
+  const totals = days.map(d => Object.values(networkExtra).reduce((s,ext)=>s+(Number(ext.dailyRevenue?.[d])||0),0));
+
+  if(chartRevPH) chartRevPH.destroy();
+  chartRevPH = new Chart(document.getElementById('chartRevenuePH'), {
+    type:'line',
+    data:{labels, datasets:[{data:totals, borderColor:'#12D992', backgroundColor:'rgba(18,217,146,.12)', fill:true, tension:.35, pointRadius:2}]},
+    options:{plugins:{legend:{display:false}}, scales:{x:{ticks:{color:'#8B96AF',font:{size:10}}, grid:{display:false}}, y:{ticks:{color:'#8B96AF',font:{size:10}}, grid:{color:'rgba(255,255,255,.05)'}}}}
+  });
+}
+
+function renderRevenueByCompanyChart(){
+  const keys = Object.keys(networkTotals);
+  const labels = keys.map(k=>networkDisplayInfo(k).name);
+  const colors = keys.map(k=>networkDisplayInfo(k).color);
+  const data = keys.map(k=>networkTotals[k].total||0);
+
+  if(chartCompanyPH) chartCompanyPH.destroy();
+  chartCompanyPH = new Chart(document.getElementById('chartCompanyPH'), {
     type:'bar',
-    data:{labels:networks.map(n=>n.name), datasets:[{data:[0,0,0,0,0], backgroundColor:'#232E48'}]},
-    options:{plugins:{legend:{display:false}}, scales:{x:{ticks:{color:'#5B6785',font:{size:10}}},y:{ticks:{color:'#5B6785',font:{size:10}}}}}
+    data:{labels, datasets:[{data, backgroundColor:colors, borderRadius:4}]},
+    options:{plugins:{legend:{display:false}}, scales:{x:{ticks:{color:'#8B96AF',font:{size:10}}, grid:{display:false}}, y:{ticks:{color:'#8B96AF',font:{size:10}}, grid:{color:'rgba(255,255,255,.05)'}}}}
+  });
+}
+
+function renderAdsViewedByCompanyChart(){
+  const keys = Object.keys(networkExtra);
+  const labels = keys.map(k=>networkDisplayInfo(k).name);
+  const colors = keys.map(k=>networkDisplayInfo(k).color);
+  const data = keys.map(k=>networkExtra[k].impressions||0);
+
+  if(chartAdsViewed) chartAdsViewed.destroy();
+  chartAdsViewed = new Chart(document.getElementById('chartAdsViewed'), {
+    type:'bar',
+    data:{labels, datasets:[{data, backgroundColor:colors, borderRadius:4}]},
+    options:{plugins:{legend:{display:false}}, scales:{x:{ticks:{color:'#8B96AF',font:{size:10}}, grid:{display:false}}, y:{ticks:{color:'#8B96AF',font:{size:10}}, grid:{color:'rgba(255,255,255,.05)'}}}}
   });
 }
 
