@@ -832,14 +832,26 @@ async function fetchHilltopAdsStats(){
     const res = await fetch('/api/hilltopads-stats');
     if(!res.ok) throw new Error('HTTP '+res.status);
     const data = await res.json();
-    const result = data.result || {}; // keyed by date string since group=date
+    const result = data.result || {}; // keyed by date string -> ARRAY of stat objects (group=date)
 
     const todayStr = new Date().toISOString().slice(0,10);
     const y = new Date(); y.setDate(y.getDate()-1);
     const yesterdayStr = y.toISOString().slice(0,10);
     const thisMonthPrefix = todayStr.slice(0,7);
 
-    const entries = Object.entries(result); // [ [date, {revenue, impressions, clicks, cpm}], ... ]
+    // Flatten each date's array into a single summed object: [ [date, {revenue, impressions, clicks, cpm}], ... ]
+    const entries = Object.entries(result).map(([date, arr])=>{
+      const list = Array.isArray(arr) ? arr : [arr];
+      const summed = list.reduce((acc,item)=>({
+        revenue: acc.revenue + (Number(item.revenue)||0),
+        impressions: acc.impressions + (Number(item.impressions)||0),
+        clicks: acc.clicks + (Number(item.clicks)||0),
+        cpmSum: acc.cpmSum + (Number(item.cpm)||0),
+        cpmCount: acc.cpmCount + 1,
+      }), {revenue:0, impressions:0, clicks:0, cpmSum:0, cpmCount:0});
+      return [date, { revenue: summed.revenue, impressions: summed.impressions, clicks: summed.clicks, cpm: summed.cpmCount ? summed.cpmSum/summed.cpmCount : 0 }];
+    });
+
     const sumWhere = (filterFn, key) => entries.filter(([d])=>filterFn(d)).reduce((s,[,v])=>s+(Number(v[key])||0),0);
 
     const todayRevenue = sumWhere(d=>d===todayStr, 'revenue');
