@@ -19,7 +19,7 @@ export default async function handler(req, res) {
   try {
     // Fetch each domain's stats in parallel
     const results = await Promise.all(domainIds.map(async (domainId) => {
-      const url = `https://api3.adsterratools.com/publisher/stats.json?format=json&domain=${domainId}&start_date=${startDate}&finish_date=${finishDate}&group_by=date`;
+      const url = `https://api3.adsterratools.com/publisher/stats.json?domain=${domainId}&start_date=${startDate}&finish_date=${finishDate}&group_by=date`;
       const response = await fetch(url, {
         headers: { 'Accept': 'application/json', 'X-API-Key': ADSTERRA_TOKEN },
       });
