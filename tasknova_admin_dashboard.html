@@ -1,0 +1,1060 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TaskNova — Admin Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+/* ============================================================
+   DESIGN TOKENS
+   Base: deep slate/navy ledger surface — this is a money-tracking
+   tool, so the palette leans "control room", not "marketing site".
+   Accent: emerald (earnings/growth), amber (pending), red (loss/reject)
+   Type: Inter for UI, JetBrains Mono for every number/ID/amount —
+   numbers should look like numbers, not like prose.
+   ============================================================ */
+:root{
+  --bg:#0A0F1C; --surface:#111827; --surface-2:#161F32; --border:#232E48;
+  --text:#E7ECF6; --text-dim:#8B96AF; --text-faint:#5B6785;
+  --emerald:#12D992; --emerald-dim:#0B9C6B; --amber:#F5A623; --red:#F0466A; --blue:#4C8DFF;
+  --radius:14px; --font-ui:'Inter',sans-serif; --font-mono:'JetBrains Mono',monospace;
+  --shadow:0 8px 24px rgba(0,0,0,.35);
+}
+[data-theme="light"]{
+  --bg:#F3F5F9; --surface:#FFFFFF; --surface-2:#F7F8FB; --border:#E4E8F0;
+  --text:#131A2A; --text-dim:#5C6784; --text-faint:#98A2BC;
+  --shadow:0 4px 16px rgba(20,30,60,.08);
+}
+*{box-sizing:border-box; margin:0; padding:0;}
+body{font-family:var(--font-ui); background:var(--bg); color:var(--text); transition:background .2s,color .2s;}
+::-webkit-scrollbar{width:8px; height:8px;}
+::-webkit-scrollbar-thumb{background:var(--border); border-radius:8px;}
+.mono{font-family:var(--font-mono);}
+
+/* ---------- LOGIN SCREEN ---------- */
+#loginScreen{position:fixed; inset:0; display:flex; align-items:center; justify-content:center; background:var(--bg); z-index:999;}
+.login-card{width:340px; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:36px 30px; box-shadow:var(--shadow);}
+.login-card h1{font-size:20px; font-weight:800; margin-bottom:4px;}
+.login-card p{color:var(--text-dim); font-size:13px; margin-bottom:22px;}
+.login-card input{width:100%; padding:12px 14px; margin-bottom:12px; background:var(--surface-2); border:1px solid var(--border); border-radius:10px; color:var(--text); font-family:var(--font-ui); font-size:14px;}
+.login-card input:focus{outline:none; border-color:var(--emerald);}
+.login-card button{width:100%; padding:12px; background:var(--emerald); color:#04150F; border:none; border-radius:10px; font-weight:700; font-size:14px; cursor:pointer; margin-top:6px;}
+.login-card button:hover{background:var(--emerald-dim);}
+#loginError{color:var(--red); font-size:12px; margin-top:10px; min-height:14px;}
+.login-badge{width:44px; height:44px; border-radius:12px; background:linear-gradient(135deg,var(--emerald),var(--blue)); display:flex; align-items:center; justify-content:center; font-weight:800; color:#04150F; margin-bottom:18px;}
+
+/* ---------- APP SHELL ---------- */
+#app{display:none;}
+#app.visible{display:flex; min-height:100vh;}
+
+.sidebar{width:230px; flex-shrink:0; background:var(--surface); border-right:1px solid var(--border); padding:22px 14px; position:sticky; top:0; height:100vh; overflow-y:auto;}
+.brand{display:flex; align-items:center; gap:10px; padding:0 8px 22px; border-bottom:1px solid var(--border); margin-bottom:16px;}
+.brand-mark{width:34px; height:34px; border-radius:9px; background:linear-gradient(135deg,var(--emerald),var(--blue)); display:flex; align-items:center; justify-content:center; font-weight:800; color:#04150F; font-size:15px;}
+.brand-name{font-weight:800; font-size:15px; letter-spacing:.2px;}
+.brand-sub{font-size:10.5px; color:var(--text-faint); font-family:var(--font-mono);}
+
+.navgroup-label{font-size:10.5px; text-transform:uppercase; letter-spacing:.08em; color:var(--text-faint); padding:14px 10px 6px;}
+.navitem{display:flex; align-items:center; gap:10px; padding:10px 10px; border-radius:9px; color:var(--text-dim); font-size:13.5px; font-weight:500; cursor:pointer; transition:.15s;}
+.navitem svg{width:17px; height:17px; flex-shrink:0;}
+.navitem:hover{background:var(--surface-2); color:var(--text);}
+.navitem.active{background:rgba(18,217,146,0.12); color:var(--emerald);}
+.navitem .badge{margin-left:auto; font-family:var(--font-mono); font-size:10px; background:var(--surface-2); padding:2px 6px; border-radius:6px; color:var(--text-faint);}
+
+.main{flex:1; min-width:0;}
+.topbar{position:sticky; top:0; z-index:10; display:flex; align-items:center; justify-content:space-between; padding:16px 26px; background:var(--bg); border-bottom:1px solid var(--border);}
+.topbar h2{font-size:18px; font-weight:800;}
+.topbar-sub{font-size:12px; color:var(--text-faint); font-family:var(--font-mono);}
+.topbar-right{display:flex; align-items:center; gap:12px;}
+.pulse-dot{width:8px; height:8px; border-radius:50%; background:var(--emerald); box-shadow:0 0 0 0 rgba(18,217,146,.6); animation:pulse 2s infinite;}
+.pulse-dot.off{background:var(--red); animation:none;}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(18,217,146,.5);} 70%{box-shadow:0 0 0 8px rgba(18,217,146,0);} 100%{box-shadow:0 0 0 0 rgba(18,217,146,0);}}
+.conn-label{font-size:11.5px; color:var(--text-dim); display:flex; align-items:center; gap:6px; font-family:var(--font-mono);}
+.icon-btn{width:36px; height:36px; border-radius:9px; background:var(--surface); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; cursor:pointer; color:var(--text-dim);}
+.icon-btn:hover{color:var(--text); border-color:var(--text-faint);}
+
+.page{display:none; padding:22px 26px 60px;}
+.page.active{display:block;}
+
+/* Cards */
+.grid{display:grid; gap:14px;}
+.grid-9{grid-template-columns:repeat(auto-fit,minmax(190px,1fr));}
+.grid-5{grid-template-columns:repeat(auto-fit,minmax(230px,1fr));}
+.grid-2{grid-template-columns:repeat(auto-fit,minmax(360px,1fr));}
+
+.stat-card{background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:16px 18px; position:relative; overflow:hidden;}
+.stat-label{font-size:11.5px; color:var(--text-faint); text-transform:uppercase; letter-spacing:.05em; margin-bottom:8px; display:flex; align-items:center; justify-content:space-between;}
+.stat-value{font-family:var(--font-mono); font-size:24px; font-weight:700;}
+.stat-value.small{font-size:19px;}
+.stat-delta{font-size:11.5px; margin-top:6px; font-family:var(--font-mono);}
+.stat-delta.up{color:var(--emerald);} .stat-delta.down{color:var(--red);}
+.accent-bar{position:absolute; left:0; top:0; bottom:0; width:3px;}
+
+.company-card{background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:18px; display:flex; flex-direction:column; gap:10px;}
+.company-head{display:flex; align-items:center; justify-content:between; gap:10px;}
+.company-logo{width:34px; height:34px; border-radius:9px; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:13px; color:#fff;}
+.company-name{font-weight:700; font-size:14px; flex:1;}
+.status-pill{font-size:10px; padding:3px 8px; border-radius:20px; font-family:var(--font-mono); background:var(--surface-2); color:var(--text-faint); border:1px solid var(--border);}
+.company-rows{display:grid; grid-template-columns:1fr 1fr; gap:8px; font-size:12.5px;}
+.company-rows div span{display:block; color:var(--text-faint); font-size:10.5px; text-transform:uppercase; letter-spacing:.04em; margin-bottom:2px;}
+.company-rows div b{font-family:var(--font-mono); font-size:14px; color:var(--text);}
+.company-foot{font-size:10.5px; color:var(--text-faint); font-family:var(--font-mono); border-top:1px solid var(--border); padding-top:8px;}
+
+.panel{background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:18px; margin-bottom:18px;}
+.panel-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; flex-wrap:wrap; gap:10px;}
+.panel-title{font-weight:700; font-size:15px;}
+.panel-title .count{color:var(--text-faint); font-weight:500; font-size:12.5px; font-family:var(--font-mono);}
+
+.search-input{padding:9px 12px; background:var(--surface-2); border:1px solid var(--border); border-radius:9px; color:var(--text); font-family:var(--font-ui); font-size:13px; width:220px;}
+.search-input:focus{outline:none; border-color:var(--emerald);}
+
+table{width:100%; border-collapse:collapse; font-size:12.8px;}
+thead th{text-align:left; padding:10px 12px; color:var(--text-faint); font-size:10.5px; text-transform:uppercase; letter-spacing:.05em; border-bottom:1px solid var(--border); white-space:nowrap; position:sticky; top:0; background:var(--surface);}
+tbody td{padding:10px 12px; border-bottom:1px solid var(--border); white-space:nowrap; color:var(--text);}
+tbody tr:hover{background:var(--surface-2);}
+.table-wrap{overflow-x:auto; max-height:520px; overflow-y:auto; border-radius:10px; border:1px solid var(--border);}
+.cell-mono{font-family:var(--font-mono); font-size:12px; color:var(--text-dim);}
+.avatar-chip{display:flex; align-items:center; gap:8px;}
+.avatar{width:26px; height:26px; border-radius:50%; background:var(--surface-2); display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; color:var(--text-dim); flex-shrink:0;}
+
+.tabs{display:flex; gap:6px; margin-bottom:14px; flex-wrap:wrap;}
+.tab-btn{padding:8px 14px; border-radius:9px; border:1px solid var(--border); background:var(--surface-2); color:var(--text-dim); font-size:12.5px; font-weight:600; cursor:pointer;}
+.tab-btn.active{background:var(--emerald); color:#04150F; border-color:var(--emerald);}
+
+.badge-status{padding:3px 10px; border-radius:20px; font-size:11px; font-weight:600; font-family:var(--font-mono);}
+.badge-pending{background:rgba(245,166,35,.15); color:var(--amber);}
+.badge-approved{background:rgba(18,217,146,.15); color:var(--emerald);}
+.badge-rejected{background:rgba(240,70,106,.15); color:var(--red);}
+
+.btn{padding:6px 12px; border-radius:7px; border:none; font-size:11.5px; font-weight:700; cursor:pointer; font-family:var(--font-ui);}
+.btn-approve{background:rgba(18,217,146,.15); color:var(--emerald);}
+.btn-approve:hover{background:var(--emerald); color:#04150F;}
+.btn-reject{background:rgba(240,70,106,.15); color:var(--red);}
+.btn-reject:hover{background:var(--red); color:#fff;}
+.btn-ghost{background:var(--surface-2); color:var(--text-dim); border:1px solid var(--border);}
+.btn-ghost:hover{color:var(--text);}
+
+.empty-state{text-align:center; padding:40px 20px; color:var(--text-faint);}
+.empty-state .icon{font-size:28px; margin-bottom:10px;}
+
+.placeholder-note{font-size:11.5px; color:var(--amber); background:rgba(245,166,35,.08); border:1px dashed rgba(245,166,35,.35); padding:8px 12px; border-radius:8px; margin-bottom:14px; display:flex; gap:8px; align-items:center;}
+
+/* Manual entry modal */
+.modal-backdrop{display:none; position:fixed; inset:0; background:rgba(0,0,0,.6); z-index:200; align-items:center; justify-content:center; padding:20px;}
+.modal-backdrop.open{display:flex;}
+.modal-box{background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:22px; width:100%; max-width:340px;}
+.modal-box h3{font-size:15px; margin-bottom:14px;}
+.modal-box label{font-size:11.5px; color:var(--text-faint); display:block; margin:10px 0 4px;}
+.modal-box input{width:100%; padding:9px 12px; background:var(--surface-2); border:1px solid var(--border); border-radius:8px; color:var(--text); font-family:var(--font-mono); font-size:13px;}
+.modal-box input:focus{outline:none; border-color:var(--emerald);}
+.modal-actions{display:flex; gap:8px; margin-top:16px;}
+.modal-actions button{flex:1; padding:10px; border-radius:8px; border:none; font-weight:700; font-size:13px; cursor:pointer;}
+.btn-save{background:var(--emerald); color:#04150F;}
+.btn-cancel{background:var(--surface-2); color:var(--text-dim); border:1px solid var(--border) !important;}
+.btn-manual{background:var(--surface-2); border:1px solid var(--border); color:var(--text-dim); font-size:11px; padding:6px 10px; border-radius:7px; cursor:pointer; width:100%; margin-top:4px;}
+.btn-manual:hover{color:var(--text); border-color:var(--emerald);}
+
+.chart-box{background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:18px; height:300px;}
+.chart-box h3{font-size:13.5px; margin-bottom:12px; color:var(--text-dim);}
+
+.pl-table{width:100%; border-collapse:collapse; font-size:13px;}
+.pl-table th{text-align:left; padding:8px 10px; color:var(--text-faint); font-size:10.5px; text-transform:uppercase; letter-spacing:.05em; border-bottom:1px solid var(--border);}
+.pl-table td{padding:10px; border-bottom:1px solid var(--border); font-family:var(--font-mono);}
+.pl-table tr:last-child td{border-bottom:none; font-weight:700; font-size:15px;}
+.pl-positive{color:var(--emerald);}
+.pl-negative{color:var(--red);}
+
+.activity-item{display:flex; gap:10px; padding:10px 0; border-bottom:1px solid var(--border); font-size:12.8px;}
+.activity-item:last-child{border-bottom:none;}
+.activity-dot{width:7px; height:7px; border-radius:50%; margin-top:5px; flex-shrink:0;}
+.activity-time{color:var(--text-faint); font-family:var(--font-mono); font-size:11px;}
+
+/* Mobile */
+.hamburger{display:none; background:none; border:none; color:var(--text); font-size:22px; cursor:pointer;}
+@media(max-width:900px){
+  .sidebar{position:fixed; left:-240px; z-index:50; transition:left .2s; box-shadow:var(--shadow);}
+  .sidebar.open{left:0;}
+  .hamburger{display:block;}
+  .topbar{padding:14px 16px;}
+  .page{padding:16px;}
+  .search-input{width:150px;}
+}
+</style>
+</head>
+<body>
+
+<!-- ============ LOGIN SCREEN ============ -->
+<div id="loginScreen">
+  <div class="login-card">
+    <div class="login-badge">TN</div>
+    <h1>TaskNova Admin</h1>
+    <p>Sign in with your admin Firebase account</p>
+    <input type="email" id="loginEmail" placeholder="Admin email" autocomplete="username">
+    <input type="password" id="loginPassword" placeholder="Password" autocomplete="current-password">
+    <button onclick="handleLogin()">Sign In</button>
+    <div id="loginError"></div>
+  </div>
+</div>
+
+<!-- ============ APP SHELL ============ -->
+<div id="app">
+  <!-- SIDEBAR -->
+  <div class="sidebar" id="sidebar">
+    <div class="brand">
+      <div class="brand-mark">TN</div>
+      <div>
+        <div class="brand-name">TaskNova</div>
+        <div class="brand-sub">tasknova-66d0f</div>
+      </div>
+    </div>
+
+    <div class="navgroup-label">Dashboard</div>
+    <div class="navitem active" data-page="overview">📊 Overview</div>
+    <div class="navitem" data-page="companies">🏢 Ad Networks</div>
+    <div class="navitem" data-page="users">👥 Users</div>
+    <div class="navitem" data-page="withdrawals">💸 Withdrawals</div>
+    <div class="navitem" data-page="activity">⚡ Live Activity</div>
+    <div class="navitem" data-page="graphs">📈 Graphs</div>
+
+    <div class="navgroup-label">System</div>
+    <div class="navitem" data-page="settings">⚙️ Settings</div>
+    <div class="navitem" onclick="handleLogout()">🚪 Sign Out</div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="topbar">
+      <div style="display:flex; align-items:center; gap:12px;">
+        <button class="hamburger" onclick="document.getElementById('sidebar').classList.toggle('open')">☰</button>
+        <div>
+          <h2 id="pageTitle">Overview</h2>
+          <div class="topbar-sub" id="pageSub">All figures in ₹ (INR)</div>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <span class="conn-label"><span class="pulse-dot" id="connDot"></span><span id="connText">Connecting…</span></span>
+        <div class="icon-btn" onclick="exportCSV()" title="Export current table as CSV">⭳</div>
+        <div class="icon-btn" onclick="toggleTheme()" title="Toggle dark/light">🌓</div>
+      </div>
+    </div>
+
+    <!-- ===================== OVERVIEW ===================== -->
+    <div class="page active" id="page-overview">
+      <div class="grid grid-9" id="overviewCards"></div>
+
+      <div class="panel" style="margin-top:18px;" id="profitLossPanel">
+        <div class="panel-title" style="margin-bottom:14px;">Profit &amp; Loss — Ad Revenue vs User Payouts</div>
+        <div id="profitLossBody" style="color:var(--text-faint); font-size:12.5px;">Waiting for ad network data to load…</div>
+      </div>
+
+      <div style="margin-top:22px;" class="grid grid-2">
+        <div class="chart-box"><h3>User Growth (last 14 days)</h3><canvas id="chartUserGrowth"></canvas></div>
+        <div class="chart-box"><h3>Withdrawals — Approved Amount (last 14 days)</h3><canvas id="chartWithdrawals"></canvas></div>
+      </div>
+    </div>
+
+    <!-- ===================== AD NETWORKS ===================== -->
+    <div class="page" id="page-companies">
+      <div class="placeholder-note">⚠ Adsterra, HilltopAds & CPX Research pull live data (API/postback). Monetag, ExoClick & ShrinkEarn don't offer a revenue-pulling API — use "Add today's entry" on those cards to log numbers manually from their own dashboards.</div>
+      <div class="grid grid-9" id="networkSummaryCards" style="margin-bottom:18px;"></div>
+      <div class="grid grid-5" id="companyCards"></div>
+    </div>
+
+    <!-- MANUAL ENTRY MODAL -->
+    <div class="modal-backdrop" id="manualModal">
+      <div class="modal-box">
+        <h3 id="manualModalTitle">Add today's entry</h3>
+        <label>Date</label>
+        <input type="date" id="manualDate">
+        <label>Revenue (₹)</label>
+        <input type="number" step="0.01" id="manualRevenue" placeholder="0.00">
+        <label>Impressions</label>
+        <input type="number" id="manualImpressions" placeholder="0">
+        <label>Clicks</label>
+        <input type="number" id="manualClicks" placeholder="0">
+        <label>CPM (optional)</label>
+        <input type="number" step="0.01" id="manualCpm" placeholder="0.00">
+        <div class="modal-actions">
+          <button class="btn-cancel" onclick="closeManualModal()">Cancel</button>
+          <button class="btn-save" onclick="saveManualEntry()">Save</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===================== USERS ===================== -->
+    <div class="page" id="page-users">
+      <div class="panel">
+        <div class="panel-head">
+          <div class="panel-title">All Users <span class="count" id="userCount"></span></div>
+          <input class="search-input" id="userSearch" placeholder="Search name, email, UID…" oninput="renderUsers()">
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr>
+              <th>User</th><th>UID</th><th>Registered</th><th>Last Login</th>
+              <th>Today Earn</th><th>Total Earn</th><th>Ads Today</th><th>Ads Total</th>
+              <th>Survey</th><th>Offerwall</th><th>Balance</th>
+            </tr></thead>
+            <tbody id="usersBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===================== WITHDRAWALS ===================== -->
+    <div class="page" id="page-withdrawals">
+      <div class="grid grid-9" style="margin-bottom:18px;" id="wdSummaryCards"></div>
+      <div class="panel">
+        <div class="panel-head">
+          <div class="tabs">
+            <button class="tab-btn active" data-status="pending" onclick="setWdTab('pending')">Pending</button>
+            <button class="tab-btn" data-status="approved" onclick="setWdTab('approved')">Approved</button>
+            <button class="tab-btn" data-status="rejected" onclick="setWdTab('rejected')">Rejected</button>
+          </div>
+          <input class="search-input" id="wdSearch" placeholder="Search user…" oninput="renderWithdrawals()">
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr>
+              <th>User</th><th>Amount</th><th>Method</th><th>Txn ID</th><th>Screenshot</th><th>Requested</th><th>Status</th><th>Action</th>
+            </tr></thead>
+            <tbody id="wdBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===================== LIVE ACTIVITY ===================== -->
+    <div class="page" id="page-activity">
+      <div class="placeholder-note">⚠ Live Activity feed is UI-only for now — wire it up by pushing an event object to <code class="mono">/activity</code> in Firebase whenever a user completes an ad, survey, or withdrawal request.</div>
+      <div class="panel">
+        <div class="panel-title" style="margin-bottom:8px;">Sample feed (static preview)</div>
+        <div id="activityList"></div>
+      </div>
+    </div>
+
+    <!-- ===================== GRAPHS ===================== -->
+    <div class="page" id="page-graphs">
+      <div class="placeholder-note">⚠ Revenue-by-company and ads-by-company graphs need the postback data described on the Ad Networks page. User Growth and Withdrawals graphs (real data) are on the Overview page.</div>
+      <div class="grid grid-2">
+        <div class="chart-box"><h3>Daily Revenue (placeholder)</h3><canvas id="chartRevenuePH"></canvas></div>
+        <div class="chart-box"><h3>Revenue by Company (placeholder)</h3><canvas id="chartCompanyPH"></canvas></div>
+      </div>
+    </div>
+
+    <!-- ===================== SETTINGS ===================== -->
+    <div class="page" id="page-settings">
+      <div class="panel" style="max-width:480px;">
+        <div class="panel-title" style="margin-bottom:14px;">Dashboard Settings</div>
+        <div style="display:flex; align-items:center; justify-content:space-between; padding:10px 0; border-bottom:1px solid var(--border);">
+          <span style="font-size:13px;">Dark mode</span>
+          <input type="checkbox" id="themeToggleCheckbox" onchange="toggleTheme()" checked>
+        </div>
+        <div style="display:flex; align-items:center; justify-content:space-between; padding:10px 0; border-bottom:1px solid var(--border);">
+          <span style="font-size:13px;">Auto-refresh (5 min)</span>
+          <input type="checkbox" id="autoRefreshCheckbox" checked>
+        </div>
+        <div style="padding:14px 0 0; font-size:11.5px; color:var(--text-faint);">Signed in as <span class="mono" id="settingsEmail"></span></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   FIREBASE CONFIG — paste your actual config here
+   (same project your app already uses: tasknova-66d0f)
+   ============================================================ */
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "tasknova-66d0f.firebaseapp.com",
+  databaseURL: "https://tasknova-66d0f-default-rtdb.firebaseio.com",
+  projectId: "tasknova-66d0f",
+  storageBucket: "tasknova-66d0f.appspot.com",
+  messagingSenderId: "YOUR_SENDER_ID",
+  appId: "YOUR_APP_ID"
+};
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.database();
+
+/* ============================================================
+   EXPECTED DATABASE STRUCTURE — adjust paths below to match
+   your actual Realtime Database if different.
+
+   /users/{uid}: {
+     name, email, createdAt (timestamp), lastLogin (timestamp),
+     balance, totalEarnings, todayEarnings,
+     totalAdsViewed, todayAdsViewed,
+     surveyEarnings, offerwallEarnings
+   }
+   /withdrawals/{id}: {
+     uid, name, amount, method, transactionId,
+     screenshotUrl, status ("pending"/"approved"/"rejected"),
+     requestedAt (timestamp)
+   }
+   /admins/{uid}: true   (used to gate dashboard access)
+   ============================================================ */
+
+let usersData = {};
+let withdrawalsData = {};
+let wdTab = "pending";
+
+/* Cross-network aggregation stores — each network's fetch/watch function fills these in,
+   then calls updateAggregateVisuals() to refresh Ad Analytics panel + Graphs page charts. */
+window.networkExtra = {}; // { key: { dailyRevenue:{date:amt}, impressions, todayImpressions } }
+
+/* ---------- AUTH ---------- */
+function handleLogin(){
+  const email = document.getElementById('loginEmail').value.trim();
+  const pass = document.getElementById('loginPassword').value;
+  const errEl = document.getElementById('loginError');
+  errEl.textContent = "";
+  if(!email || !pass){ errEl.textContent = "Enter email and password."; return; }
+  auth.signInWithEmailAndPassword(email, pass)
+    .catch(err => { errEl.textContent = err.message; });
+}
+function handleLogout(){ auth.signOut(); }
+
+auth.onAuthStateChanged(user => {
+  if(user){
+    // Optional: gate by /admins/{uid} === true. Comment out if you don't need role-checking yet.
+    db.ref('admins/'+user.uid).once('value').then(snap=>{
+      // if(!snap.exists()){ document.getElementById('loginError').textContent="Not authorized as admin."; auth.signOut(); return; }
+      document.getElementById('loginScreen').style.display='none';
+      document.getElementById('app').classList.add('visible');
+      document.getElementById('settingsEmail').textContent = user.email;
+      initData();
+    });
+  } else {
+    document.getElementById('loginScreen').style.display='flex';
+    document.getElementById('app').classList.remove('visible');
+  }
+});
+
+/* ---------- NAV ---------- */
+document.querySelectorAll('.navitem[data-page]').forEach(item=>{
+  item.addEventListener('click', ()=>{
+    document.querySelectorAll('.navitem[data-page]').forEach(i=>i.classList.remove('active'));
+    item.classList.add('active');
+    const page = item.dataset.page;
+    document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+    document.getElementById('page-'+page).classList.add('active');
+    document.getElementById('pageTitle').textContent = item.textContent.trim().replace(/^\S+\s/, '');
+    document.getElementById('sidebar').classList.remove('open');
+  });
+});
+
+/* ---------- THEME ---------- */
+function toggleTheme(){
+  const html = document.documentElement;
+  const isLight = html.getAttribute('data-theme') === 'light';
+  html.setAttribute('data-theme', isLight ? 'dark' : 'light');
+}
+
+/* ---------- HELPERS ---------- */
+const fmtMoney = n => '₹' + (Number(n)||0).toLocaleString('en-IN', {maximumFractionDigits:2});
+const fmtDate = ts => ts ? new Date(ts).toLocaleString('en-IN',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}) : '—';
+const isToday = ts => ts && new Date(ts).toDateString() === new Date().toDateString();
+const isYesterday = ts => { if(!ts) return false; const y=new Date(); y.setDate(y.getDate()-1); return new Date(ts).toDateString()===y.toDateString(); };
+const isThisMonth = ts => { if(!ts) return false; const d=new Date(ts), n=new Date(); return d.getMonth()===n.getMonth() && d.getFullYear()===n.getFullYear(); };
+const initials = name => (name||'?').trim().split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
+
+/* ---------- DATA LISTENERS ---------- */
+function initData(){
+  document.getElementById('connText').textContent = 'Live';
+
+  db.ref('.info/connected').on('value', snap=>{
+    const ok = snap.val() === true;
+    document.getElementById('connDot').classList.toggle('off', !ok);
+    document.getElementById('connText').textContent = ok ? 'Live' : 'Offline';
+  });
+
+  db.ref('users').on('value', snap=>{
+    usersData = snap.val() || {};
+    renderOverview();
+    renderUsers();
+    renderUserGrowthChart();
+  });
+
+  db.ref('withdrawals').on('value', snap=>{
+    withdrawalsData = snap.val() || {};
+    renderOverview();
+    renderWithdrawals();
+    renderWithdrawalSummary();
+    renderWithdrawalsChart();
+  });
+
+  renderCompanyCards();
+  renderActivityPlaceholder();
+  renderPlaceholderCharts();
+
+  // Auto-refresh note: Firebase .on() listeners are already real-time,
+  // so data updates instantly. This just forces a light re-render every
+  // 5 min in case any derived "today/yesterday" bucket needs recompute
+  // right after midnight.
+  setInterval(()=>{
+    if(document.getElementById('autoRefreshCheckbox')?.checked){
+      renderOverview(); renderUsers(); renderWithdrawals();
+    }
+  }, 5*60*1000);
+}
+
+/* ---------- OVERVIEW ---------- */
+function renderOverview(){
+  const users = Object.entries(usersData).map(([uid,u])=>({uid,...u}));
+  const wds = Object.entries(withdrawalsData).map(([id,w])=>({id,...w}));
+
+  const totalRevenue = users.reduce((s,u)=>s+(Number(u.totalEarnings)||0),0);
+  const todayRevenue = users.reduce((s,u)=>s+(Number(u.todayEarnings)||0),0);
+  // Yesterday revenue can't be derived from a live "todayEarnings" field alone —
+  // ideally log a daily snapshot node like /dailyStats/{date}/revenue.
+  const totalWithdrawals = wds.filter(w=>w.status==='approved').reduce((s,w)=>s+(Number(w.amount)||0),0);
+  const monthRevenue = users.reduce((s,u)=>s+(isThisMonth(u.lastLogin)?(Number(u.todayEarnings)||0):0),0);
+  const netProfitLoss = totalRevenue - totalWithdrawals;
+  const totalUsers = users.length;
+  const activeToday = users.filter(u=>isToday(u.lastLogin)).length;
+  const newToday = users.filter(u=>isToday(u.createdAt)).length;
+
+  const cards = [
+    {label:'Total Revenue', value:fmtMoney(totalRevenue), color:'var(--emerald)'},
+    {label:"Today's Revenue", value:fmtMoney(todayRevenue), color:'var(--emerald)'},
+    {label:"Yesterday's Revenue", value:'— (needs daily snapshot)', color:'var(--text-faint)', small:true},
+    {label:'This Month Revenue', value:fmtMoney(monthRevenue), color:'var(--blue)'},
+    {label:'Total Withdrawals', value:fmtMoney(totalWithdrawals), color:'var(--amber)'},
+    {label:'Net Profit / Loss', value:fmtMoney(netProfitLoss), color: netProfitLoss>=0?'var(--emerald)':'var(--red)'},
+    {label:'Total Registered Users', value:totalUsers.toLocaleString('en-IN'), color:'var(--blue)'},
+    {label:'Active Users Today', value:activeToday.toLocaleString('en-IN'), color:'var(--emerald)'},
+    {label:'New Users Today', value:newToday.toLocaleString('en-IN'), color:'var(--blue)'},
+  ];
+
+  document.getElementById('overviewCards').innerHTML = cards.map(c=>`
+    <div class="stat-card">
+      <div class="accent-bar" style="background:${c.color}"></div>
+      <div class="stat-label">${c.label}</div>
+      <div class="stat-value ${c.small?'small':''}">${c.value}</div>
+    </div>`).join('');
+
+  window.userPayoutTotals = {today:todayRevenue, yesterday:null, month:monthRevenue, total:totalRevenue};
+  renderProfitLoss();
+}
+
+/* ---------- AD NETWORK CARDS ---------- */
+// live: true  -> pulled from a real API (see fetchAdsterraStats / fetchHilltopAdsStats)
+// live: false -> no revenue API available; data comes from manual entries saved to
+//                /adNetworks/{key}/{date} in Firebase
+const networks = [
+  {name:'Adsterra', key:'adsterra', color:'#3B82F6', live:true},
+  {name:'HilltopAds', key:'hilltopads', color:'#F59E0B', live:true},
+  {name:'CPX Research', key:'cpxresearch', color:'#12D992', live:true},
+  {name:'Monetag', key:'monetag', color:'#8B5CF6', live:false},
+  {name:'ExoClick', key:'exoclick', color:'#EF4444', live:false},
+  {name:'ShrinkEarn', key:'shrinkearn', color:'#06B6D4', live:false},
+];
+
+function renderCompanyCards(){
+  document.getElementById('companyCards').innerHTML = networks.map(n=>`
+    <div class="company-card" id="card-${n.key}">
+      <div class="company-head">
+        <div class="company-logo" style="background:${n.color}">${n.name.slice(0,2).toUpperCase()}</div>
+        <div class="company-name">${n.name}</div>
+        <div class="status-pill" id="status-${n.key}">${n.live ? 'loading…' : 'manual'}</div>
+      </div>
+      <div class="company-rows" id="rows-${n.key}">
+        <div><span>Today</span><b>—</b></div>
+        <div><span>Yesterday</span><b>—</b></div>
+        <div><span>Monthly</span><b>—</b></div>
+        <div><span>Total</span><b>—</b></div>
+        <div><span>Impressions</span><b>—</b></div>
+        <div><span>Clicks</span><b>—</b></div>
+        <div><span>CPM/CPC</span><b>—</b></div>
+        <div><span>Last Sync</span><b>—</b></div>
+      </div>
+      <div class="company-foot" id="foot-${n.key}">${n.live ? '' : 'No revenue API available'}</div>
+      ${n.live ? '' : `<button class="btn-manual" onclick="openManualModal('${n.key}','${n.name}')">+ Add today's entry</button>`}
+    </div>`).join('');
+
+  fetchAdsterraStats();
+  fetchHilltopAdsStats();
+  fetchCpxStats();
+  networks.filter(n=>!n.live).forEach(n => watchManualNetwork(n.key));
+}
+
+/* ---------- COMBINED "ALL NETWORKS" TOTAL ---------- */
+// Every network fetch function writes its numbers here, then calls renderNetworkSummary()
+let networkTotals = {}; // { adsterra: {today,yesterday,month,total}, hilltopads: {...}, ... }
+
+function renderNetworkSummary(){
+  const keys = Object.keys(networkTotals);
+  const sum = field => keys.reduce((s,k)=>s+(Number(networkTotals[k][field])||0),0);
+  const combined = {
+    today: sum('today'), yesterday: sum('yesterday'), month: sum('month'), total: sum('total')
+  };
+  const missing = networks.length - keys.length;
+
+  const cards = [
+    {label:"All Networks — Today", value:fmtMoney(combined.today), color:'var(--emerald)'},
+    {label:"All Networks — Yesterday", value:fmtMoney(combined.yesterday), color:'var(--text-dim)'},
+    {label:"All Networks — This Month", value:fmtMoney(combined.month), color:'var(--blue)'},
+    {label:"All Networks — Total", value:fmtMoney(combined.total), color:'var(--emerald)'},
+  ];
+  document.getElementById('networkSummaryCards').innerHTML = cards.map(c=>`
+    <div class="stat-card"><div class="accent-bar" style="background:${c.color}"></div>
+      <div class="stat-label">${c.label}</div><div class="stat-value small">${c.value}</div></div>`).join('')
+    + (missing>0 ? `<div class="stat-card"><div class="stat-label">Not loaded yet</div><div class="stat-value small" style="color:var(--text-faint)">${missing} network${missing>1?'s':''}</div></div>` : '');
+
+  window.adRevenueTotals = combined; // {today, yesterday, month, total}
+  renderProfitLoss();
+}
+
+/* ---------- PROFIT & LOSS: Ad Revenue (what came in) vs User Payouts (what went out) ---------- */
+function renderProfitLoss(){
+  const body = document.getElementById('profitLossBody');
+  if(!body) return;
+  const ad = window.adRevenueTotals;
+  const payout = window.userPayoutTotals;
+  if(!ad || !payout){
+    body.textContent = 'Waiting for ad network and user data to load…';
+    return;
+  }
+  const row = (label, adVal, payoutVal) => {
+    const pl = adVal - payoutVal;
+    const cls = pl >= 0 ? 'pl-positive' : 'pl-negative';
+    const sign = pl >= 0 ? 'Profit' : 'Loss';
+    return `<tr>
+      <td>${label}</td>
+      <td>${fmtMoney(adVal)}</td>
+      <td>${fmtMoney(payoutVal)}</td>
+      <td class="${cls}">${fmtMoney(Math.abs(pl))} ${sign}</td>
+    </tr>`;
+  };
+  body.innerHTML = `
+    <table class="pl-table">
+      <thead><tr><th>Period</th><th>Ad Revenue (in)</th><th>User Payouts (out)</th><th>Result</th></tr></thead>
+      <tbody>
+        ${row('Today', ad.today, payout.today)}
+        ${row('This Month', ad.month, payout.month)}
+        ${row('All Time', ad.total, payout.total)}
+      </tbody>
+    </table>
+    <div style="font-size:10.5px; color:var(--text-faint); margin-top:10px;">
+      "User Payouts" = coins credited to users (todayEarnings/totalEarnings in /users). This is what users have earned so far — actual cash leaves your pocket only when a withdrawal is approved, so this is your running/expected liability, not already-paid-out cash.
+    </div>`;
+}
+/* Structure: /postback_log/cpx/{firebase_uid}/{cpx_transaction_id} = {coins, credited, ts} */
+function fetchCpxStats(){
+  const statusEl = document.getElementById('status-cpxresearch');
+  const rowsEl = document.getElementById('rows-cpxresearch');
+  const footEl = document.getElementById('foot-cpxresearch');
+
+  db.ref('postback_log/cpx').on('value', snap=>{
+    const data = snap.val() || {};
+    const todayStr = new Date().toISOString().slice(0,10);
+    const y = new Date(); y.setDate(y.getDate()-1);
+    const yesterdayStr = y.toISOString().slice(0,10);
+    const monthPrefix = todayStr.slice(0,7);
+
+    let today=0, yesterday=0, month=0, total=0, offerCount=0, lastTs=0;
+    const earners = new Set();
+
+    Object.entries(data).forEach(([uid, transactions])=>{
+      Object.entries(transactions||{}).forEach(([transId, t])=>{
+        if(!t || t.credited !== true) return; // only count credited transactions
+        const coins = Number(t.coins)||0; // 1 coin = ₹1 (post-migration)
+        const ts = Number(t.ts)||0;
+        const dateStr = ts ? new Date(ts).toISOString().slice(0,10) : null;
+
+        total += coins;
+        offerCount++;
+        earners.add(uid);
+        if(dateStr===todayStr) today+=coins;
+        if(dateStr===yesterdayStr) yesterday+=coins;
+        if(dateStr && dateStr.startsWith(monthPrefix)) month+=coins;
+        if(ts>lastTs) lastTs = ts;
+      });
+    });
+
+    rowsEl.innerHTML = `
+      <div><span>Today</span><b>${fmtMoney(today)}</b></div>
+      <div><span>Yesterday</span><b>${fmtMoney(yesterday)}</b></div>
+      <div><span>Monthly</span><b>${fmtMoney(month)}</b></div>
+      <div><span>Total</span><b>${fmtMoney(total)}</b></div>
+      <div><span>Completed Offers</span><b>${offerCount.toLocaleString('en-IN')}</b></div>
+      <div><span>Unique Earners</span><b>${earners.size.toLocaleString('en-IN')}</b></div>
+      <div><span>Avg / Offer</span><b>${fmtMoney(offerCount ? total/offerCount : 0)}</b></div>
+      <div><span>Last Sync</span><b>${lastTs ? new Date(lastTs).toLocaleString('en-IN',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}) : '—'}</b></div>`;
+    statusEl.textContent = 'live';
+    statusEl.style.color = 'var(--emerald)';
+    footEl.textContent = 'Reading from /postback_log/cpx (existing webhook)';
+
+    networkTotals.cpxresearch = {today, yesterday, month, total};
+    renderNetworkSummary();
+  }, err=>{
+    statusEl.textContent = 'error';
+    statusEl.style.color = 'var(--red)';
+    footEl.textContent = 'Failed to read postback_log/cpx: '+err.message;
+  });
+}
+
+/* ---------- MANUAL ENTRY NETWORKS (Monetag, ExoClick, ShrinkEarn) ---------- */
+function computeFromDateMap(entries){
+  // entries: [ [dateStr, {revenue, impressions, clicks, cpm}], ... ]
+  const todayStr = new Date().toISOString().slice(0,10);
+  const y = new Date(); y.setDate(y.getDate()-1);
+  const yesterdayStr = y.toISOString().slice(0,10);
+  const monthPrefix = todayStr.slice(0,7);
+
+  const sumWhere = (filterFn, key) => entries.filter(([d])=>filterFn(d)).reduce((s,[,v])=>s+(Number(v[key])||0),0);
+  return {
+    today: sumWhere(d=>d===todayStr,'revenue'),
+    yesterday: sumWhere(d=>d===yesterdayStr,'revenue'),
+    month: sumWhere(d=>d.startsWith(monthPrefix),'revenue'),
+    total: entries.reduce((s,[,v])=>s+(Number(v.revenue)||0),0),
+    impressions: entries.reduce((s,[,v])=>s+(Number(v.impressions)||0),0),
+    clicks: entries.reduce((s,[,v])=>s+(Number(v.clicks)||0),0),
+    avgCpm: entries.length ? entries.reduce((s,[,v])=>s+(Number(v.cpm)||0),0)/entries.length : 0,
+    lastEntryDate: entries.length ? entries.map(([d])=>d).sort().slice(-1)[0] : null,
+  };
+}
+
+function watchManualNetwork(key){
+  db.ref('adNetworks/'+key).on('value', snap=>{
+    const data = snap.val() || {};
+    const entries = Object.entries(data);
+    const rowsEl = document.getElementById('rows-'+key);
+    const footEl = document.getElementById('foot-'+key);
+    if(!rowsEl) return;
+
+    if(entries.length===0){
+      footEl.textContent = 'No entries yet — tap "Add today\'s entry"';
+      return;
+    }
+    const c = computeFromDateMap(entries);
+    rowsEl.innerHTML = `
+      <div><span>Today</span><b>${fmtMoney(c.today)}</b></div>
+      <div><span>Yesterday</span><b>${fmtMoney(c.yesterday)}</b></div>
+      <div><span>Monthly</span><b>${fmtMoney(c.month)}</b></div>
+      <div><span>Total</span><b>${fmtMoney(c.total)}</b></div>
+      <div><span>Impressions</span><b>${c.impressions.toLocaleString('en-IN')}</b></div>
+      <div><span>Clicks</span><b>${c.clicks.toLocaleString('en-IN')}</b></div>
+      <div><span>CPM</span><b>${c.avgCpm.toFixed(3)}</b></div>
+      <div><span>Last Sync</span><b>${c.lastEntryDate||'—'}</b></div>`;
+    footEl.textContent = `Last manual entry: ${c.lastEntryDate}`;
+
+    networkTotals[key] = {today:c.today, yesterday:c.yesterday, month:c.month, total:c.total};
+    renderNetworkSummary();
+  });
+}
+
+let manualModalKey = null;
+function openManualModal(key, name){
+  manualModalKey = key;
+  document.getElementById('manualModalTitle').textContent = `Add entry — ${name}`;
+  const todayStr = new Date().toISOString().slice(0,10);
+  document.getElementById('manualDate').value = todayStr;
+
+  // Pre-fill if an entry already exists for today
+  db.ref(`adNetworks/${key}/${todayStr}`).once('value').then(snap=>{
+    const v = snap.val();
+    document.getElementById('manualRevenue').value = v?.revenue ?? '';
+    document.getElementById('manualImpressions').value = v?.impressions ?? '';
+    document.getElementById('manualClicks').value = v?.clicks ?? '';
+    document.getElementById('manualCpm').value = v?.cpm ?? '';
+  });
+  document.getElementById('manualModal').classList.add('open');
+}
+function closeManualModal(){
+  document.getElementById('manualModal').classList.remove('open');
+  manualModalKey = null;
+}
+function saveManualEntry(){
+  if(!manualModalKey) return;
+  const date = document.getElementById('manualDate').value;
+  if(!date){ alert('Date choose karo'); return; }
+  const entry = {
+    revenue: Number(document.getElementById('manualRevenue').value) || 0,
+    impressions: Number(document.getElementById('manualImpressions').value) || 0,
+    clicks: Number(document.getElementById('manualClicks').value) || 0,
+    cpm: Number(document.getElementById('manualCpm').value) || 0,
+    updatedAt: Date.now(),
+  };
+  db.ref(`adNetworks/${manualModalKey}/${date}`).set(entry)
+    .then(()=> closeManualModal())
+    .catch(err => alert('Save failed: '+err.message));
+}
+
+/* ---------- HILLTOPADS — LIVE DATA via /api/hilltopads-stats proxy ---------- */
+async function fetchHilltopAdsStats(){
+  const statusEl = document.getElementById('status-hilltopads');
+  const rowsEl = document.getElementById('rows-hilltopads');
+  const footEl = document.getElementById('foot-hilltopads');
+  try{
+    const res = await fetch('/api/hilltopads-stats');
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    const data = await res.json();
+    const result = data.result || {}; // keyed by date string since group=date
+
+    const todayStr = new Date().toISOString().slice(0,10);
+    const y = new Date(); y.setDate(y.getDate()-1);
+    const yesterdayStr = y.toISOString().slice(0,10);
+    const thisMonthPrefix = todayStr.slice(0,7);
+
+    const entries = Object.entries(result); // [ [date, {revenue, impressions, clicks, cpm}], ... ]
+    const sumWhere = (filterFn, key) => entries.filter(([d])=>filterFn(d)).reduce((s,[,v])=>s+(Number(v[key])||0),0);
+
+    const todayRevenue = sumWhere(d=>d===todayStr, 'revenue');
+    const yestRevenue = sumWhere(d=>d===yesterdayStr, 'revenue');
+    const monthRevenue = sumWhere(d=>d.startsWith(thisMonthPrefix), 'revenue');
+    const totalRevenue = entries.reduce((s,[,v])=>s+(Number(v.revenue)||0),0);
+    const totalImpressions = entries.reduce((s,[,v])=>s+(Number(v.impressions)||0),0);
+    const totalClicks = entries.reduce((s,[,v])=>s+(Number(v.clicks)||0),0);
+    const avgCpm = entries.length ? entries.reduce((s,[,v])=>s+(Number(v.cpm)||0),0)/entries.length : 0;
+
+    rowsEl.innerHTML = `
+      <div><span>Today</span><b>${fmtMoney(todayRevenue)}</b></div>
+      <div><span>Yesterday</span><b>${fmtMoney(yestRevenue)}</b></div>
+      <div><span>Monthly</span><b>${fmtMoney(monthRevenue)}</b></div>
+      <div><span>Total</span><b>${fmtMoney(totalRevenue)}</b></div>
+      <div><span>Impressions</span><b>${totalImpressions.toLocaleString('en-IN')}</b></div>
+      <div><span>Clicks</span><b>${totalClicks.toLocaleString('en-IN')}</b></div>
+      <div><span>CPM</span><b>${avgCpm.toFixed(3)}</b></div>
+      <div><span>Last Sync</span><b>${new Date().toLocaleTimeString('en-IN')}</b></div>`;
+    statusEl.textContent = 'live';
+    statusEl.style.color = 'var(--emerald)';
+    footEl.textContent = 'Connected to HilltopAds API';
+
+    networkTotals.hilltopads = {today:todayRevenue, yesterday:yestRevenue, month:monthRevenue, total:totalRevenue};
+    renderNetworkSummary();
+  } catch(err){
+    statusEl.textContent = 'error';
+    statusEl.style.color = 'var(--red)';
+    footEl.textContent = 'Failed to load: '+err.message+' — check /api/hilltopads-stats deployment & env vars';
+  }
+}
+
+/* ---------- ADSTERRA — LIVE DATA via /api/adsterra-stats proxy ---------- */
+async function fetchAdsterraStats(){
+  const statusEl = document.getElementById('status-adsterra');
+  const rowsEl = document.getElementById('rows-adsterra');
+  const footEl = document.getElementById('foot-adsterra');
+  try{
+    const res = await fetch('/api/adsterra-stats');
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    const data = await res.json();
+    const items = data.items || [];
+
+    const todayStr = new Date().toISOString().slice(0,10);
+    const y = new Date(); y.setDate(y.getDate()-1);
+    const yesterdayStr = y.toISOString().slice(0,10);
+    const thisMonthPrefix = todayStr.slice(0,7); // YYYY-MM
+
+    const sum = (arr, key) => arr.reduce((s,i)=>s+(Number(i[key])||0),0);
+    const todayItems = items.filter(i=>i.date===todayStr);
+    const yestItems = items.filter(i=>i.date===yesterdayStr);
+    const monthItems = items.filter(i=>i.date && i.date.startsWith(thisMonthPrefix));
+
+    const todayRevenue = sum(todayItems,'revenue');
+    const yestRevenue = sum(yestItems,'revenue');
+    const monthRevenue = sum(monthItems,'revenue');
+    const totalRevenue = sum(items,'revenue');
+    const totalImpressions = sum(items,'impression');
+    const totalClicks = sum(items,'clicks');
+    const avgCpm = items.length ? (sum(items,'cpm')/items.length) : 0;
+
+    rowsEl.innerHTML = `
+      <div><span>Today</span><b>${fmtMoney(todayRevenue)}</b></div>
+      <div><span>Yesterday</span><b>${fmtMoney(yestRevenue)}</b></div>
+      <div><span>Monthly</span><b>${fmtMoney(monthRevenue)}</b></div>
+      <div><span>Total</span><b>${fmtMoney(totalRevenue)}</b></div>
+      <div><span>Impressions</span><b>${totalImpressions.toLocaleString('en-IN')}</b></div>
+      <div><span>Clicks</span><b>${totalClicks.toLocaleString('en-IN')}</b></div>
+      <div><span>CPM</span><b>${avgCpm.toFixed(3)}</b></div>
+      <div><span>Last Sync</span><b>${new Date().toLocaleTimeString('en-IN')}</b></div>`;
+    statusEl.textContent = 'live';
+    statusEl.style.color = 'var(--emerald)';
+    footEl.textContent = data.dbLastUpdateTime ? `Adsterra DB updated: ${data.dbLastUpdateTime}` : 'Connected to Adsterra API';
+
+    networkTotals.adsterra = {today:todayRevenue, yesterday:yestRevenue, month:monthRevenue, total:totalRevenue};
+    renderNetworkSummary();
+
+    networkExtra.adsterra = {
+      dailyRevenue: Object.fromEntries(items.map(i=>[i.date, Number(i.revenue)||0])),
+      impressions: totalImpressions,
+      todayImpressions: sum(todayItems,'impression'),
+    };
+    updateAggregateVisuals();
+  } catch(err){
+    statusEl.textContent = 'error';
+    statusEl.style.color = 'var(--red)';
+    footEl.textContent = 'Failed to load: '+err.message+' — check /api/adsterra-stats deployment & env vars';
+  }
+}
+
+/* ---------- USERS TABLE ---------- */
+function renderUsers(){
+  const q = (document.getElementById('userSearch')?.value || '').toLowerCase();
+  const rows = Object.entries(usersData)
+    .map(([uid,u])=>({uid,...u}))
+    .filter(u => !q || (u.name||'').toLowerCase().includes(q) || (u.email||'').toLowerCase().includes(q) || uid.toLowerCase().includes(q));
+
+  document.getElementById('userCount').textContent = `(${rows.length})`;
+
+  if(rows.length===0){
+    document.getElementById('usersBody').innerHTML = `<tr><td colspan="11"><div class="empty-state"><div class="icon">👥</div>No users found. Data will appear here once your /users node has entries.</div></td></tr>`;
+    return;
+  }
+
+  document.getElementById('usersBody').innerHTML = rows.map(u=>`
+    <tr>
+      <td><div class="avatar-chip"><div class="avatar">${initials(u.name)}</div><div><div>${u.name||'—'}</div><div style="font-size:10.5px;color:var(--text-faint)">${u.email||'—'}</div></div></div></td>
+      <td class="cell-mono">${u.uid.slice(0,10)}…</td>
+      <td>${fmtDate(u.createdAt)}</td>
+      <td>${fmtDate(u.lastLogin)}</td>
+      <td class="cell-mono">${fmtMoney(u.todayEarnings)}</td>
+      <td class="cell-mono">${fmtMoney(u.totalEarnings)}</td>
+      <td class="cell-mono">${u.todayAdsViewed||0}</td>
+      <td class="cell-mono">${u.totalAdsViewed||0}</td>
+      <td class="cell-mono">${fmtMoney(u.surveyEarnings)}</td>
+      <td class="cell-mono">${fmtMoney(u.offerwallEarnings)}</td>
+      <td class="cell-mono">${fmtMoney(u.balance)}</td>
+    </tr>`).join('');
+}
+
+/* ---------- WITHDRAWALS ---------- */
+function setWdTab(status){
+  wdTab = status;
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('active', b.dataset.status===status));
+  renderWithdrawals();
+}
+function renderWithdrawalSummary(){
+  const wds = Object.values(withdrawalsData);
+  const sum = st => wds.filter(w=>w.status===st).reduce((s,w)=>s+(Number(w.amount)||0),0);
+  const cnt = st => wds.filter(w=>w.status===st).length;
+  const cards = [
+    {label:'Pending Withdrawals', value:`${cnt('pending')} · ${fmtMoney(sum('pending'))}`, color:'var(--amber)'},
+    {label:'Approved Withdrawals', value:`${cnt('approved')} · ${fmtMoney(sum('approved'))}`, color:'var(--emerald)'},
+    {label:'Rejected Withdrawals', value:`${cnt('rejected')} · ${fmtMoney(sum('rejected'))}`, color:'var(--red)'},
+  ];
+  document.getElementById('wdSummaryCards').innerHTML = cards.map(c=>`
+    <div class="stat-card"><div class="accent-bar" style="background:${c.color}"></div>
+      <div class="stat-label">${c.label}</div><div class="stat-value small">${c.value}</div></div>`).join('');
+}
+function renderWithdrawals(){
+  const q = (document.getElementById('wdSearch')?.value || '').toLowerCase();
+  const rows = Object.entries(withdrawalsData)
+    .map(([id,w])=>({id,...w}))
+    .filter(w => (w.status||'pending')===wdTab)
+    .filter(w => !q || (w.name||'').toLowerCase().includes(q))
+    .sort((a,b)=>(b.requestedAt||0)-(a.requestedAt||0));
+
+  if(rows.length===0){
+    document.getElementById('wdBody').innerHTML = `<tr><td colspan="8"><div class="empty-state"><div class="icon">💸</div>No ${wdTab} withdrawals.</div></td></tr>`;
+    return;
+  }
+
+  document.getElementById('wdBody').innerHTML = rows.map(w=>`
+    <tr>
+      <td>${w.name||w.uid||'—'}</td>
+      <td class="cell-mono">${fmtMoney(w.amount)}</td>
+      <td>${w.method||'—'}</td>
+      <td class="cell-mono">${w.transactionId||'—'}</td>
+      <td>${w.screenshotUrl ? `<a href="${w.screenshotUrl}" target="_blank" style="color:var(--blue)">View</a>` : '—'}</td>
+      <td class="cell-mono">${fmtDate(w.requestedAt)}</td>
+      <td><span class="badge-status badge-${w.status||'pending'}">${w.status||'pending'}</span></td>
+      <td>${w.status==='pending' ? `
+        <button class="btn btn-approve" onclick="updateWithdrawal('${w.id}','approved')">Approve</button>
+        <button class="btn btn-reject" onclick="updateWithdrawal('${w.id}','rejected')">Reject</button>
+      ` : `<button class="btn btn-ghost" onclick="updateWithdrawal('${w.id}','pending')">Revert</button>`}</td>
+    </tr>`).join('');
+}
+function updateWithdrawal(id, status){
+  db.ref('withdrawals/'+id).update({
+    status,
+    [status+'At']: Date.now()
+  });
+}
+
+/* ---------- CHARTS (real data) ---------- */
+let chartUG, chartWD;
+function last14Days(){
+  const days=[];
+  for(let i=13;i>=0;i--){ const d=new Date(); d.setDate(d.getDate()-i); days.push(d); }
+  return days;
+}
+function renderUserGrowthChart(){
+  const days = last14Days();
+  const users = Object.values(usersData);
+  const counts = days.map(d => users.filter(u=>u.createdAt && new Date(u.createdAt).toDateString()===d.toDateString()).length);
+  const labels = days.map(d=>d.toLocaleDateString('en-IN',{day:'2-digit',month:'short'}));
+  if(chartUG) chartUG.destroy();
+  chartUG = new Chart(document.getElementById('chartUserGrowth'), {
+    type:'line',
+    data:{labels, datasets:[{data:counts, borderColor:'#4C8DFF', backgroundColor:'rgba(76,141,255,.12)', fill:true, tension:.35, pointRadius:2}]},
+    options:{plugins:{legend:{display:false}}, scales:{x:{ticks:{color:'#8B96AF',font:{size:10}}, grid:{display:false}}, y:{ticks:{color:'#8B96AF',font:{size:10}}, grid:{color:'rgba(255,255,255,.05)'}}}}
+  });
+}
+function renderWithdrawalsChart(){
+  const days = last14Days();
+  const wds = Object.values(withdrawalsData).filter(w=>w.status==='approved');
+  const sums = days.map(d => wds.filter(w=>w.approvedAt && new Date(w.approvedAt).toDateString()===d.toDateString()).reduce((s,w)=>s+(Number(w.amount)||0),0));
+  const labels = days.map(d=>d.toLocaleDateString('en-IN',{day:'2-digit',month:'short'}));
+  if(chartWD) chartWD.destroy();
+  chartWD = new Chart(document.getElementById('chartWithdrawals'), {
+    type:'bar',
+    data:{labels, datasets:[{data:sums, backgroundColor:'#12D992', borderRadius:4}]},
+    options:{plugins:{legend:{display:false}}, scales:{x:{ticks:{color:'#8B96AF',font:{size:10}}, grid:{display:false}}, y:{ticks:{color:'#8B96AF',font:{size:10}}, grid:{color:'rgba(255,255,255,.05)'}}}}
+  });
+}
+
+/* ---------- PLACEHOLDER CHARTS (Ad Networks — no data source yet) ---------- */
+function renderPlaceholderCharts(){
+  new Chart(document.getElementById('chartRevenuePH'), {
+    type:'line',
+    data:{labels:['Day 1','Day 2','Day 3','Day 4','Day 5','Day 6','Day 7'], datasets:[{data:[0,0,0,0,0,0,0], borderColor:'#5B6785', borderDash:[4,4], pointRadius:0}]},
+    options:{plugins:{legend:{display:false}}, scales:{x:{ticks:{color:'#5B6785',font:{size:10}}},y:{ticks:{color:'#5B6785',font:{size:10}}}}}
+  });
+  new Chart(document.getElementById('chartCompanyPH'), {
+    type:'bar',
+    data:{labels:networks.map(n=>n.name), datasets:[{data:[0,0,0,0,0], backgroundColor:'#232E48'}]},
+    options:{plugins:{legend:{display:false}}, scales:{x:{ticks:{color:'#5B6785',font:{size:10}}},y:{ticks:{color:'#5B6785',font:{size:10}}}}}
+  });
+}
+
+/* ---------- ACTIVITY PLACEHOLDER ---------- */
+function renderActivityPlaceholder(){
+  const sample = [
+    {text:'Sample: User watched Adsterra SmartLink', color:'#3B82F6', time:'preview'},
+    {text:'Sample: User completed Survey', color:'#F5A623', time:'preview'},
+    {text:'Sample: User requested Withdrawal', color:'#F0466A', time:'preview'},
+    {text:'Sample: User watched Banner ad', color:'#12D992', time:'preview'},
+  ];
+  document.getElementById('activityList').innerHTML = sample.map(a=>`
+    <div class="activity-item">
+      <div class="activity-dot" style="background:${a.color}"></div>
+      <div><div>${a.text}</div><div class="activity-time">${a.time}</div></div>
+    </div>`).join('');
+}
+
+/* ---------- CSV EXPORT (exports whichever table is visible) ---------- */
+function exportCSV(){
+  const activePage = document.querySelector('.page.active');
+  const table = activePage?.querySelector('table');
+  if(!table){ alert('No table on this page to export.'); return; }
+  const rows = [...table.querySelectorAll('tr')].map(tr =>
+    [...tr.children].map(td => `"${td.innerText.replace(/"/g,'""')}"`).join(',')
+  );
+  const blob = new Blob([rows.join('\n')], {type:'text/csv'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'tasknova_export_'+Date.now()+'.csv'; a.click();
+  URL.revokeObjectURL(url);
+}
+</script>
+</body>
+</html>
