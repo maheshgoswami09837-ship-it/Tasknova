@@ -431,19 +431,30 @@ function handleLogout(){ auth.signOut(); }
 
 auth.onAuthStateChanged(user => {
   if(user){
-    // Optional: gate by /admins/{uid} === true. Comment out if you don't need role-checking yet.
-    db.ref('admins/'+user.uid).once('value').then(snap=>{
-      // if(!snap.exists()){ document.getElementById('loginError').textContent="Not authorized as admin."; auth.signOut(); return; }
-      document.getElementById('loginScreen').style.display='none';
-      document.getElementById('app').classList.add('visible');
-      document.getElementById('settingsEmail').textContent = user.email;
-      initData();
-    });
+    // Optional: gate by /admins/{uid} === true. If this read is blocked by your
+    // database security rules, we don't want login to hang — so we proceed
+    // either way and just log a warning in that case.
+    db.ref('admins/'+user.uid).once('value')
+      .then(snap=>{
+        // if(!snap.exists()){ document.getElementById('loginError').textContent="Not authorized as admin."; auth.signOut(); return; }
+        enterDashboard(user);
+      })
+      .catch(err=>{
+        console.warn('Admin-check read failed (check DB rules) — logging in anyway:', err.message);
+        enterDashboard(user);
+      });
   } else {
     document.getElementById('loginScreen').style.display='flex';
     document.getElementById('app').classList.remove('visible');
   }
 });
+
+function enterDashboard(user){
+  document.getElementById('loginScreen').style.display='none';
+  document.getElementById('app').classList.add('visible');
+  document.getElementById('settingsEmail').textContent = user.email;
+  initData();
+}
 
 /* ---------- NAV ---------- */
 document.querySelectorAll('.navitem[data-page]').forEach(item=>{
