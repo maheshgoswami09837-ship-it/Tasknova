@@ -245,6 +245,12 @@ tbody tr:hover{background:var(--surface-2);}
 
     <!-- ===================== OVERVIEW ===================== -->
     <div class="page active" id="page-overview">
+      <div class="panel" style="margin-bottom:18px; border-color:var(--emerald);">
+        <div class="panel-title" style="margin-bottom:10px;">💰 Real Revenue — Money Received From Ad Networks</div>
+        <div id="realRevenueCards" class="grid grid-9" style="color:var(--text-faint); font-size:12.5px;">Waiting for network data to load…</div>
+        <div style="font-size:10.5px; color:var(--text-faint); margin-top:10px;">This is actual money from Adsterra, HilltopAds, CPX Research + whatever you've manually entered for Monetag/ExoClick/ShrinkEarn/CPALead. This is NOT the same as "Total Revenue (User Earnings)" below — that one is what users have earned/been credited, not real cash you received.</div>
+      </div>
+
       <div class="grid grid-9" id="overviewCards"></div>
 
       <div class="panel" style="margin-top:18px;" id="profitLossPanel">
@@ -536,24 +542,17 @@ function renderOverview(){
   const users = Object.entries(usersData).map(([uid,u])=>({uid,...u}));
   const wds = Object.entries(withdrawalsData).map(([id,w])=>({id,...w}));
 
-  // Sum a user's completed taskHistory earnings matching a date filter on completedAt (epoch ms)
-  const sumUserTasks = (u, dateFilterFn) => {
-    if(!u.taskHistory) return 0;
-    return Object.values(u.taskHistory).reduce((s,t)=>{
-      if(!t || t.status!=='completed') return s;
-      if(!dateFilterFn(t.completedAt)) return s;
-      return s + (Number(t.coinsEarned)||0);
-    },0);
-  };
-
   const totalRevenue = users.reduce((s,u)=>s+(Number(u.totalEarned)||0),0);
-  const todayRevenue = users.reduce((s,u)=>s+sumUserTasks(u, ts=>isToday(ts)),0);
-  const yesterdayRevenue = users.reduce((s,u)=>s+sumUserTasks(u, ts=>isYesterday(ts)),0);
-  const monthRevenue = users.reduce((s,u)=>s+sumUserTasks(u, ts=>isThisMonth(ts)),0);
+  const todayRevenue = users.reduce((s,u)=>s+computeUserToday(u),0);
+  const yesterdayRevenue = users.reduce((s,u)=>s+computeUserYesterday(u),0);
+  const monthRevenue = users.reduce((s,u)=>s+computeUserMonth(u),0);
   const totalWithdrawals = wds.filter(w=>w.status==='approved').reduce((s,w)=>s+(Number(w.amount)||0),0);
   const netProfitLoss = totalRevenue - totalWithdrawals;
   const totalUsers = users.length;
-  const activeToday = users.filter(u=>isToday(u.lastResetDate)).length;
+  // Prefer the new server-timestamped "lastActive" field once you add the tracking
+  // snippet to your app. Falls back to lastResetDate (less reliable — it's a daily
+  // counter reset that can fire for users regardless of whether they opened the app).
+  const activeToday = users.filter(u => isToday(u.lastActive || u.lastResetDate)).length;
   const newToday = users.filter(u=>isToday(u.joinDate)).length;
 
   const cards = [
@@ -579,6 +578,49 @@ function renderOverview(){
   renderProfitLoss();
 }
 
+/* ---------- Per-user earnings: handles BOTH schema variants seen in this DB ----------
+   Newer users: /users/{uid}/dailyTasks/{YYYY-MM-DD}/earned  (direct daily total)
+   Older users: /users/{uid}/taskHistory/{pushId} = {coinsEarned, completedAt, status}
+   We prefer dailyTasks when present for a given day; otherwise fall back to summing
+   taskHistory entries for that day. */
+function computeUserToday(u){
+  const todayStr = new Date().toISOString().slice(0,10);
+  if(u.dailyTasks && u.dailyTasks[todayStr] && u.dailyTasks[todayStr].earned !== undefined){
+    return Number(u.dailyTasks[todayStr].earned)||0;
+  }
+  if(u.taskHistory){
+    return Object.values(u.taskHistory).reduce((s,t)=> (t && t.status==='completed' && isToday(t.completedAt)) ? s+(Number(t.coinsEarned)||0) : s, 0);
+  }
+  return 0;
+}
+function computeUserYesterday(u){
+  const y = new Date(); y.setDate(y.getDate()-1);
+  const yStr = y.toISOString().slice(0,10);
+  if(u.dailyTasks && u.dailyTasks[yStr] && u.dailyTasks[yStr].earned !== undefined){
+    return Number(u.dailyTasks[yStr].earned)||0;
+  }
+  if(u.taskHistory){
+    return Object.values(u.taskHistory).reduce((s,t)=> (t && t.status==='completed' && isYesterday(t.completedAt)) ? s+(Number(t.coinsEarned)||0) : s, 0);
+  }
+  return 0;
+}
+function computeUserMonth(u){
+  const monthPrefix = new Date().toISOString().slice(0,7);
+  let total = 0, matchedViaDaily = false;
+  if(u.dailyTasks){
+    Object.entries(u.dailyTasks).forEach(([dateStr,dayObj])=>{
+      if(dateStr.startsWith(monthPrefix) && dayObj && dayObj.earned!==undefined){
+        total += Number(dayObj.earned)||0;
+        matchedViaDaily = true;
+      }
+    });
+  }
+  if(!matchedViaDaily && u.taskHistory){
+    total = Object.values(u.taskHistory).reduce((s,t)=> (t && t.status==='completed' && isThisMonth(t.completedAt)) ? s+(Number(t.coinsEarned)||0) : s, 0);
+  }
+  return total;
+}
+
 /* ---------- AD NETWORK CARDS ---------- */
 // live: true  -> pulled from a real API (see fetchAdsterraStats / fetchHilltopAdsStats)
 // live: false -> no revenue API available; data comes from manual entries saved to
@@ -590,6 +632,7 @@ const networks = [
   {name:'Monetag', key:'monetag', color:'#8B5CF6', live:false},
   {name:'ExoClick', key:'exoclick', color:'#EF4444', live:false},
   {name:'ShrinkEarn', key:'shrinkearn', color:'#06B6D4', live:false},
+  {name:'CPALead', key:'cpalead', color:'#EC4899', live:false},
 ];
 
 function renderCompanyCards(){
@@ -645,6 +688,25 @@ function renderNetworkSummary(){
 
   window.adRevenueTotals = combined; // {today, yesterday, month, total}
   renderProfitLoss();
+  renderRealRevenueCards();
+}
+
+/* ---------- REAL REVENUE: clearly-labeled actual money from ad networks (Overview page) ---------- */
+function renderRealRevenueCards(){
+  const el = document.getElementById('realRevenueCards');
+  if(!el) return;
+  const ad = window.adRevenueTotals;
+  if(!ad){ el.textContent = 'Waiting for network data to load…'; return; }
+
+  const cards = [
+    {label:'Today', value:fmtMoney(ad.today), color:'var(--emerald)'},
+    {label:'Yesterday', value:fmtMoney(ad.yesterday), color:'var(--text-dim)'},
+    {label:'This Month', value:fmtMoney(ad.month), color:'var(--blue)'},
+    {label:'All-Time Total', value:fmtMoney(ad.total), color:'var(--emerald)'},
+  ];
+  el.innerHTML = cards.map(c=>`
+    <div class="stat-card"><div class="accent-bar" style="background:${c.color}"></div>
+      <div class="stat-label">${c.label}</div><div class="stat-value small">${c.value}</div></div>`).join('');
 }
 
 /* ---------- PROFIT & LOSS: Ad Revenue (what came in) vs User Payouts (what went out) ---------- */
@@ -980,20 +1042,14 @@ function renderUsers(){
     return;
   }
 
-  const earnedTodayFor = u => {
-    if(!u.taskHistory) return 0;
-    return Object.values(u.taskHistory).reduce((s,t)=>{
-      if(!t || t.status!=='completed' || !isToday(t.completedAt)) return s;
-      return s + (Number(t.coinsEarned)||0);
-    },0);
-  };
+  const earnedTodayFor = u => computeUserToday(u);
 
   document.getElementById('usersBody').innerHTML = rows.map(u=>`
     <tr>
       <td><div class="avatar-chip"><div class="avatar">${initials(u.name)}</div><div><div>${u.name||'—'}</div><div style="font-size:10.5px;color:var(--text-faint)">${u.email||'—'}</div></div></div></td>
       <td class="cell-mono">${u.uid.slice(0,10)}…</td>
       <td>${fmtDate(u.joinDate)}</td>
-      <td>${fmtDate(u.lastResetDate)}</td>
+      <td>${fmtDate(u.lastActive) !== '—' ? fmtDate(u.lastActive) : fmtDate(u.lastResetDate)}</td>
       <td class="cell-mono">${fmtMoney(u.balance)}</td>
       <td class="cell-mono">${fmtMoney(u.totalEarned)}</td>
       <td class="cell-mono">${fmtMoney(earnedTodayFor(u))}</td>
