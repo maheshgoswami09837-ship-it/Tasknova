@@ -1,5 +1,5 @@
 // ============================================================
-//  TaskNova — Combined Postback Handler
+//  TaskNova — Combined Postback Handler (FIXED: CPX reversal handling)
 //
 //  CPX Postback URL (CPX dashboard mein lagao):
 //  https://tasknovaofficial.vercel.app/api/postback?source=cpx
@@ -15,6 +15,12 @@
 //    INR × 0.25 (25% user share) = User INR
 //    User INR × 1 (1 coin = ₹1) = Coins
 //    Balance = Total Coins
+//
+//  ⚠️ CONFIRMED from CPX dashboard (Postback Settings):
+//     status = 1  → completed (credit the user)
+//     status = 2  → CANCELED / fraud reversal (CPX calls the SAME url again,
+//                   with the SAME trans_id, 15-60 days later if they detect fraud)
+//     This is NOT a "bonus" — it means: take back what was given for this transaction.
 // ============================================================
 
 const FIREBASE_URL      = 'https://tasknova-66d0f-default-rtdb.firebaseio.com';
@@ -22,12 +28,11 @@ const FIREBASE_SECRET   = process.env.FIREBASE_SECRET;
 const POSTBACK_PASSWORD = process.env.POSTBACK_PASSWORD;
 
 // ── Shared constants ─────────────────────────────────────────
-const USD_TO_INR      = 84;    // 1 USD = ₹84
+const USD_TO_INR      = 84;    // 1 USD = ₹84 (fixed rate used for coin calculation)
 const USER_SHARE      = 0.25;  // 25% user ko milega
 const COINS_PER_RUPEE = 1;     // 1 coin = ₹1
 
 // Helper: USD → Coins
-// $1 × 84 = ₹84 → ₹84 × 0.25 = ₹21 → ₹21 × 100 = 2100 coins
 function usdToCoins(usdAmount) {
   const inr       = usdAmount * USD_TO_INR;
   const userInr   = inr * USER_SHARE;
@@ -46,69 +51,110 @@ export default async function handler(req, res) {
 
   // ════════════════════════════════════════════════════════════
   //  SOURCE 1 — CPX Research
-  //  CPX → amount_usd (publisher dollar payout)
-  //  Formula: amount_usd × 84 × 0.25 × 1 = coins
-  //  Example: $0.50 × 84 = ₹42 → ₹42 × 0.25 = ₹10.50 → 11 coins (rounded)
   // ════════════════════════════════════════════════════════════
   if (source === 'cpx') {
     const { status, trans_id, amount_usd, amount_local, user_id } = req.query;
 
     console.log('[CPX] Postback received:', { status, trans_id, amount_usd, user_id });
 
-    // Validation
     if (!user_id) {
       return res.status(200).json({ success: false, reason: 'Missing user_id' });
     }
     const statusCode = parseInt(status);
     if (statusCode !== 1 && statusCode !== 2) {
-      console.log('[CPX] Non-success status:', status, '— skip');
+      console.log('[CPX] Unknown status:', status, '— skip');
       return res.status(200).send('1');
     }
-    const isBonus = statusCode === 2; // 2 = survey screen-out bonus
 
-    // Parse USD amount
-    // amount_usd = direct dollar value (e.g. 0.50)
-    // amount_local = CPX points (e.g. 50) — 100 points =  approx, divide by 100
-    let usdAmount = parseFloat(amount_usd || '0');
-    if (isNaN(usdAmount) || usdAmount <= 0) {
-      // Fallback: amount_local use karo
-      const localVal = parseFloat(amount_local || '0');
-      if (isNaN(localVal) || localVal <= 0) {
-        console.error('[CPX] Both amount_usd and amount_local missing/invalid');
-        return res.status(200).send('1');
-      }
-      usdAmount = localVal / 100; // CPX points to USD
-      console.log('[CPX] Using amount_local fallback:', localVal, '→ $' + usdAmount);
-    }
-
-    // Calculate coins
-    const { coins: coinsToAdd, inr: inrAmount, userInr: userShare } = usdToCoins(usdAmount);
-    console.log(`[CPX] Calc: $${usdAmount} × 84 = ₹${inrAmount} × 25% = ₹${userShare} = ${coinsToAdd} coins`);
+    const safeTransId = (trans_id || ('cpx_' + Date.now())).replace(/[^a-zA-Z0-9_-]/g, '_');
+    const cpxLogUrl    = `${FIREBASE_URL}/postback_log/cpx/${user_id}/${safeTransId}.json${authParam}`;
 
     try {
-      // ── Duplicate check ───────────────────────────────────
-      const safeTransId = (trans_id || ('cpx_' + Date.now())).replace(/[^a-zA-Z0-9_-]/g, '_');
-      const cpxDupUrl   = `${FIREBASE_URL}/postback_log/cpx/${user_id}/${safeTransId}.json${authParam}`;
-      const cpxDupData  = await (await fetch(cpxDupUrl)).json();
+      const existing = await (await fetch(cpxLogUrl)).json();
 
-      if (cpxDupData && cpxDupData.credited) {
+      // ──────────────────────────────────────────────────────
+      //  STATUS 2 = CANCELED / FRAUD REVERSAL
+      //  Claw back the coins that were given for this transaction.
+      // ──────────────────────────────────────────────────────
+      if (statusCode === 2) {
+        if (!existing || !existing.credited) {
+          console.log('[CPX] Cancel received but nothing was credited for this trans_id — nothing to reverse:', safeTransId);
+          return res.status(200).send('1');
+        }
+        if (existing.reversed) {
+          console.log('[CPX] Already reversed — skip:', safeTransId);
+          return res.status(200).send('1');
+        }
+
+        const userUrl  = `${FIREBASE_URL}/users/${user_id}.json${authParam}`;
+        const userData = await (await fetch(userUrl)).json();
+        if (!userData || userData.error) {
+          console.error('[CPX] User not found during reversal:', user_id);
+          return res.status(200).send('1');
+        }
+
+        const coinsToRemove = existing.coins || 0;
+        const newCoins      = Math.max(0, (userData.coins || 0) - coinsToRemove);
+        const newBalance    = parseFloat((newCoins / COINS_PER_RUPEE).toFixed(2));
+
+        await fetch(userUrl, {
+          method : 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body   : JSON.stringify({ coins: newCoins, balance: newBalance })
+        });
+
+        // Mark the postback log entry as reversed (dashboard uses this to exclude it)
+        await fetch(cpxLogUrl, {
+          method : 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body   : JSON.stringify({ reversed: true, reversedAt: Date.now() })
+        });
+
+        // Also mark the matching taskHistory entry as reversed, if we saved its key
+        if (existing.taskHistoryKey) {
+          await fetch(`${FIREBASE_URL}/users/${user_id}/taskHistory/${existing.taskHistoryKey}.json${authParam}`, {
+            method : 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body   : JSON.stringify({ reversed: true, status: 'Reversed' })
+          });
+        }
+
+        console.log(`[CPX] ⚠️ REVERSED ${coinsToRemove} coins from user ${user_id} (fraud/cancel: ${safeTransId})`);
+        return res.status(200).send('1');
+      }
+
+      // ──────────────────────────────────────────────────────
+      //  STATUS 1 = COMPLETED — normal crediting flow
+      // ──────────────────────────────────────────────────────
+      if (existing && existing.credited) {
         console.log('[CPX] Duplicate — skip:', safeTransId);
         return res.status(200).send('1');
       }
 
-      // ── User fetch ────────────────────────────────────────
+      let usdAmount = parseFloat(amount_usd || '0');
+      if (isNaN(usdAmount) || usdAmount <= 0) {
+        const localVal = parseFloat(amount_local || '0');
+        if (isNaN(localVal) || localVal <= 0) {
+          console.error('[CPX] Both amount_usd and amount_local missing/invalid');
+          return res.status(200).send('1');
+        }
+        usdAmount = localVal / 100;
+        console.log('[CPX] Using amount_local fallback:', localVal, '→ $' + usdAmount);
+      }
+
+      const { coins: coinsToAdd, inr: inrAmount, userShare } = usdToCoins(usdAmount);
+      console.log(`[CPX] Calc: $${usdAmount} × 84 = ₹${inrAmount} × 25% = ₹${userShare} = ${coinsToAdd} coins`);
+
       const userUrl  = `${FIREBASE_URL}/users/${user_id}.json${authParam}`;
       const userData = await (await fetch(userUrl)).json();
-
       if (!userData || userData.error) {
         console.error('[CPX] User not found:', user_id);
         return res.status(200).json({ success: false, reason: 'User not found' });
       }
 
-      // ── Update user ───────────────────────────────────────
-      const newCoins    = (userData.coins     || 0) + coinsToAdd;
-      const newBalance  = parseFloat((newCoins / COINS_PER_RUPEE).toFixed(2));
-      const newTasksDone= (userData.tasksDone || 0) + 1;
+      const newCoins     = (userData.coins     || 0) + coinsToAdd;
+      const newBalance   = parseFloat((newCoins / COINS_PER_RUPEE).toFixed(2));
+      const newTasksDone = (userData.tasksDone || 0) + 1;
 
       await fetch(userUrl, {
         method : 'PATCH',
@@ -116,14 +162,15 @@ export default async function handler(req, res) {
         body   : JSON.stringify({ coins: newCoins, balance: newBalance, tasksDone: newTasksDone })
       });
 
-      // ── Task History ──────────────────────────────────────
-      await fetch(`${FIREBASE_URL}/users/${user_id}/taskHistory.json${authParam}`, {
+      // Push taskHistory entry and capture its generated key so we can mark it
+      // reversed later if CPX cancels this transaction
+      const taskHistoryRes = await fetch(`${FIREBASE_URL}/users/${user_id}/taskHistory.json${authParam}`, {
         method : 'POST',
         headers: { 'Content-Type': 'application/json' },
         body   : JSON.stringify({
           userId    : user_id,
           taskType  : 'Survey',
-          taskName  : isBonus ? 'CPX Survey Screen-Out Bonus' : 'CPX Survey Completed',
+          taskName  : 'CPX Survey Completed',
           coins     : coinsToAdd,
           status    : 'Success',
           source    : 'CPX Research',
@@ -134,15 +181,22 @@ export default async function handler(req, res) {
           timestamp : Date.now(),
         })
       });
+      const taskHistoryData = await taskHistoryRes.json();
+      const taskHistoryKey  = taskHistoryData && taskHistoryData.name ? taskHistoryData.name : null;
 
-      // ── Mark credited ─────────────────────────────────────
-      await fetch(cpxDupUrl, {
+      // Mark credited — store taskHistoryKey too so a future reversal can find it
+      await fetch(cpxLogUrl, {
         method : 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body   : JSON.stringify({ credited: true, coins: coinsToAdd, ts: Date.now() })
+        body   : JSON.stringify({
+          credited: true,
+          coins: coinsToAdd,
+          ts: Date.now(),
+          taskHistoryKey: taskHistoryKey,
+        })
       });
 
-      console.log(`[CPX] ✅ ${isBonus ? '(Bonus) ' : ''}+${coinsToAdd} coins → user: ${user_id} | $${usdAmount} → ₹${userShare}`);
+      console.log(`[CPX] ✅ +${coinsToAdd} coins → user: ${user_id} | $${usdAmount} → ₹${userShare}`);
       return res.status(200).send('1');
 
     } catch (e) {
@@ -152,17 +206,13 @@ export default async function handler(req, res) {
   }
 
   // ════════════════════════════════════════════════════════════
-  //  SOURCE 2 — CPALead Offerwall
-  //  CPALead → payout (dollar amount)
-  //  Formula: payout × 84 × 0.25 × 1 = coins
-  //  Example: $0.10 × 84 = ₹8.4 → ₹8.4 × 0.25 = ₹2.10 → 2 coins (rounded)
+  //  SOURCE 2 — CPALead Offerwall (unchanged)
   // ════════════════════════════════════════════════════════════
   if (source === 'cpalead') {
     const { subid, payout, password, offer_name, offer_id, lead_id } = req.query;
 
     console.log('[CPALead] Postback received:', { subid, payout, offer_name });
 
-    // Validation
     if (!subid || !payout) {
       console.error('[CPALead] Missing params:', req.query);
       return res.status(200).send('1');
@@ -172,19 +222,16 @@ export default async function handler(req, res) {
       return res.status(200).send('1');
     }
 
-    // Parse USD amount
     const payoutUsd = parseFloat(payout);
     if (isNaN(payoutUsd) || payoutUsd <= 0) {
       console.error('[CPALead] Invalid payout:', payout);
       return res.status(200).send('1');
     }
 
-    // Calculate coins
-    const { coins: coinsToAdd, inr: inrAmount, userInr: userShare } = usdToCoins(payoutUsd);
+    const { coins: coinsToAdd, inr: inrAmount, userShare } = usdToCoins(payoutUsd);
     console.log(`[CPALead] Calc: $${payoutUsd} × 84 = ₹${inrAmount} × 25% = ₹${userShare} = ${coinsToAdd} coins`);
 
     try {
-      // ── Duplicate check ───────────────────────────────────
       const txKey = (lead_id || offer_id || '').replace(/[^a-zA-Z0-9_-]/g, '_');
       if (txKey) {
         const dupUrl  = `${FIREBASE_URL}/postback_log/cpalead/${subid}/${txKey}.json${authParam}`;
@@ -195,7 +242,6 @@ export default async function handler(req, res) {
         }
       }
 
-      // ── Rate limit 2 min ──────────────────────────────────
       const rateLimitUrl  = `${FIREBASE_URL}/postback_log/cpalead_rate/${subid}.json${authParam}`;
       const rateLimitData = await (await fetch(rateLimitUrl)).json();
       const lastPostback  = rateLimitData ? rateLimitData.lastTs : 0;
@@ -211,7 +257,6 @@ export default async function handler(req, res) {
 
       const finalTxKey = txKey || ('cl_' + Date.now());
 
-      // ── User fetch ────────────────────────────────────────
       const userUrl  = `${FIREBASE_URL}/users/${subid}.json${authParam}`;
       const userData = await (await fetch(userUrl)).json();
       if (!userData || userData.error) {
@@ -219,7 +264,6 @@ export default async function handler(req, res) {
         return res.status(200).send('1');
       }
 
-      // ── Update user ───────────────────────────────────────
       const newCoins   = (userData.coins     || 0) + coinsToAdd;
       const newBalance = parseFloat((newCoins / COINS_PER_RUPEE).toFixed(2));
       const newTasks   = (userData.tasksDone || 0) + 1;
@@ -230,7 +274,6 @@ export default async function handler(req, res) {
         body   : JSON.stringify({ coins: newCoins, balance: newBalance, tasksDone: newTasks })
       });
 
-      // ── Task History ──────────────────────────────────────
       const offerLabel = offer_name ? decodeURIComponent(offer_name) : 'CPALead Offer';
       await fetch(`${FIREBASE_URL}/users/${subid}/taskHistory.json${authParam}`, {
         method : 'POST',
@@ -251,7 +294,6 @@ export default async function handler(req, res) {
         })
       });
 
-      // ── Mark credited ─────────────────────────────────────
       const clDupUrl = `${FIREBASE_URL}/postback_log/cpalead/${subid}/${finalTxKey}.json${authParam}`;
       await fetch(clDupUrl, {
         method : 'PUT',
@@ -268,9 +310,6 @@ export default async function handler(req, res) {
     }
   }
 
-  // ════════════════════════════════════════════════════════════
-  //  Unknown source
-  // ════════════════════════════════════════════════════════════
   console.error('[Postback] Unknown source:', source);
   return res.status(200).send('Unknown source');
 }
