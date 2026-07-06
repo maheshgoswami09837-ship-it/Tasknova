@@ -245,10 +245,10 @@ tbody tr:hover{background:var(--surface-2);}
 
     <!-- ===================== OVERVIEW ===================== -->
     <div class="page active" id="page-overview">
-      <div class="panel" style="margin-bottom:18px; border-color:var(--emerald);">
-        <div class="panel-title" style="margin-bottom:10px;">💰 Real Revenue — Live From Adsterra + HilltopAds (USD)</div>
-        <div id="realRevenueCards" class="grid grid-9" style="color:var(--text-faint); font-size:12.5px;">Waiting for network data to load…</div>
-        <div style="font-size:10.5px; color:var(--text-faint); margin-top:10px;">These are the exact $ numbers from Adsterra + HilltopAds' own APIs — same as what you'd see logging into their websites directly. CPX Research isn't included here (different currency/concept — see its own card on Ad Networks). This is NOT the same as "Total Revenue (User Earnings)" below — that one is what users have earned/been credited, not real cash you received.</div>
+      <div class="panel" style="margin-bottom:18px; border-color:var(--emerald); text-align:center;">
+        <div class="panel-title" style="margin-bottom:14px;">💰 Real Revenue — Live Networks Combined (USD)</div>
+        <div id="realRevenueCards" style="color:var(--text-faint); font-size:14px;">Waiting for network data to load…</div>
+        <div style="font-size:10.5px; color:var(--text-faint); margin-top:14px;">Adsterra + HilltopAds (their own API, real $) + CPX Research (coins credited to users, converted to $). This is NOT "Total Revenue (User Earnings)" below — that's what users earned overall, not real cash.</div>
       </div>
 
       <div class="grid grid-9" id="overviewCards"></div>
@@ -701,26 +701,19 @@ function renderNetworkSummary(){
   renderRealRevenueCards();
 }
 
-/* ---------- REAL REVENUE: clearly-labeled actual money from ad networks (Overview page) ----------
-   Shown in USD to match exactly what Adsterra/HilltopAds show on their own websites. */
+/* ---------- REAL REVENUE: ONE combined USD total (Adsterra + HilltopAds + CPX) ---------- */
 function renderRealRevenueCards(){
   const el = document.getElementById('realRevenueCards');
   if(!el) return;
   const usd = window.networkTotalsUSD;
   if(!usd || Object.keys(usd).length===0){ el.textContent = 'Waiting for network data to load…'; return; }
 
-  const fmtUSD = n => '$' + (Number(n)||0).toFixed(4);
-  const sum = field => Object.values(usd).reduce((s,v)=>s+(Number(v[field])||0),0);
+  const totalAll = Object.values(usd).reduce((s,v)=>s+(Number(v.total)||0),0);
+  const breakdown = Object.entries(usd).map(([k,v])=>`${(networks.find(n=>n.key===k)||{name:k}).name}: $${(v.total||0).toFixed(4)}`).join(' · ');
 
-  const cards = [
-    {label:'Today', value:fmtUSD(sum('today')), color:'var(--emerald)'},
-    {label:'Yesterday', value:fmtUSD(sum('yesterday')), color:'var(--text-dim)'},
-    {label:'This Month', value:fmtUSD(sum('month')), color:'var(--blue)'},
-    {label:'All-Time Total', value:fmtUSD(sum('total')), color:'var(--emerald)'},
-  ];
-  el.innerHTML = cards.map(c=>`
-    <div class="stat-card"><div class="accent-bar" style="background:${c.color}"></div>
-      <div class="stat-label">${c.label}</div><div class="stat-value small">${c.value}</div></div>`).join('');
+  el.innerHTML = `
+    <div style="font-size:40px; font-weight:800; font-family:var(--font-mono); color:var(--emerald);">$${totalAll.toFixed(4)}</div>
+    <div style="font-size:11px; color:var(--text-faint); margin-top:8px;">${breakdown}</div>`;
 }
 
 /* ---------- PROFIT & LOSS: Ad Revenue (what came in) vs User Payouts (what went out) ---------- */
@@ -832,12 +825,16 @@ function fetchCpxStats(){
     footEl.textContent = 'Included in All Networks Total (based on amount credited to users via CPX)';
 
     networkTotals.cpxresearch = {today, yesterday, month, total};
-    // NOTE: This is NOT counted as "real revenue from CPX" — the postback only tells us
-    // what was paid OUT to users for completing CPX offers, not what CPX actually pays
-    // the app (which is usually a different, often higher, number due to their margin).
-    // We feed it into user payouts (cost) instead, and exclude it from ad revenue totals.
+    // NOTE: coins credited to users, treated as ₹ 1:1 — converting to USD here only
+    // so it can combine with Adsterra/HilltopAds into one single USD total, per request.
     window.cpxUserPayouts = {today, yesterday, month, total};
+    window.networkTotalsUSD = window.networkTotalsUSD || {};
+    window.networkTotalsUSD.cpxresearch = {
+      today: today/USD_TO_INR, yesterday: yesterday/USD_TO_INR,
+      month: month/USD_TO_INR, total: total/USD_TO_INR
+    };
     renderNetworkSummary();
+    renderRawUsdVerification();
 
     networkExtra.cpxresearch = {
       dailyRevenue: dateMap,
