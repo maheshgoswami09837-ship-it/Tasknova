@@ -246,9 +246,9 @@ tbody tr:hover{background:var(--surface-2);}
     <!-- ===================== OVERVIEW ===================== -->
     <div class="page active" id="page-overview">
       <div class="panel" style="margin-bottom:18px; border-color:var(--emerald);">
-        <div class="panel-title" style="margin-bottom:10px;">💰 Real Revenue — Money Received From Ad Networks</div>
+        <div class="panel-title" style="margin-bottom:10px;">💰 Real Revenue — Live From Adsterra + HilltopAds (USD)</div>
         <div id="realRevenueCards" class="grid grid-9" style="color:var(--text-faint); font-size:12.5px;">Waiting for network data to load…</div>
-        <div style="font-size:10.5px; color:var(--text-faint); margin-top:10px;">This is actual money from Adsterra + HilltopAds (live API) + CPX Research (amount credited to users, used as an approximation) + whatever you've manually entered for Monetag/ShrinkEarn. This is NOT the same as "Total Revenue (User Earnings)" below — that one is what users have earned/been credited overall, not real cash you received.</div>
+        <div style="font-size:10.5px; color:var(--text-faint); margin-top:10px;">These are the exact $ numbers from Adsterra + HilltopAds' own APIs — same as what you'd see logging into their websites directly. CPX Research isn't included here (different currency/concept — see its own card on Ad Networks). This is NOT the same as "Total Revenue (User Earnings)" below — that one is what users have earned/been credited, not real cash you received.</div>
       </div>
 
       <div class="grid grid-9" id="overviewCards"></div>
@@ -268,6 +268,13 @@ tbody tr:hover{background:var(--surface-2);}
     <div class="page" id="page-companies">
       <div class="placeholder-note">⚠ Adsterra, HilltopAds & CPX Research pull live data automatically. Monetag & ShrinkEarn don't offer any stats API — use "Add today's entry" to log real revenue numbers manually from their own dashboards. (Note: CPX Research's number is the amount credited to users via CPX, used here as an approximation of CPX earnings.)</div>
       <div class="grid grid-9" id="networkSummaryCards" style="margin-bottom:18px;"></div>
+
+      <div class="panel" style="border-color:var(--blue); margin-bottom:18px;">
+        <div class="panel-title" style="margin-bottom:10px;">🔍 Verify — Raw Dashboard Values (USD, unconverted)</div>
+        <div style="font-size:11px; color:var(--text-faint); margin-bottom:12px;">Compare these numbers directly against what you see on Adsterra's and HilltopAds' own websites (they also show USD). If these don't match, tell me the exact numbers you see there and I'll help find the mismatch.</div>
+        <div id="rawUsdVerification" style="color:var(--text-faint); font-size:12.5px;">Waiting for data…</div>
+      </div>
+
       <div class="grid grid-5" id="companyCards"></div>
 
       <div class="panel" style="margin-top:18px;">
@@ -422,6 +429,11 @@ let wdTab = "pending";
 /* Cross-network aggregation stores — each network's fetch/watch function fills these in,
    then calls updateAggregateVisuals() to refresh Ad Analytics panel + Graphs page charts. */
 window.networkExtra = {}; // { key: { dailyRevenue:{date:amt}, impressions, todayImpressions } }
+
+// Adsterra & HilltopAds report revenue in USD — convert to INR before displaying,
+// since this dashboard shows everything in ₹. Update this rate occasionally
+// (check google "USD to INR") — it doesn't need to be live-accurate to the paisa.
+const USD_TO_INR = 95.3;
 
 /* ---------- AUTH ---------- */
 function handleLogin(){
@@ -689,18 +701,22 @@ function renderNetworkSummary(){
   renderRealRevenueCards();
 }
 
-/* ---------- REAL REVENUE: clearly-labeled actual money from ad networks (Overview page) ---------- */
+/* ---------- REAL REVENUE: clearly-labeled actual money from ad networks (Overview page) ----------
+   Shown in USD to match exactly what Adsterra/HilltopAds show on their own websites. */
 function renderRealRevenueCards(){
   const el = document.getElementById('realRevenueCards');
   if(!el) return;
-  const ad = window.adRevenueTotals;
-  if(!ad){ el.textContent = 'Waiting for network data to load…'; return; }
+  const usd = window.networkTotalsUSD;
+  if(!usd || Object.keys(usd).length===0){ el.textContent = 'Waiting for network data to load…'; return; }
+
+  const fmtUSD = n => '$' + (Number(n)||0).toFixed(4);
+  const sum = field => Object.values(usd).reduce((s,v)=>s+(Number(v[field])||0),0);
 
   const cards = [
-    {label:'Today', value:fmtMoney(ad.today), color:'var(--emerald)'},
-    {label:'Yesterday', value:fmtMoney(ad.yesterday), color:'var(--text-dim)'},
-    {label:'This Month', value:fmtMoney(ad.month), color:'var(--blue)'},
-    {label:'All-Time Total', value:fmtMoney(ad.total), color:'var(--emerald)'},
+    {label:'Today', value:fmtUSD(sum('today')), color:'var(--emerald)'},
+    {label:'Yesterday', value:fmtUSD(sum('yesterday')), color:'var(--text-dim)'},
+    {label:'This Month', value:fmtUSD(sum('month')), color:'var(--blue)'},
+    {label:'All-Time Total', value:fmtUSD(sum('total')), color:'var(--emerald)'},
   ];
   el.innerHTML = cards.map(c=>`
     <div class="stat-card"><div class="accent-bar" style="background:${c.color}"></div>
@@ -740,6 +756,32 @@ function renderProfitLoss(){
     <div style="font-size:10.5px; color:var(--text-faint); margin-top:10px;">
       "User Payouts" = coins credited to users (todayEarnings/totalEarnings in /users). This is what users have earned so far — actual cash leaves your pocket only when a withdrawal is approved, so this is your running/expected liability, not already-paid-out cash.
     </div>`;
+}
+
+/* ---------- RAW USD VERIFICATION: compare against real network dashboards ---------- */
+function renderRawUsdVerification(){
+  const el = document.getElementById('rawUsdVerification');
+  if(!el) return;
+  const usd = window.networkTotalsUSD || {};
+  const keys = Object.keys(usd);
+  if(keys.length===0){ el.textContent = 'Waiting for data…'; return; }
+
+  const fmtUSD = n => '$' + (Number(n)||0).toFixed(4);
+  const totalToday = keys.reduce((s,k)=>s+(usd[k].today||0),0);
+  const totalMonth = keys.reduce((s,k)=>s+(usd[k].month||0),0);
+  const totalAll = keys.reduce((s,k)=>s+(usd[k].total||0),0);
+
+  el.innerHTML = `
+    <table class="pl-table">
+      <thead><tr><th>Network</th><th>Today</th><th>This Month</th><th>All-Time Total</th></tr></thead>
+      <tbody>
+        ${keys.map(k=>`<tr><td>${(networks.find(n=>n.key===k)||{name:k}).name}</td><td>${fmtUSD(usd[k].today)}</td><td>${fmtUSD(usd[k].month)}</td><td>${fmtUSD(usd[k].total)}</td></tr>`).join('')}
+        <tr style="font-weight:700;"><td>TOTAL (USD)</td><td>${fmtUSD(totalToday)}</td><td>${fmtUSD(totalMonth)}</td><td>${fmtUSD(totalAll)}</td></tr>
+      </tbody>
+    </table>
+    <div style="font-size:10.5px; color:var(--text-faint); margin-top:8px;">Converted to INR at ₹${USD_TO_INR}/$ elsewhere on this dashboard: All-Time Total ≈ ₹${(totalAll*USD_TO_INR).toLocaleString('en-IN',{maximumFractionDigits:2})}</div>
+    <div style="font-size:10.5px; color:var(--text-faint); margin-top:4px;">Note: CPX Research isn't shown here — it doesn't report in USD, its number comes from coins credited to users (see its own card below).</div>`;
+  renderRealRevenueCards();
 }
 /* Structure: /postback_log/cpx/{firebase_uid}/{cpx_transaction_id} = {coins, credited, ts} */
 function fetchCpxStats(){
@@ -936,13 +978,23 @@ async function fetchHilltopAdsStats(){
 
     const sumWhere = (filterFn, key) => entries.filter(([d])=>filterFn(d)).reduce((s,[,v])=>s+(Number(v[key])||0),0);
 
-    const todayRevenue = sumWhere(d=>d===todayStr, 'revenue');
-    const yestRevenue = sumWhere(d=>d===yesterdayStr, 'revenue');
-    const monthRevenue = sumWhere(d=>d.startsWith(thisMonthPrefix), 'revenue');
-    const totalRevenue = entries.reduce((s,[,v])=>s+(Number(v.revenue)||0),0);
+    // Raw USD values, exactly as HilltopAds' API returns them
+    const todayRevenueUSD = sumWhere(d=>d===todayStr, 'revenue');
+    const yestRevenueUSD = sumWhere(d=>d===yesterdayStr, 'revenue');
+    const monthRevenueUSD = sumWhere(d=>d.startsWith(thisMonthPrefix), 'revenue');
+    const totalRevenueUSD = entries.reduce((s,[,v])=>s+(Number(v.revenue)||0),0);
+
+    const todayRevenue = todayRevenueUSD * USD_TO_INR;
+    const yestRevenue = yestRevenueUSD * USD_TO_INR;
+    const monthRevenue = monthRevenueUSD * USD_TO_INR;
+    const totalRevenue = totalRevenueUSD * USD_TO_INR;
     const totalImpressions = entries.reduce((s,[,v])=>s+(Number(v.impressions)||0),0);
     const totalClicks = entries.reduce((s,[,v])=>s+(Number(v.clicks)||0),0);
-    const avgCpm = entries.length ? entries.reduce((s,[,v])=>s+(Number(v.cpm)||0),0)/entries.length : 0;
+    const avgCpm = (entries.length ? entries.reduce((s,[,v])=>s+(Number(v.cpm)||0),0)/entries.length : 0) * USD_TO_INR;
+
+    window.networkTotalsUSD = window.networkTotalsUSD || {};
+    window.networkTotalsUSD.hilltopads = {today:todayRevenueUSD, yesterday:yestRevenueUSD, month:monthRevenueUSD, total:totalRevenueUSD};
+    renderRawUsdVerification();
 
     rowsEl.innerHTML = `
       <div><span>Today</span><b>${fmtMoney(todayRevenue)}</b></div>
@@ -961,7 +1013,7 @@ async function fetchHilltopAdsStats(){
     renderNetworkSummary();
 
     networkExtra.hilltopads = {
-      dailyRevenue: Object.fromEntries(entries.map(([d,v])=>[d, Number(v.revenue)||0])),
+      dailyRevenue: Object.fromEntries(entries.map(([d,v])=>[d, (Number(v.revenue)||0) * USD_TO_INR])),
       impressions: totalImpressions,
       todayImpressions: sumWhere(d=>d===todayStr,'impressions'),
     };
@@ -994,13 +1046,25 @@ async function fetchAdsterraStats(){
     const yestItems = items.filter(i=>i.date===yesterdayStr);
     const monthItems = items.filter(i=>i.date && i.date.startsWith(thisMonthPrefix));
 
-    const todayRevenue = sum(todayItems,'revenue');
-    const yestRevenue = sum(yestItems,'revenue');
-    const monthRevenue = sum(monthItems,'revenue');
-    const totalRevenue = sum(items,'revenue');
+    // Raw USD values, exactly as Adsterra's API returns them — use these to compare
+    // against your real Adsterra dashboard (which also shows USD).
+    const todayRevenueUSD = sum(todayItems,'revenue');
+    const yestRevenueUSD = sum(yestItems,'revenue');
+    const monthRevenueUSD = sum(monthItems,'revenue');
+    const totalRevenueUSD = sum(items,'revenue');
+
+    // Adsterra reports in USD — convert to INR for the rest of the dashboard
+    const todayRevenue = todayRevenueUSD * USD_TO_INR;
+    const yestRevenue = yestRevenueUSD * USD_TO_INR;
+    const monthRevenue = monthRevenueUSD * USD_TO_INR;
+    const totalRevenue = totalRevenueUSD * USD_TO_INR;
     const totalImpressions = sum(items,'impression');
     const totalClicks = sum(items,'clicks');
-    const avgCpm = items.length ? (sum(items,'cpm')/items.length) : 0;
+    const avgCpm = (items.length ? (sum(items,'cpm')/items.length) : 0) * USD_TO_INR;
+
+    window.networkTotalsUSD = window.networkTotalsUSD || {};
+    window.networkTotalsUSD.adsterra = {today:todayRevenueUSD, yesterday:yestRevenueUSD, month:monthRevenueUSD, total:totalRevenueUSD};
+    renderRawUsdVerification();
 
     rowsEl.innerHTML = `
       <div><span>Today</span><b>${fmtMoney(todayRevenue)}</b></div>
@@ -1019,7 +1083,7 @@ async function fetchAdsterraStats(){
     renderNetworkSummary();
 
     networkExtra.adsterra = {
-      dailyRevenue: Object.fromEntries(items.map(i=>[i.date, Number(i.revenue)||0])),
+      dailyRevenue: Object.fromEntries(items.map(i=>[i.date, (Number(i.revenue)||0) * USD_TO_INR])),
       impressions: totalImpressions,
       todayImpressions: sum(todayItems,'impression'),
     };
