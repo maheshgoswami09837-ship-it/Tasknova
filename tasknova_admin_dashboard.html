@@ -525,6 +525,7 @@ function initData(){
     renderOverview();
     renderUsers();
     renderUserGrowthChart();
+    computeRealCpxRevenue();
   });
 
   db.ref('withdrawals').on('value', snap=>{
@@ -776,6 +777,36 @@ function renderRawUsdVerification(){
     <div style="font-size:10.5px; color:var(--text-faint); margin-top:4px;">Note: CPX Research isn't shown here — it doesn't report in USD, its number comes from coins credited to users (see its own card below).</div>`;
   renderRealRevenueCards();
 }
+
+/* ---------- REAL CPX REVENUE — from taskHistory's stored amountUsd (pre-25%-split) ----------
+   The postback code splits CPX's payment 4-ways: user gets 25%. taskHistory stores the
+   FULL original amountUsd/amountInr before that split — this is what CPX actually paid,
+   not the user-credited coins. This feeds into networkTotalsUSD.cpxresearch. */
+function computeRealCpxRevenue(){
+  const todayStr = new Date().toISOString().slice(0,10);
+  const y = new Date(); y.setDate(y.getDate()-1);
+  const yesterdayStr = y.toISOString().slice(0,10);
+  const monthPrefix = todayStr.slice(0,7);
+
+  let today=0, yesterday=0, month=0, total=0;
+
+  Object.values(usersData).forEach(u=>{
+    if(!u.taskHistory) return;
+    Object.values(u.taskHistory).forEach(t=>{
+      if(!t || t.source !== 'CPX Research' || !t.amountUsd || t.reversed === true) return;
+      const usd = Number(t.amountUsd)||0;
+      const dateStr = t.timestamp ? new Date(t.timestamp).toISOString().slice(0,10) : null;
+      total += usd;
+      if(dateStr===todayStr) today += usd;
+      if(dateStr===yesterdayStr) yesterday += usd;
+      if(dateStr && dateStr.startsWith(monthPrefix)) month += usd;
+    });
+  });
+
+  window.networkTotalsUSD = window.networkTotalsUSD || {};
+  window.networkTotalsUSD.cpxresearch = {today, yesterday, month, total};
+  renderRawUsdVerification();
+}
 /* Structure: /postback_log/cpx/{firebase_uid}/{cpx_transaction_id} = {coins, credited, ts} */
 function fetchCpxStats(){
   const statusEl = document.getElementById('status-cpxresearch');
@@ -795,7 +826,7 @@ function fetchCpxStats(){
 
     Object.entries(data).forEach(([uid, transactions])=>{
       Object.entries(transactions||{}).forEach(([transId, t])=>{
-        if(!t || t.credited !== true) return; // only count credited transactions
+        if(!t || t.credited !== true || t.reversed === true) return; // exclude non-credited and reversed/fraud transactions
         const coins = Number(t.coins)||0; // 1 coin = ₹1 (post-migration)
         const ts = Number(t.ts)||0;
         const dateStr = ts ? new Date(ts).toISOString().slice(0,10) : null;
@@ -822,19 +853,14 @@ function fetchCpxStats(){
       <div><span>Last Sync</span><b>${lastTs ? new Date(lastTs).toLocaleString('en-IN',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}) : '—'}</b></div>`;
     statusEl.textContent = 'live';
     statusEl.style.color = 'var(--emerald)';
-    footEl.textContent = 'Included in All Networks Total (based on amount credited to users via CPX)';
+    footEl.textContent = 'User payouts via CPX (see "Real CPX Revenue" in Verify section for actual earnings)';
 
     networkTotals.cpxresearch = {today, yesterday, month, total};
-    // NOTE: coins credited to users, treated as ₹ 1:1 — converting to USD here only
-    // so it can combine with Adsterra/HilltopAds into one single USD total, per request.
+    // NOTE: this "coins" figure is the 25% user share, kept here for the CPX card's own
+    // display. The accurate pre-split revenue (what CPX actually paid) is computed
+    // separately in computeRealCpxRevenue() from taskHistory's stored amountUsd.
     window.cpxUserPayouts = {today, yesterday, month, total};
-    window.networkTotalsUSD = window.networkTotalsUSD || {};
-    window.networkTotalsUSD.cpxresearch = {
-      today: today/USD_TO_INR, yesterday: yesterday/USD_TO_INR,
-      month: month/USD_TO_INR, total: total/USD_TO_INR
-    };
     renderNetworkSummary();
-    renderRawUsdVerification();
 
     networkExtra.cpxresearch = {
       dailyRevenue: dateMap,
@@ -842,6 +868,7 @@ function fetchCpxStats(){
       todayImpressions: todayOfferCount,
     };
     updateAggregateVisuals();
+    computeRealCpxRevenue();
   }, err=>{
     statusEl.textContent = 'error';
     statusEl.style.color = 'var(--red)';
