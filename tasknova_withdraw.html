@@ -613,16 +613,43 @@
       if (data) {
         let totalCoins = data.coins || 0;
 
-        // ── REJECTED FIX: pending withdraw deducted tha — rejected ones wapas add karo ──
+        // ── REJECTED FIX: rejected withdrawal ka exact amount ek hi baar wapas credit karo ──
+        // Firebase mein 'refundAdded:true' turant likha jaata hai taaki ye dobara kabhi na chale
+        // (pehle ye sirf local/display calculation tha jo kabhi persist nahi hota tha — isliye
+        // rejected withdrawals ka refund baar-baar, aur 100x zyada, add ho raha tha).
         if (wdData && typeof wdData === 'object') {
-          Object.values(wdData).forEach(tx => {
+          for (const [key, tx] of Object.entries(wdData)) {
             const st = (tx.status || '').toLowerCase().trim();
             const isRejected = ['rejected','reject','failed','fail','cancelled','canceled'].includes(st);
             if (isRejected && tx.refundAdded !== true) {
-              // Rejected amount coins mein wapas count karo (display only — admin PATCH se actual update hoga)
-              totalCoins += Math.round((tx.amount || 0) * 100);
+              const refundAmount = Math.round(tx.amount || 0); // exact withdrawn amount, 1 coin = ₹1
+              if (refundAmount > 0) {
+                try {
+                  // Fresh read so we credit on top of the latest known balance, not a stale one
+                  const freshUserRes = await fetch(DB + '/users/' + uid + '.json' + ap);
+                  const freshUser    = await freshUserRes.json() || {};
+                  const freshCoins   = freshUser.coins || 0;
+                  const newCoins     = freshCoins + refundAmount;
+
+                  await fetch(DB + '/users/' + uid + '.json' + ap, {
+                    method : 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body   : JSON.stringify({ coins: newCoins, balance: newCoins })
+                  });
+                  await fetch(DB + '/withdrawals/' + uid + '/' + key + '.json' + ap, {
+                    method : 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body   : JSON.stringify({ refundAdded: true })
+                  });
+
+                  totalCoins = newCoins;
+                  tx.refundAdded = true; // reflect locally so this render cycle shows it correctly
+                } catch (refundErr) {
+                  console.log('refund credit error:', refundErr);
+                }
+              }
             }
-          });
+          }
         }
 
         userBalance = parseFloat((totalCoins / 1).toFixed(2));
