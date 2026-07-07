@@ -6,9 +6,10 @@ export default async function handler(req, res) {
   const HILLTOP_KEY = process.env.HILLTOPADS_API_KEY; // set in Vercel → Settings → Environment Variables
 
   const today = new Date().toISOString().slice(0, 10);
-  const monthAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+  // Previously defaulted to last 30 days only — extending to cover full app history
+  const accountStart = `${new Date().getFullYear()}-01-01`;
 
-  const date = req.query.date || monthAgo;   // range start
+  const date = req.query.date || accountStart;   // range start
   const date2 = req.query.date2 || today;    // range end
 
   // Correct endpoint per HilltopAds docs — no /v1/ prefix
