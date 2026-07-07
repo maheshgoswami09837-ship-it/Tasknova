@@ -551,7 +551,7 @@
   let savedPayments    = { upi: null, bank: null };
 
   // ── Page load — instant show ──────────────────────────────────
-  window.addEventListener('load', () => {
+  document.addEventListener('DOMContentLoaded', () => {
     document.body.classList.add('loaded');
 
     // Load EmailJS
@@ -613,49 +613,9 @@
       if (data) {
         let totalCoins = data.coins || 0;
 
-        // ── REJECTED FIX: rejected withdrawal ka exact amount ek hi baar wapas credit karo ──
-        // Firebase mein 'refundAdded:true' turant likha jaata hai taaki ye dobara kabhi na chale
-        // (pehle ye sirf local/display calculation tha jo kabhi persist nahi hota tha — isliye
-        // rejected withdrawals ka refund baar-baar, aur 100x zyada, add ho raha tha).
-        if (wdData && typeof wdData === 'object') {
-          for (const [key, tx] of Object.entries(wdData)) {
-            const st = (tx.status || '').toLowerCase().trim();
-            const isRejected = ['rejected','reject','failed','fail','cancelled','canceled'].includes(st);
-            if (isRejected && tx.refundAdded !== true) {
-              const refundAmount = Math.round(tx.amount || 0); // exact withdrawn amount, 1 coin = ₹1
-              if (refundAmount > 0) {
-                try {
-                  // Fresh read so we credit on top of the latest known balance, not a stale one
-                  const freshUserRes = await fetch(DB + '/users/' + uid + '.json' + ap);
-                  const freshUser    = await freshUserRes.json() || {};
-                  const freshCoins   = freshUser.coins || 0;
-                  const newCoins     = freshCoins + refundAmount;
-
-                  await fetch(DB + '/users/' + uid + '.json' + ap, {
-                    method : 'PATCH',
-                    headers: { 'Content-Type': 'application/json' },
-                    body   : JSON.stringify({ coins: newCoins, balance: newCoins })
-                  });
-                  await fetch(DB + '/withdrawals/' + uid + '/' + key + '.json' + ap, {
-                    method : 'PATCH',
-                    headers: { 'Content-Type': 'application/json' },
-                    body   : JSON.stringify({ refundAdded: true })
-                  });
-
-                  totalCoins = newCoins;
-                  tx.refundAdded = true; // reflect locally so this render cycle shows it correctly
-                } catch (refundErr) {
-                  console.log('refund credit error:', refundErr);
-                }
-              }
-            }
-          }
-        }
-
         userBalance = parseFloat((totalCoins / 1).toFixed(2));
         userEmail   = data.email || '';
         document.querySelector('.user-balance').textContent = '₹' + userBalance.toFixed(2);
-        
 
         // Cache karo taaki next load instant ho
         localStorage.setItem('tasknova_coins', String(totalCoins));
@@ -667,10 +627,56 @@
           localStorage.setItem('tasknova_savedPayments', JSON.stringify(data.savedPayments));
           renderSavedDetails();
         }
+
+        // ── Instant render: history/pending card turant dikhao, refund-credit background me ──
         renderHistory(wdData);
         showPendingCard(wdData);
+
+        // ── REJECTED FIX: rejected withdrawal ka exact amount ek hi baar wapas credit karo ──
+        // Firebase mein 'refundAdded:true' turant likha jaata hai taaki ye dobara kabhi na chale.
+        // Ye ab background me chalta hai, history render ko block nahi karta.
+        creditRejectedRefunds(uid, ap, wdData);
       }
     } catch(e) { console.log('fetchUserData error:', e); }
+  }
+
+  // ── Background: rejected withdrawals ka refund credit karo (non-blocking) ──
+  async function creditRejectedRefunds(uid, ap, wdData) {
+    if (!wdData || typeof wdData !== 'object') return;
+    for (const [key, tx] of Object.entries(wdData)) {
+      const st = (tx.status || '').toLowerCase().trim();
+      const isRejected = ['rejected','reject','failed','fail','cancelled','canceled'].includes(st);
+      if (isRejected && tx.refundAdded !== true) {
+        const refundAmount = Math.round(tx.amount || 0); // exact withdrawn amount, 1 coin = ₹1
+        if (refundAmount > 0) {
+          try {
+            // Fresh read so we credit on top of the latest known balance, not a stale one
+            const freshUserRes = await fetch(DB + '/users/' + uid + '.json' + ap);
+            const freshUser    = await freshUserRes.json() || {};
+            const freshCoins   = freshUser.coins || 0;
+            const newCoins     = freshCoins + refundAmount;
+
+            await fetch(DB + '/users/' + uid + '.json' + ap, {
+              method : 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body   : JSON.stringify({ coins: newCoins, balance: newCoins })
+            });
+            await fetch(DB + '/withdrawals/' + uid + '/' + key + '.json' + ap, {
+              method : 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body   : JSON.stringify({ refundAdded: true })
+            });
+
+            // Balance update ho gaya — display bhi refresh karo
+            userBalance = parseFloat((newCoins / 1).toFixed(2));
+            document.querySelector('.user-balance').textContent = '₹' + userBalance.toFixed(2);
+            localStorage.setItem('tasknova_coins', String(newCoins));
+          } catch (refundErr) {
+            console.log('refund credit error:', refundErr);
+          }
+        }
+      }
+    }
   }
 
   // ── Show saved details ────────────────────────────────────────
@@ -1018,19 +1024,24 @@
     const ap = token ? '?auth=' + token : '';
 
     try {
-      // Step 1: Purane REJECTED entries hata do (dobara withdraw karne se pehle)
+      // Step 1: Purane REJECTED entries ko "archive" karo (delete NAHI) — taaki wo
+      // Transaction History me dikhte rahein, sirf withdraw button ke niche se hat jayein.
       const existingRes = await fetch(DB + '/withdrawals/' + uid + '.json' + ap);
       const existingData = await existingRes.json();
       if (existingData) {
-        const deletePromises = Object.entries(existingData)
+        const archivePromises = Object.entries(existingData)
           .filter(([, w]) => {
             const st = (w.status || '').toLowerCase().trim();
             return ['rejected','reject','failed','fail','cancelled','canceled'].includes(st);
           })
           .map(([key]) =>
-            fetch(DB + '/withdrawals/' + uid + '/' + key + '.json' + ap, { method: 'DELETE' })
+            fetch(DB + '/withdrawals/' + uid + '/' + key + '.json' + ap, {
+              method : 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body   : JSON.stringify({ archived: true })
+            })
           );
-        await Promise.all(deletePromises);
+        await Promise.all(archivePromises);
       }
 
       // Step 2: Naya Withdrawal request save karo
@@ -1274,11 +1285,15 @@
 
     const items = Object.values(data).reverse();
 
-    // Niche dikhao: pending + rejected (success nahi)
+    // Niche (withdraw button ke neeche) dikhao: sirf pending + un-archived rejected.
+    // Success ho jaye ya naya withdraw ho jaye (rejected archive ho jata hai) to
+    // Transaction History me chala jata hai, yahan se hat jata hai.
     const activeItems = items.filter(item => {
       const st = (item.status || 'pending').toLowerCase().trim();
       const isSuccess = ['success','done','completed','approved'].includes(st);
-      return !isSuccess; // pending aur rejected dono dikhao
+      if (isSuccess) return false;
+      if (item.archived === true) return false;
+      return true;
     });
 
     if (activeItems.length === 0) { container.innerHTML = ''; return; }
