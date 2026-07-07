@@ -49,6 +49,26 @@ export default async function handler(req, res) {
   const source    = req.query.source;
   const authParam = FIREBASE_SECRET ? ('?auth=' + FIREBASE_SECRET) : '';
 
+  // ── Failure logger ──────────────────────────────────────────
+  // CPX (and any advertiser) counts a transaction on THEIR side as soon as
+  // they fire the postback — regardless of what our server does with it.
+  // If we silently drop a postback (user not found, bad amount, etc.) we
+  // return 200 so CPX won't retry, but nothing gets recorded anywhere —
+  // creating an invisible gap between CPX's real Balance and our dashboard.
+  // This logs every dropped postback so it's visible and reconcilable.
+  async function logCpxFailure(reason, query) {
+    try {
+      const key = 'fail_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
+      await fetch(`${FIREBASE_URL}/postback_log/cpx_failed/${key}.json${authParam}`, {
+        method : 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body   : JSON.stringify({ reason, query, ts: Date.now() })
+      });
+    } catch (e) {
+      console.error('[CPX] Failed to log failure:', e.message);
+    }
+  }
+
   // ════════════════════════════════════════════════════════════
   //  SOURCE 1 — CPX Research
   // ════════════════════════════════════════════════════════════
@@ -58,6 +78,7 @@ export default async function handler(req, res) {
     console.log('[CPX] Postback received:', { status, trans_id, amount_usd, user_id });
 
     if (!user_id) {
+      await logCpxFailure('Missing user_id', req.query);
       return res.status(200).json({ success: false, reason: 'Missing user_id' });
     }
     const statusCode = parseInt(status);
@@ -90,6 +111,7 @@ export default async function handler(req, res) {
         const userData = await (await fetch(userUrl)).json();
         if (!userData || userData.error) {
           console.error('[CPX] User not found during reversal:', user_id);
+          await logCpxFailure('User not found during reversal', req.query);
           return res.status(200).send('1');
         }
 
@@ -136,6 +158,7 @@ export default async function handler(req, res) {
         const localVal = parseFloat(amount_local || '0');
         if (isNaN(localVal) || localVal <= 0) {
           console.error('[CPX] Both amount_usd and amount_local missing/invalid');
+          await logCpxFailure('Invalid amount_usd and amount_local', req.query);
           return res.status(200).send('1');
         }
         usdAmount = localVal / 100;
@@ -149,6 +172,7 @@ export default async function handler(req, res) {
       const userData = await (await fetch(userUrl)).json();
       if (!userData || userData.error) {
         console.error('[CPX] User not found:', user_id);
+        await logCpxFailure('User not found (credit)', req.query);
         return res.status(200).json({ success: false, reason: 'User not found' });
       }
 
@@ -201,6 +225,7 @@ export default async function handler(req, res) {
 
     } catch (e) {
       console.error('[CPX] Error:', e.message);
+      await logCpxFailure('Exception: ' + e.message, req.query);
       return res.status(200).send('1');
     }
   }
