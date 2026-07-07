@@ -12,8 +12,11 @@ export default async function handler(req, res) {
     .filter(Boolean);
 
   const today = new Date().toISOString().slice(0, 10);
-  const monthAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
-  const startDate = req.query.start_date || monthAgo;
+  // Previously defaulted to last 30 days only — but your Adsterra data goes back
+  // further (May 2026), so a 30-day window was missing most of the real revenue.
+  // Using Jan 1 of this year as a safe "since account started" default.
+  const accountStart = `${new Date().getFullYear()}-01-01`;
+  const startDate = req.query.start_date || accountStart;
   const finishDate = req.query.finish_date || today;
 
   try {
