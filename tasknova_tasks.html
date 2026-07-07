@@ -2838,13 +2838,15 @@
   // taskType: 'Offerwall' | 'Survey' | 'Shortlink' | 'Ad' | 'Spin' | 'Scratch' | 'Quiz' | 'Checkin' | 'Bonus'
   async function logTaskActivity({ uid, taskType, taskName, coins, status, extraData }) {
     if (!uid || uid === 'null') return null;
+    const now = Date.now();
+    const todayIST = new Date(now + 5.5*60*60*1000).toISOString().split('T')[0];
     const entry = {
       userId:    uid,
       taskType:  taskType,
       taskName:  taskName  || taskType,
       coins:     coins     || 0,
       status:    status    || 'Pending',
-      timestamp: Date.now(),
+      timestamp: now,
       ...(extraData || {})
     };
     try {
@@ -2863,6 +2865,25 @@
       });
       if (!res.ok) throw new Error('HTTP ' + res.status);
       const result = await res.json();
+
+      // NEW: same entry saved under today's date too — /users/{uid}/dailyTasks/{date}/history/{key}
+      // This is what the admin dashboard now reads for "which tasks did each active user do today".
+      if (result && result.name) {
+        fetch(DB_URL + '/users/' + uid + '/dailyTasks/' + todayIST + '/history/' + result.name + '.json' + ap, {
+          method:  'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body:    JSON.stringify(entry)
+        }).catch(()=>{});
+      }
+
+      // NEW: real "last active" timestamp — written on every task action (Pending or Success),
+      // not tied to the daily-reset counter. Admin dashboard's Active Users Today should use this.
+      fetch(DB_URL + '/users/' + uid + '.json' + ap, {
+        method:  'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ lastActive: now })
+      }).catch(()=>{});
+
       console.log('[TaskLog] ✅ Logged:', taskType, status, '| key:', result && result.name);
       return result && result.name;
     } catch(e) {
