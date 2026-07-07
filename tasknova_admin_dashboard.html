@@ -563,10 +563,9 @@ function renderOverview(){
   const totalWithdrawals = wds.filter(w=>w.status==='approved').reduce((s,w)=>s+(Number(w.amount)||0),0);
   const netProfitLoss = totalRevenue - totalWithdrawals;
   const totalUsers = users.length;
-  // Prefer the new server-timestamped "lastActive" field once you add the tracking
-  // snippet to your app. Falls back to lastResetDate (less reliable — it's a daily
-  // counter reset that can fire for users regardless of whether they opened the app).
-  const activeToday = users.filter(u => isToday(u.lastActive || u.lastResetDate)).length;
+  // Uses only the server-timestamped "lastActive" field (set on login). No fallback
+  // to lastResetDate — that's a daily task-counter reset, not a real app-open signal.
+  const activeToday = users.filter(u => isToday(u.lastActive)).length;
   const newToday = users.filter(u=>isToday(u.joinDate)).length;
 
   const cards = [
@@ -1188,7 +1187,7 @@ function renderUsers(){
       <td><div class="avatar-chip"><div class="avatar">${initials(u.name)}</div><div><div>${u.name||'—'}</div><div style="font-size:10.5px;color:var(--text-faint)">${u.email||'—'}</div></div></div></td>
       <td class="cell-mono">${u.uid.slice(0,10)}…</td>
       <td>${fmtDate(u.joinDate)}</td>
-      <td>${fmtDate(u.lastActive) !== '—' ? fmtDate(u.lastActive) : fmtDate(u.lastResetDate)}</td>
+      <td>${u.lastActive ? fmtDate(u.lastActive) : '<span style="color:var(--text-faint)">Never</span>'}</td>
       <td class="cell-mono">${fmtMoney(u.balance)}</td>
       <td class="cell-mono">${fmtMoney(u.totalEarned)}</td>
       <td class="cell-mono">${fmtMoney(earnedTodayFor(u))}</td>
