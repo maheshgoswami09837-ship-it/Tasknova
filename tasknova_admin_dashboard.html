@@ -25,7 +25,7 @@
   --emerald:#12D992; --emerald-dim:#0B9C6B; --amber:#F5A623; --red:#F0466A; --blue:#4C8DFF;
   --radius:14px; --font-ui:'Inter',sans-serif; --font-mono:'JetBrains Mono',monospace;
   --shadow:0 8px 24px rgba(0,0,0,.35);
-}
+
 [data-theme="light"]{
   --bg:#F3F5F9; --surface:#FFFFFF; --surface-2:#F7F8FB; --border:#E4E8F0;
   --text:#131A2A; --text-dim:#5C6784; --text-faint:#98A2BC;
@@ -252,11 +252,6 @@ tbody tr:hover{background:var(--surface-2);}
       </div>
 
       <div class="grid grid-9" id="overviewCards"></div>
-
-      <div class="panel" style="margin-top:18px;" id="profitLossPanel">
-        <div class="panel-title" style="margin-bottom:14px;">Profit &amp; Loss — Ad Revenue vs User Payouts</div>
-        <div id="profitLossBody" style="color:var(--text-faint); font-size:12.5px;">Waiting for ad network data to load…</div>
-      </div>
 
       <div style="margin-top:22px;" class="grid grid-2">
         <div class="chart-box"><h3>User Growth (last 14 days)</h3><canvas id="chartUserGrowth"></canvas></div>
@@ -594,11 +589,7 @@ function renderOverview(){
 
   const cards = [
     {label:'Total Revenue (User Earnings)', value:fmtMoney(totalRevenue), color:'var(--emerald)'},
-    {label:"Today's Revenue", value:fmtMoney(todayRevenue), color:'var(--emerald)'},
-    {label:"Yesterday's Revenue", value:fmtMoney(yesterdayRevenue), color:'var(--text-dim)'},
-    {label:'This Month Revenue', value:fmtMoney(monthRevenue), color:'var(--blue)'},
-    {label:'Total Withdrawals', value:fmtMoney(totalWithdrawals), color:'var(--amber)'},
-    {label:'Net Profit / Loss', value:fmtMoney(netProfitLoss), color: netProfitLoss>=0?'var(--emerald)':'var(--red)'},
+    {label:'Coins Earned Today (All Users)', value:fmtMoney(todayRevenue), color:'var(--emerald)'},
     {label:'Total Registered Users', value:totalUsers.toLocaleString('en-IN'), color:'var(--blue)'},
     {label:'Active Users Today', value:activeToday.toLocaleString('en-IN'), color:'var(--emerald)'},
     {label:'New Users Today', value:newToday.toLocaleString('en-IN'), color:'var(--blue)'},
