@@ -330,20 +330,40 @@ tbody tr:hover{background:var(--surface-2);}
       <div class="grid grid-9" style="margin-bottom:18px;" id="wdSummaryCards"></div>
       <div class="panel">
         <div class="panel-head">
+          <div class="panel-title">Withdrawal Requests <span class="count" id="wdCount"></span></div>
           <div class="tabs">
+            <button class="tab-btn" data-status="all" onclick="setWdTab('all')">All</button>
             <button class="tab-btn active" data-status="pending" onclick="setWdTab('pending')">Pending</button>
             <button class="tab-btn" data-status="approved" onclick="setWdTab('approved')">Approved</button>
             <button class="tab-btn" data-status="rejected" onclick="setWdTab('rejected')">Rejected</button>
           </div>
-          <input class="search-input" id="wdSearch" placeholder="Search user…" oninput="renderWithdrawals()">
+          <input class="search-input" id="wdSearch" placeholder="Search name, UID, email, or UPI ID…" oninput="wdSearchChanged()">
         </div>
         <div class="table-wrap">
           <table>
             <thead><tr>
-              <th>User</th><th>Amount</th><th>Method</th><th>Txn ID</th><th>Screenshot</th><th>Requested</th><th>Status</th><th>Action</th>
+              <th>User</th><th>UID</th><th>Balance</th><th>Amount</th><th>Payment Details</th>
+              <th>Screenshot</th><th>Requested</th><th>Status</th><th>Action</th>
             </tr></thead>
             <tbody id="wdBody"></tbody>
           </table>
+        </div>
+        <div id="wdPagination" style="display:flex; align-items:center; justify-content:center; margin-top:14px;"></div>
+      </div>
+    </div>
+
+    <!-- WITHDRAWAL ACTION CONFIRMATION MODAL -->
+    <div class="modal-backdrop" id="wdConfirmModal">
+      <div class="modal-box">
+        <h3 id="wdConfirmTitle">Confirm action</h3>
+        <div id="wdConfirmDetail" style="font-size:12.5px; color:var(--text-faint); margin-bottom:4px;"></div>
+        <div id="wdReasonWrap" style="display:none;">
+          <label>Rejection reason (sent to user)</label>
+          <textarea id="wdReasonInput" rows="3" placeholder="e.g. UPI ID doesn't match your registered account" style="width:100%; padding:9px 12px; background:var(--surface-2); border:1px solid var(--border); border-radius:8px; color:var(--text); font-size:13px; font-family:inherit; resize:vertical;"></textarea>
+        </div>
+        <div class="modal-actions">
+          <button class="btn-cancel" onclick="closeWdConfirm()">Cancel</button>
+          <button class="btn-save" id="wdConfirmBtn" onclick="submitWdAction()">Confirm</button>
         </div>
       </div>
     </div>
@@ -425,7 +445,6 @@ const db = firebase.database();
 
 let usersData = {};
 let withdrawalsData = {};
-let wdTab = "pending";
 
 /* Cross-network aggregation stores — each network's fetch/watch function fills these in,
    then calls updateAggregateVisuals() to refresh Ad Analytics panel + Graphs page charts. */
@@ -507,6 +526,11 @@ function toggleTheme(){
 const fmtMoney = n => '₹' + (Number(n)||0).toLocaleString('en-IN', {maximumFractionDigits:2});
 const fmtDate = ts => ts ? new Date(ts).toLocaleString('en-IN',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}) : '—';
 const isToday = ts => ts && new Date(ts).toDateString() === new Date().toDateString();
+// adsWatchedToday/quizzesToday/scratchesToday/spinsToday are client-side counters that
+// only reset when the user opens the app and the reset-check runs. If a user hasn't
+// opened the app today, these fields still hold yesterday's (or older) stale numbers.
+// Gate them on lastResetDate so the dashboard shows 0 instead of stale leftover counts.
+const todayCount = (u, field) => isToday(u.lastResetDate) ? (Number(u[field])||0) : 0;
 const isYesterday = ts => { if(!ts) return false; const y=new Date(); y.setDate(y.getDate()-1); return new Date(ts).toDateString()===y.toDateString(); };
 const isThisMonth = ts => { if(!ts) return false; const d=new Date(ts), n=new Date(); return d.getMonth()===n.getMonth() && d.getFullYear()===n.getFullYear(); };
 const initials = name => (name||'?').trim().split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
@@ -554,7 +578,7 @@ function initData(){
 /* ---------- OVERVIEW ---------- */
 function renderOverview(){
   const users = Object.entries(usersData).map(([uid,u])=>({uid,...u}));
-  const wds = Object.entries(withdrawalsData).map(([id,w])=>({id,...w}));
+  const wds = flattenWithdrawals();
 
   const totalRevenue = users.reduce((s,u)=>s+(Number(u.totalEarned)||0),0);
   const todayRevenue = users.reduce((s,u)=>s+computeUserToday(u),0);
@@ -1191,11 +1215,11 @@ function renderUsers(){
       <td class="cell-mono">${fmtMoney(u.balance)}</td>
       <td class="cell-mono">${fmtMoney(u.totalEarned)}</td>
       <td class="cell-mono">${fmtMoney(earnedTodayFor(u))}</td>
-      <td class="cell-mono">${u.adsWatchedToday||0}</td>
+      <td class="cell-mono">${todayCount(u,'adsWatchedToday')}</td>
       <td class="cell-mono">${u.tasksDone||0}</td>
-      <td class="cell-mono">${u.quizzesToday||0}</td>
-      <td class="cell-mono">${u.scratchesToday||0}</td>
-      <td class="cell-mono">${u.spinsToday||0}</td>
+      <td class="cell-mono">${todayCount(u,'quizzesToday')}</td>
+      <td class="cell-mono">${todayCount(u,'scratchesToday')}</td>
+      <td class="cell-mono">${todayCount(u,'spinsToday')}</td>
       <td class="cell-mono">${u.referrals||0}</td>
     </tr>`).join('');
 }
@@ -1206,8 +1230,45 @@ function setWdTab(status){
   document.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('active', b.dataset.status===status));
   renderWithdrawals();
 }
+let wdTab = "pending";
+let wdPage = 1;
+const WD_PAGE_SIZE = 15;
+let pendingWdAction = null; // {uid, id, newStatus}
+
+function escapeHtml(s){
+  return String(s==null?'':s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+// Real DB shape is nested: /withdrawals/{uid}/{withdrawalId}: {amount, date, fee, method,
+// paymentDetails:{upiId,upiName}, receive, status, txnId} — flatten it into rows here.
+function flattenWithdrawals(){
+  const rows = [];
+  Object.entries(withdrawalsData).forEach(([uid, userWds])=>{
+    if(!userWds || typeof userWds !== 'object') return;
+    Object.entries(userWds).forEach(([id,w])=>{
+      if(!w || typeof w !== 'object') return;
+      rows.push({uid, id, ...w});
+    });
+  });
+  return rows;
+}
+function wdMatchesSearch(w, u, q){
+  if(!q) return true;
+  const hay = [w.uid, u?.name, u?.email, w.paymentDetails?.upiId, w.paymentDetails?.upiName, w.txnId, w.method]
+    .filter(Boolean).join(' ').toLowerCase();
+  return hay.includes(q);
+}
+function setWdTab(status){
+  wdTab = status;
+  wdPage = 1;
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('active', b.dataset.status===status));
+  renderWithdrawals();
+}
+function wdSearchChanged(){
+  wdPage = 1;
+  renderWithdrawals();
+}
 function renderWithdrawalSummary(){
-  const wds = Object.values(withdrawalsData);
+  const wds = flattenWithdrawals();
   const sum = st => wds.filter(w=>w.status===st).reduce((s,w)=>s+(Number(w.amount)||0),0);
   const cnt = st => wds.filter(w=>w.status===st).length;
   const cards = [
@@ -1220,37 +1281,163 @@ function renderWithdrawalSummary(){
       <div class="stat-label">${c.label}</div><div class="stat-value small">${c.value}</div></div>`).join('');
 }
 function renderWithdrawals(){
-  const q = (document.getElementById('wdSearch')?.value || '').toLowerCase();
-  const rows = Object.entries(withdrawalsData)
-    .map(([id,w])=>({id,...w}))
-    .filter(w => (w.status||'pending')===wdTab)
-    .filter(w => !q || (w.name||'').toLowerCase().includes(q))
-    .sort((a,b)=>(b.requestedAt||0)-(a.requestedAt||0));
+  const q = (document.getElementById('wdSearch')?.value || '').trim().toLowerCase();
+  let rows = flattenWithdrawals();
+
+  if(wdTab !== 'all'){
+    rows = rows.filter(w => (w.status||'pending')===wdTab);
+  }
+  rows = rows.filter(w => wdMatchesSearch(w, usersData[w.uid], q));
+
+  // Pending requests always float to the top; within each group, newest first.
+  rows.sort((a,b)=>{
+    const aPending = (a.status||'pending')==='pending' ? 0 : 1;
+    const bPending = (b.status||'pending')==='pending' ? 0 : 1;
+    if(aPending !== bPending) return aPending - bPending;
+    return (new Date(b.date||0).getTime()) - (new Date(a.date||0).getTime());
+  });
+
+  const countEl = document.getElementById('wdCount');
+  if(countEl) countEl.textContent = rows.length ? `(${rows.length})` : '';
 
   if(rows.length===0){
-    document.getElementById('wdBody').innerHTML = `<tr><td colspan="8"><div class="empty-state"><div class="icon">💸</div>No ${wdTab} withdrawals.</div></td></tr>`;
+    document.getElementById('wdBody').innerHTML = `<tr><td colspan="9"><div class="empty-state"><div class="icon">💸</div>No withdrawals found.</div></td></tr>`;
+    document.getElementById('wdPagination').innerHTML = '';
     return;
   }
 
-  document.getElementById('wdBody').innerHTML = rows.map(w=>`
+  const totalPages = Math.max(1, Math.ceil(rows.length / WD_PAGE_SIZE));
+  if(wdPage > totalPages) wdPage = totalPages;
+  const start = (wdPage-1)*WD_PAGE_SIZE;
+  const pageRows = rows.slice(start, start+WD_PAGE_SIZE);
+
+  document.getElementById('wdBody').innerHTML = pageRows.map(w=>{
+    const u = usersData[w.uid];
+    const status = w.status || 'pending';
+    const payDetail = w.paymentDetails?.upiId || w.paymentDetails?.upiName || w.txnId || '—';
+    return `
     <tr>
-      <td>${w.name||w.uid||'—'}</td>
-      <td class="cell-mono">${fmtMoney(w.amount)}</td>
-      <td>${w.method||'—'}</td>
-      <td class="cell-mono">${w.transactionId||'—'}</td>
+      <td><div class="avatar-chip"><div class="avatar">${initials(u?.name)}</div><div><div>${u?.name||'—'}</div><div style="font-size:10.5px;color:var(--text-faint)">${u?.email||'—'}</div></div></div></td>
+      <td class="cell-mono" style="font-size:11px;">${(w.uid||'—').slice(0,10)}…</td>
+      <td class="cell-mono">${u ? fmtMoney(u.balance) : '—'}</td>
+      <td class="cell-mono" style="font-weight:700;">${fmtMoney(w.amount)}<br><span style="font-size:10px;color:var(--text-faint);font-weight:400;">recv ${fmtMoney(w.receive)} · fee ${fmtMoney(w.fee)}</span></td>
+      <td>${(w.method||'—').toUpperCase()}<br><span class="cell-mono" style="font-size:10.5px;color:var(--text-faint)">${escapeHtml(payDetail)}</span></td>
       <td>${w.screenshotUrl ? `<a href="${w.screenshotUrl}" target="_blank" style="color:var(--blue)">View</a>` : '—'}</td>
-      <td class="cell-mono">${fmtDate(w.requestedAt)}</td>
-      <td><span class="badge-status badge-${w.status||'pending'}">${w.status||'pending'}</span></td>
-      <td>${w.status==='pending' ? `
-        <button class="btn btn-approve" onclick="updateWithdrawal('${w.id}','approved')">Approve</button>
-        <button class="btn btn-reject" onclick="updateWithdrawal('${w.id}','rejected')">Reject</button>
-      ` : `<button class="btn btn-ghost" onclick="updateWithdrawal('${w.id}','pending')">Revert</button>`}</td>
-    </tr>`).join('');
+      <td class="cell-mono">${fmtDate(w.date)}</td>
+      <td><span class="badge-status badge-${status}">${status}</span>${status==='rejected' && w.rejectionReason ? `<div style="font-size:10px;color:var(--text-faint);margin-top:3px;max-width:150px;">${escapeHtml(w.rejectionReason)}</div>` : ''}</td>
+      <td>${status==='pending' ? `
+        <button class="btn btn-approve" onclick="confirmWdAction('${w.uid}','${w.id}','approved')">Approve</button>
+        <button class="btn btn-reject" onclick="confirmWdAction('${w.uid}','${w.id}','rejected')">Reject</button>
+      ` : `<button class="btn btn-ghost" onclick="confirmWdAction('${w.uid}','${w.id}','pending')">Revert</button>`}</td>
+    </tr>`;
+  }).join('');
+
+  renderWdPagination(totalPages);
 }
-function updateWithdrawal(id, status){
-  db.ref('withdrawals/'+id).update({
-    status,
-    [status+'At']: Date.now()
+function renderWdPagination(totalPages){
+  const el = document.getElementById('wdPagination');
+  if(totalPages<=1){ el.innerHTML=''; return; }
+  el.innerHTML = `
+    <button class="btn btn-ghost" ${wdPage===1?'disabled style="opacity:.4;cursor:default;"':''} onclick="wdGoPage(${wdPage-1})">‹ Prev</button>
+    <span style="margin:0 14px; font-size:12px; color:var(--text-faint);">Page ${wdPage} of ${totalPages}</span>
+    <button class="btn btn-ghost" ${wdPage===totalPages?'disabled style="opacity:.4;cursor:default;"':''} onclick="wdGoPage(${wdPage+1})">Next ›</button>`;
+}
+function wdGoPage(p){ wdPage = p; renderWithdrawals(); }
+
+/* ---------- Approve / Reject / Revert with confirmation ---------- */
+function confirmWdAction(uid, id, newStatus){
+  const w = withdrawalsData[uid]?.[id];
+  if(!w) return;
+  const u = usersData[uid];
+  pendingWdAction = {uid, id, newStatus};
+  const titles = {approved:'Approve this withdrawal?', rejected:'Reject this withdrawal?', pending:'Revert to pending?'};
+  document.getElementById('wdConfirmTitle').textContent = titles[newStatus] || 'Confirm action';
+  document.getElementById('wdConfirmDetail').textContent = `${u?.name || uid || 'User'} · ${fmtMoney(w.amount)}`;
+  const reasonWrap = document.getElementById('wdReasonWrap');
+  const reasonInput = document.getElementById('wdReasonInput');
+  reasonWrap.style.display = newStatus==='rejected' ? 'block' : 'none';
+  reasonInput.value = '';
+  const btn = document.getElementById('wdConfirmBtn');
+  btn.style.background = newStatus==='rejected' ? 'var(--red)' : (newStatus==='approved' ? 'var(--emerald)' : '');
+  document.getElementById('wdConfirmModal').classList.add('open');
+}
+function closeWdConfirm(){
+  document.getElementById('wdConfirmModal').classList.remove('open');
+  pendingWdAction = null;
+}
+function submitWdAction(){
+  if(!pendingWdAction) return;
+  const {uid, id, newStatus} = pendingWdAction;
+  let reason = '';
+  if(newStatus==='rejected'){
+    reason = document.getElementById('wdReasonInput').value.trim();
+    if(!reason){ alert('Please enter a rejection reason — it will be shown to the user.'); return; }
+  }
+  updateWithdrawal(uid, id, newStatus, reason);
+  closeWdConfirm();
+}
+
+/* Atomic status transition: Firebase transaction guarantees a pending request can only
+   be approved/rejected ONCE even with double clicks or two admins acting at the same time.
+   Reverting a previously-refunded rejection automatically reverses that exact refund amount
+   so the user's balance can never be credited twice for the same withdrawal. */
+function updateWithdrawal(uid, id, status, reason){
+  const wdRef = db.ref('withdrawals/'+uid+'/'+id);
+  wdRef.transaction(current => {
+    if(!current) return current;
+    const curStatus = current.status || 'pending';
+    if((status==='approved' || status==='rejected') && curStatus !== 'pending'){
+      return; // abort — someone already processed this request
+    }
+    const wasRefundedRejection = curStatus==='rejected' && current.refunded===true;
+    current.status = status;
+    current[status+'At'] = Date.now();
+    if(status==='rejected'){
+      current.rejectionReason = reason || '';
+    }
+    if(status==='pending' && wasRefundedRejection){
+      current._needsUnrefund = true;
+    }
+    return current;
+  }, (error, committed, snapshot) => {
+    if(error){ alert('Update failed: '+error.message); return; }
+    if(!committed){
+      alert('This request was already processed (possibly in another tab). The list will refresh automatically.');
+      return;
+    }
+    const w = snapshot.val();
+    if(!w) return;
+    if(status==='rejected' && !w.refunded){
+      refundUser(uid, w.amount, id);
+    }
+    if(w._needsUnrefund){
+      unrefundUser(uid, w.amount, id);
+    }
+  });
+}
+/* Credits back the ORIGINAL withdrawal amount exactly once. The 'refunded' flag is set
+   only after the balance transaction commits, and updateWithdrawal never calls this a
+   second time for a request once refunded===true, so duplicate refunds are not possible. */
+function refundUser(uid, amount, wdId){
+  const amt = Number(amount)||0;
+  if(!uid || amt<=0) return;
+  db.ref('users/'+uid+'/balance').transaction(bal => (Number(bal)||0) + amt, (error, committed) => {
+    if(!error && committed){
+      db.ref('withdrawals/'+uid+'/'+wdId).update({refunded:true, refundedAt:Date.now()});
+    } else if(error){
+      console.error('Refund failed for', wdId, error);
+    }
+  });
+}
+function unrefundUser(uid, amount, wdId){
+  const amt = Number(amount)||0;
+  if(!uid || amt<=0) return;
+  db.ref('users/'+uid+'/balance').transaction(bal => Math.max(0, (Number(bal)||0) - amt), (error, committed) => {
+    if(!error && committed){
+      db.ref('withdrawals/'+uid+'/'+wdId).update({refunded:false, refundedAt:null, _needsUnrefund:null});
+    } else if(error){
+      console.error('Un-refund failed for', wdId, error);
+    }
   });
 }
 
@@ -1275,7 +1462,7 @@ function renderUserGrowthChart(){
 }
 function renderWithdrawalsChart(){
   const days = last14Days();
-  const wds = Object.values(withdrawalsData).filter(w=>w.status==='approved');
+  const wds = flattenWithdrawals().filter(w=>w.status==='approved');
   const sums = days.map(d => wds.filter(w=>w.approvedAt && new Date(w.approvedAt).toDateString()===d.toDateString()).reduce((s,w)=>s+(Number(w.amount)||0),0));
   const labels = days.map(d=>d.toLocaleDateString('en-IN',{day:'2-digit',month:'short'}));
   if(chartWD) chartWD.destroy();
