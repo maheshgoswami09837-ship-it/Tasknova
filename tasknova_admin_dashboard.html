@@ -25,7 +25,7 @@
   --emerald:#12D992; --emerald-dim:#0B9C6B; --amber:#F5A623; --red:#F0466A; --blue:#4C8DFF;
   --radius:14px; --font-ui:'Inter',sans-serif; --font-mono:'JetBrains Mono',monospace;
   --shadow:0 8px 24px rgba(0,0,0,.35);
-
+}
 [data-theme="light"]{
   --bg:#F3F5F9; --surface:#FFFFFF; --surface-2:#F7F8FB; --border:#E4E8F0;
   --text:#131A2A; --text-dim:#5C6784; --text-faint:#98A2BC;
@@ -312,7 +312,7 @@ tbody tr:hover{background:var(--surface-2);}
             <thead><tr>
               <th>User</th><th>UID</th><th>Joined</th><th>Last Active</th>
               <th>Balance</th><th>Total Earned</th><th>Earned Today</th><th>Ads Today</th><th>Tasks Done</th>
-              <th>Quizzes Today</th><th>Scratches Today</th><th>Spins Today</th><th>Referrals</th>
+              <th>Shortlinks Today</th><th>Spins Today</th><th>Referrals</th>
             </tr></thead>
             <tbody id="usersBody"></tbody>
           </table>
@@ -344,6 +344,23 @@ tbody tr:hover{background:var(--surface-2);}
           </table>
         </div>
         <div id="wdPagination" style="display:flex; align-items:center; justify-content:center; margin-top:14px;"></div>
+      </div>
+    </div>
+
+    <!-- ACTIVE USERS TODAY MODAL -->
+    <div class="modal-backdrop" id="activeUsersModal">
+      <div class="modal-box" style="max-width:520px;">
+        <h3>Active Users Today</h3>
+        <div style="font-size:11.5px; color:var(--text-faint); margin-bottom:10px;">Users who opened the app today, and whether they completed a task today.</div>
+        <div class="table-wrap" style="max-height:400px;">
+          <table>
+            <thead><tr><th>User</th><th>Last Active</th><th>Task Today</th></tr></thead>
+            <tbody id="activeUsersModalBody"></tbody>
+          </table>
+        </div>
+        <div class="modal-actions">
+          <button class="btn-cancel" onclick="closeActiveUsersModal()">Close</button>
+        </div>
       </div>
     </div>
 
@@ -526,6 +543,18 @@ const isToday = ts => ts && new Date(ts).toDateString() === new Date().toDateStr
 // opened the app today, these fields still hold yesterday's (or older) stale numbers.
 // Gate them on lastResetDate so the dashboard shows 0 instead of stale leftover counts.
 const todayCount = (u, field) => isToday(u.lastResetDate) ? (Number(u[field])||0) : 0;
+// Newer accounts store today's per-task counts nested under dailyTasks/{YYYY-MM-DD}/{field}
+// (adsWatched, shortlinks, spins, earned, checkin). Older accounts only have the flat
+// top-level counters gated by lastResetDate. Prefer dailyTasks; fall back to legacy.
+function dailyTaskField(u, field){
+  const todayStr = new Date().toISOString().slice(0,10);
+  if(u.dailyTasks && u.dailyTasks[todayStr] && u.dailyTasks[todayStr][field] !== undefined){
+    return Number(u.dailyTasks[todayStr][field]) || 0;
+  }
+  const legacyField = {adsWatched:'adsWatchedToday', spins:'spinsToday', shortlinks:'shortlinksToday'}[field];
+  if(legacyField) return todayCount(u, legacyField);
+  return 0;
+}
 const isYesterday = ts => { if(!ts) return false; const y=new Date(); y.setDate(y.getDate()-1); return new Date(ts).toDateString()===y.toDateString(); };
 const isThisMonth = ts => { if(!ts) return false; const d=new Date(ts), n=new Date(); return d.getMonth()===n.getMonth() && d.getFullYear()===n.getFullYear(); };
 const initials = name => (name||'?').trim().split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
@@ -591,12 +620,12 @@ function renderOverview(){
     {label:'Total Revenue (User Earnings)', value:fmtMoney(totalRevenue), color:'var(--emerald)'},
     {label:'Coins Earned Today (All Users)', value:fmtMoney(todayRevenue), color:'var(--emerald)'},
     {label:'Total Registered Users', value:totalUsers.toLocaleString('en-IN'), color:'var(--blue)'},
-    {label:'Active Users Today', value:activeToday.toLocaleString('en-IN'), color:'var(--emerald)'},
+    {label:'Active Users Today', value:activeToday.toLocaleString('en-IN'), color:'var(--emerald)', onclick:'showActiveUsersModal()'},
     {label:'New Users Today', value:newToday.toLocaleString('en-IN'), color:'var(--blue)'},
   ];
 
   document.getElementById('overviewCards').innerHTML = cards.map(c=>`
-    <div class="stat-card">
+    <div class="stat-card"${c.onclick ? ` style="cursor:pointer;" onclick="${c.onclick}"` : ''}>
       <div class="accent-bar" style="background:${c.color}"></div>
       <div class="stat-label">${c.label}</div>
       <div class="stat-value ${c.small?'small':''}">${c.value}</div>
@@ -1191,7 +1220,7 @@ function renderUsers(){
   document.getElementById('userCount').textContent = `(${rows.length})`;
 
   if(rows.length===0){
-    document.getElementById('usersBody').innerHTML = `<tr><td colspan="13"><div class="empty-state"><div class="icon">👥</div>No users found. Data will appear here once your /users node has entries.</div></td></tr>`;
+    document.getElementById('usersBody').innerHTML = `<tr><td colspan="12"><div class="empty-state"><div class="icon">👥</div>No users found. Data will appear here once your /users node has entries.</div></td></tr>`;
     return;
   }
 
@@ -1206,11 +1235,10 @@ function renderUsers(){
       <td class="cell-mono">${fmtMoney(u.balance)}</td>
       <td class="cell-mono">${fmtMoney(u.totalEarned)}</td>
       <td class="cell-mono">${fmtMoney(earnedTodayFor(u))}</td>
-      <td class="cell-mono">${todayCount(u,'adsWatchedToday')}</td>
+      <td class="cell-mono">${dailyTaskField(u,'adsWatched')}</td>
       <td class="cell-mono">${u.tasksDone||0}</td>
-      <td class="cell-mono">${todayCount(u,'quizzesToday')}</td>
-      <td class="cell-mono">${todayCount(u,'scratchesToday')}</td>
-      <td class="cell-mono">${todayCount(u,'spinsToday')}</td>
+      <td class="cell-mono">${dailyTaskField(u,'shortlinks')}</td>
+      <td class="cell-mono">${dailyTaskField(u,'spins')}</td>
       <td class="cell-mono">${u.referrals||0}</td>
     </tr>`).join('');
 }
@@ -1334,6 +1362,34 @@ function renderWdPagination(totalPages){
     <button class="btn btn-ghost" ${wdPage===totalPages?'disabled style="opacity:.4;cursor:default;"':''} onclick="wdGoPage(${wdPage+1})">Next ›</button>`;
 }
 function wdGoPage(p){ wdPage = p; renderWithdrawals(); }
+
+/* ---------- Active Users Today modal ---------- */
+// A user counts as having "done a task today" if they earned coins today, or if any of
+// their today-gated counters (ads/quizzes/scratches/spins) show activity for today.
+function userDidTaskToday(u){
+  if(computeUserToday(u) > 0) return true;
+  return dailyTaskField(u,'adsWatched') > 0
+    || dailyTaskField(u,'spins') > 0
+    || dailyTaskField(u,'shortlinks') > 0;
+}
+function showActiveUsersModal(){
+  const users = Object.entries(usersData).map(([uid,u])=>({uid,...u})).filter(u=>isToday(u.lastActive));
+  users.sort((a,b)=> new Date(b.lastActive||0) - new Date(a.lastActive||0));
+
+  document.getElementById('activeUsersModalBody').innerHTML = users.length ? users.map(u=>{
+    const didTask = userDidTaskToday(u);
+    return `<tr>
+      <td><div class="avatar-chip"><div class="avatar">${initials(u.name)}</div><div><div>${u.name||'—'}</div><div style="font-size:10.5px;color:var(--text-faint)">${u.email||'—'}</div></div></div></td>
+      <td class="cell-mono">${fmtDate(u.lastActive)}</td>
+      <td><span class="badge-status ${didTask?'badge-approved':'badge-rejected'}">${didTask?'Yes':'No'}</span></td>
+    </tr>`;
+  }).join('') : `<tr><td colspan="3"><div class="empty-state"><div class="icon">👥</div>No active users today.</div></td></tr>`;
+
+  document.getElementById('activeUsersModal').classList.add('open');
+}
+function closeActiveUsersModal(){
+  document.getElementById('activeUsersModal').classList.remove('open');
+}
 
 /* ---------- Approve / Reject / Revert with confirmation ---------- */
 function confirmWdAction(uid, id, newStatus){
