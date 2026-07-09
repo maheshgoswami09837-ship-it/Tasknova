@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<script src="https://accounts.google.com/gsi/client" async defer></script>
 <meta charset="UTF-8">
 <meta name="6a97888e-site-verification" content="ee5d57d1e51cac4b2e217d9cfcb8f61f">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -401,8 +400,7 @@
         <div style="flex:1; height:1px; background:rgba(255,255,255,0.12);"></div>
       </div>
 
-      <div id="googleSignUpBtnContainer" style="display:flex; justify-content:center; min-height:44px; margin-top:2px;"></div>
-      <div id="googleSignUpFallback" style="display:none;">
+      <div id="googleSignUpFallback" style="display:block;">
         <button type="button" class="btn-google" onclick="googleSignUp()">
           <svg width="18" height="18" viewBox="0 0 48 48">
             <path fill="#FFC107" d="M43.6 20.1H42V20H24v8h11.3c-1.6 4.6-6 8-11.3 8-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.1 8 3l6-6C34.5 5.1 29.6 3 24 3 12.4 3 3 12.4 3 24s9.4 21 21 21 21-9.4 21-21c0-1.3-.1-2.7-.4-3.9z"/>
@@ -1071,70 +1069,26 @@
     }
   };
 
-  // ── REGISTER: Google Sign-Up (official Google Identity Services widget — ──
-  // ── renders as an in-page overlay, no new tab / no full page redirect) ──
-  const GOOGLE_CLIENT_ID = '135129024485-cip605lq4arn9a8ohu9qmi1646acbarp.apps.googleusercontent.com';
-  let googleButtonInited = false;
-
-  window.handleGoogleCredentialResponse = async function(response) {
-    try {
-      const referral = (document.getElementById('regReferralDisplay')?.value || '').trim();
-      const credential = GoogleAuthProvider.credential(response.credential);
-      const result = await signInWithCredential(auth, credential);
-      await finishGoogleSignIn(result.user, referral);
-    } catch(e) {
-      if (e.code === 'auth/account-exists-with-different-credential') {
-        showToast('This email is already registered with a password. Login with email instead.', 'error');
-      } else {
-        showToast('Google sign-up failed: ' + e.message, 'error');
-      }
-    }
-  };
-
-  function initGoogleButton() {
-    if (googleButtonInited) return;
-    if (!(window.google && google.accounts && google.accounts.id)) return;
-    googleButtonInited = true;
-    google.accounts.id.initialize({
-      client_id: GOOGLE_CLIENT_ID,
-      callback: window.handleGoogleCredentialResponse,
-      auto_select: false,
-      cancel_on_tap_outside: true
-    });
-    const container = document.getElementById('googleSignUpBtnContainer');
-    if (container) {
-      const w = Math.min(320, Math.max(240, container.clientWidth || 280));
-      google.accounts.id.renderButton(container, {
-        theme: 'outline', size: 'large', shape: 'pill', text: 'signup_with', width: w, logo_alignment: 'left'
-      });
-    }
-  }
-  // Poll briefly until the GSI script (loaded async) is ready — more reliable
-  // than relying on window 'load' timing, which can race with the async script.
-  let gsiPollTries = 0;
-  const gsiPoll = setInterval(() => {
-    initGoogleButton();
-    gsiPollTries++;
-    if (googleButtonInited || gsiPollTries > 25) {
-      clearInterval(gsiPoll);
-      if (!googleButtonInited) {
-        // GSI failed to load (e.g. blocked/offline) — show the manual fallback button.
-        const fb = document.getElementById('googleSignUpFallback');
-        if (fb) fb.style.display = 'block';
-      }
-    }
-  }, 250);
-
-  // Fallback button (shown only if the GSI widget above fails to load) still
-  // uses the popup method as a last resort.
+  // ── REGISTER: Google Sign-Up (popup only — no GSI widget, no redirect) ──
+  let googleSignUpInProgress = false;
   window.googleSignUp = async function() {
+    if (googleSignUpInProgress) return; // prevent double-tap -> cancelled-popup-request
+    googleSignUpInProgress = true;
+    const fb = document.getElementById('googleSignUpFallback');
+    const fbBtn = fb ? fb.querySelector('button') : null;
+    if (fbBtn) fbBtn.disabled = true;
     try {
       const { signInWithPopup } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js");
       const referral = document.getElementById('regReferralDisplay').value.trim();
       const result = await signInWithPopup(auth, googleProvider);
       await finishGoogleSignIn(result.user, referral);
     } catch(e) {
-      showToast('Google sign-up failed: ' + e.message, 'error');
+      if (e.code !== 'auth/cancelled-popup-request') {
+        showToast('Google sign-up failed: ' + e.message, 'error');
+      }
+    } finally {
+      googleSignUpInProgress = false;
+      if (fbBtn) fbBtn.disabled = false;
     }
   };
 
