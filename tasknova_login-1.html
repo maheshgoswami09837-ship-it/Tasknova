@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 <meta charset="UTF-8">
 <meta name="6a97888e-site-verification" content="ee5d57d1e51cac4b2e217d9cfcb8f61f">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -400,15 +401,18 @@
         <div style="flex:1; height:1px; background:rgba(255,255,255,0.12);"></div>
       </div>
 
-      <button type="button" class="btn-google" id="googleRegisterBtn" onclick="googleSignUp()">
-        <svg width="18" height="18" viewBox="0 0 48 48">
-          <path fill="#FFC107" d="M43.6 20.1H42V20H24v8h11.3c-1.6 4.6-6 8-11.3 8-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.1 8 3l6-6C34.5 5.1 29.6 3 24 3 12.4 3 3 12.4 3 24s9.4 21 21 21 21-9.4 21-21c0-1.3-.1-2.7-.4-3.9z"/>
-          <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.6 15.9 18.9 13 24 13c3.1 0 5.8 1.1 8 3l6-6C34.5 5.1 29.6 3 24 3 15.9 3 8.9 7.7 6.3 14.7z"/>
-          <path fill="#4CAF50" d="M24 45c5.5 0 10.4-1.9 14.3-5.1l-6.6-5.4C29.6 36.4 27 37 24 37c-5.3 0-9.7-3.4-11.3-8.1l-6.6 5.1C8.9 40.3 15.9 45 24 45z"/>
-          <path fill="#1976D2" d="M43.6 20.1H42V20H24v8h11.3c-.8 2.3-2.2 4.2-4.1 5.6l6.6 5.4C39.9 37 43 31.1 43 24c0-1.3-.1-2.7-.4-3.9z"/>
-        </svg>
-        <span>Sign up with Google</span>
-      </button>
+      <div id="googleSignUpBtnContainer" style="display:flex; justify-content:center; min-height:44px; margin-top:2px;"></div>
+      <div id="googleSignUpFallback" style="display:none;">
+        <button type="button" class="btn-google" onclick="googleSignUp()">
+          <svg width="18" height="18" viewBox="0 0 48 48">
+            <path fill="#FFC107" d="M43.6 20.1H42V20H24v8h11.3c-1.6 4.6-6 8-11.3 8-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.1 8 3l6-6C34.5 5.1 29.6 3 24 3 12.4 3 3 12.4 3 24s9.4 21 21 21 21-9.4 21-21c0-1.3-.1-2.7-.4-3.9z"/>
+            <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.6 15.9 18.9 13 24 13c3.1 0 5.8 1.1 8 3l6-6C34.5 5.1 29.6 3 24 3 15.9 3 8.9 7.7 6.3 14.7z"/>
+            <path fill="#4CAF50" d="M24 45c5.5 0 10.4-1.9 14.3-5.1l-6.6-5.4C29.6 36.4 27 37 24 37c-5.3 0-9.7-3.4-11.3-8.1l-6.6 5.1C8.9 40.3 15.9 45 24 45z"/>
+            <path fill="#1976D2" d="M43.6 20.1H42V20H24v8h11.3c-.8 2.3-2.2 4.2-4.1 5.6l6.6 5.4C39.9 37 43 31.1 43 24c0-1.3-.1-2.7-.4-3.9z"/>
+          </svg>
+          <span>Sign up with Google</span>
+        </button>
+      </div>
     </div>
   </div>
 </div>
@@ -700,8 +704,8 @@
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-  import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, updatePassword, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-  import { getDatabase, ref, set, get, update, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+  import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, updatePassword, GoogleAuthProvider, signInWithCredential } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+  import { getDatabase, ref, set, get, update, serverTimestamp, query, orderByKey, limitToLast } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyBbDeBse2WXwzd_X0Mr8VyEzytI8Yya_uc",
@@ -833,11 +837,29 @@
     } catch(e) { console.log('error:', e); }
   }
 
+  function _setBadge(count) {
+    const badge = document.getElementById('inboxUnreadBadge');
+    if (!badge) return;
+    if (count > 0) {
+      badge.textContent = count > 9 ? '9+' : count;
+      badge.style.display = 'flex';
+    } else {
+      badge.style.display = 'none';
+    }
+  }
+
   async function updateInboxBadge(uid) {
+    // Show last-known state instantly (0ms) — no blank/delayed badge while we fetch fresh data.
+    const cachedCount = localStorage.getItem('tn_badge_' + uid);
+    if (cachedCount !== null) _setBadge(Number(cachedCount));
+
     try {
+      // Only pull the most recent 30 broadcasts instead of the entire history —
+      // this node only ever grows, so fetching all of it gets slower every month.
+      const recentBroadcastsQuery = query(ref(db, 'broadcastMessages'), orderByKey(), limitToLast(30));
       const [targetedSnap, broadcastSnap, readsSnap] = await Promise.all([
         get(ref(db, 'messages/' + uid)),
-        get(ref(db, 'broadcastMessages')),
+        get(recentBroadcastsQuery),
         get(ref(db, 'broadcastReads/' + uid))
       ]);
 
@@ -852,15 +874,8 @@
         Object.keys(data).forEach(id => { if (!reads[id]) unreadCount++; });
       }
 
-      const badge = document.getElementById('inboxUnreadBadge');
-      if (badge) {
-        if (unreadCount > 0) {
-          badge.textContent = unreadCount > 9 ? '9+' : unreadCount;
-          badge.style.display = 'flex';
-        } else {
-          badge.style.display = 'none';
-        }
-      }
+      localStorage.setItem('tn_badge_' + uid, String(unreadCount));
+      _setBadge(unreadCount);
     } catch (e) { console.log('badge error:', e); }
   }
 
@@ -1056,26 +1071,86 @@
     }
   };
 
-  // ── REGISTER: Google Sign-Up ─────────────────────────────────
+  // ── REGISTER: Google Sign-Up (official Google Identity Services widget — ──
+  // ── renders as an in-page overlay, no new tab / no full page redirect) ──
+  const GOOGLE_CLIENT_ID = '135129024485-cip605lq4arn9a8ohu9qmi1646acbarp.apps.googleusercontent.com';
+  let googleButtonInited = false;
+
+  window.handleGoogleCredentialResponse = async function(response) {
+    try {
+      const referral = (document.getElementById('regReferralDisplay')?.value || '').trim();
+      const credential = GoogleAuthProvider.credential(response.credential);
+      const result = await signInWithCredential(auth, credential);
+      await finishGoogleSignIn(result.user, referral);
+    } catch(e) {
+      if (e.code === 'auth/account-exists-with-different-credential') {
+        showToast('This email is already registered with a password. Login with email instead.', 'error');
+      } else {
+        showToast('Google sign-up failed: ' + e.message, 'error');
+      }
+    }
+  };
+
+  function initGoogleButton() {
+    if (googleButtonInited) return;
+    if (!(window.google && google.accounts && google.accounts.id)) return;
+    googleButtonInited = true;
+    google.accounts.id.initialize({
+      client_id: GOOGLE_CLIENT_ID,
+      callback: window.handleGoogleCredentialResponse,
+      auto_select: false,
+      cancel_on_tap_outside: true
+    });
+    const container = document.getElementById('googleSignUpBtnContainer');
+    if (container) {
+      const w = Math.min(320, Math.max(240, container.clientWidth || 280));
+      google.accounts.id.renderButton(container, {
+        theme: 'outline', size: 'large', shape: 'pill', text: 'signup_with', width: w, logo_alignment: 'left'
+      });
+    }
+  }
+  // Poll briefly until the GSI script (loaded async) is ready — more reliable
+  // than relying on window 'load' timing, which can race with the async script.
+  let gsiPollTries = 0;
+  const gsiPoll = setInterval(() => {
+    initGoogleButton();
+    gsiPollTries++;
+    if (googleButtonInited || gsiPollTries > 25) {
+      clearInterval(gsiPoll);
+      if (!googleButtonInited) {
+        // GSI failed to load (e.g. blocked/offline) — show the manual fallback button.
+        const fb = document.getElementById('googleSignUpFallback');
+        if (fb) fb.style.display = 'block';
+      }
+    }
+  }, 250);
+
+  // Fallback button (shown only if the GSI widget above fails to load) still
+  // uses the popup method as a last resort.
   window.googleSignUp = async function() {
-    const referral = document.getElementById('regReferralDisplay').value.trim();
-    const btn = document.getElementById('googleRegisterBtn');
-    const btnLabel = btn.querySelector('span:last-child');
-    btnLabel.textContent = 'Please wait...';
-    btn.disabled = true;
+    try {
+      const { signInWithPopup } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js");
+      const referral = document.getElementById('regReferralDisplay').value.trim();
+      const result = await signInWithPopup(auth, googleProvider);
+      await finishGoogleSignIn(result.user, referral);
+    } catch(e) {
+      showToast('Google sign-up failed: ' + e.message, 'error');
+    }
+  };
+
+  // Shared by both new Google accounts and returning Google users —
+  // called once we're back from the Google redirect with a signed-in user.
+  async function finishGoogleSignIn(user, referral) {
+    const uid = user.uid;
+    localStorage.setItem('tasknova_uid', uid);
 
     try {
-      const result = await signInWithPopup(auth, googleProvider);
-      const user = result.user;
-      const uid = user.uid;
-      localStorage.setItem('tasknova_uid', uid);
-
       const existingSnap = await get(ref(db, 'users/' + uid));
 
       if (existingSnap.exists()) {
         // Already registered with Google before — just log them in.
         showToast('Welcome back! 🎉', 'success');
-        setTimeout(() => { window.__HOME_ACTIVE__ = false; showHome(uid); }, 1000);
+        setTimeout(() => { window.__HOME_ACTIVE__ = false; showHome(uid); }, 800);
         return;
       }
 
@@ -1115,21 +1190,14 @@
       }
 
       showToast('Welcome! ₹10 bonus added! 🎉', 'success');
-      setTimeout(() => { window.__HOME_ACTIVE__ = false; showHome(uid); }, 1500);
+      setTimeout(() => { window.__HOME_ACTIVE__ = false; showHome(uid); }, 1200);
 
     } catch(e) {
-      if (e.code === 'auth/popup-closed-by-user') {
-        // User cancelled — no error toast needed.
-      } else if (e.code === 'auth/account-exists-with-different-credential') {
-        showToast('This email is already registered with a password. Login with email instead.', 'error');
-      } else {
-        showToast('Google sign-up failed: ' + e.message, 'error');
-      }
-    } finally {
-      btnLabel.textContent = 'Sign up with Google';
-      btn.disabled = false;
+      showToast('Google sign-up failed: ' + e.message, 'error');
+      document.getElementById('loadingScreen').style.display = 'none';
+      document.getElementById('loginSection').style.display = 'flex';
     }
-  };
+  }
 
   function sendRegOTP() {
     currentOTP = Math.floor(100000 + Math.random() * 900000).toString();
