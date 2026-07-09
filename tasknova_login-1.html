@@ -705,7 +705,7 @@
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
   import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, updatePassword, GoogleAuthProvider, signInWithCredential } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-  import { getDatabase, ref, set, get, update, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+  import { getDatabase, ref, set, get, update, serverTimestamp, query, orderByKey, limitToLast } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyBbDeBse2WXwzd_X0Mr8VyEzytI8Yya_uc",
@@ -837,11 +837,29 @@
     } catch(e) { console.log('error:', e); }
   }
 
+  function _setBadge(count) {
+    const badge = document.getElementById('inboxUnreadBadge');
+    if (!badge) return;
+    if (count > 0) {
+      badge.textContent = count > 9 ? '9+' : count;
+      badge.style.display = 'flex';
+    } else {
+      badge.style.display = 'none';
+    }
+  }
+
   async function updateInboxBadge(uid) {
+    // Show last-known state instantly (0ms) — no blank/delayed badge while we fetch fresh data.
+    const cachedCount = localStorage.getItem('tn_badge_' + uid);
+    if (cachedCount !== null) _setBadge(Number(cachedCount));
+
     try {
+      // Only pull the most recent 30 broadcasts instead of the entire history —
+      // this node only ever grows, so fetching all of it gets slower every month.
+      const recentBroadcastsQuery = query(ref(db, 'broadcastMessages'), orderByKey(), limitToLast(30));
       const [targetedSnap, broadcastSnap, readsSnap] = await Promise.all([
         get(ref(db, 'messages/' + uid)),
-        get(ref(db, 'broadcastMessages')),
+        get(recentBroadcastsQuery),
         get(ref(db, 'broadcastReads/' + uid))
       ]);
 
@@ -856,15 +874,8 @@
         Object.keys(data).forEach(id => { if (!reads[id]) unreadCount++; });
       }
 
-      const badge = document.getElementById('inboxUnreadBadge');
-      if (badge) {
-        if (unreadCount > 0) {
-          badge.textContent = unreadCount > 9 ? '9+' : unreadCount;
-          badge.style.display = 'flex';
-        } else {
-          badge.style.display = 'none';
-        }
-      }
+      localStorage.setItem('tn_badge_' + uid, String(unreadCount));
+      _setBadge(unreadCount);
     } catch (e) { console.log('badge error:', e); }
   }
 
