@@ -162,6 +162,43 @@ tbody tr:hover{background:var(--surface-2);}
 /* ---------- Users: card list, kebab menu, status, raw data tree ---------- */
 .badge-active{background:rgba(18,217,146,.15); color:var(--emerald); padding:3px 10px; border-radius:20px; font-size:11px; font-weight:600;}
 .badge-banned{background:rgba(240,70,106,.15); color:var(--red); padding:3px 10px; border-radius:20px; font-size:11px; font-weight:600;}
+
+/* ---------- User Detail (redesigned, matches reference screenshot) ---------- */
+.ud-header{display:flex; align-items:flex-start; gap:14px; flex-wrap:wrap;}
+.ud-header .avatar{width:56px; height:56px; font-size:19px; flex-shrink:0; background:var(--emerald-dim); color:#fff;}
+.ud-header-info{min-width:0; flex:1;}
+.ud-header-info h2{margin:0 0 3px; font-size:18px; overflow-wrap:break-word;}
+.ud-header-email{font-size:12.5px; color:var(--text-faint); overflow-wrap:break-word;}
+.ud-header-uid{font-size:11px; color:var(--text-faint); margin-top:4px; font-family:var(--font-mono);}
+.ud-header-status{display:flex; align-items:center; gap:6px; margin-top:8px;}
+.ud-header-status .dot{width:7px; height:7px; border-radius:50%; background:var(--emerald); flex-shrink:0;}
+.ud-header-status.banned .dot{background:var(--red);}
+.ud-stat-row{display:grid; grid-template-columns:repeat(3,1fr); gap:10px;}
+.ud-stat-box{background:var(--surface-2); border:1px solid var(--border); border-radius:10px; padding:12px 10px; text-align:center;}
+.ud-stat-box .lbl{font-size:10.5px; color:var(--text-faint); margin-bottom:6px;}
+.ud-stat-box .val{font-family:var(--font-mono); font-weight:800; font-size:16px;}
+.ud-section-title{font-weight:700; font-size:14.5px; margin-bottom:12px;}
+.ud-row{display:flex; align-items:center; justify-content:space-between; gap:10px; padding:10px 0; border-bottom:1px solid var(--border);}
+.ud-row:last-child{border-bottom:none;}
+.ud-row-label{display:flex; align-items:center; gap:9px; font-size:12.5px; color:var(--text-dim); min-width:0;}
+.ud-row-label svg{width:15px; height:15px; flex-shrink:0; color:var(--text-faint);}
+.ud-row-value{font-size:12.5px; font-weight:600; text-align:right; word-break:break-word; display:flex; align-items:center; gap:6px;}
+.ud-row-value.mono{font-family:var(--font-mono);}
+.ud-row-value.yes{color:var(--emerald);}
+.ud-row-value.no{color:var(--red);}
+.ud-copy-btn{background:none; border:none; color:var(--text-faint); cursor:pointer; padding:2px; display:flex; line-height:0;}
+.ud-copy-btn svg{width:13px; height:13px;}
+.ud-copy-btn:hover{color:var(--text);}
+.ud-activity-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:8px; text-align:center;}
+.ud-activity-item{padding:10px 4px;}
+.ud-activity-item .ic{width:34px; height:34px; border-radius:10px; background:var(--surface-2); display:flex; align-items:center; justify-content:center; margin:0 auto 8px; color:var(--text-dim);}
+.ud-activity-item .ic svg{width:16px; height:16px;}
+.ud-activity-item .num{font-family:var(--font-mono); font-weight:800; font-size:16px;}
+.ud-activity-item .lbl{font-size:10px; color:var(--text-faint); margin-top:3px;}
+@media (max-width:520px){
+  .ud-stat-row{grid-template-columns:repeat(3,1fr);}
+  .ud-activity-grid{grid-template-columns:repeat(2,1fr);}
+}
 .kebab-wrap{position:relative; display:inline-block;}
 .kebab-btn{background:none; border:none; color:var(--text-faint); cursor:pointer; padding:0; border-radius:6px; width:26px; height:26px; display:inline-flex; align-items:center; justify-content:center; flex-shrink:0;}
 .kebab-btn:hover{background:var(--surface-2); color:var(--text);}
@@ -472,6 +509,61 @@ tbody tr:hover{background:var(--surface-2);}
       </div>
     </div>
 
+    <!-- ===================== USER DETAIL (full page) ===================== -->
+    <div class="page" id="page-user-detail">
+      <button class="btn btn-ghost" style="margin-bottom:14px;" onclick="closeUserDetailPage()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="13" height="13"><path d="M15 18l-6-6 6-6"/></svg> Back
+      </button>
+
+      <div class="panel" style="margin-bottom:16px;">
+        <div class="ud-header">
+          <div class="avatar" id="udAvatar"></div>
+          <div class="ud-header-info">
+            <h2 id="udName">—</h2>
+            <div class="ud-header-email" id="udEmail">—</div>
+            <div class="ud-header-uid">UID: <span id="udUid" class="cell-mono">—</span></div>
+            <div class="ud-header-status" id="udStatusRow"><span class="dot"></span><span class="badge-status" id="udStatusBadge">—</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel" style="margin-bottom:16px;">
+        <div class="ud-stat-row">
+          <div class="ud-stat-box"><div class="lbl">Total Balance</div><div class="val" style="color:var(--amber);" id="udBalance">—</div></div>
+          <div class="ud-stat-box"><div class="lbl">Total Earned</div><div class="val" style="color:var(--emerald);" id="udTotalEarned">—</div></div>
+          <div class="ud-stat-box"><div class="lbl">Total Withdrawn</div><div class="val" style="color:var(--blue);" id="udTotalWithdrawn">—</div></div>
+        </div>
+      </div>
+
+      <div class="panel" style="margin-bottom:16px;">
+        <div class="ud-section-title">User Information</div>
+        <div id="udInfoRows"></div>
+      </div>
+
+      <div class="panel" style="margin-bottom:16px;">
+        <div class="ud-section-title">Wallet &amp; Earnings</div>
+        <div id="udWalletRows"></div>
+      </div>
+
+      <div class="panel" style="margin-bottom:16px;">
+        <div class="ud-section-title">Account &amp; Security</div>
+        <div id="udSecurityRows"></div>
+      </div>
+
+      <div class="panel" style="margin-bottom:16px;">
+        <div class="ud-section-title">Activity Summary</div>
+        <div class="ud-activity-grid" id="udActivityGrid"></div>
+      </div>
+
+      <div class="panel" style="margin-bottom:16px;">
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; flex-wrap:wrap; gap:10px;">
+          <div class="ud-section-title" style="margin-bottom:0;">Full record (live from Firebase)</div>
+          <button class="btn" id="udBanBtn" onclick="toggleBanCurrentUser()" style="background:var(--red); color:#fff;">Ban User</button>
+        </div>
+        <div style="background:var(--surface-2); border:1px solid var(--border); border-radius:10px; padding:14px 16px;" id="udRawData"></div>
+      </div>
+    </div>
+
     <!-- ===================== WITHDRAWALS ===================== -->
     <div class="page" id="page-withdrawals">
       <div class="grid grid-compact" style="margin-bottom:18px;" id="wdSummaryCards"></div>
@@ -502,26 +594,7 @@ tbody tr:hover{background:var(--surface-2);}
     </div>
 
     <!-- USER DETAIL MODAL (full Firebase data dump) -->
-    <div class="modal-backdrop" id="userDetailModal">
-      <div class="modal-box" style="max-width:560px; max-height:85vh; display:flex; flex-direction:column;">
-        <div style="display:flex; align-items:center; gap:12px; margin-bottom:4px;">
-          <div class="avatar" id="udAvatar" style="width:44px;height:44px;font-size:15px;flex-shrink:0;"></div>
-          <div style="min-width:0;">
-            <h3 id="udName" style="margin-bottom:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">—</h3>
-            <div style="font-size:11.5px; color:var(--text-faint); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" id="udEmail">—</div>
-          </div>
-          <span class="badge-status" id="udStatusBadge" style="margin-left:auto; flex-shrink:0;">—</span>
-        </div>
-        <div style="font-size:11px; color:var(--text-faint); margin:8px 0 12px; font-family:var(--font-mono);">UID: <span id="udUid" class="cell-mono">—</span></div>
-        <div class="grid grid-5" style="margin-bottom:14px;" id="udQuickStats"></div>
-        <div class="panel-title" style="font-size:12.5px; margin-bottom:8px; color:var(--text-faint); text-transform:uppercase; letter-spacing:.05em;">Full record (live from Firebase)</div>
-        <div style="overflow-y:auto; flex:1; background:var(--surface-2); border:1px solid var(--border); border-radius:10px; padding:12px 14px;" id="udRawData"></div>
-        <div class="modal-actions">
-          <button class="btn-cancel" onclick="closeUserDetailModal()">Close</button>
-          <button class="btn-save" id="udBanBtn" onclick="toggleBanCurrentUser()" style="background:var(--red); color:#fff;">Ban User</button>
-        </div>
-      </div>
-    </div>
+
 
     <!-- WITHDRAWAL ACTION CONFIRMATION MODAL -->
     <div class="modal-backdrop" id="wdConfirmModal">
@@ -671,18 +744,39 @@ function enterDashboard(user){
   document.getElementById('app').classList.add('visible');
   document.getElementById('settingsEmail').textContent = user.email;
   initData();
+  // Seed browser history so the device/browser back button stays inside the
+  // app instead of leaving it (which was re-triggering the login screen).
+  history.replaceState({page:'overview', label:'Overview'}, '', '#overview');
 }
 
 /* ---------- NAV ---------- */
+// When true, goToPage was called *from* a popstate (back/forward button) —
+// skip re-pushing a new history entry to avoid creating a loop.
+let isHistoryNav = false;
 function goToPage(page, label){
-  const navPage = page==='active-users' ? 'overview' : page;
+  const alreadyOnThisPage = document.getElementById('page-'+page).classList.contains('active');
+  let navPage = page;
+  if(page==='active-users') navPage = 'overview';
+  if(page==='user-detail') navPage = userDetailReturnPage.page==='active-users' ? 'overview' : userDetailReturnPage.page;
   document.querySelectorAll('.navitem[data-page]').forEach(i=>i.classList.toggle('active', i.dataset.page===navPage));
   document.querySelectorAll('.bottom-nav-item[data-page]').forEach(i=>i.classList.toggle('active', i.dataset.page===navPage));
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.getElementById('page-'+page).classList.add('active');
   document.getElementById('pageTitle').textContent = label;
   document.getElementById('sidebar').classList.remove('open');
+  if(!isHistoryNav && !alreadyOnThisPage){
+    history.pushState({page, label}, '', '#'+page);
+  }
 }
+// Device/browser back (or Android back gesture) fires this instead of leaving
+// the app — we just navigate to whichever page was recorded in that history entry.
+window.addEventListener('popstate', (e)=>{
+  if(!document.getElementById('app').classList.contains('visible')) return; // not logged in yet
+  isHistoryNav = true;
+  const st = e.state || {page:'overview', label:'Overview'};
+  goToPage(st.page, st.label);
+  isHistoryNav = false;
+});
 document.querySelectorAll('.navitem[data-page]').forEach(item=>{
   item.addEventListener('click', ()=>{
     goToPage(item.dataset.page, item.querySelector('.nav-label')?.textContent.trim() || item.textContent.trim());
@@ -721,6 +815,15 @@ const ICONS = {
   alert: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5 21.5 20h-19z"/><path d="M12 9v5"/><circle cx="12" cy="17" r="0.8" fill="currentColor" stroke="none"/></svg>',
   wallet: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v1"/><path d="M3 8v9a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-6a2 2 0 0 0-2-2H8"/><circle cx="16.5" cy="14" r="1.2" fill="currentColor" stroke="none"/></svg>',
   bell: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 10a6 6 0 0 1 12 0c0 4 1.5 5.5 2 6H4c.5-.5 2-2 2-6z"/><path d="M9.5 19a2.5 2.5 0 0 0 5 0"/></svg>',
+  mail: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 6.5l9 6.5 9-6.5"/></svg>',
+  idcard: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="8.5" cy="11" r="1.8"/><path d="M6 16c.5-1.5 1.8-2.3 2.5-2.3s2 .8 2.5 2.3"/><path d="M14 10h5M14 13h5"/></svg>',
+  user: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.5"/><path d="M4.5 20a7.5 7.5 0 0 1 15 0"/></svg>',
+  phone: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h3.5l1.5 5-2 1.5a11 11 0 0 0 5.5 5.5l1.5-2 5 1.5V19a2 2 0 0 1-2 2C10.5 21 3 13.5 3 6a2 2 0 0 1 2-2z"/></svg>',
+  eye: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.8-7 10-7 10 7 10 7-3.8 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>',
+  clipboard: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="12" height="17" rx="2"/><rect x="9" y="2.5" width="6" height="3" rx="1"/><path d="M9 11h6M9 15h6"/></svg>',
+  gift: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="9" width="18" height="4" rx="1"/><rect x="5" y="13" width="14" height="8" rx="1"/><path d="M12 9v12M12 9c-1.5-3-5-4-5-1.5S9.5 9 12 9zM12 9c1.5-3 5-4 5-1.5S14.5 9 12 9z"/></svg>',
+  link: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 15l6-6"/><path d="M11 6l1-1a4 4 0 0 1 5.7 5.7l-1.7 1.7"/><path d="M13 18l-1 1a4 4 0 0 1-5.7-5.7l1.7-1.7"/></svg>',
+  dot: '<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="4"/></svg>',
 };
 function ic(name, cls){ return ICONS[name] ? ICONS[name].replace('<svg ', `<svg class="${cls||'icon-svg'}" `) : ''; }
 
@@ -767,6 +870,9 @@ function initData(){
     renderActiveUsersPage();
     renderUserGrowthChart();
     computeRealCpxRevenue();
+    if(currentUserDetailUid && document.getElementById('page-user-detail').classList.contains('active')){
+      showUserDetailModal(currentUserDetailUid);
+    }
   });
 
   db.ref('withdrawals').on('value', snap=>{
@@ -1459,7 +1565,7 @@ function renderUsers(){
   const pageRows = rows.slice(start, start+USERS_PAGE_SIZE);
 
   document.getElementById('usersBody').innerHTML = pageRows.map(u=>`
-    <tr onclick="showUserDetailModal('${u.uid}')" style="cursor:pointer;">
+    <tr onclick="showUserDetailModal('${u.uid}','users','All Users')" style="cursor:pointer;">
       <td><div class="avatar-chip"><div class="avatar">${initials(u.name)}</div><div><div>${u.name||'—'}</div><div style="font-size:10.5px;color:var(--text-faint)">${u.email||'—'}</div></div></div></td>
       <td class="cell-mono">${u.uid.slice(0,10)}…</td>
       <td>${fmtDate(u.joinDate)}</td>
@@ -1477,7 +1583,7 @@ function renderUsers(){
     </tr>`).join('');
 
   document.getElementById('userCards').innerHTML = pageRows.map(u=>`
-    <div class="user-card" onclick="showUserDetailModal('${u.uid}')">
+    <div class="user-card" onclick="showUserDetailModal('${u.uid}','users','All Users')">
       <div class="avatar">${initials(u.name)}</div>
       <div class="user-card-body">
         <div class="user-card-name">${u.name||'—'}</div>
@@ -1499,7 +1605,7 @@ function kebabMenuHtml(uid, banned){
     <div class="kebab-wrap">
       <button class="kebab-btn" onclick="event.stopPropagation(); toggleKebabMenu('${menuId}')"><svg viewBox="0 0 24 24" fill="currentColor" width="17" height="17"><circle cx="12" cy="5" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="12" cy="19" r="1.8"/></svg></button>
       <div class="kebab-menu" id="${menuId}">
-        <button onclick="event.stopPropagation(); closeAllKebabMenus(); showUserDetailModal('${uid}')">View details</button>
+        <button onclick="event.stopPropagation(); closeAllKebabMenus(); showUserDetailModal('${uid}','users','All Users')">View details</button>
         <button class="danger" onclick="event.stopPropagation(); closeAllKebabMenus(); setUserBanned('${uid}', ${!banned})">${banned?'Unban user':'Ban user'}</button>
       </div>
     </div>`;
@@ -1540,8 +1646,9 @@ function renderUserPagination(totalPages, totalCount, start){
 }
 function uGoPage(p){ uPage = p; renderUsers(); }
 
-/* ---------- User Detail Modal (full Firebase record) ---------- */
+/* ---------- User Detail Page (full Firebase record) ---------- */
 let currentUserDetailUid = null;
+let userDetailReturnPage = {page:'users', label:'All Users'};
 function buildRawDataTree(obj, depth){
   depth = depth || 0;
   if(obj === null || obj === undefined) return `<span class="rd-val" style="color:var(--text-faint)">—</span>`;
@@ -1557,27 +1664,111 @@ function buildRawDataTree(obj, depth){
     return `<div class="rd-row"><div class="rd-key">${escapeHtml(k)}</div><div class="rd-val">${escapeHtml(String(v))}</div></div>`;
   }).join('');
 }
-function showUserDetailModal(uid){
+// Human-readable "how long ago" string, used to show since-when a user has gone inactive.
+function timeAgo(ts){
+  if(!ts) return null;
+  const diffMs = Date.now() - new Date(ts).getTime();
+  const mins = Math.floor(diffMs/60000);
+  if(mins < 1) return 'just now';
+  if(mins < 60) return `${mins} minute${mins===1?'':'s'} ago`;
+  const hrs = Math.floor(mins/60);
+  if(hrs < 24) return `${hrs} hour${hrs===1?'':'s'} ago`;
+  const days = Math.floor(hrs/24);
+  if(days < 30) return `${days} day${days===1?'':'s'} ago`;
+  const months = Math.floor(days/30);
+  if(months < 12) return `${months} month${months===1?'':'s'} ago`;
+  const years = Math.floor(months/12);
+  return `${years} year${years===1?'':'s'} ago`;
+}
+function showUserDetailModal(uid, returnPage, returnLabel){
   const u = usersData[uid];
   if(!u) return;
   currentUserDetailUid = uid;
+  if(returnPage) userDetailReturnPage = {page:returnPage, label:returnLabel||'Back'};
+
   document.getElementById('udAvatar').textContent = initials(u.name);
   document.getElementById('udName').textContent = u.name || '—';
   document.getElementById('udEmail').textContent = u.email || '—';
   document.getElementById('udUid').textContent = uid;
   const statusEl = document.getElementById('udStatusBadge');
-  statusEl.className = u.banned ? 'badge-banned' : 'badge-active';
+  statusEl.className = 'badge-status ' + (u.banned ? 'badge-banned' : 'badge-active');
   statusEl.textContent = u.banned ? 'Banned' : 'Active';
+  document.getElementById('udStatusRow').className = 'ud-header-status' + (u.banned ? ' banned' : '');
 
-  const quick = [
-    {label:'Balance', value:fmtMoney(u.balance)},
-    {label:'Total Earned', value:fmtMoney(u.totalEarned)},
-    {label:'Joined', value:fmtDate(u.joinDate)},
-    {label:'Last Active', value:u.lastActive ? fmtDate(u.lastActive) : 'Never'},
-    {label:'Referrals', value:u.referrals||0},
+  // ---- Per-user withdrawal figures (from /withdrawals/{uid}/*) ----
+  const myWds = Object.entries(withdrawalsData[uid] || {}).map(([id,w])=>({id,...w}));
+  const totalWithdrawn = myWds.filter(w=>w.status==='approved').reduce((s,w)=>s+(Number(w.amount)||0),0);
+  const pendingWithdraw = myWds.filter(w=>w.status==='pending').reduce((s,w)=>s+(Number(w.amount)||0),0);
+
+  // ---- Top balance row ----
+  document.getElementById('udBalance').textContent = fmtMoney(u.balance);
+  document.getElementById('udTotalEarned').textContent = fmtMoney(u.totalEarned);
+  document.getElementById('udTotalWithdrawn').textContent = fmtMoney(totalWithdrawn);
+
+  // ---- User Information ----
+  const infoRows = [
+    {icon:'user', label:'Username', value:u.name || '—'},
+    {icon:'mail', label:'Email', value:u.email || '—'},
+    {icon:'idcard', label:'User ID (UID)', value:uid, mono:true, copy:true},
+    {icon:'dot', label:'Status', value:u.banned?'Banned':'Active', cls:u.banned?'no':'yes'},
+    {icon:'calendar', label:'Registered On', value:fmtDate(u.joinDate || u.createdAt)},
+    {icon:'clock', label:'Last Login', value:fmtDate(u.lastActive || u.lastLogin)},
+    {icon:'gift', label:'Referral Code', value:u.referralCode || 'Not Available'},
+    {icon:'link', label:'Referred By', value:u.referredBy || 'Not Available'},
   ];
-  document.getElementById('udQuickStats').innerHTML = quick.map(q=>`
-    <div class="stat-card" style="padding:10px 12px;"><div class="stat-label" style="margin-bottom:4px;">${q.label}</div><div class="stat-value small">${q.value}</div></div>`).join('');
+  document.getElementById('udInfoRows').innerHTML = infoRows.map(r=>`
+    <div class="ud-row">
+      <div class="ud-row-label">${ic(r.icon)}<span>${r.label}</span></div>
+      <div class="ud-row-value ${r.mono?'mono':''} ${r.cls||''}">${escapeHtml(String(r.value))}${r.copy?`<button class="ud-copy-btn" title="Copy" onclick="copyUid('${uid}', event)">${ic('copy')}</button>`:''}</div>
+    </div>`).join('');
+
+  // ---- Wallet & Earnings ----
+  const walletRows = [
+    {icon:'coins', label:'Current Balance', value:fmtMoney(u.balance), color:'var(--amber)'},
+    {icon:'trendUp', label:'Total Earned', value:fmtMoney(u.totalEarned), color:'var(--emerald)'},
+    {icon:'wallet', label:'Total Withdrawn', value:fmtMoney(totalWithdrawn), color:'var(--blue)'},
+    {icon:'clock', label:'Pending Withdraw', value:fmtMoney(pendingWithdraw), color:'var(--blue)'},
+  ];
+  document.getElementById('udWalletRows').innerHTML = walletRows.map(r=>`
+    <div class="ud-row">
+      <div class="ud-row-label">${ic(r.icon)}<span>${r.label}</span></div>
+      <div class="ud-row-value mono" style="color:${r.color};">${r.value}</div>
+    </div>`).join('');
+
+  // ---- Account & Security ----
+  const yn = v => v===true || v==='true';
+  const secRows = [
+    {icon:'mail', label:'Email Verified', value:yn(u.emailVerified)},
+    {icon:'phone', label:'Phone Verified', value:yn(u.phoneVerified)},
+    {icon:'idcard', label:'KYC Verified', value:yn(u.kycVerified)},
+    {icon:'shield', label:'Banned', value:!!u.banned, invert:true},
+  ];
+  document.getElementById('udSecurityRows').innerHTML = secRows.map(r=>{
+    const positive = r.invert ? !r.value : r.value;
+    return `
+    <div class="ud-row">
+      <div class="ud-row-label">${ic(r.icon)}<span>${r.label}</span></div>
+      <div class="ud-row-value ${positive?'yes':'no'}">${r.value ? 'Yes' : 'No'}</div>
+    </div>`;
+  }).join('');
+
+  // ---- Activity Summary ----
+  const totalAdsWatched = Object.values(u.dailyTasks||{}).reduce((s,d)=>s+(Number(d?.adsWatched)||0),0) || (Number(u.totalAdsViewed)||0);
+  const totalShortlinks = Object.values(u.dailyTasks||{}).reduce((s,d)=>s+(Number(d?.shortlinks)||0),0);
+  const totalSpins = Object.values(u.dailyTasks||{}).reduce((s,d)=>s+(Number(d?.spins)||0),0);
+  const tasksCompleted = totalAdsWatched + totalShortlinks + totalSpins;
+  const activityItems = [
+    {icon:'eye', num:totalAdsWatched, label:'Ads Watched'},
+    {icon:'clipboard', num:tasksCompleted, label:'Tasks Completed'},
+    {icon:'userPlus', num:u.referrals||0, label:'Referrals'},
+    {icon:'wallet', num:myWds.length, label:'Withdrawals'},
+  ];
+  document.getElementById('udActivityGrid').innerHTML = activityItems.map(a=>`
+    <div class="ud-activity-item">
+      <div class="ic">${ic(a.icon)}</div>
+      <div class="num">${a.num}</div>
+      <div class="lbl">${a.label}</div>
+    </div>`).join('');
 
   document.getElementById('udRawData').innerHTML = `<div class="rd-tree">${buildRawDataTree(u)}</div>`;
 
@@ -1586,17 +1777,15 @@ function showUserDetailModal(uid){
   banBtn.style.background = u.banned ? 'var(--emerald)' : 'var(--red)';
   banBtn.style.color = u.banned ? '#04150F' : '#fff';
 
-  document.getElementById('userDetailModal').classList.add('open');
+  goToPage('user-detail', u.name || 'User Details');
 }
-function closeUserDetailModal(){
-  document.getElementById('userDetailModal').classList.remove('open');
-  currentUserDetailUid = null;
+function closeUserDetailPage(){
+  goToPage(userDetailReturnPage.page, userDetailReturnPage.label);
 }
 function toggleBanCurrentUser(){
   if(!currentUserDetailUid) return;
   const u = usersData[currentUserDetailUid];
   setUserBanned(currentUserDetailUid, !u?.banned);
-  closeUserDetailModal();
 }
 
 /* ---------- WITHDRAWALS ---------- */
@@ -1840,13 +2029,13 @@ function renderActiveUsersPage(){
       <td class="cell-mono">${dailyTaskField(u,'shortlinks')}</td>
       <td class="cell-mono">${fmtMoney(computeUserToday(u))}</td>
       <td><span class="${didTask?'badge-active':'badge-banned'}">${didTask?'Done':'Pending'}</span></td>
-      <td><button class="btn btn-ghost" onclick="showUserDetailModal('${u.uid}')">See More</button></td>
+      <td><button class="btn btn-ghost" onclick="showUserDetailModal('${u.uid}','active-users','Active Users Today')">See More</button></td>
     </tr>`;
   }).join('');
 
   document.getElementById('auCards').innerHTML = pageRows.map(u=>{
     const didTask = userDidTaskToday(u);
-    return `<div class="user-card" onclick="showUserDetailModal('${u.uid}')">
+    return `<div class="user-card" onclick="showUserDetailModal('${u.uid}','active-users','Active Users Today')">
       <div class="avatar">${initials(u.name)}</div>
       <div class="user-card-body">
         <div class="user-card-name">${u.name||'—'}</div>
@@ -1855,7 +2044,7 @@ function renderActiveUsersPage(){
           <span class="${didTask?'badge-active':'badge-banned'}">${didTask?'Task Done':'No Task Yet'}</span>
         </div>
         <div style="font-size:10.5px; color:var(--text-faint); margin-top:6px;">Ads ${dailyTaskField(u,'adsWatched')} · Spins ${dailyTaskField(u,'spins')} · Links ${dailyTaskField(u,'shortlinks')} · Earned ${fmtMoney(computeUserToday(u))}</div>
-        <button class="btn btn-ghost" style="margin-top:10px; width:100%;" onclick="event.stopPropagation(); showUserDetailModal('${u.uid}')">See More Tasks</button>
+        <button class="btn btn-ghost" style="margin-top:10px; width:100%;" onclick="event.stopPropagation(); showUserDetailModal('${u.uid}','active-users','Active Users Today')">See More Tasks</button>
       </div>
     </div>`;
   }).join('');
