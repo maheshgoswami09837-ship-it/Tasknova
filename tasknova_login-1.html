@@ -702,7 +702,7 @@
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-  import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, updatePassword, GoogleAuthProvider, signInWithCredential } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+  import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, updatePassword, GoogleAuthProvider, signInWithCredential, signInWithRedirect, getRedirectResult } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
   import { getDatabase, ref, set, get, update, serverTimestamp, query, orderByKey, limitToLast } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
   const firebaseConfig = {
@@ -730,6 +730,19 @@
   window.addEventListener('load', async () => {
     if (alreadyChecked) return;
     alreadyChecked = true;
+
+    // If we're returning from a Google redirect sign-in, finish that first.
+    try {
+      const redirectResult = await getRedirectResult(auth);
+      if (redirectResult && redirectResult.user) {
+        const referral = sessionStorage.getItem('tn_pending_referral') || '';
+        sessionStorage.removeItem('tn_pending_referral');
+        await finishGoogleSignIn(redirectResult.user, referral);
+        return;
+      }
+    } catch(e) {
+      showToast('Google sign-up failed: ' + e.message, 'error');
+    }
 
     // Auto-fill referral code from URL
     const urlParams = new URLSearchParams(window.location.search);
@@ -1069,26 +1082,15 @@
     }
   };
 
-  // ── REGISTER: Google Sign-Up (popup only — no GSI widget, no redirect) ──
-  let googleSignUpInProgress = false;
+  // ── REGISTER: Google Sign-Up (redirect — same tab, no new tab/window) ──
   window.googleSignUp = async function() {
-    if (googleSignUpInProgress) return; // prevent double-tap -> cancelled-popup-request
-    googleSignUpInProgress = true;
-    const fb = document.getElementById('googleSignUpFallback');
-    const fbBtn = fb ? fb.querySelector('button') : null;
-    if (fbBtn) fbBtn.disabled = true;
     try {
-      const { signInWithPopup } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js");
+      // Save referral before leaving the page, since the tab will navigate away.
       const referral = document.getElementById('regReferralDisplay').value.trim();
-      const result = await signInWithPopup(auth, googleProvider);
-      await finishGoogleSignIn(result.user, referral);
+      sessionStorage.setItem('tn_pending_referral', referral);
+      await signInWithRedirect(auth, googleProvider);
     } catch(e) {
-      if (e.code !== 'auth/cancelled-popup-request') {
-        showToast('Google sign-up failed: ' + e.message, 'error');
-      }
-    } finally {
-      googleSignUpInProgress = false;
-      if (fbBtn) fbBtn.disabled = false;
+      showToast('Google sign-up failed: ' + e.message, 'error');
     }
   };
 
