@@ -1,58 +1,39 @@
+import { MongoClient } from 'mongodb';
+import nodemailer from 'nodemailer';
+
 export default async function handler(req, res) {
-  // CORS headers
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  if (req.method !== 'POST') return res.status(405).json({ message: 'Method not allowed' });
 
-  if (req.method === 'OPTIONS') return res.status(200).end();
-  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
-
-  const { email, name, otp } = req.body;
-
-  if (!email || !name || !otp) {
-    return res.status(400).json({ error: 'email, name, otp required' });
-  }
-
+  const { email } = req.body;
+  const client = new MongoClient(process.env.MONGODB_URI);
+  
   try {
-    const response = await fetch('https://api.brevo.com/v3/smtp/email', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'api-key': process.env.BREVO_API_KEY
-      },
-      body: JSON.stringify({
-        sender: { name: 'TaskNova Team', email: 'bekarboy73@gmail.com' },
-        to: [{ email, name }],
-        subject: 'TaskNova - Your OTP Code: ' + otp,
-        htmlContent: `
-          <div style="font-family:Segoe UI,sans-serif;background:#05051a;padding:32px;border-radius:16px;max-width:480px;margin:auto;">
-            <div style="text-align:center;margin-bottom:24px;">
-              <div style="display:inline-block;background:linear-gradient(135deg,#6c63ff,#3b82f6);border-radius:16px;padding:12px 20px;">
-                <span style="font-size:28px;">⚡</span>
-                <span style="color:#fff;font-size:22px;font-weight:800;margin-left:8px;">TaskNova</span>
-              </div>
-            </div>
-            <h2 style="color:#fff;text-align:center;margin-bottom:8px;">Email Verification</h2>
-            <p style="color:rgba(255,255,255,0.6);text-align:center;margin-bottom:28px;">Hi ${name}, apna account verify karne ke liye neeche diya OTP use karein:</p>
-            <div style="background:linear-gradient(135deg,rgba(108,99,255,0.2),rgba(59,130,246,0.2));border:2px solid rgba(108,99,255,0.4);border-radius:14px;padding:24px;text-align:center;margin-bottom:24px;">
-              <div style="font-size:40px;font-weight:900;letter-spacing:12px;color:#fff;">${otp}</div>
-              <p style="color:rgba(255,255,255,0.4);font-size:12px;margin-top:8px;">Yeh OTP 10 minutes mein expire ho jayega</p>
-            </div>
-            <p style="color:rgba(255,255,255,0.4);font-size:12px;text-align:center;">Agar aapne signup nahi kiya toh is email ko ignore karein.</p>
-          </div>
-        `
-      })
+    await client.connect();
+    const db = client.db(); // Default database
+    
+    // 6-digit OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    
+    // Save to MongoDB
+    await db.collection('otps').insertOne({ email, otp, createdAt: new Date() });
+
+    // Send Email
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS }
     });
 
-    const data = await response.json();
+    await transporter.sendMail({
+      from: process.env.EMAIL_USER,
+      to: email,
+      subject: 'Your OTP Code',
+      text: `Aapka OTP code hai: ${otp}`
+    });
 
-    if (data.messageId) {
-      return res.status(200).json({ success: true });
-    } else {
-      return res.status(500).json({ error: data.message || 'Failed to send email' });
-    }
-
-  } catch (err) {
-    return res.status(500).json({ error: err.message || 'Server error' });
+    res.status(200).json({ message: "OTP sent successfully" });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  } finally {
+    await client.close();
   }
 }
