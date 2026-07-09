@@ -4,42 +4,66 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Admin - Send Message</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
+  :root{
+    --bg:#0A0F1C; --surface:#111827; --surface-2:#161F32; --border:#232E48;
+    --text:#E7ECF6; --text-dim:#8B96AF; --text-faint:#5B6785;
+    --emerald:#12D992; --emerald-dim:#0B9C6B; --amber:#F5A623; --red:#F0466A; --blue:#4C8DFF;
+    --radius:14px; --font-ui:'Inter',sans-serif;
+    --shadow:0 8px 24px rgba(0,0,0,.35);
+  }
   * { margin:0; padding:0; box-sizing:border-box; }
-  body { font-family:'Segoe UI',sans-serif; background:#f5f6fa; min-height:100vh; padding:20px; }
+  body { font-family:var(--font-ui); background:var(--bg); color:var(--text); min-height:100vh; padding:20px; }
   .wrap { max-width:480px; margin:0 auto; }
-  h1 { font-size:20px; font-weight:800; color:#1a1a2e; margin-bottom:20px; }
-  .card { background:#fff; border-radius:16px; padding:20px; box-shadow:0 2px 10px rgba(0,0,0,0.05); margin-bottom:16px; }
-  label { display:block; font-size:12.5px; font-weight:700; color:#475569; margin-bottom:6px; margin-top:14px; }
+  .topbar { display:flex; align-items:center; gap:12px; margin-bottom:20px; }
+  .back-btn { width:38px; height:38px; border-radius:10px; background:var(--surface); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; cursor:pointer; color:var(--text-dim); flex-shrink:0; }
+  .back-btn:hover { color:var(--text); border-color:var(--text-faint); }
+  .back-btn svg { width:18px; height:18px; }
+  h1 { font-size:19px; font-weight:800; display:flex; align-items:center; gap:9px; }
+  h1 svg { width:20px; height:20px; color:var(--emerald); flex-shrink:0; }
+  .card { background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:20px; margin-bottom:16px; }
+  label { display:block; font-size:11.5px; font-weight:700; color:var(--text-faint); text-transform:uppercase; letter-spacing:.04em; margin-bottom:6px; margin-top:16px; }
   label:first-child { margin-top:0; }
-  input, textarea, select { width:100%; padding:12px 14px; border:1.5px solid #e2e8f0; border-radius:12px; font-size:14px; font-family:inherit; outline:none; }
+  input, textarea, select {
+    width:100%; padding:12px 14px; border:1.5px solid var(--border); border-radius:12px;
+    font-size:14px; font-family:inherit; outline:none; background:var(--surface-2); color:var(--text);
+  }
+  input::placeholder, textarea::placeholder{ color:var(--text-faint); }
   textarea { resize:vertical; min-height:90px; }
-  input:focus, textarea:focus, select:focus { border-color:#2563eb; }
+  input:focus, textarea:focus, select:focus { border-color:var(--emerald); }
   .toggleRow { display:flex; gap:8px; margin-top:6px; }
-  .toggleBtn { flex:1; padding:11px; border-radius:12px; border:1.5px solid #e2e8f0; background:#fff; font-size:13px; font-weight:700; color:#64748b; cursor:pointer; text-align:center; }
-  .toggleBtn.active { border-color:#2563eb; background:#eff6ff; color:#2563eb; }
+  .toggleBtn { flex:1; padding:11px; border-radius:12px; border:1.5px solid var(--border); background:var(--surface-2); font-size:13px; font-weight:700; color:var(--text-dim); cursor:pointer; text-align:center; }
+  .toggleBtn.active { border-color:var(--emerald); background:rgba(18,217,146,.12); color:var(--emerald); }
   #uidField { display:none; }
-  .sendBtn { width:100%; margin-top:18px; padding:14px; border:none; border-radius:14px; background:linear-gradient(135deg,#2563eb,#1d4ed8); color:#fff; font-size:14.5px; font-weight:800; cursor:pointer; }
+  .sendBtn {
+    width:100%; margin-top:20px; padding:14px; border:none; border-radius:14px;
+    background:var(--emerald); color:#04150F; font-size:14.5px; font-weight:800; cursor:pointer;
+    display:flex; align-items:center; justify-content:center; gap:8px;
+  }
+  .sendBtn:hover{ background:var(--emerald-dim); }
   .sendBtn:disabled { opacity:0.6; cursor:not-allowed; }
+  .sendBtn svg{ width:15px; height:15px; }
   .status { margin-top:12px; font-size:13px; font-weight:600; text-align:center; padding:10px; border-radius:10px; display:none; }
-  .status.ok { display:block; background:#ecfdf5; color:#059669; }
-  .status.err { display:block; background:#fef2f2; color:#dc2626; }
-  .lock { max-width:340px; margin:100px auto; text-align:center; }
-  .lock input { text-align:center; font-size:18px; letter-spacing:4px; margin-top:16px; }
-  .lock button { margin-top:14px; width:100%; padding:13px; border:none; border-radius:12px; background:#2563eb; color:#fff; font-weight:700; cursor:pointer; }
+  .status.ok { display:flex; align-items:center; justify-content:center; gap:7px; background:rgba(18,217,146,.12); color:var(--emerald); }
+  .status.err { display:flex; align-items:center; justify-content:center; gap:7px; background:rgba(240,70,106,.12); color:var(--red); }
+  .status svg{ width:14px; height:14px; flex-shrink:0; }
+  .hint { font-size:11px; color:var(--text-faint); margin-top:14px; text-align:center; }
 </style>
 </head>
 <body>
 
-<div class="lock" id="lockScreen">
-  <h1>Admin Access</h1>
-  <input type="password" id="passInput" placeholder="Enter passcode">
-  <button onclick="checkPass()">Unlock</button>
-  <div class="status err" id="lockErr">Galat passcode</div>
-</div>
-
-<div class="wrap" id="mainPanel" style="display:none;">
-  <h1>📨 Send Message</h1>
+<div class="wrap">
+  <div class="topbar">
+    <div class="back-btn" onclick="goBack()" title="Back to Dashboard">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+    </div>
+    <h1>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>
+      Send Message
+    </h1>
+  </div>
 
   <div class="card">
     <label>Send To</label>
@@ -59,9 +83,14 @@
     <label>Message</label>
     <textarea id="msgBody" placeholder="Apna message likho..."></textarea>
 
-    <button class="sendBtn" id="sendBtn" onclick="sendMessage()">Send Message</button>
+    <button class="sendBtn" id="sendBtn" onclick="sendMessage()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4z"/></svg>
+      Send Message
+    </button>
     <div class="status" id="statusBox"></div>
   </div>
+
+  <div class="hint">Messages are sent live via Firebase to the TaskNova app.</div>
 </div>
 
 <script type="module">
@@ -80,23 +109,15 @@
   const app = initializeApp(firebaseConfig);
   const db = getDatabase(app);
 
-  const ADMIN_PASSCODE = "tasknova2026"; // change this to your own secret
-
-  window.checkPass = function() {
-    const val = document.getElementById('passInput').value;
-    if (val === ADMIN_PASSCODE) {
-      document.getElementById('lockScreen').style.display = 'none';
-      document.getElementById('mainPanel').style.display = 'block';
-      sessionStorage.setItem('tn_admin_ok', '1');
+  window.goBack = function() {
+    // Prefer returning into browser history (keeps the dashboard's own state),
+    // falling back to a direct link if there's no history to go back to.
+    if (document.referrer && document.referrer.includes(location.hostname)) {
+      history.back();
     } else {
-      document.getElementById('lockErr').style.display = 'block';
+      window.location.href = 'tasknova_admin_dashboard.html';
     }
   };
-
-  if (sessionStorage.getItem('tn_admin_ok') === '1') {
-    document.getElementById('lockScreen').style.display = 'none';
-    document.getElementById('mainPanel').style.display = 'block';
-  }
 
   let mode = 'all';
   window.setMode = function(m) {
@@ -110,7 +131,6 @@
     const title = document.getElementById('msgTitle').value.trim();
     const body = document.getElementById('msgBody').value.trim();
     const uid = document.getElementById('targetUid').value.trim();
-    const statusBox = document.getElementById('statusBox');
     const sendBtn = document.getElementById('sendBtn');
 
     if (!title || !body) {
@@ -123,6 +143,7 @@
     }
 
     sendBtn.disabled = true;
+    const originalHtml = sendBtn.innerHTML;
     sendBtn.textContent = 'Sending...';
 
     try {
@@ -136,7 +157,7 @@
         await set(newRef, { ...payload, read: false });
       }
 
-      showStatus('Message bhej diya! ✅', true);
+      showStatus('Message bhej diya!', true);
       document.getElementById('msgTitle').value = '';
       document.getElementById('msgBody').value = '';
       document.getElementById('targetUid').value = '';
@@ -145,15 +166,18 @@
       showStatus('Error: ' + e.message, false);
     } finally {
       sendBtn.disabled = false;
-      sendBtn.textContent = 'Send Message';
+      sendBtn.innerHTML = originalHtml;
     }
   };
 
   function showStatus(msg, ok) {
     const box = document.getElementById('statusBox');
-    box.textContent = msg;
+    const icon = ok
+      ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>'
+      : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5 21.5 20h-19z"/><path d="M12 9v5"/><circle cx="12" cy="17" r="0.8" fill="currentColor" stroke="none"/></svg>';
+    box.innerHTML = icon + '<span>' + msg + '</span>';
     box.className = 'status ' + (ok ? 'ok' : 'err');
-    setTimeout(() => { box.className = 'status'; }, 4000);
+    setTimeout(() => { box.className = 'status'; box.innerHTML=''; }, 4000);
   }
 </script>
 </body>
