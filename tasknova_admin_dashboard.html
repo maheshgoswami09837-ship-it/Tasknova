@@ -32,7 +32,7 @@
   --shadow:0 4px 16px rgba(20,30,60,.08);
 }
 *{box-sizing:border-box; margin:0; padding:0;}
-body{font-family:var(--font-ui); background:var(--bg); color:var(--text); transition:background .2s,color .2s;}
+body{font-family:var(--font-ui); background:var(--bg); color:var(--text); transition:background .2s,color .2s; -webkit-overflow-scrolling:touch;}
 ::-webkit-scrollbar{width:8px; height:8px;}
 ::-webkit-scrollbar-thumb{background:var(--border); border-radius:8px;}
 .mono{font-family:var(--font-mono);}
@@ -272,6 +272,9 @@ tbody tr:hover{background:var(--surface-2);}
     background:var(--surface); border-top:1px solid var(--border);
     padding:8px 4px calc(6px + env(safe-area-inset-bottom));
     box-shadow:0 -6px 20px rgba(0,0,0,.25);
+    -webkit-transform:translateZ(0); transform:translateZ(0);
+    -webkit-backface-visibility:hidden; backface-visibility:hidden;
+    will-change:transform;
   }
   .bottom-nav-item{
     flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center;
@@ -320,6 +323,7 @@ tbody tr:hover{background:var(--surface-2);}
     <div class="navitem" data-page="companies"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="1"/><path d="M9 21v-4h6v4"/><path d="M8 7h1M11.5 7h1M15 7h1M8 11h1M11.5 11h1M15 11h1"/></svg><span class="nav-label">Ad Networks</span></div>
     <div class="navitem" data-page="users"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 20v-1.5a3.5 3.5 0 0 0-3.5-3.5h-5A3.5 3.5 0 0 0 5 18.5V20"/><circle cx="9.5" cy="8" r="3.2"/><path d="M21 20v-1.2a3 3 0 0 0-2.2-2.9"/><path d="M15 5.2a3.2 3.2 0 0 1 0 6"/></svg><span class="nav-label">Users</span></div>
     <div class="navitem" data-page="withdrawals"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v1"/><path d="M3 8v9a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-6a2 2 0 0 0-2-2H8"/><circle cx="16.5" cy="14" r="1.2" fill="currentColor" stroke="none"/></svg><span class="nav-label">Withdrawals</span></div>
+    <div class="navitem" onclick="window.location.href='admin_messages.html'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg><span class="nav-label">Messages</span></div>
     <div class="navitem" data-page="activity"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 4 14h6l-1 8 9-12h-6z"/></svg><span class="nav-label">Live Activity</span></div>
     <div class="navitem" data-page="graphs"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/></svg><span class="nav-label">Graphs</span></div>
 
@@ -333,7 +337,7 @@ tbody tr:hover{background:var(--surface-2);}
     <div class="bottom-nav-item active" data-page="overview" data-label="Dashboard"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v9.5a1 1 0 0 0 1 1H9a1 1 0 0 0 1-1V15a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v4.5a1 1 0 0 0 1 1h2.5a1 1 0 0 0 1-1V10"/></svg><span>Dashboard</span></div>
     <div class="bottom-nav-item" data-page="users" data-label="Users"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 20v-1.5a3.5 3.5 0 0 0-3.5-3.5h-5A3.5 3.5 0 0 0 5 18.5V20"/><circle cx="9.5" cy="8" r="3.2"/><path d="M21 20v-1.2a3 3 0 0 0-2.2-2.9"/><path d="M15 5.2a3.2 3.2 0 0 1 0 6"/></svg><span>Users</span></div>
     <div class="bottom-nav-item" data-page="withdrawals" data-label="Withdrawals"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v1"/><path d="M3 8v9a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-6a2 2 0 0 0-2-2H8"/><circle cx="16.5" cy="14" r="1.2" fill="currentColor" stroke="none"/></svg><span class="bn-badge" id="bnWdBadge" style="display:none;"></span><span>Withdrawals</span></div>
-    <div class="bottom-nav-item" data-page="activity" data-label="Activity"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 4 14h6l-1 8 9-12h-6z"/></svg><span>Activity</span></div>
+    <div class="bottom-nav-item" onclick="window.location.href='admin_messages.html'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg><span>Messages</span></div>
     <div class="bottom-nav-item" data-page="settings" data-label="Settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v3M12 18.5v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2.5 12h3M18.5 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></svg><span>Settings</span></div>
   </div>
 
