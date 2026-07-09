@@ -62,6 +62,7 @@ body{font-family:var(--font-ui); background:var(--bg); color:var(--text); transi
 .navgroup-label{font-size:10.5px; text-transform:uppercase; letter-spacing:.08em; color:var(--text-faint); padding:14px 10px 6px;}
 .navitem{display:flex; align-items:center; gap:10px; padding:10px 10px; border-radius:9px; color:var(--text-dim); font-size:13.5px; font-weight:500; cursor:pointer; transition:.15s;}
 .navitem svg{width:17px; height:17px; flex-shrink:0;}
+.icon-svg{width:15px; height:15px; flex-shrink:0; vertical-align:-3px;}
 .navitem:hover{background:var(--surface-2); color:var(--text);}
 .navitem.active{background:rgba(18,217,146,0.12); color:var(--emerald);}
 .navitem .badge{margin-left:auto; font-family:var(--font-mono); font-size:10px; background:var(--surface-2); padding:2px 6px; border-radius:6px; color:var(--text-faint);}
@@ -123,7 +124,7 @@ tbody tr:hover{background:var(--surface-2);}
 .avatar{width:26px; height:26px; border-radius:50%; background:var(--surface-2); display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; color:var(--text-dim); flex-shrink:0;}
 
 .tabs{display:flex; gap:6px; margin-bottom:14px; flex-wrap:wrap;}
-.tab-btn{padding:8px 14px; border-radius:9px; border:1px solid var(--border); background:var(--surface-2); color:var(--text-dim); font-size:12.5px; font-weight:600; cursor:pointer; display:flex; align-items:center; gap:7px;}
+.tab-btn{padding:8px 14px; border-radius:9px; border:1px solid var(--border); background:var(--surface-2); color:var(--text-dim); font-size:12.5px; font-weight:600; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:7px; white-space:nowrap;}
 .tab-btn.active{background:var(--emerald); color:#04150F; border-color:var(--emerald);}
 .tab-btn .tab-count{font-family:var(--font-mono); font-size:11px; font-weight:700; background:rgba(255,255,255,.14); padding:1px 7px; border-radius:20px;}
 .tab-btn:not(.active) .tab-count{background:var(--border); color:var(--text-dim);}
@@ -144,13 +145,14 @@ tbody tr:hover{background:var(--surface-2);}
 .wd-card-actions{display:flex; gap:10px;}
 .wd-card-actions .btn{flex:1; padding:11px; border-radius:10px; font-size:13.5px; text-align:center; font-weight:700;}
 
-/* Icon-circle summary cards (Pending / Approved / Rejected) */
-.grid-3-eq{display:grid; grid-template-columns:repeat(3,1fr); gap:10px;}
-.wd-icon-card{background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:16px 10px; display:flex; flex-direction:column; align-items:center; text-align:center; gap:6px;}
-.wd-icon-circle{width:42px; height:42px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:19px;}
-.wd-icon-label{font-size:12.5px; font-weight:700;}
-.wd-icon-value{font-family:var(--font-mono); font-size:23px; font-weight:800; color:var(--text);}
-.wd-icon-caption{font-size:10.5px; color:var(--text-faint);}
+/* Compact horizontal icon widget — reused for Overview / Users / Withdrawals summary rows */
+.grid-compact{display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:10px;}
+.mini-widget{background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:12px 14px; display:flex; align-items:center; gap:10px; min-width:0;}
+.mini-widget-icon{width:34px; height:34px; border-radius:10px; display:flex; align-items:center; justify-content:center; flex-shrink:0;}
+.mini-widget-icon svg{width:17px; height:17px;}
+.mini-widget-body{min-width:0; flex:1;}
+.mini-widget-label{font-size:10px; color:var(--text-faint); text-transform:uppercase; letter-spacing:.04em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-bottom:2px;}
+.mini-widget-value{font-family:var(--font-mono); font-weight:800; font-size:16px; color:var(--text); line-height:1.25; word-break:break-word;}
 
 /* Segmented pill tab control (Pending / Approved / Rejected) — mobile only, see media query below */
 
@@ -161,7 +163,7 @@ tbody tr:hover{background:var(--surface-2);}
 .badge-active{background:rgba(18,217,146,.15); color:var(--emerald); padding:3px 10px; border-radius:20px; font-size:11px; font-weight:600;}
 .badge-banned{background:rgba(240,70,106,.15); color:var(--red); padding:3px 10px; border-radius:20px; font-size:11px; font-weight:600;}
 .kebab-wrap{position:relative; display:inline-block;}
-.kebab-btn{background:none; border:none; color:var(--text-faint); font-size:18px; cursor:pointer; padding:4px 8px; border-radius:6px; line-height:1;}
+.kebab-btn{background:none; border:none; color:var(--text-faint); cursor:pointer; padding:0; border-radius:6px; width:26px; height:26px; display:inline-flex; align-items:center; justify-content:center; flex-shrink:0;}
 .kebab-btn:hover{background:var(--surface-2); color:var(--text);}
 .kebab-menu{display:none; position:absolute; right:0; top:calc(100% + 4px); background:var(--surface); border:1px solid var(--border); border-radius:9px; box-shadow:var(--shadow); z-index:30; min-width:150px; overflow:hidden;}
 .kebab-menu.open{display:block;}
@@ -194,7 +196,8 @@ tbody tr:hover{background:var(--surface-2);}
 .badge-approved{background:rgba(18,217,146,.15); color:var(--emerald);}
 .badge-rejected{background:rgba(240,70,106,.15); color:var(--red);}
 
-.btn{padding:6px 12px; border-radius:7px; border:none; font-size:11.5px; font-weight:700; cursor:pointer; font-family:var(--font-ui);}
+.btn{padding:6px 12px; border-radius:7px; border:none; font-size:11.5px; font-weight:700; cursor:pointer; font-family:var(--font-ui); display:inline-flex; align-items:center; justify-content:center; gap:6px; white-space:nowrap;}
+.btn svg{width:13px; height:13px; flex-shrink:0;}
 .btn-approve{background:rgba(18,217,146,.15); color:var(--emerald);}
 .btn-approve:hover{background:var(--emerald); color:#04150F;}
 .btn-reject{background:rgba(240,70,106,.15); color:var(--red);}
@@ -203,7 +206,8 @@ tbody tr:hover{background:var(--surface-2);}
 .btn-ghost:hover{color:var(--text);}
 
 .empty-state{text-align:center; padding:40px 20px; color:var(--text-faint);}
-.empty-state .icon{font-size:28px; margin-bottom:10px;}
+.empty-state .icon{margin-bottom:10px; display:flex; align-items:center; justify-content:center;}
+.empty-state .icon svg{width:30px; height:30px; opacity:.5;}
 
 .placeholder-note{font-size:11.5px; color:var(--amber); background:rgba(245,166,35,.08); border:1px dashed rgba(245,166,35,.35); padding:8px 12px; border-radius:8px; margin-bottom:14px; display:flex; gap:8px; align-items:center;}
 
@@ -253,8 +257,9 @@ tbody tr:hover{background:var(--surface-2);}
   .wd-cards{display:flex;}
   #page-withdrawals .table-wrap, #page-withdrawals #wdPagination{display:none;}
   #page-users .table-wrap{display:none;}
+  #page-active-users .table-wrap{display:none;}
 
-  #wdSummaryCards{grid-template-columns:repeat(3,1fr) !important;}
+  #wdSummaryCards.grid-compact{grid-template-columns:repeat(3,1fr) !important;}
   #wdTabs.tabs-segmented{background:var(--surface-2); border-radius:12px; padding:4px; gap:4px; flex-wrap:nowrap;}
   #wdTabs.tabs-segmented .tab-btn{flex:1; justify-content:center; background:transparent; border:none; padding:11px 6px; font-size:12.5px;}
   #wdTabs.tabs-segmented .tab-btn.active{background:var(--indigo); color:#fff;}
@@ -273,7 +278,7 @@ tbody tr:hover{background:var(--surface-2);}
     gap:3px; padding:6px 2px; color:var(--text-faint); font-size:10.5px; font-weight:600;
     cursor:pointer; position:relative; border-radius:10px;
   }
-  .bottom-nav-item .bn-icon{font-size:19px; line-height:1;}
+  .bottom-nav-item svg{width:19px; height:19px;}
   .bottom-nav-item.active{color:var(--emerald);}
   .bottom-nav-item .bn-badge{
     position:absolute; top:2px; right:calc(50% - 20px); min-width:15px; height:15px; padding:0 4px;
@@ -311,32 +316,32 @@ tbody tr:hover{background:var(--surface-2);}
     </div>
 
     <div class="navgroup-label">Dashboard</div>
-    <div class="navitem active" data-page="overview">📊 Overview</div>
-    <div class="navitem" data-page="companies">🏢 Ad Networks</div>
-    <div class="navitem" data-page="users">👥 Users</div>
-    <div class="navitem" data-page="withdrawals">💸 Withdrawals</div>
-    <div class="navitem" data-page="activity">⚡ Live Activity</div>
-    <div class="navitem" data-page="graphs">📈 Graphs</div>
+    <div class="navitem active" data-page="overview"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10"/><path d="M10 20V4"/><path d="M16 20v-7"/><path d="M20 20H4"/></svg><span class="nav-label">Overview</span></div>
+    <div class="navitem" data-page="companies"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="1"/><path d="M9 21v-4h6v4"/><path d="M8 7h1M11.5 7h1M15 7h1M8 11h1M11.5 11h1M15 11h1"/></svg><span class="nav-label">Ad Networks</span></div>
+    <div class="navitem" data-page="users"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 20v-1.5a3.5 3.5 0 0 0-3.5-3.5h-5A3.5 3.5 0 0 0 5 18.5V20"/><circle cx="9.5" cy="8" r="3.2"/><path d="M21 20v-1.2a3 3 0 0 0-2.2-2.9"/><path d="M15 5.2a3.2 3.2 0 0 1 0 6"/></svg><span class="nav-label">Users</span></div>
+    <div class="navitem" data-page="withdrawals"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v1"/><path d="M3 8v9a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-6a2 2 0 0 0-2-2H8"/><circle cx="16.5" cy="14" r="1.2" fill="currentColor" stroke="none"/></svg><span class="nav-label">Withdrawals</span></div>
+    <div class="navitem" data-page="activity"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 4 14h6l-1 8 9-12h-6z"/></svg><span class="nav-label">Live Activity</span></div>
+    <div class="navitem" data-page="graphs"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/></svg><span class="nav-label">Graphs</span></div>
 
     <div class="navgroup-label">System</div>
-    <div class="navitem" data-page="settings">⚙️ Settings</div>
-    <div class="navitem" onclick="handleLogout()">🚪 Sign Out</div>
+    <div class="navitem" data-page="settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v3M12 18.5v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2.5 12h3M18.5 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></svg><span class="nav-label">Settings</span></div>
+    <div class="navitem" onclick="handleLogout()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg><span class="nav-label">Sign Out</span></div>
   </div>
 
   <!-- BOTTOM NAV (mobile) -->
   <div class="bottom-nav" id="bottomNav">
-    <div class="bottom-nav-item active" data-page="overview" data-label="Dashboard"><span class="bn-icon">🏠</span><span>Dashboard</span></div>
-    <div class="bottom-nav-item" data-page="users" data-label="Users"><span class="bn-icon">👥</span><span>Users</span></div>
-    <div class="bottom-nav-item" data-page="withdrawals" data-label="Withdrawals"><span class="bn-icon">💸</span><span class="bn-badge" id="bnWdBadge" style="display:none;"></span><span>Withdrawals</span></div>
-    <div class="bottom-nav-item" data-page="activity" data-label="Activity"><span class="bn-icon">⚡</span><span>Activity</span></div>
-    <div class="bottom-nav-item" data-page="settings" data-label="Settings"><span class="bn-icon">⚙️</span><span>Settings</span></div>
+    <div class="bottom-nav-item active" data-page="overview" data-label="Dashboard"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v9.5a1 1 0 0 0 1 1H9a1 1 0 0 0 1-1V15a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v4.5a1 1 0 0 0 1 1h2.5a1 1 0 0 0 1-1V10"/></svg><span>Dashboard</span></div>
+    <div class="bottom-nav-item" data-page="users" data-label="Users"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 20v-1.5a3.5 3.5 0 0 0-3.5-3.5h-5A3.5 3.5 0 0 0 5 18.5V20"/><circle cx="9.5" cy="8" r="3.2"/><path d="M21 20v-1.2a3 3 0 0 0-2.2-2.9"/><path d="M15 5.2a3.2 3.2 0 0 1 0 6"/></svg><span>Users</span></div>
+    <div class="bottom-nav-item" data-page="withdrawals" data-label="Withdrawals"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v1"/><path d="M3 8v9a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-6a2 2 0 0 0-2-2H8"/><circle cx="16.5" cy="14" r="1.2" fill="currentColor" stroke="none"/></svg><span class="bn-badge" id="bnWdBadge" style="display:none;"></span><span>Withdrawals</span></div>
+    <div class="bottom-nav-item" data-page="activity" data-label="Activity"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 4 14h6l-1 8 9-12h-6z"/></svg><span>Activity</span></div>
+    <div class="bottom-nav-item" data-page="settings" data-label="Settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v3M12 18.5v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2.5 12h3M18.5 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></svg><span>Settings</span></div>
   </div>
 
   <!-- MAIN -->
   <div class="main">
     <div class="topbar">
       <div style="display:flex; align-items:center; gap:12px;">
-        <button class="hamburger" onclick="document.getElementById('sidebar').classList.toggle('open')">☰</button>
+        <button class="hamburger" onclick="document.getElementById('sidebar').classList.toggle('open')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="20" height="20"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
         <div>
           <h2 id="pageTitle">Overview</h2>
           <div class="topbar-sub" id="pageSub">All figures in ₹ (INR)</div>
@@ -344,20 +349,20 @@ tbody tr:hover{background:var(--surface-2);}
       </div>
       <div class="topbar-right">
         <span class="conn-label"><span class="pulse-dot" id="connDot"></span><span id="connText">Connecting…</span></span>
-        <div class="icon-btn" onclick="exportCSV()" title="Export current table as CSV">⭳</div>
-        <div class="icon-btn" onclick="toggleTheme()" title="Toggle dark/light">🌓</div>
+        <div class="icon-btn" onclick="exportCSV()" title="Export current table as CSV"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M4 19h16"/></svg></div>
+        <div class="icon-btn" onclick="toggleTheme()" title="Toggle dark/light"><svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5z"/></svg></div>
       </div>
     </div>
 
     <!-- ===================== OVERVIEW ===================== -->
     <div class="page active" id="page-overview">
       <div class="panel" style="margin-bottom:18px; border-color:var(--emerald); text-align:center;">
-        <div class="panel-title" style="margin-bottom:14px;">💰 Real Revenue — Live Networks Combined (USD)</div>
+        <div class="panel-title" style="margin-bottom:14px; display:flex; align-items:center; gap:8px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><circle cx="8.5" cy="8.5" r="5.5"/><circle cx="15" cy="15" r="5.5"/></svg> Real Revenue — Live Networks Combined (USD)</div>
         <div id="realRevenueCards" style="color:var(--text-faint); font-size:14px;">Waiting for network data to load…</div>
         <div style="font-size:10.5px; color:var(--text-faint); margin-top:14px;">Adsterra + HilltopAds (their own API, real $) + CPX Research (coins credited to users, converted to $). This is NOT "Total Revenue (User Earnings)" below — that's what users earned overall, not real cash.</div>
       </div>
 
-      <div class="grid grid-9" id="overviewCards"></div>
+      <div class="grid grid-compact" id="overviewCards"></div>
 
       <div style="margin-top:22px;" class="grid grid-2">
         <div class="chart-box"><h3>User Growth (last 14 days)</h3><canvas id="chartUserGrowth"></canvas></div>
@@ -365,13 +370,44 @@ tbody tr:hover{background:var(--surface-2);}
       </div>
     </div>
 
+    <!-- ===================== ACTIVE USERS TODAY (full page) ===================== -->
+    <div class="page" id="page-active-users">
+      <button class="btn btn-ghost" style="margin-bottom:14px;" onclick="goToPage('overview','Overview')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="13" height="13"><path d="M15 18l-6-6 6-6"/></svg> Back to Overview
+      </button>
+      <div class="grid grid-compact" style="margin-bottom:18px;" id="auSummaryCards"></div>
+      <div class="panel">
+        <div class="panel-head">
+          <div class="panel-title">Active Users Today <span class="count" id="auCount"></span></div>
+          <input class="search-input" id="auSearch" placeholder="Search name, UID, or email…" oninput="auSearchChanged()">
+        </div>
+        <div class="tabs" id="auTabs">
+          <button class="tab-btn active" data-au="all" onclick="setAuTab('all')">All</button>
+          <button class="tab-btn" data-au="done" onclick="setAuTab('done')">Task Done <span class="tab-count" id="auTabDoneCount">0</span></button>
+          <button class="tab-btn" data-au="pending" onclick="setAuTab('pending')">No Task Yet <span class="tab-count" id="auTabPendingCount">0</span></button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr>
+              <th>User</th><th>Last Active</th><th>Ads Watched</th><th>Spins</th><th>Shortlinks</th>
+              <th>Earned Today</th><th>Task Status</th><th></th>
+            </tr></thead>
+            <tbody id="auBody"></tbody>
+          </table>
+        </div>
+        <div class="wd-cards" id="auCards"></div>
+        <div id="auPagination" style="display:flex; align-items:center; justify-content:space-between; margin-top:14px; flex-wrap:wrap; gap:10px;"></div>
+      </div>
+    </div>
+
+
     <!-- ===================== AD NETWORKS ===================== -->
     <div class="page" id="page-companies">
-      <div class="placeholder-note">⚠ Adsterra, HilltopAds & CPX Research pull live data automatically. Monetag & ShrinkEarn don't offer any stats API — use "Add today's entry" to log real revenue numbers manually from their own dashboards. (Note: CPX Research's number is the amount credited to users via CPX, used here as an approximation of CPX earnings.)</div>
+      <div class="placeholder-note"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="15" height="15" style="flex-shrink:0;"><path d="M12 3.5 21.5 20h-19z"/><path d="M12 9v5"/><circle cx="12" cy="17" r="0.8" fill="currentColor" stroke="none"/></svg>Adsterra, HilltopAds & CPX Research pull live data automatically. Monetag & ShrinkEarn don't offer any stats API — use "Add today's entry" to log real revenue numbers manually from their own dashboards. (Note: CPX Research's number is the amount credited to users via CPX, used here as an approximation of CPX earnings.)</div>
       <div class="grid grid-9" id="networkSummaryCards" style="margin-bottom:18px;"></div>
 
       <div class="panel" style="border-color:var(--blue); margin-bottom:18px;">
-        <div class="panel-title" style="margin-bottom:10px;">🔍 Verify — Raw Dashboard Values (USD, unconverted)</div>
+        <div class="panel-title" style="margin-bottom:10px; display:flex; align-items:center; gap:8px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M20 20l-4.8-4.8"/></svg> Verify — Raw Dashboard Values (USD, unconverted)</div>
         <div style="font-size:11px; color:var(--text-faint); margin-bottom:12px;">Compare these numbers directly against what you see on Adsterra's and HilltopAds' own websites (they also show USD). If these don't match, tell me the exact numbers you see there and I'll help find the mismatch.</div>
         <div id="rawUsdVerification" style="color:var(--text-faint); font-size:12.5px;">Waiting for data…</div>
         <div id="cpxFailedBox" style="margin-top:14px;"></div>
@@ -408,13 +444,13 @@ tbody tr:hover{background:var(--surface-2);}
 
     <!-- ===================== USERS ===================== -->
     <div class="page" id="page-users">
-      <div class="grid grid-9" style="margin-bottom:18px;" id="userSummaryCards"></div>
+      <div class="grid grid-compact" style="margin-bottom:18px;" id="userSummaryCards"></div>
       <div class="panel">
         <div class="panel-head">
           <div class="panel-title">All Users <span class="count" id="userCount"></span></div>
           <div style="display:flex; gap:10px; flex:1; min-width:220px;">
             <input class="search-input" id="userSearch" placeholder="Search by username, UID or email…" oninput="uSearchChanged()" style="flex:1;">
-            <button class="btn btn-ghost" id="userFilterBtn" onclick="cycleUserFilter()">▽ Filter: All</button>
+            <button class="btn btn-ghost" id="userFilterBtn" onclick="cycleUserFilter()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="13" height="13"><path d="M4 5h16l-6 7v6l-4 2v-8z"/></svg><span id="userFilterLabel">Filter: All</span></button>
           </div>
         </div>
         <div class="table-wrap">
@@ -434,7 +470,7 @@ tbody tr:hover{background:var(--surface-2);}
 
     <!-- ===================== WITHDRAWALS ===================== -->
     <div class="page" id="page-withdrawals">
-      <div class="grid grid-3-eq" style="margin-bottom:18px;" id="wdSummaryCards"></div>
+      <div class="grid grid-compact" style="margin-bottom:18px;" id="wdSummaryCards"></div>
       <div class="panel">
         <div class="panel-head">
           <div class="panel-title">Withdrawal Requests <span class="count" id="wdCount"></span></div>
@@ -446,7 +482,7 @@ tbody tr:hover{background:var(--surface-2);}
           <button class="tab-btn" data-status="approved" onclick="setWdTab('approved')">Approved <span class="tab-count" id="tabCountApproved">0</span></button>
           <button class="tab-btn" data-status="rejected" onclick="setWdTab('rejected')">Rejected <span class="tab-count" id="tabCountRejected">0</span></button>
         </div>
-        <div class="wd-sort-note"><span>⇅ Pending requests are shown on top</span><span><b id="wdNoteCount">0</b> <span id="wdNoteLabel">Pending</span></span></div>
+        <div class="wd-sort-note"><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="13" height="13" style="vertical-align:-2px;"><path d="M8 4v13M8 4 4.5 7.5M8 4l3.5 3.5"/><path d="M16 20V7M16 20l3.5-3.5M16 20l-3.5-3.5"/></svg> Pending requests are shown on top</span><span><b id="wdNoteCount">0</b> <span id="wdNoteLabel">Pending</span></span></div>
         <div class="table-wrap">
           <table>
             <thead><tr>
@@ -483,23 +519,6 @@ tbody tr:hover{background:var(--surface-2);}
       </div>
     </div>
 
-    <!-- ACTIVE USERS TODAY MODAL -->
-    <div class="modal-backdrop" id="activeUsersModal">
-      <div class="modal-box" style="max-width:520px;">
-        <h3>Active Users Today</h3>
-        <div style="font-size:11.5px; color:var(--text-faint); margin-bottom:10px;">Users who opened the app today, and whether they completed a task today.</div>
-        <div class="table-wrap" style="max-height:400px;">
-          <table>
-            <thead><tr><th>User</th><th>Last Active</th><th>Task Today</th></tr></thead>
-            <tbody id="activeUsersModalBody"></tbody>
-          </table>
-        </div>
-        <div class="modal-actions">
-          <button class="btn-cancel" onclick="closeActiveUsersModal()">Close</button>
-        </div>
-      </div>
-    </div>
-
     <!-- WITHDRAWAL ACTION CONFIRMATION MODAL -->
     <div class="modal-backdrop" id="wdConfirmModal">
       <div class="modal-box">
@@ -518,7 +537,7 @@ tbody tr:hover{background:var(--surface-2);}
 
     <!-- ===================== LIVE ACTIVITY ===================== -->
     <div class="page" id="page-activity">
-      <div class="placeholder-note">⚠ Live Activity feed is UI-only for now — wire it up by pushing an event object to <code class="mono">/activity</code> in Firebase whenever a user completes an ad, survey, or withdrawal request.</div>
+      <div class="placeholder-note"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="15" height="15" style="flex-shrink:0;"><path d="M12 3.5 21.5 20h-19z"/><path d="M12 9v5"/><circle cx="12" cy="17" r="0.8" fill="currentColor" stroke="none"/></svg>Live Activity feed is UI-only for now — wire it up by pushing an event object to <code class="mono">/activity</code> in Firebase whenever a user completes an ad, survey, or withdrawal request.</div>
       <div class="panel">
         <div class="panel-title" style="margin-bottom:8px;">Sample feed (static preview)</div>
         <div id="activityList"></div>
@@ -652,8 +671,9 @@ function enterDashboard(user){
 
 /* ---------- NAV ---------- */
 function goToPage(page, label){
-  document.querySelectorAll('.navitem[data-page]').forEach(i=>i.classList.toggle('active', i.dataset.page===page));
-  document.querySelectorAll('.bottom-nav-item[data-page]').forEach(i=>i.classList.toggle('active', i.dataset.page===page));
+  const navPage = page==='active-users' ? 'overview' : page;
+  document.querySelectorAll('.navitem[data-page]').forEach(i=>i.classList.toggle('active', i.dataset.page===navPage));
+  document.querySelectorAll('.bottom-nav-item[data-page]').forEach(i=>i.classList.toggle('active', i.dataset.page===navPage));
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.getElementById('page-'+page).classList.add('active');
   document.getElementById('pageTitle').textContent = label;
@@ -661,7 +681,7 @@ function goToPage(page, label){
 }
 document.querySelectorAll('.navitem[data-page]').forEach(item=>{
   item.addEventListener('click', ()=>{
-    goToPage(item.dataset.page, item.textContent.trim().replace(/^\S+\s/, ''));
+    goToPage(item.dataset.page, item.querySelector('.nav-label')?.textContent.trim() || item.textContent.trim());
   });
 });
 document.querySelectorAll('.bottom-nav-item[data-page]').forEach(item=>{
@@ -678,7 +698,31 @@ function toggleTheme(){
 }
 
 /* ---------- HELPERS ---------- */
+/* ---------- Icon set (inline SVG, no emoji) ---------- */
+const ICONS = {
+  users: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 20v-1.5a3.5 3.5 0 0 0-3.5-3.5h-5A3.5 3.5 0 0 0 5 18.5V20"/><circle cx="9.5" cy="8" r="3.2"/><path d="M21 20v-1.2a3 3 0 0 0-2.2-2.9"/><path d="M15 5.2a3.2 3.2 0 0 1 0 6"/></svg>',
+  trendUp: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/></svg>',
+  userPlus: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M19 8v6M22 11h-6"/></svg>',
+  shield: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6z"/><path d="M12 8v4"/><circle cx="12" cy="15.2" r="0.9" fill="currentColor" stroke="none"/></svg>',
+  coins: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8.5" cy="8.5" r="5.5"/><circle cx="15" cy="15" r="5.5"/></svg>',
+  clock: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg>',
+  check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>',
+  close: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>',
+  calendar: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/></svg>',
+  kebab: '<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="12" cy="19" r="1.8"/></svg>',
+  copy: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>',
+  search: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M20 20l-4.8-4.8"/></svg>',
+  filter: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16l-6 7v6l-4 2v-8z"/></svg>',
+  sort: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 4v13M8 4 4.5 7.5M8 4l3.5 3.5"/><path d="M16 20V7M16 20l3.5-3.5M16 20l-3.5-3.5"/></svg>',
+  alert: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5 21.5 20h-19z"/><path d="M12 9v5"/><circle cx="12" cy="17" r="0.8" fill="currentColor" stroke="none"/></svg>',
+  wallet: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v1"/><path d="M3 8v9a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-6a2 2 0 0 0-2-2H8"/><circle cx="16.5" cy="14" r="1.2" fill="currentColor" stroke="none"/></svg>',
+  bell: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 10a6 6 0 0 1 12 0c0 4 1.5 5.5 2 6H4c.5-.5 2-2 2-6z"/><path d="M9.5 19a2.5 2.5 0 0 0 5 0"/></svg>',
+};
+function ic(name, cls){ return ICONS[name] ? ICONS[name].replace('<svg ', `<svg class="${cls||'icon-svg'}" `) : ''; }
+
 const fmtMoney = n => '₹' + (Number(n)||0).toLocaleString('en-IN', {maximumFractionDigits:2});
+
+
 const fmtDate = ts => ts ? new Date(ts).toLocaleString('en-IN',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}) : '—';
 const isToday = ts => ts && new Date(ts).toDateString() === new Date().toDateString();
 // adsWatchedToday/quizzesToday/scratchesToday/spinsToday are client-side counters that
@@ -716,6 +760,7 @@ function initData(){
     usersData = snap.val() || {};
     renderOverview();
     renderUsers();
+    renderActiveUsersPage();
     renderUserGrowthChart();
     computeRealCpxRevenue();
   });
@@ -737,7 +782,7 @@ function initData(){
   // right after midnight.
   setInterval(()=>{
     if(document.getElementById('autoRefreshCheckbox')?.checked){
-      renderOverview(); renderUsers(); renderWithdrawals();
+      renderOverview(); renderUsers(); renderWithdrawals(); renderActiveUsersPage();
     }
   }, 5*60*1000);
 }
@@ -760,18 +805,20 @@ function renderOverview(){
   const newToday = users.filter(u=>isToday(u.joinDate)).length;
 
   const cards = [
-    {label:'Total Revenue (User Earnings)', value:fmtMoney(totalRevenue), color:'var(--emerald)'},
-    {label:'Coins Earned Today (All Users)', value:fmtMoney(todayRevenue), color:'var(--emerald)'},
-    {label:'Total Registered Users', value:totalUsers.toLocaleString('en-IN'), color:'var(--blue)'},
-    {label:'Active Users Today', value:activeToday.toLocaleString('en-IN'), color:'var(--emerald)', onclick:'showActiveUsersModal()'},
-    {label:'New Users Today', value:newToday.toLocaleString('en-IN'), color:'var(--blue)'},
+    {label:'Total Revenue', icon:'coins', value:fmtMoney(totalRevenue), color:'var(--emerald)', bg:'rgba(18,217,146,.15)'},
+    {label:'Earned Today', icon:'trendUp', value:fmtMoney(todayRevenue), color:'var(--emerald)', bg:'rgba(18,217,146,.15)'},
+    {label:'Total Users', icon:'users', value:totalUsers.toLocaleString('en-IN'), color:'var(--blue)', bg:'rgba(76,141,255,.15)'},
+    {label:'Active Today', icon:'trendUp', value:activeToday.toLocaleString('en-IN'), color:'var(--emerald)', bg:'rgba(18,217,146,.15)', onclick:"goToPage('active-users','Active Users Today'); renderActiveUsersPage();"},
+    {label:'New Today', icon:'userPlus', value:newToday.toLocaleString('en-IN'), color:'var(--blue)', bg:'rgba(76,141,255,.15)'},
   ];
 
   document.getElementById('overviewCards').innerHTML = cards.map(c=>`
-    <div class="stat-card"${c.onclick ? ` style="cursor:pointer;" onclick="${c.onclick}"` : ''}>
-      <div class="accent-bar" style="background:${c.color}"></div>
-      <div class="stat-label">${c.label}</div>
-      <div class="stat-value ${c.small?'small':''}">${c.value}</div>
+    <div class="mini-widget"${c.onclick ? ` style="cursor:pointer;" onclick="${c.onclick}"` : ''}>
+      <div class="mini-widget-icon" style="background:${c.bg}; color:${c.color};">${ic(c.icon)}</div>
+      <div class="mini-widget-body">
+        <div class="mini-widget-label">${c.label}</div>
+        <div class="mini-widget-value">${c.value}</div>
+      </div>
     </div>`).join('');
 
   window.userPayoutTotals = {today:todayRevenue, yesterday:yesterdayRevenue, month:monthRevenue, total:totalRevenue};
@@ -1008,7 +1055,7 @@ function fetchCpxFailures(){
     const data = snap.val() || {};
     const entries = Object.entries(data).sort((a,b)=>(b[1].ts||0)-(a[1].ts||0));
     if(entries.length===0){
-      box.innerHTML = `<div style="font-size:11.5px; color:var(--emerald);">✓ No dropped CPX postbacks logged — nothing missing on this front.</div>`;
+      box.innerHTML = `<div style="font-size:11.5px; color:var(--emerald); display:flex; align-items:center; gap:6px;">${ic('check','icon-svg')} No dropped CPX postbacks logged — nothing missing on this front.</div>`;
       return;
     }
     let missedUsd = 0;
@@ -1028,7 +1075,7 @@ function fetchCpxFailures(){
 
     box.innerHTML = `
       <div style="font-size:11.5px; color:var(--red); font-weight:700; margin-bottom:8px;">
-        ⚠ ${entries.length} dropped CPX postback${entries.length>1?'s':''} found${missedUsd>0?` — ≈$${missedUsd.toFixed(4)} never credited/logged`:''}. This is likely why the dashboard total sits below CPX's real Balance.
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="15" height="15" style="flex-shrink:0;"><path d="M12 3.5 21.5 20h-19z"/><path d="M12 9v5"/><circle cx="12" cy="17" r="0.8" fill="currentColor" stroke="none"/></svg>${entries.length} dropped CPX postback${entries.length>1?'s':''} found${missedUsd>0?` — ≈$${missedUsd.toFixed(4)} never credited/logged`:''}. This is likely why the dashboard total sits below CPX's real Balance.
       </div>
       <table class="pl-table">
         <thead><tr><th>When</th><th>Reason</th><th>user_id sent</th><th>trans_id</th><th>amount_usd</th></tr></thead>
@@ -1361,21 +1408,26 @@ function uSearchChanged(){ uPage = 1; renderUsers(); }
 function cycleUserFilter(){
   uFilter = uFilter==='all' ? 'active' : uFilter==='active' ? 'banned' : 'all';
   const label = uFilter==='all' ? 'All' : uFilter==='active' ? 'Active' : 'Banned';
-  document.getElementById('userFilterBtn').textContent = `▽ Filter: ${label}`;
+  document.getElementById('userFilterLabel').textContent = `Filter: ${label}`;
   uPage = 1;
   renderUsers();
 }
 function renderUserSummaryCards(){
   const users = Object.entries(usersData).map(([uid,u])=>({uid,...u}));
   const cards = [
-    {label:'👥 Total Users', value:users.length.toLocaleString('en-IN'), color:'var(--blue)'},
-    {label:'📈 Active Users', value:users.filter(u=>isToday(u.lastActive)).length.toLocaleString('en-IN'), color:'var(--emerald)'},
-    {label:'🆕 New This Month', value:users.filter(u=>isThisMonth(u.joinDate)).length.toLocaleString('en-IN'), color:'var(--blue)'},
-    {label:'🛡 Banned Users', value:users.filter(u=>u.banned).length.toLocaleString('en-IN'), color:'var(--red)'},
+    {label:'Total Users', icon:'users', value:users.length.toLocaleString('en-IN'), color:'var(--blue)', bg:'rgba(76,141,255,.15)'},
+    {label:'Active Users', icon:'trendUp', value:users.filter(u=>isToday(u.lastActive)).length.toLocaleString('en-IN'), color:'var(--emerald)', bg:'rgba(18,217,146,.15)'},
+    {label:'New This Month', icon:'userPlus', value:users.filter(u=>isThisMonth(u.joinDate)).length.toLocaleString('en-IN'), color:'var(--blue)', bg:'rgba(76,141,255,.15)'},
+    {label:'Banned Users', icon:'shield', value:users.filter(u=>u.banned).length.toLocaleString('en-IN'), color:'var(--red)', bg:'rgba(240,70,106,.15)'},
   ];
   document.getElementById('userSummaryCards').innerHTML = cards.map(c=>`
-    <div class="stat-card"><div class="accent-bar" style="background:${c.color}"></div>
-      <div class="stat-label">${c.label}</div><div class="stat-value small">${c.value}</div></div>`).join('');
+    <div class="mini-widget">
+      <div class="mini-widget-icon" style="background:${c.bg}; color:${c.color};">${ic(c.icon)}</div>
+      <div class="mini-widget-body">
+        <div class="mini-widget-label">${c.label}</div>
+        <div class="mini-widget-value">${c.value}</div>
+      </div>
+    </div>`).join('');
 }
 function renderUsers(){
   renderUserSummaryCards();
@@ -1390,8 +1442,8 @@ function renderUsers(){
   document.getElementById('userCount').textContent = `(${rows.length})`;
 
   if(rows.length===0){
-    document.getElementById('usersBody').innerHTML = `<tr><td colspan="14"><div class="empty-state"><div class="icon">👥</div>No users found. Data will appear here once your /users node has entries.</div></td></tr>`;
-    document.getElementById('userCards').innerHTML = `<div class="empty-state"><div class="icon">👥</div>No users found.</div>`;
+    document.getElementById('usersBody').innerHTML = `<tr><td colspan="14"><div class="empty-state"><div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M17 20v-1.5a3.5 3.5 0 0 0-3.5-3.5h-5A3.5 3.5 0 0 0 5 18.5V20"/><circle cx="9.5" cy="8" r="3.2"/><path d="M21 20v-1.2a3 3 0 0 0-2.2-2.9"/><path d="M15 5.2a3.2 3.2 0 0 1 0 6"/></svg></div>No users found. Data will appear here once your /users node has entries.</div></td></tr>`;
+    document.getElementById('userCards').innerHTML = `<div class="empty-state"><div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M17 20v-1.5a3.5 3.5 0 0 0-3.5-3.5h-5A3.5 3.5 0 0 0 5 18.5V20"/><circle cx="9.5" cy="8" r="3.2"/><path d="M21 20v-1.2a3 3 0 0 0-2.2-2.9"/><path d="M15 5.2a3.2 3.2 0 0 1 0 6"/></svg></div>No users found.</div>`;
     document.getElementById('userPagination').innerHTML = '';
     return;
   }
@@ -1428,7 +1480,7 @@ function renderUsers(){
         <div class="user-card-email">${u.email||'—'}</div>
         <div class="user-card-uid">UID: ${u.uid.slice(0,10)}…</div>
         <div class="user-card-row">
-          <div class="user-card-coins">🪙 ${fmtMoney(u.balance).replace('₹','')}</div>
+          <div class="user-card-coins"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="13" height="13" style="vertical-align:-2px;"><circle cx="12" cy="12" r="9"/><path d="M12 7v10M9.5 9.3c0-1.3 1.1-2.3 2.5-2.3s2.5 1 2.5 2.1c0 2.8-5 1.7-5 4.5 0 1.2 1.1 2.1 2.5 2.1s2.5-1 2.5-2.3"/></svg> ${fmtMoney(u.balance).replace('₹','')}</div>
           <span class="${u.banned?'badge-banned':'badge-active'}">${u.banned?'Banned':'Active'}</span>
         </div>
       </div>
@@ -1441,7 +1493,7 @@ function kebabMenuHtml(uid, banned){
   const menuId = 'kebab-'+uid;
   return `
     <div class="kebab-wrap">
-      <button class="kebab-btn" onclick="event.stopPropagation(); toggleKebabMenu('${menuId}')">⋮</button>
+      <button class="kebab-btn" onclick="event.stopPropagation(); toggleKebabMenu('${menuId}')"><svg viewBox="0 0 24 24" fill="currentColor" width="17" height="17"><circle cx="12" cy="5" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="12" cy="19" r="1.8"/></svg></button>
       <div class="kebab-menu" id="${menuId}">
         <button onclick="event.stopPropagation(); closeAllKebabMenus(); showUserDetailModal('${uid}')">View details</button>
         <button class="danger" onclick="event.stopPropagation(); closeAllKebabMenus(); setUserBanned('${uid}', ${!banned})">${banned?'Unban user':'Ban user'}</button>
@@ -1587,16 +1639,17 @@ function renderWithdrawalSummary(){
   const cnt = st => wds.filter(w=>w.status===st).length;
   const pendingCnt = cnt('pending'), approvedCnt = cnt('approved'), rejectedCnt = cnt('rejected');
   const cards = [
-    {icon:'⏱', label:'Pending', value:pendingCnt, color:'var(--amber)', bg:'rgba(245,166,35,.15)'},
-    {icon:'✓', label:'Approved', value:approvedCnt, color:'var(--emerald)', bg:'rgba(18,217,146,.15)'},
-    {icon:'✕', label:'Rejected', value:rejectedCnt, color:'var(--red)', bg:'rgba(240,70,106,.15)'},
+    {icon:'clock', label:'Pending Requests', value:pendingCnt, color:'var(--amber)', bg:'rgba(245,166,35,.15)'},
+    {icon:'check', label:'Approved Requests', value:approvedCnt, color:'var(--emerald)', bg:'rgba(18,217,146,.15)'},
+    {icon:'close', label:'Rejected Requests', value:rejectedCnt, color:'var(--red)', bg:'rgba(240,70,106,.15)'},
   ];
   document.getElementById('wdSummaryCards').innerHTML = cards.map(c=>`
-    <div class="wd-icon-card">
-      <div class="wd-icon-circle" style="background:${c.bg}; color:${c.color};">${c.icon}</div>
-      <div class="wd-icon-label" style="color:${c.color};">${c.label}</div>
-      <div class="wd-icon-value">${c.value}</div>
-      <div class="wd-icon-caption">Requests</div>
+    <div class="mini-widget">
+      <div class="mini-widget-icon" style="background:${c.bg}; color:${c.color};">${ic(c.icon)}</div>
+      <div class="mini-widget-body">
+        <div class="mini-widget-label">${c.label}</div>
+        <div class="mini-widget-value">${c.value}</div>
+      </div>
     </div>`).join('');
 
   document.getElementById('tabCountPending').textContent = pendingCnt;
@@ -1641,8 +1694,8 @@ function renderWithdrawals(){
   if(countEl) countEl.textContent = rows.length ? `(${rows.length})` : '';
 
   if(rows.length===0){
-    document.getElementById('wdBody').innerHTML = `<tr><td colspan="9"><div class="empty-state"><div class="icon">💸</div>No withdrawals found.</div></td></tr>`;
-    document.getElementById('wdCards').innerHTML = `<div class="empty-state"><div class="icon">💸</div>No withdrawals found.</div>`;
+    document.getElementById('wdBody').innerHTML = `<tr><td colspan="9"><div class="empty-state"><div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v1"/><path d="M3 8v9a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-6a2 2 0 0 0-2-2H8"/><circle cx="16.5" cy="14" r="1.2" fill="currentColor" stroke="none"/></svg></div>No withdrawals found.</div></td></tr>`;
+    document.getElementById('wdCards').innerHTML = `<div class="empty-state"><div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v1"/><path d="M3 8v9a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-6a2 2 0 0 0-2-2H8"/><circle cx="16.5" cy="14" r="1.2" fill="currentColor" stroke="none"/></svg></div>No withdrawals found.</div>`;
     document.getElementById('wdPagination').innerHTML = '';
     return;
   }
@@ -1685,22 +1738,22 @@ function renderWithdrawals(){
       <div class="wd-card-grid">
         <div>
           <div class="wd-card-name">${u?.name||'—'}</div>
-          <div class="wd-card-uid">UID: ${(w.uid||'—').slice(0,10)}… <span class="wd-copy-icon" onclick="copyUid('${w.uid||''}', event)" title="Copy UID">⧉</span></div>
+          <div class="wd-card-uid">UID: ${(w.uid||'—').slice(0,10)}… <span class="wd-copy-icon" onclick="copyUid('${w.uid||''}', event)" title="Copy UID"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="12" height="12"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></span></div>
         </div>
         <div class="wd-card-amt">${fmtMoney(w.amount)}</div>
-        <div class="wd-card-date">📅 ${dateStr}</div>
+        <div class="wd-card-date"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="12" height="12"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/></svg> ${dateStr}</div>
         <div class="wd-card-upi">${(w.method||'UPI').toUpperCase()}: ${escapeHtml(payDetail)}</div>
         <div>
           <div class="wd-card-recv-label">You Receive</div>
           <div class="wd-card-recv">${fmtMoney(w.receive)}</div>
         </div>
-        <div class="wd-card-time">🕐 ${timeStr}</div>
+        <div class="wd-card-time"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="12" height="12"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg> ${timeStr}</div>
       </div>
       ${status!=='pending' ? `<div style="margin:-4px 0 12px;"><span class="badge-status badge-${status}">${status}</span>${status==='rejected' && w.rejectionReason ? `<div style="font-size:11px;color:var(--text-faint);margin-top:6px;">${escapeHtml(w.rejectionReason)}</div>` : ''}</div>` : ''}
       <div class="wd-card-actions">
         ${status==='pending' ? `
-          <button class="btn btn-approve" onclick="confirmWdAction('${w.uid}','${w.id}','approved')">✓ Approve</button>
-          <button class="btn btn-reject" onclick="confirmWdAction('${w.uid}','${w.id}','rejected')">✕ Reject</button>
+          <button class="btn btn-approve" onclick="confirmWdAction('${w.uid}','${w.id}','approved')">${ic('check')} Approve</button>
+          <button class="btn btn-reject" onclick="confirmWdAction('${w.uid}','${w.id}','rejected')">${ic('close')} Reject</button>
         ` : `<button class="btn btn-ghost" onclick="confirmWdAction('${w.uid}','${w.id}','pending')">Revert to pending</button>`}
       </div>
     </div>`;
@@ -1718,7 +1771,7 @@ function renderWdPagination(totalPages){
 }
 function wdGoPage(p){ wdPage = p; renderWithdrawals(); }
 
-/* ---------- Active Users Today modal ---------- */
+/* ---------- Active Users Today (full page) ---------- */
 // A user counts as having "done a task today" if they earned coins today, or if any of
 // their today-gated counters (ads/quizzes/scratches/spins) show activity for today.
 function userDidTaskToday(u){
@@ -1727,24 +1780,101 @@ function userDidTaskToday(u){
     || dailyTaskField(u,'spins') > 0
     || dailyTaskField(u,'shortlinks') > 0;
 }
-function showActiveUsersModal(){
-  const users = Object.entries(usersData).map(([uid,u])=>({uid,...u})).filter(u=>isToday(u.lastActive));
-  users.sort((a,b)=> new Date(b.lastActive||0) - new Date(a.lastActive||0));
+let auPage = 1;
+const AU_PAGE_SIZE = 15;
+let auTab = 'all'; // all | done | pending
+function auSearchChanged(){ auPage = 1; renderActiveUsersPage(); }
+function setAuTab(t){
+  auTab = t; auPage = 1;
+  document.querySelectorAll('#auTabs .tab-btn').forEach(b=>b.classList.toggle('active', b.dataset.au===t));
+  renderActiveUsersPage();
+}
+function renderActiveUsersPage(){
+  const allActive = Object.entries(usersData).map(([uid,u])=>({uid,...u})).filter(u=>isToday(u.lastActive));
+  allActive.sort((a,b)=> new Date(b.lastActive||0) - new Date(a.lastActive||0));
+  const doneCount = allActive.filter(userDidTaskToday).length;
+  const pendingCount = allActive.length - doneCount;
 
-  document.getElementById('activeUsersModalBody').innerHTML = users.length ? users.map(u=>{
+  document.getElementById('auSummaryCards').innerHTML = [
+    {label:'Active Today', icon:'trendUp', value:allActive.length, color:'var(--emerald)', bg:'rgba(18,217,146,.15)'},
+    {label:'Task Done', icon:'check', value:doneCount, color:'var(--emerald)', bg:'rgba(18,217,146,.15)'},
+    {label:'No Task Yet', icon:'close', value:pendingCount, color:'var(--red)', bg:'rgba(240,70,106,.15)'},
+  ].map(c=>`
+    <div class="mini-widget">
+      <div class="mini-widget-icon" style="background:${c.bg}; color:${c.color};">${ic(c.icon)}</div>
+      <div class="mini-widget-body"><div class="mini-widget-label">${c.label}</div><div class="mini-widget-value">${c.value}</div></div>
+    </div>`).join('');
+  document.getElementById('auTabDoneCount').textContent = doneCount;
+  document.getElementById('auTabPendingCount').textContent = pendingCount;
+
+  const q = (document.getElementById('auSearch')?.value || '').toLowerCase();
+  let rows = allActive.filter(u => !q || (u.name||'').toLowerCase().includes(q) || (u.email||'').toLowerCase().includes(q) || u.uid.toLowerCase().includes(q));
+  if(auTab==='done') rows = rows.filter(userDidTaskToday);
+  if(auTab==='pending') rows = rows.filter(u=>!userDidTaskToday(u));
+
+  document.getElementById('auCount').textContent = `(${rows.length})`;
+
+  if(rows.length===0){
+    document.getElementById('auBody').innerHTML = `<tr><td colspan="8"><div class="empty-state"><div class="icon">${ic('users')}</div>No active users match this view.</div></td></tr>`;
+    document.getElementById('auCards').innerHTML = `<div class="empty-state"><div class="icon">${ic('users')}</div>No active users match this view.</div>`;
+    document.getElementById('auPagination').innerHTML = '';
+    return;
+  }
+
+  const totalPages = Math.max(1, Math.ceil(rows.length / AU_PAGE_SIZE));
+  if(auPage > totalPages) auPage = totalPages;
+  const start = (auPage-1)*AU_PAGE_SIZE;
+  const pageRows = rows.slice(start, start+AU_PAGE_SIZE);
+
+  document.getElementById('auBody').innerHTML = pageRows.map(u=>{
     const didTask = userDidTaskToday(u);
     return `<tr>
       <td><div class="avatar-chip"><div class="avatar">${initials(u.name)}</div><div><div>${u.name||'—'}</div><div style="font-size:10.5px;color:var(--text-faint)">${u.email||'—'}</div></div></div></td>
       <td class="cell-mono">${fmtDate(u.lastActive)}</td>
-      <td><span class="badge-status ${didTask?'badge-approved':'badge-rejected'}">${didTask?'Yes':'No'}</span></td>
+      <td class="cell-mono">${dailyTaskField(u,'adsWatched')}</td>
+      <td class="cell-mono">${dailyTaskField(u,'spins')}</td>
+      <td class="cell-mono">${dailyTaskField(u,'shortlinks')}</td>
+      <td class="cell-mono">${fmtMoney(computeUserToday(u))}</td>
+      <td><span class="${didTask?'badge-active':'badge-banned'}">${didTask?'Done':'Pending'}</span></td>
+      <td><button class="btn btn-ghost" onclick="showUserDetailModal('${u.uid}')">See More</button></td>
     </tr>`;
-  }).join('') : `<tr><td colspan="3"><div class="empty-state"><div class="icon">👥</div>No active users today.</div></td></tr>`;
+  }).join('');
 
-  document.getElementById('activeUsersModal').classList.add('open');
+  document.getElementById('auCards').innerHTML = pageRows.map(u=>{
+    const didTask = userDidTaskToday(u);
+    return `<div class="user-card" onclick="showUserDetailModal('${u.uid}')">
+      <div class="avatar">${initials(u.name)}</div>
+      <div class="user-card-body">
+        <div class="user-card-name">${u.name||'—'}</div>
+        <div class="user-card-email">${u.email||'—'}</div>
+        <div class="user-card-row">
+          <span class="${didTask?'badge-active':'badge-banned'}">${didTask?'Task Done':'No Task Yet'}</span>
+        </div>
+        <div style="font-size:10.5px; color:var(--text-faint); margin-top:6px;">Ads ${dailyTaskField(u,'adsWatched')} · Spins ${dailyTaskField(u,'spins')} · Links ${dailyTaskField(u,'shortlinks')} · Earned ${fmtMoney(computeUserToday(u))}</div>
+        <button class="btn btn-ghost" style="margin-top:10px; width:100%;" onclick="event.stopPropagation(); showUserDetailModal('${u.uid}')">See More Tasks</button>
+      </div>
+    </div>`;
+  }).join('');
+
+  renderAuPagination(totalPages, rows.length, start);
 }
-function closeActiveUsersModal(){
-  document.getElementById('activeUsersModal').classList.remove('open');
+function renderAuPagination(totalPages, totalCount, start){
+  const el = document.getElementById('auPagination');
+  const end = Math.min(start+AU_PAGE_SIZE, totalCount);
+  let pageNums = totalPages <= 5 ? Array.from({length:totalPages}, (_,i)=>i+1) : [1,2,3,'…',totalPages];
+  const chips = pageNums.map(p => p==='…'
+    ? `<span style="color:var(--text-faint); padding:0 4px;">…</span>`
+    : `<button class="page-chip ${p===auPage?'active':''}" onclick="auGoPage(${p})">${p}</button>`
+  ).join('');
+  el.innerHTML = `
+    <span style="font-size:12px; color:var(--text-faint);">Showing ${start+1} to ${end} of ${totalCount} users</span>
+    <div style="display:flex; gap:6px; align-items:center;">
+      ${chips}
+      <button class="page-chip" ${auPage===totalPages?'disabled style="opacity:.4;cursor:default;"':''} onclick="auGoPage(${auPage+1})">›</button>
+    </div>`;
 }
+function auGoPage(p){ auPage = p; renderActiveUsersPage(); }
+
 
 /* ---------- Approve / Reject / Revert with confirmation ---------- */
 function confirmWdAction(uid, id, newStatus){
