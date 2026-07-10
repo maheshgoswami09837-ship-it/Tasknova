@@ -76,7 +76,7 @@
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-  import { getDatabase, ref, get, set, remove, child } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+  import { getDatabase, ref, get, set, remove, child, query, orderByKey, limitToLast } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyBbDeBse2WXwzd_X0Mr8VyEzytI8Yya_uc",
@@ -99,11 +99,23 @@
     loadInbox();
   }
 
-  async function loadInbox() {
+  async function loadInbox(fromCache) {
+    // Show cached list instantly (0ms) so the page isn't blank while Firebase loads.
+    if (!fromCache) {
+      const cached = localStorage.getItem('tn_inbox_' + uid);
+      if (cached) {
+        try { renderInbox(JSON.parse(cached)); } catch(e) {}
+        loadInbox(true); // now go fetch the real, fresh data in the background
+        return;
+      }
+    }
     try {
+      // Only the most recent 30 broadcasts — this node only grows over time,
+      // so pulling the entire history gets slower every month.
+      const recentBroadcastsQuery = query(ref(db, 'broadcastMessages'), orderByKey(), limitToLast(30));
       const [targetedSnap, broadcastSnap, readsSnap, hiddenSnap] = await Promise.all([
         get(ref(db, 'messages/' + uid)),
-        get(ref(db, 'broadcastMessages')),
+        get(recentBroadcastsQuery),
         get(ref(db, 'broadcastReads/' + uid)),
         get(ref(db, 'broadcastHidden/' + uid))
       ]);
@@ -128,6 +140,7 @@
       }
 
       items.sort((a, b) => (Number(b.timestamp) || 0) - (Number(a.timestamp) || 0));
+      localStorage.setItem('tn_inbox_' + uid, JSON.stringify(items));
       renderInbox(items);
     } catch (e) {
       contentEl.innerHTML = '<div class="emptyState"><p>Kuch gadbad ho gayi. Dobara try karo.</p></div>';
@@ -164,6 +177,7 @@
     }).join('');
 
     window.__items = items;
+    updateUnreadBadgeCount();
   }
 
   window.__toggleRead = async function(id, type) {
@@ -175,7 +189,7 @@
       } else {
         await set(ref(db, 'messages/' + uid + '/' + id + '/read'), true);
       }
-      loadInbox();
+      loadInbox(true);
     } catch (e) {
       console.error(e);
     }
@@ -205,7 +219,7 @@
       } else {
         await remove(ref(db, 'messages/' + uid + '/' + id));
       }
-      loadInbox();
+      loadInbox(true);
     } catch (e) {
       console.error(e);
     }
@@ -236,9 +250,8 @@
         } else {
           await set(ref(db, 'broadcastReads/' + uid + '/' + id), true);
         }
-        updateUnreadBadgeCount();
       } catch (e) { console.error(e); }
-      // re-render to remove unread dot
+      // re-render to remove unread dot (this also refreshes the cached badge count)
       renderInbox(window.__items);
     }
   };
@@ -263,8 +276,10 @@
     return div.innerHTML;
   }
 
-  async function updateUnreadBadgeCount() {
-    // recompute and store nothing here; home page recalculates on load
+  function updateUnreadBadgeCount() {
+    if (!window.__items) return;
+    const unreadCount = window.__items.filter(i => !i.read).length;
+    localStorage.setItem('tn_inbox_unread_' + uid, unreadCount);
   }
 </script>
 </body>
