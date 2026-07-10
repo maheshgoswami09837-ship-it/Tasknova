@@ -239,7 +239,7 @@
   .nav-center:active { opacity: 0.85; transform: scale(0.95); }
   .nav-center svg { width: 24px; height: 24px; stroke: #fff; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
   .nav-center-label { font-size: 11px; color: #b0b8cc; font-weight: 600; }
-  .toast { position: fixed; bottom: 160px; left: 50%; transform: translateX(-50%); padding: 12px 24px; border-radius: 50px; font-size: 13px; font-weight: 600; z-index: 200; display: none; white-space: nowrap; max-width: 90%; text-align: center; }
+  .toast { position: fixed; top: calc(env(safe-area-inset-top, 0px) + 16px); left: 50%; transform: translateX(-50%); padding: 12px 20px; border-radius: 50px; font-size: 13px; font-weight: 600; z-index: 9999; display: none; white-space: normal; max-width: 88%; text-align: center; box-shadow: 0 6px 20px rgba(0,0,0,0.25); background: #1a1a2e; }
   .toast.success { background: rgba(34,197,94,0.2); border: 1px solid rgba(34,197,94,0.4); color: #22c55e; }
   .toast.error { background: rgba(239,68,68,0.2); border: 1px solid rgba(239,68,68,0.4); color: #ef4444; }
   .toast.show { display: block; }
@@ -700,7 +700,7 @@
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-  import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, updatePassword, GoogleAuthProvider, signInWithRedirect, getRedirectResult } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+  import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, updatePassword, GoogleAuthProvider, signInWithRedirect, getRedirectResult, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
   import { getDatabase, ref, set, get, update, serverTimestamp, query, orderByChild, equalTo } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
   const firebaseConfig = {
@@ -718,6 +718,26 @@
   const db   = getDatabase(app);
   const googleProvider = new GoogleAuthProvider();
 
+  // ── Safety-net: agar getRedirectResult() Google redirect ke baad
+  // result miss kar de (timing/storage issue), ye fallback pakad lega ──
+  let googleFallbackHandled = false;
+  onAuthStateChanged(auth, (user) => {
+    if (!user) return;
+    if (googleFallbackHandled) return;
+    if (localStorage.getItem('tasknova_uid')) return; // already handled normally
+    if (user.providerData[0]?.providerId !== 'google.com') return; // sirf Google users ke liye
+
+    googleFallbackHandled = true;
+    const referral = sessionStorage.getItem('tn_pending_referral') || '';
+    sessionStorage.removeItem('tn_pending_referral');
+    document.getElementById('loadingScreen').style.display = 'flex';
+    document.getElementById('loginSection').style.display = 'none';
+    processGoogleUser(user, referral).catch(e => {
+      console.warn('[Google Fallback] error:', e);
+      showToast('Google sign-up failed: ' + e.message, 'error');
+    });
+  });
+
   // ── OTP API endpoints ──────────────────────────────────────────
   const OTP_API        = '/api/send-otp';
   const VERIFY_OTP_API = '/api/verify-otp';
@@ -733,6 +753,7 @@
     try {
       const redirectResult = await getRedirectResult(auth);
       if (redirectResult && redirectResult.user) {
+        googleFallbackHandled = true;
         const referral = sessionStorage.getItem('tn_pending_referral') || '';
         sessionStorage.removeItem('tn_pending_referral');
         document.getElementById('loadingScreen').style.display = 'flex';
