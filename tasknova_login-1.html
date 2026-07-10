@@ -263,8 +263,8 @@
 <!-- OTP MODAL -->
 <div class="modal-overlay" id="otpModal">
   <div class="modal-box">
-    <div class="modal-title">📧 Email Verify Karein</div>
-    <div class="modal-sub">OTP bheja gaya hai <span id="otpEmailShow"></span> par. Account banane ke liye verify karein.</div>
+    <div class="modal-title">Email Verify Karein</div>
+    <div class="modal-sub">OTP bheja gaya hai <span id="otpEmailShow"></span> par. Account banane ke liye verify karein.<br><br><b>Note:</b> OTP kabhi-kabhi Spam ya Junk folder mein ja sakta hai — agar Inbox mein na dikhe toh wahan zaroor check karein.</div>
     <div class="otp-input-wrap">
       <input class="otp-box" maxlength="1" type="tel" oninput="otpInput(this,0)" onkeydown="otpBack(event,0)">
       <input class="otp-box" maxlength="1" type="tel" oninput="otpInput(this,1)" onkeydown="otpBack(event,1)">
@@ -274,7 +274,7 @@
       <input class="otp-box" maxlength="1" type="tel" oninput="otpInput(this,5)" onkeydown="otpBack(event,5)">
     </div>
     <div class="resend-otp">OTP nahi aaya? <span onclick="resendRegOTP()">Resend OTP</span></div>
-    <button class="otp-verify-btn" id="otpVerifyBtn" onclick="verifyRegOTP()">✅ Verify & Create Account</button>
+    <button class="otp-verify-btn" id="otpVerifyBtn" onclick="verifyRegOTP()">Verify &amp; Create Account</button>
     <button class="otp-cancel-btn" onclick="closeOTPModal()">Cancel</button>
   </div>
 </div>
@@ -718,10 +718,10 @@
   const db   = getDatabase(app);
   const googleProvider = new GoogleAuthProvider();
 
-  // ── OTP API endpoint ──────────────────────────────────────────
-  const OTP_API = '/api/send-otp';
+  // ── OTP API endpoints ──────────────────────────────────────────
+  const OTP_API        = '/api/send-otp';
+  const VERIFY_OTP_API = '/api/verify-otp';
 
-  let currentOTP   = '';
   let pendingRegData = null;
 
   let alreadyChecked = false;
@@ -987,7 +987,7 @@
     '10minutemail.com','20minutemail.com','tempinbox.com','mailscrap.com'
   ];
 
-  // ── REGISTER: Validate → Direct Account Create (No OTP) ──────
+  // ── REGISTER: Validate → Send OTP → Verify → Create Account ──
   window.startRegister_module = window.startRegister = async function() {
     const name     = document.getElementById('regName').value.trim();
     const email    = document.getElementById('regEmail').value.trim().toLowerCase();
@@ -1005,55 +1005,13 @@
       return;
     }
 
+    // Email already registered? check karo before OTP bhejne se
     const btn = document.getElementById('registerBtn');
-    btn.innerHTML = '<span class="spinner"></span>Creating Account...';
+    btn.innerHTML = '<span class="spinner"></span>Checking...';
     btn.disabled  = true;
 
-    try {
-      const userCred = await createUserWithEmailAndPassword(auth, email, password);
-      const uid = userCred.user.uid;
-      localStorage.setItem('tasknova_uid', uid);
-      const myReferralCode = generateReferralCode();
-
-      await set(ref(db, 'users/' + uid), {
-        name, email, balance: 10, coins: 10,
-        referralCode: myReferralCode, referredBy: referral || '',
-        totalEarned: 10, tasksDone: 0, referrals: 0,
-        joinDate: new Date().toISOString(), welcomeBonus: true
-      });
-
-      if (referral) {
-        await set(ref(db, 'referrals/' + referral + '/' + uid), {
-          joined: new Date().toISOString(), withdrawn: false
-        });
-        try {
-          const usersSnap = await get(ref(db, 'users'));
-          if (usersSnap.exists()) {
-            const users = usersSnap.val();
-            const referrerUid = Object.keys(users).find(k => users[k].referralCode === referral);
-            if (referrerUid) {
-              const rData = users[referrerUid];
-              const newReferrals = (rData.referrals || 0) + 1;
-              const newCoins   = (rData.coins || 0) + 1;
-              const newBalance = parseFloat((newCoins / 1).toFixed(2));
-              await set(ref(db, 'users/' + referrerUid), {
-                ...rData, referrals: newReferrals, coins: newCoins,
-                balance: newBalance, totalEarned: newBalance
-              });
-            }
-          }
-        } catch(refErr) { console.warn('[Referral] Could not update referrer:', refErr); }
-      }
-
-      showToast('Welcome! ₹10 bonus added! 🎉', 'success');
-      setTimeout(() => { window.__HOME_ACTIVE__ = false; showHome(uid); }, 1500);
-
-    } catch(e) {
-      if (e.code === 'auth/email-already-in-use') showToast('Email already registered!', 'error');
-      else showToast('Error: ' + e.message, 'error');
-      btn.innerHTML = 'CREATE ACCOUNT';
-      btn.disabled  = false;
-    }
+    pendingRegData = { name, email, password, referral };
+    sendRegOTP();
   };
 
   // ── REGISTER: Google Sign-Up ─────────────────────────────────
@@ -1132,7 +1090,6 @@
   };
 
   function sendRegOTP() {
-    currentOTP = Math.floor(100000 + Math.random() * 900000).toString();
     document.getElementById('otpEmailShow').textContent = maskEmail(pendingRegData.email);
     document.querySelectorAll('.otp-box').forEach(b => b.value = '');
 
@@ -1143,14 +1100,10 @@
     fetch(OTP_API, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        email: pendingRegData.email,
-        name:  pendingRegData.name,
-        otp:   currentOTP
-      })
-    }).then(res => res.json()).then(data => {
-      if (data.success) {
-        showToast('OTP bheja! Gmail check karein 📧', 'success');
+      body: JSON.stringify({ email: pendingRegData.email })
+    }).then(res => res.json().then(data => ({ ok: res.ok, data }))).then(({ ok, data }) => {
+      if (ok) {
+        showToast('OTP bheja gaya! Gmail check karein — Spam/Junk folder bhi dekhein.', 'success');
         document.getElementById('otpModal').classList.add('show');
         document.querySelectorAll('.otp-box')[0].focus();
       } else {
@@ -1185,22 +1138,42 @@
       document.querySelectorAll('.otp-box')[idx - 1].focus();
   };
 
-  // ── REGISTER Step 2: Verify OTP → Create Account ─────────────
+  // ── REGISTER Step 2: Verify OTP (server-side) → Create Account ─
   window.verifyRegOTP_module = window.verifyRegOTP = async function() {
     const entered = [...document.querySelectorAll('.otp-box')].map(b => b.value).join('');
     if (entered.length < 6) { showToast('Pura 6-digit OTP enter karein', 'error'); return; }
 
-    if (entered !== currentOTP) {
-      showToast('Galat OTP! Dobara try karein ❌', 'error');
-      document.querySelectorAll('.otp-box').forEach(b => { b.value = ''; b.style.borderColor = '#ef4444'; });
-      setTimeout(() => document.querySelectorAll('.otp-box').forEach(b => b.style.borderColor = ''), 1200);
-      document.querySelectorAll('.otp-box')[0].focus();
+    const verifyBtn = document.getElementById('otpVerifyBtn');
+    verifyBtn.innerHTML = '<span class="otp-loader"></span>Verifying...';
+    verifyBtn.disabled  = true;
+
+    let verifyData;
+    try {
+      const verifyRes = await fetch(VERIFY_OTP_API, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: pendingRegData.email, otp: entered })
+      });
+      verifyData = await verifyRes.json();
+    } catch (err) {
+      console.error('Verify OTP network error:', err);
+      showToast('OTP verify fail. Internet check karein.', 'error');
+      verifyBtn.innerHTML = 'Verify & Create Account';
+      verifyBtn.disabled  = false;
       return;
     }
 
-    const verifyBtn = document.getElementById('otpVerifyBtn');
+    if (!verifyData.success) {
+      showToast('Galat OTP! Dobara try karein.', 'error');
+      document.querySelectorAll('.otp-box').forEach(b => { b.value = ''; b.style.borderColor = '#ef4444'; });
+      setTimeout(() => document.querySelectorAll('.otp-box').forEach(b => b.style.borderColor = ''), 1200);
+      document.querySelectorAll('.otp-box')[0].focus();
+      verifyBtn.innerHTML = 'Verify & Create Account';
+      verifyBtn.disabled  = false;
+      return;
+    }
+
     verifyBtn.innerHTML = '<span class="otp-loader"></span>Creating Account...';
-    verifyBtn.disabled  = true;
 
     const { name, email, password, referral } = pendingRegData;
     try {
@@ -1262,7 +1235,7 @@
       if (e.code === 'auth/email-already-in-use') showToast('Email already registered!', 'error');
       else showToast('Error: ' + e.message, 'error');
     } finally {
-      verifyBtn.innerHTML = '✅ Verify & Create Account';
+      verifyBtn.innerHTML = 'Verify & Create Account';
       verifyBtn.disabled  = false;
     }
   };
