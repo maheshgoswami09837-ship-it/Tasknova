@@ -239,7 +239,7 @@
   .nav-center:active { opacity: 0.85; transform: scale(0.95); }
   .nav-center svg { width: 24px; height: 24px; stroke: #fff; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
   .nav-center-label { font-size: 11px; color: #b0b8cc; font-weight: 600; }
-  .toast { position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%); padding: 12px 24px; border-radius: 50px; font-size: 13px; font-weight: 600; z-index: 200; display: none; white-space: nowrap; }
+  .toast { position: fixed; bottom: 160px; left: 50%; transform: translateX(-50%); padding: 12px 24px; border-radius: 50px; font-size: 13px; font-weight: 600; z-index: 200; display: none; white-space: nowrap; max-width: 90%; text-align: center; }
   .toast.success { background: rgba(34,197,94,0.2); border: 1px solid rgba(34,197,94,0.4); color: #22c55e; }
   .toast.error { background: rgba(239,68,68,0.2); border: 1px solid rgba(239,68,68,0.4); color: #ef4444; }
   .toast.show { display: block; }
@@ -394,7 +394,7 @@
       </div>
       <button class="btn-main" id="registerBtn" onclick="startRegister()">CREATE ACCOUNT</button>
 
-      <div style="display:flex; align-items:center; gap:10px; margin:14px 0 2px;">
+      <div style="display:flex; align-items:center; gap:10px; margin:8px 0 2px;">
         <div style="flex:1; height:1px; background:rgba(255,255,255,0.12);"></div>
         <span style="font-size:11px; color:rgba(255,255,255,0.4); font-weight:600;">OR</span>
         <div style="flex:1; height:1px; background:rgba(255,255,255,0.12);"></div>
@@ -700,7 +700,7 @@
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-  import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, updatePassword, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+  import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, updatePassword, GoogleAuthProvider, signInWithRedirect, getRedirectResult } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
   import { getDatabase, ref, set, get, update, serverTimestamp, query, orderByChild, equalTo } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
   const firebaseConfig = {
@@ -728,6 +728,25 @@
   window.addEventListener('load', async () => {
     if (alreadyChecked) return;
     alreadyChecked = true;
+
+    // Google redirect se wapas aaye hain kya? (signInWithRedirect ke baad)
+    try {
+      const redirectResult = await getRedirectResult(auth);
+      if (redirectResult && redirectResult.user) {
+        const referral = sessionStorage.getItem('tn_pending_referral') || '';
+        sessionStorage.removeItem('tn_pending_referral');
+        document.getElementById('loadingScreen').style.display = 'flex';
+        await processGoogleUser(redirectResult.user, referral);
+        return;
+      }
+    } catch (e) {
+      if (e.code === 'auth/account-exists-with-different-credential') {
+        showToast('This email is already registered with a password. Login with email instead.', 'error');
+      } else if (e.code) {
+        showToast('Google sign-up failed: ' + e.message, 'error');
+      }
+      console.warn('[Google Redirect] error:', e);
+    }
 
     // Auto-fill referral code from URL
     const urlParams = new URLSearchParams(window.location.search);
@@ -1038,7 +1057,6 @@
       }
     } catch (e) {
       console.warn('[Register] Email check failed:', e);
-      showToast('DEBUG: Email check error - ' + e.message, 'error');
       // Agar check hi fail ho jaye, aage badh jao — Firebase account create ke time bhi pakad lega
     }
 
@@ -1047,79 +1065,71 @@
   };
 
   // ── REGISTER: Google Sign-Up ─────────────────────────────────
-  window.googleSignUp = async function() {
+  window.googleSignUp = function() {
     const referral = document.getElementById('regReferralDisplay').value.trim();
+    if (referral) sessionStorage.setItem('tn_pending_referral', referral);
     const btn = document.getElementById('googleRegisterBtn');
     const btnLabel = btn.querySelector('span:last-child');
-    btnLabel.textContent = 'Please wait...';
+    btnLabel.textContent = 'Redirecting...';
     btn.disabled = true;
-
-    try {
-      const result = await signInWithPopup(auth, googleProvider);
-      const user = result.user;
-      const uid = user.uid;
-      localStorage.setItem('tasknova_uid', uid);
-
-      const existingSnap = await get(ref(db, 'users/' + uid));
-
-      if (existingSnap.exists()) {
-        // Already registered with Google before — just log them in.
-        showToast('Welcome back! 🎉', 'success');
-        setTimeout(() => { window.__HOME_ACTIVE__ = false; showHome(uid); }, 1000);
-        return;
-      }
-
-      // New Google user — create the account exactly like normal email register.
-      const myReferralCode = generateReferralCode();
-      await set(ref(db, 'users/' + uid), {
-        name: user.displayName || 'Tasknova User',
-        email: user.email || '',
-        balance: 10, coins: 10,
-        referralCode: myReferralCode, referredBy: referral || '',
-        totalEarned: 10, tasksDone: 0, referrals: 0,
-        joinDate: new Date().toISOString(), welcomeBonus: true,
-        authProvider: 'google'
-      });
-
-      if (referral) {
-        await set(ref(db, 'referrals/' + referral + '/' + uid), {
-          joined: new Date().toISOString(), withdrawn: false
-        });
-        try {
-          const usersSnap = await get(ref(db, 'users'));
-          if (usersSnap.exists()) {
-            const users = usersSnap.val();
-            const referrerUid = Object.keys(users).find(k => users[k].referralCode === referral);
-            if (referrerUid) {
-              const rData = users[referrerUid];
-              const newReferrals = (rData.referrals || 0) + 1;
-              const newCoins   = (rData.coins || 0) + 1;
-              const newBalance = parseFloat((newCoins / 1).toFixed(2));
-              await set(ref(db, 'users/' + referrerUid), {
-                ...rData, referrals: newReferrals, coins: newCoins,
-                balance: newBalance, totalEarned: newBalance
-              });
-            }
-          }
-        } catch(refErr) { console.warn('[Referral] Could not update referrer:', refErr); }
-      }
-
-      showToast('Welcome! ₹10 bonus added! 🎉', 'success');
-      setTimeout(() => { window.__HOME_ACTIVE__ = false; showHome(uid); }, 1500);
-
-    } catch(e) {
-      if (e.code === 'auth/popup-closed-by-user') {
-        // User cancelled — no error toast needed.
-      } else if (e.code === 'auth/account-exists-with-different-credential') {
-        showToast('This email is already registered with a password. Login with email instead.', 'error');
-      } else {
-        showToast('Google sign-up failed: ' + e.message, 'error');
-      }
-    } finally {
-      btnLabel.textContent = 'Sign up with Google';
-      btn.disabled = false;
-    }
+    signInWithRedirect(auth, googleProvider);
+    // Page ab Google ke login page pe redirect ho jayega, wapas aane par
+    // load handler mein getRedirectResult() se process hoga.
   };
+
+  async function processGoogleUser(user, referral) {
+    const uid = user.uid;
+    localStorage.setItem('tasknova_uid', uid);
+
+    const existingSnap = await get(ref(db, 'users/' + uid));
+
+    if (existingSnap.exists()) {
+      // Already registered with Google before — just log them in.
+      showToast('Welcome back! 🎉', 'success');
+      setTimeout(() => { window.__HOME_ACTIVE__ = false; showHome(uid); }, 1000);
+      return;
+    }
+
+    // New Google user — create the account exactly like normal email register.
+    const myReferralCode = generateReferralCode();
+    await set(ref(db, 'users/' + uid), {
+      name: user.displayName || 'Tasknova User',
+      email: user.email || '',
+      balance: 10, coins: 10,
+      referralCode: myReferralCode, referredBy: referral || '',
+      totalEarned: 10, tasksDone: 0, referrals: 0,
+      joinDate: new Date().toISOString(), welcomeBonus: true,
+      authProvider: 'google'
+    });
+
+    if (referral) {
+      await set(ref(db, 'referrals/' + referral + '/' + uid), {
+        joined: new Date().toISOString(), withdrawn: false
+      });
+      try {
+        const usersSnap = await get(ref(db, 'users'));
+        if (usersSnap.exists()) {
+          const users = usersSnap.val();
+          const referrerUid = Object.keys(users).find(k => users[k].referralCode === referral);
+          if (referrerUid) {
+            const rData = users[referrerUid];
+            const newReferrals = (rData.referrals || 0) + 1;
+            const newCoins   = (rData.coins || 0) + 1;
+            const newBalance = parseFloat((newCoins / 1).toFixed(2));
+            await set(ref(db, 'users/' + referrerUid), {
+              ...rData, referrals: newReferrals, coins: newCoins,
+              balance: newBalance, totalEarned: newBalance
+            });
+          }
+        }
+      } catch(refErr) { console.warn('[Referral] Could not update referrer:', refErr); }
+    }
+
+    showToast('Welcome! ₹10 bonus added! 🎉', 'success');
+    setTimeout(() => { window.__HOME_ACTIVE__ = false; showHome(uid); }, 1500);
+  }
+
+
 
   function sendRegOTP() {
     document.getElementById('otpEmailShow').textContent = maskEmail(pendingRegData.email);
