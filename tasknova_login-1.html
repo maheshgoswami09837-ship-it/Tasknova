@@ -840,7 +840,7 @@
         }
       });
     } catch (e) {
-      alert('Notification Error: ' + e.message);
+      console.warn('[Notification] permission/token error:', e);
     }
   }
 
