@@ -18,7 +18,29 @@ messaging.onBackgroundMessage((payload) => {
   const title = payload.notification?.title || 'TaskNova';
   const options = {
     body: payload.notification?.body || '',
-    icon: '/icon.png'
+    icon: '/images/logo.png',   // ← apna logo filename yahan daalo
+    data: { url: payload.fcmOptions?.link || payload.data?.url || '/' }
   };
   self.registration.showNotification(title, options);
+});
+
+// Notification pe tap karte hi app kholo
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const targetUrl = event.notification.data?.url || '/';
+
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+      // Agar app ka tab pehle se khula hai, usी pe focus karo
+      for (const client of clientList) {
+        if (client.url.includes(self.location.origin) && 'focus' in client) {
+          return client.focus();
+        }
+      }
+      // Warna naya tab kholo
+      if (clients.openWindow) {
+        return clients.openWindow(targetUrl);
+      }
+    })
+  );
 });
