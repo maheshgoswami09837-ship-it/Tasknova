@@ -830,7 +830,7 @@
         await update(ref(db, 'users/' + uid), { fcmToken: token });
       }
     } catch (e) {
-      console.warn('[Notification] permission/token error:', e);
+      alert('Notification Error: ' + e.message);
     }
   }
 
