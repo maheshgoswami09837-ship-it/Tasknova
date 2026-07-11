@@ -2941,7 +2941,8 @@
               coins:       newCoins,
               balance:     newBalance,
               totalEarned: newBalance,
-              tasksDone:   newTasks
+              tasksDone:   newTasks,
+              lastTaskDate: Date.now()
             };
             // Save type-specific counts under dailyTasks[today] for accurate daily reset
             if (type === 'spin')    {
